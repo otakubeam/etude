@@ -58,3 +58,5 @@ std::ostream& operator<<(std::ostream& os,  //
                          const SBObject& object) {
   return os << Format(object);
 }
+
+/////////////////////////////////////////////////////////////////////

@@ -34,7 +34,7 @@ class Evaluator : public EnvVisitor<SBObject> {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitVarDecl(VarDeclStatement* node) override {
-    auto name = std::get<std::string>(node->lvalue_->token_.sem_info);
+    auto name = node->lvalue_->token_.GetName();
     auto val = Eval(node->value_);
     env_->Declare(name, val);
   }
