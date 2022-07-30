@@ -107,19 +107,19 @@ class Parser {
 
     // This should be fine even without parentheses, right?
     auto condition = ParseExpression();
-    FMT_ASSERT(condition,  //
-               "If statement without condition");
+    AssertParsed(condition,  //
+                 "If statement without condition");
 
     auto true_branch = ParseBlockStatement();
-    FMT_ASSERT(true_branch,  //
-               "If statement without true branch");
+    AssertParsed(true_branch,  //
+                 "If statement without true branch");
 
     BlockStatement* false_branch = nullptr;
 
     if (Matches(lex::TokenType::ELSE)) {
       false_branch = ParseBlockStatement();
-      FMT_ASSERT(false_branch,  //
-                 "Else clause without an associated statement");
+      AssertParsed(false_branch,  //
+                   "Else clause without an associated statement");
     }
 
     return new IfStatement(condition, true_branch, false_branch);
@@ -178,7 +178,7 @@ class Parser {
     Consume(lex::TokenType::ASSIGN);
 
     auto value = ParseExpression();
-    FMT_ASSERT(value, "Trying to assign a non-existent value");
+    AssertParsed(value, "Trying to assign a non-existent value");
 
     Consume(lex::TokenType::SEMICOLUMN);
 
@@ -250,7 +250,15 @@ class Parser {
   void Consume(lex::TokenType type) {
     auto error_msg = fmt::format("\nCould not match type {}\n",  //
                                  lex::FormatTokenType(type));
-    FMT_ASSERT(Matches(type), error_msg.c_str());
+    if (!Matches(type)) {
+      throw ParseError{error_msg.c_str()};
+    }
+  }
+
+  void AssertParsed(TreeNode* node, const char* error_msg) {
+    if (node == nullptr) {
+      throw ParseError{error_msg};
+    }
   }
 
  private:

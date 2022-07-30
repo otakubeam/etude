@@ -4,10 +4,17 @@
 
 int main() {
   Evaluator e;
-  Parser p(lex::Lexer{std::cin});
+  auto p = new Parser(lex::Lexer{std::cin});
 
-  while (!false) {
-    auto stmt = p.ParseStatement();
-    e.Eval(stmt);
-  }
+  while (true) try {
+      auto stmt = p->ParseStatement();
+      e.Eval(stmt);
+    } catch (ParseError e) {
+      fmt::print("{}\n", e.msg);
+
+      delete p; // Reset parser
+      p = new Parser(lex::Lexer{std::cin});
+    } catch (...) {
+      fmt::print("Unrecognized error\n");
+    }
 }
