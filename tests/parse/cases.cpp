@@ -5,7 +5,7 @@
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Just works", "[parser]") {
+TEST_CASE("Parser: Just works", "[parser]") {
   char stream[] = "1 - 2";
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
@@ -30,7 +30,7 @@ TEST_CASE("Parse as separate", "[parser]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Booleans", "[parser]") {
+TEST_CASE("Parser: Booleans", "[parser]") {
   char stream[] = "!true";
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
@@ -239,7 +239,7 @@ TEST_CASE("Function application (VI)", "[parser]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Return statement", "[parser]") {
+TEST_CASE("Parse return", "[parser]") {
   std::stringstream source("return foo(123);");
   Parser p{lex::Lexer{source}};
 
@@ -249,7 +249,7 @@ TEST_CASE("Return statement", "[parser]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Yield as break", "[parser]") {
+TEST_CASE("Parse yield", "[parser]") {
   std::stringstream source("yield;");
   Parser p{lex::Lexer{source}};
 

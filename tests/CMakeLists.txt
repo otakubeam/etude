@@ -1,5 +1,3 @@
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin")
-
 message(STATUS "Generating tests")
 
 get_filename_component(TESTS_PATH "." ABSOLUTE)

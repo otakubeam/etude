@@ -5,7 +5,7 @@
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Just works", "[rt]") {
+TEST_CASE("Rt: Just works", "[rt]") {
   CHECK(PrimitiveType{1} != PrimitiveType{'a'});
   CHECK(PrimitiveType{true} != PrimitiveType{});
 
@@ -52,7 +52,7 @@ TEST_CASE("Unary", "[rt]") {
 TEST_CASE("Prints", "[rt]") {
   CHECK(Format(PrimitiveType{1}) == "1");
   CHECK(Format(PrimitiveType{}) == "0x0");
-  CHECK(Format(PrimitiveType{'a'}) == "a");
+  CHECK(Format(PrimitiveType{"a"}) == "a");
   CHECK(Format(PrimitiveType{true}) == "true");
 }
 

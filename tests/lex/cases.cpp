@@ -7,7 +7,7 @@
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Just works", "[lex]") {
+TEST_CASE("Lexer: Just works", "[lex]") {
   std::stringstream source("1 + 2");
   lex::Lexer l{source};
 
@@ -18,14 +18,14 @@ TEST_CASE("Just works", "[lex]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Grouping", "[lex]") {
+TEST_CASE("Braces", "[lex]") {
   std::stringstream source("1 + (1)");
   lex::Lexer l{source};
 
   REQUIRE(l.Peek().type == lex::TokenType::NUMBER);
   CHECK(l.Advance().type == lex::TokenType::PLUS);
   CHECK(l.Advance().type == lex::TokenType::LEFT_BRACE);
-  REQUIRE(l.Advance().type == lex::TokenType::NUMBER);
+  CHECK(l.Advance().type == lex::TokenType::NUMBER);
   CHECK(l.Advance().type == lex::TokenType::RIGHT_BRACE);
 }
 

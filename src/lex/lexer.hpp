@@ -4,7 +4,6 @@
 #include <lex/lexer_aux.hpp>
 #include <lex/token.hpp>
 
-#include <catch2/catch.hpp>
 #include <fmt/format.h>
 
 #include <optional>

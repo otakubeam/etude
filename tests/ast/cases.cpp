@@ -14,77 +14,24 @@
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Expressions", "[ast]") {
-  auto ty = lex::TokenType::NUMBER;
-  lex::Location loc_dummy;
-
-  auto minus_tk = lex::Token{lex::TokenType::MINUS, loc_dummy};
-  auto plus_tk = lex::Token{lex::TokenType::PLUS, loc_dummy};
-
-  auto tk = lex::Token{ty, loc_dummy, 1},  //
-      tk2 = lex::Token{ty, loc_dummy, 2};
-
-  auto a1 = LiteralExpression{tk}, a2 = LiteralExpression{tk2};
-
-  auto un1 = UnaryExpression{minus_tk, &a1};
-  auto bin1 = BinaryExpression{&a1, minus_tk, &a2},
-       bin2 = BinaryExpression{&un1, plus_tk, &bin1};
-
-  Evaluator e;
-
-  auto result1 = GetPrim<int>(e.Eval(&bin1));
-  auto result2 = GetPrim<int>(e.Eval(&bin2));
-
-  REQUIRE(result1 == -1);
-  REQUIRE(result2 == -2);
-}
-
-//////////////////////////////////////////////////////////////////////
-
-TEST_CASE("Print tree", "[ast]") {
-  auto ty = lex::TokenType::NUMBER;
-  lex::Location loc_dummy;
-
-  auto minus_tk = lex::Token{lex::TokenType::MINUS, loc_dummy};
-  auto plus_tk = lex::Token{lex::TokenType::PLUS, loc_dummy};
-
-  auto tk = lex::Token{ty, loc_dummy, 1},  //
-      tk2 = lex::Token{ty, loc_dummy, 2};
-
-  auto a1 = LiteralExpression{tk}, a2 = LiteralExpression{tk2};
-
-  auto un1 = UnaryExpression{minus_tk, &a1};
-  auto bin1 = BinaryExpression{&a1, minus_tk, &a2},
-       bin2 = BinaryExpression{&un1, plus_tk, &bin1};
-
-  PrintingVisitor p;
-
-  auto result1 = p.Eval(&bin1);
-  auto result2 = p.Eval(&bin2);
-
-  fmt::print("{}\n\n\n{}", result1, result2);
-}
-
-//////////////////////////////////////////////////////////////////////
-
 TEST_CASE("Grouping", "[ast]") {
-  char stream[] = "1 - (2 - 3)";
-  std::stringstream source{stream};
-  Parser p{lex::Lexer{source}};
-
   Evaluator e;
-  CHECK(e.Eval(p.ParseExpression()) == FromPrim(2));
-}
 
-//////////////////////////////////////////////////////////////////////
+  SECTION("Grouping") {
+    char stream[] = "1 - (2 - 3)";
+    std::stringstream source{stream};
+    Parser p{lex::Lexer{source}};
 
-TEST_CASE("Associativity", "[parser]") {
-  char stream[] = "1 - 2 - 3";
-  std::stringstream source{stream};
-  Parser p{lex::Lexer{source}};
+    CHECK(e.Eval(p.ParseExpression()) == FromPrim(2));
+  }
 
-  Evaluator e;
-  CHECK(e.Eval(p.ParseExpression()) == FromPrim(-4));
+  SECTION("Associativity") {
+    char stream[] = "1 - 2 - 3";
+    std::stringstream source{stream};
+    Parser p{lex::Lexer{source}};
+
+    CHECK(e.Eval(p.ParseExpression()) == FromPrim(-4));
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -193,7 +140,7 @@ TEST_CASE("Eval string literal", "[ast]") {
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
-  CHECK(e.Eval(p.ParseExpression()) == FromPrim('a'));
+  CHECK(e.Eval(p.ParseExpression()) == FromPrim("abc"));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -313,11 +260,23 @@ TEST_CASE("If statement (II)", "[ast]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Doesn't work", "[ast]") {
-  Evaluator e;
-  Parser p(lex::Lexer{std::cin});
+TEST_CASE("Recursive", "[ast]") {
+  std::stringstream source(  //
+      "                                          "
+      "      fun sum(n) {                        "
+      "         if n == 0 {                      "
+      "             return 1;                    "
+      "         } else {                         "
+      "             return (n + sum(n-1));       "
+      "         }                                "
+      "      }                                   "
+      "                                          "
+      "             sum(4)                       ");
+  Parser p{lex::Lexer{source}};
 
-  while (auto stmt = p.ParseStatement()) {
-    e.Eval(stmt);
-  }
+  Evaluator e;
+  e.Eval(p.ParseStatement());
+  CHECK(e.Eval(p.ParseExpression()) == FromPrim(11));
 }
+
+//////////////////////////////////////////////////////////////////////
