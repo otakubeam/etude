@@ -183,26 +183,24 @@ TEST_CASE("Bad scope access", "[ast]") {
 TEST_CASE("Fn call", "[ast]") {
   std::stringstream source(
       "var a = 3;"
-      "fun f() { print(a); }"
-      "f();");
+      "fun f() { return a; }"
+      "f()");
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
   e.Eval(p.ParseStatement());
   e.Eval(p.ParseStatement());
-  e.Eval(p.ParseStatement());
+  CHECK(e.Eval(p.ParseExpression()) == FromPrim(3));
 }
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Intrinsic print", "[ast]") {
+TEST_CASE("Intrinsic print", "[ast][.]") {
   std::stringstream source("print(4, 3)");
   Parser p{lex::Lexer{source}};
 
-  // Side effect: prints "\n\n4 3 \n\n"
-
   Evaluator e;
-  e.Eval(p.ParseExpression());
+  e.Eval(p.ParseStatement());
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -236,26 +234,47 @@ TEST_CASE("Yield as break", "[ast]") {
 
 TEST_CASE("If statement (I)", "[ast]") {
   std::stringstream source(  //
-      "if false { print(1); } else { print(0); }");
-  //                               -----------
-  //                               not executed
+      "                                          "
+      "      fun retval() {                      "
+      "        if true {                         "
+      "          return 1;                       "
+      "        } else {                          "
+      "          return 0;                       "
+      "        }                                 "
+      "      }                                   "
+      "                                          "
+      "      var a = retval();                   "
+      "                                          "
+      "      a                                   ");
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
   e.Eval(p.ParseStatement());
+  e.Eval(p.ParseStatement());
+  CHECK(e.Eval(p.ParseExpression()) == FromPrim(1));
 }
 
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("If statement (II)", "[ast]") {
   std::stringstream source(  //
-      "fun negate(val) { if val { return false; } else { return true; } }"
-      "if negate(true) { print(1); } else { print(0); }");
+      "                                          "
+      "         fun negate(val) {                "
+      "           if val {                       "
+      "             return false;                "
+      "           } else {                       "
+      "             return true;                 "
+      "           }                              "
+      "         }                                "
+      "                                          "
+      "    var a = negate(true);                 "
+      "    a                                     ");
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
   e.Eval(p.ParseStatement());
   e.Eval(p.ParseStatement());
+  CHECK(e.Eval(p.ParseExpression()) == FromPrim(false));
 }
 
 //////////////////////////////////////////////////////////////////////
