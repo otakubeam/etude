@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ast/visitors/template_visitor.hpp>
-
 #include <ast/expressions.hpp>
 #include <ast/statements.hpp>
 

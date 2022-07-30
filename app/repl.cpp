@@ -6,11 +6,8 @@ int main() {
   Evaluator e;
   Parser p(lex::Lexer{std::cin});
 
-  while (true) {
+  while (!false) {
     auto stmt = p.ParseStatement();
-    std::cout << "[!] Parsed" << std::endl;
-
     e.Eval(stmt);
-    std::cout << "[~] Evaluated" << std::endl;
   }
 }

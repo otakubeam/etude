@@ -1,11 +1,10 @@
 #pragma once
 
-#include <ast/syntax_tree.hpp>
+#include <parse/parse_error.hpp>
+
 #include <ast/statements.hpp>
 
 #include <lex/lexer.hpp>
-
-#include <catch2/catch.hpp>
 
 class Parser {
  public:
