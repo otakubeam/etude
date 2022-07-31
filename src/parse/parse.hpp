@@ -202,28 +202,7 @@ class Parser {
   //        Use it however you wish                                //
   //        -----------------------                                //
   //                                                               //
-  //   The second big thing I need to do is to          (a)        //
-  //   be able to parse statements.                                //
-  //                    ----------                                 //
-  //                                                               //
-  //             - Specifically IF statement and VAR statement     //
-  //                            ============     =============     //
-  //                                                               //
-  //    I can parse them now! Great. The only thing left is to     //
-  //          ---------------        test the implementation.      //
-  //                                                               //
-  //    And of course I still need to fix visitors to recognize    //
-  //     these new statements.     ---------------                 //
-  //                                                               //
-  //                                                               //
-  //    It seems to be more useful to make 'if' an expression.     //
-  //                               ============ --------------     //
-  //    I wonder if there are any unintended consequences to that  //
-  //                              -----------------------          //
-  //                                                               //
-  //                                                               //
-  //                                                               //
-  //                                                               //
+  //             ~~ Old stuff omitted ~~                           //
   //                                                               //
   //                                                               //
   ///////////////////////////////////////////////////////////////////
