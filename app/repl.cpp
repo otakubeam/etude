@@ -1,6 +1,6 @@
 #include <ast/visitors/evaluator.hpp>
 
-#include <parse/parse.hpp>
+#include <parse/parser.hpp>
 
 int main() {
   Evaluator e;
