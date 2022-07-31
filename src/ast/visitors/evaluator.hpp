@@ -24,14 +24,6 @@ class Evaluator : public EnvVisitor<SBObject> {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitIf(IfStatement* node) override {
-    auto cond = GetPrim<bool>(Eval(node->condition_));
-    auto* branch = cond ? node->true_branch_ : node->false_branch_;
-    Eval(branch);
-  }
-
-  ////////////////////////////////////////////////////////////////////
-
   virtual void VisitVarDecl(VarDeclStatement* node) override {
     auto name = node->lvalue_->token_.GetName();
     auto val = Eval(node->value_);
@@ -80,31 +72,39 @@ class Evaluator : public EnvVisitor<SBObject> {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitBlockStatement(BlockStatement* node) override {
-    Environment::ScopeGuard guard{&env_};
-
-    // TODO: make an expression
-
-    // try {
-    //   for (auto stmt : node->stmts_) {
-    //     Eval(stmt);
-    //   }
-    // } catch (YieldedValue yield) {
-    //
-    // }
-
-    for (auto stmt : node->stmts_) {
-      Eval(stmt);
-    }
-  }
-
-  ////////////////////////////////////////////////////////////////////
-
   virtual void VisitExpression(Expression* node) override;
 
   virtual void VisitComparison(ComparisonExpression* node) override;
   virtual void VisitBinary(BinaryExpression* node) override;
   virtual void VisitUnary(UnaryExpression* node) override;
+
+  ////////////////////////////////////////////////////////////////////
+
+  virtual void VisitIf(IfExpression* node) override {
+    auto cond = GetPrim<bool>(Eval(node->condition_));
+    auto* branch = cond ? node->true_branch_ : node->false_branch_;
+    return_value = Eval(branch);
+  }
+
+  ////////////////////////////////////////////////////////////////////
+
+  virtual void VisitBlock(BlockExpression* node) override {
+    Environment::ScopeGuard guard{&env_};
+
+    try {
+      for (auto stmt : node->stmts_) {
+        Eval(stmt);
+      }
+    } catch (YieldedValue yield) {
+      return_value = yield.value;
+      return;
+    }
+
+    return_value = node->final_ ? Eval(node->final_) : SBObject{};
+  }
+
+  ////////////////////////////////////////////////////////////////////
+
   virtual void VisitFnCall(FnCallExpression* node) override;
   virtual void VisitLiteral(LiteralExpression* lit) override;
 

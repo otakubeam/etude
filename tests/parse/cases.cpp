@@ -116,7 +116,7 @@ TEST_CASE("Parse string literal (II)", "[parser]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Parse function decl", "[parser]") {
-  std::stringstream source("fun f     ()       123;");
+  std::stringstream source("fun f     ()       { 123; }");
   //                        -----  --------  -------------
   //                        name   no args   expr-statement
 
@@ -129,7 +129,7 @@ TEST_CASE("Parse function decl", "[parser]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Parse function declaration (II)", "[parser]") {
-  std::stringstream source("fun f     (a1, a2, a3)       123;");
+  std::stringstream source("fun f     (a1, a2, a3)   {  123; 1 }");
   //                        -----     -------------  -------------
   //                        name          args       expr-statement
 
@@ -145,10 +145,10 @@ TEST_CASE("Block statement", "[parser]") {
   std::stringstream source("{ 123; var a = 5; fun f() {}}");
 
   Parser p{lex::Lexer{source}};
-  auto stmt = p.ParseStatement();
+  auto expr = p.ParseExpression();
 
-  REQUIRE(typeid(*stmt) == typeid(BlockStatement));
-  BlockStatement* block = dynamic_cast<BlockStatement*>(stmt);
+  REQUIRE(typeid(*expr) == typeid(BlockExpression));
+  BlockExpression* block = dynamic_cast<BlockExpression*>(expr);
 
   // Explicitly evaluate dereferences
 
@@ -163,12 +163,12 @@ TEST_CASE("Block statement", "[parser]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Empty block statement", "[parser]") {
-  std::stringstream source("{}");
-  Parser p{lex::Lexer{source}};
-  auto block_statement = p.ParseBlockStatement();
-  REQUIRE(typeid(*block_statement) == typeid(BlockStatement));
-}
+// TEST_CASE("Empty block statement", "[parser]") {
+//   std::stringstream source("{}");
+//   Parser p{lex::Lexer{source}};
+//   auto block_statement = p.ParseBlockStatement();
+//   REQUIRE(typeid(*block_statement) == typeid(BlockStatement));
+// }
 
 //////////////////////////////////////////////////////////////////////
 
@@ -255,6 +255,24 @@ TEST_CASE("Parse yield", "[parser]") {
 
   auto stmt = p.ParseStatement();
   REQUIRE(typeid(*stmt) == typeid(YieldStatement));
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Block final expr", "[parser]") {
+  std::stringstream source("{ 123 }");
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+  REQUIRE(typeid(*expr) == typeid(BlockExpression));
+}
+
+TEST_CASE("If Expr", "[parser]") {
+  std::stringstream source("if true { 123 } else { false }");
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+  REQUIRE(typeid(*expr) == typeid(IfExpression));
 }
 
 //////////////////////////////////////////////////////////////////////

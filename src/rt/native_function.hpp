@@ -16,7 +16,7 @@ struct FunctionType : public IFunction {
   virtual SBObject Compute(EnvVisitor<SBObject>* e,
                            std::vector<SBObject> args) override {
     if (args.size() != fn->formals_.size()) {
-      throw "Bad function call:" //
+      throw "Bad function call: " //
          "args and params size do not correspond";
     }
 

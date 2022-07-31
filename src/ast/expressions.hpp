@@ -81,6 +81,42 @@ class FnCallExpression : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
+class IfExpression : public Expression {
+ public:
+  IfExpression(Expression* condition, Expression* true_branch,
+               Expression* false_branch = nullptr)
+      : condition_{condition},
+        true_branch_{true_branch},
+        false_branch_{false_branch} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitIf(this);
+  }
+
+  Expression* condition_;
+  Expression* true_branch_;
+  Expression* false_branch_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class BlockExpression : public Expression {
+ public:
+  BlockExpression(std::vector<Statement*> stmts, Expression* final = nullptr)
+      : stmts_{stmts}, final_{final} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitBlock(this);
+  }
+
+  std::vector<Statement*> stmts_;
+  Expression* final_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
 class LiteralExpression : public Expression {
  public:
   LiteralExpression(lex::Token token) : token_{token} {

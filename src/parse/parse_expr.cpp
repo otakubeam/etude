@@ -48,18 +48,69 @@ Expression* Parser::ParseUnary() {
   auto token = lexer_.Peek();
 
   if (Matches(lex::TokenType::MINUS) || Matches(lex::TokenType::NOT)) {
-    if (auto expr = ParseFunApplication()) {
+    if (auto expr = ParseIfExpression()) {
       return new UnaryExpression{token, expr};
     } else {
       throw ParseError{"Could not parse primary starting with minus"};
     }
   }
 
-  if (auto expr = ParseFunApplication()) {
+  if (auto expr = ParseIfExpression()) {
     return expr;
   } else {
     throw ParseError{"Could not match Unary Expression \n"};
   }
+}
+
+///////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseIfExpression() {
+  if (!Matches(lex::TokenType::IF)) {
+    return ParseBlockExpression();
+  }
+
+  // This should be fine even without parentheses, right?
+  auto condition = ParseExpression();
+  AssertParsed(condition,  //
+               "If statement without condition");
+
+  auto true_branch = ParseBlockExpression();
+  AssertParsed(true_branch,  //
+               "If statement without true branch");
+
+  Expression* false_branch = nullptr;
+
+  if (Matches(lex::TokenType::ELSE)) {
+    false_branch = ParseBlockExpression();
+    AssertParsed(false_branch,  //
+                 "Else clause without an associated statement");
+  }
+
+  return new IfExpression(condition, true_branch, false_branch);
+}
+
+///////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseBlockExpression() {
+  if (!Matches(lex::TokenType::LEFT_CBRACE)) {
+    return ParseFunApplication();
+  }
+
+  std::vector<Statement*> stmts;
+  Expression* final_expr = nullptr;
+
+  while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
+    try {
+      auto stmt = ParseStatement();
+      stmts.push_back(stmt);
+    } catch (ExprStatement* e) {
+      final_expr = e->expr_;
+      Consume(lex::TokenType::RIGHT_CBRACE);
+      break;
+    }
+  }
+
+  return new BlockExpression{std::move(stmts), final_expr};
 }
 
 ////////////////////////////////////////////////////////////////////

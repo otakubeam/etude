@@ -18,20 +18,12 @@ class Parser {
   ///////////////////////////////////////////////////////////////////
 
   Statement* ParseStatement() {
-    if (auto if_stmt = ParseIfStatement()) {
-      return if_stmt;
-    }
-
     if (auto var_decl = ParseVarDeclStatement()) {
       return var_decl;
     }
 
     if (auto fun_decl = ParseFunDeclStatement()) {
       return fun_decl;
-    }
-
-    if (auto block_statement = ParseBlockStatement()) {
-      return block_statement;
     }
 
     if (auto ret_stmt = ParseReturnStatement()) {
@@ -53,9 +45,8 @@ class Parser {
 
   ///////////////////////////////////////////////////////////////////
 
+  // TODO: why different?
   FunDeclStatement* ParseFunDeclStatement();
-  BlockStatement* ParseBlockStatement();
-  IfStatement* ParseIfStatement();
   ReturnStatement* ParseReturnStatement();
   YieldStatement* ParseYieldStatement();
   VarDeclStatement* ParseVarDeclStatement();
@@ -73,6 +64,17 @@ class Parser {
   //                                                               //
   //             ~~ Old stuff omitted ~~                           //
   //                                                               //
+  //   Right now I cannot even do                                  //
+  //                                                               //
+  //            if true -3 else 2 + 3                              //
+  //                                                               //
+  //   However I can do:   - if true 3 else { 2 + 3 }              //
+  //             ---                                               //
+  //   I am not sure what to think about it. One one hand not      //
+  //    being able to write like 1. feels strange, on the other    //
+  //         it's probably a good idea to delimit both clauses     //
+  //    with the {}                                                //
+  //                                                               //
   //                                                               //
   ///////////////////////////////////////////////////////////////////
   // clang-format on
@@ -82,6 +84,8 @@ class Parser {
   Expression* ParseComparison();
   Expression* ParseBinary();
   Expression* ParseUnary();
+  Expression* ParseIfExpression();
+  Expression* ParseBlockExpression();
   Expression* ParseFunApplication();
   Expression* ParsePrimary();
 

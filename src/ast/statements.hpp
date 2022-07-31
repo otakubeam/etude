@@ -16,26 +16,6 @@ class Statement : public TreeNode {
 
 //////////////////////////////////////////////////////////////////////
 
-class IfStatement : public Statement {
- public:
-  IfStatement(Expression* condition, BlockStatement* true_branch,
-              BlockStatement* false_branch = nullptr)
-      : condition_{condition},
-        true_branch_{true_branch},
-        false_branch_{false_branch} {
-  }
-
-  virtual void Accept(Visitor* visitor) override {
-    visitor->VisitIf(this);
-  }
-
-  Expression* condition_;
-  BlockStatement* true_branch_;
-  BlockStatement* false_branch_ = nullptr;
-};
-
-//////////////////////////////////////////////////////////////////////
-
 class ExprStatement : public Statement {
  public:
   ExprStatement(Expression* expr) : expr_{expr} {
@@ -72,7 +52,7 @@ class VarDeclStatement : public Statement {
 class FunDeclStatement : public Statement {
  public:
   FunDeclStatement(lex::Token name, std::vector<lex::Token> formals,
-                   Statement* block)
+                   BlockExpression* block)
       : name_{name}, formals_{std::move(formals)}, block_{block} {
   }
 
@@ -82,21 +62,7 @@ class FunDeclStatement : public Statement {
 
   lex::Token name_;
   std::vector<lex::Token> formals_;
-  Statement* block_;
-};
-
-//////////////////////////////////////////////////////////////////////
-
-class BlockStatement : public Statement {
- public:
-  BlockStatement(std::vector<Statement*> stmts) : stmts_{stmts} {
-  }
-
-  virtual void Accept(Visitor* visitor) override {
-    visitor->VisitBlockStatement(this);
-  }
-
-  std::vector<Statement*> stmts_;
+  BlockExpression* block_;
 };
 
 //////////////////////////////////////////////////////////////////////

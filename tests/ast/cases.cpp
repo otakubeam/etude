@@ -1,4 +1,3 @@
-#include <ast/visitors/printing_visitor.hpp>
 #include <ast/visitors/evaluator.hpp>
 
 #include <rt/base_object.hpp>
@@ -146,9 +145,9 @@ TEST_CASE("Eval string literal", "[ast]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Eval fn decl", "[ast]") {
-  std::stringstream source("fun f     ()       123;");
+  std::stringstream source("fun f     ()      { 123; }");
   //                        -----  --------  -------------
-  //                        name   no args   expr-statement
+  //                        name   no args   block-expr
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
@@ -158,9 +157,9 @@ TEST_CASE("Eval fn decl", "[ast]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Eval fn decl args", "[ast]") {
-  std::stringstream source("fun f  (a1, a2, a3)       123;");
+  std::stringstream source("fun f  (a1, a2, a3)    { 123; }");
   //                        -----  ------------  -------------
-  //                        name       args      expr-statement
+  //                        name       args      block-expr
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
@@ -174,8 +173,8 @@ TEST_CASE("Bad scope access", "[ast]") {
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
-  e.Eval(p.ParseStatement());
-  CHECK_THROWS(e.Eval(p.ParseExpression()) == FromPrim(6));
+  e.Eval(p.ParseExpression());
+  CHECK_THROWS(e.Eval(p.ParseExpression()));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -196,7 +195,7 @@ TEST_CASE("Fn call", "[ast]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Intrinsic print", "[ast][.]") {
-  std::stringstream source("print(4, 3)");
+  std::stringstream source("print(4, 3);");
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
@@ -221,20 +220,20 @@ TEST_CASE("Return value", "[ast]") {
 
 TEST_CASE("Yield as break", "[ast]") {
   std::stringstream source(  //
-      "{ yield 5;  print(5); }");
+      "{ yield 5;    3 - 2  }");
   //              -----------
   //              not executed
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
-  CHECK_THROWS_AS(e.Eval(p.ParseStatement()), Evaluator::YieldedValue);
+  CHECK(e.Eval(p.ParseExpression()) == FromPrim(5));
 }
 
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("If statement (I)", "[ast]") {
   std::stringstream source(  //
-      "                                          "
+      "{                                         "
       "      fun retval() {                      "
       "        if true {                         "
       "          return 1;                       "
@@ -245,12 +244,11 @@ TEST_CASE("If statement (I)", "[ast]") {
       "                                          "
       "      var a = retval();                   "
       "                                          "
-      "      a                                   ");
+      "      a                                   "
+      "}                                         ");
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
-  e.Eval(p.ParseStatement());
-  e.Eval(p.ParseStatement());
   CHECK(e.Eval(p.ParseExpression()) == FromPrim(1));
 }
 
@@ -258,22 +256,22 @@ TEST_CASE("If statement (I)", "[ast]") {
 
 TEST_CASE("If statement (II)", "[ast]") {
   std::stringstream source(  //
-      "                                          "
+      "{                                         "
       "         fun negate(val) {                "
       "           if val {                       "
-      "             return false;                "
+      "             false                        "
       "           } else {                       "
-      "             return true;                 "
+      "             true                         "
       "           }                              "
       "         }                                "
       "                                          "
       "    var a = negate(true);                 "
-      "    a                                     ");
+      "                                          "
+      "    a                                     "
+      "}                                         ");
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
-  e.Eval(p.ParseStatement());
-  e.Eval(p.ParseStatement());
   CHECK(e.Eval(p.ParseExpression()) == FromPrim(false));
 }
 
@@ -281,20 +279,20 @@ TEST_CASE("If statement (II)", "[ast]") {
 
 TEST_CASE("Recursive", "[ast]") {
   std::stringstream source(  //
-      "                                          "
+      "{                                         "
       "      fun sum(n) {                        "
       "         if n == 0 {                      "
-      "             return 1;                    "
+      "             1                            "
       "         } else {                         "
-      "             return (n + sum(n-1));       "
+      "             n + sum(n-1)                 "
       "         }                                "
       "      }                                   "
       "                                          "
-      "             sum(4)                       ");
+      "      sum(4)                              "
+      "}                                         ");
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
-  e.Eval(p.ParseStatement());
   CHECK(e.Eval(p.ParseExpression()) == FromPrim(11));
 }
 

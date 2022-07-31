@@ -9,10 +9,6 @@
 
 class PrintingVisitor : public ReturnVisitor<std::string> {
  public:
-  virtual void VisitIf(IfStatement*) override {
-    std::abort();
-  }
-
   virtual void VisitStatement(Statement*) override {
     std::abort();
   }
@@ -34,10 +30,6 @@ class PrintingVisitor : public ReturnVisitor<std::string> {
   }
 
   virtual void VisitYield(YieldStatement*) override {
-    std::abort();
-  }
-
-  virtual void VisitBlockStatement(BlockStatement*) override {
     std::abort();
   }
 
@@ -72,6 +64,14 @@ class PrintingVisitor : public ReturnVisitor<std::string> {
         "\t operand: {}) \n",                        //
         lex::FormatTokenType(node->operator_.type),  //
         Eval(node->operand_));
+  }
+
+  virtual void VisitIf(IfExpression*) override {
+    std::abort();
+  }
+
+  virtual void VisitBlock(BlockExpression*) override {
+    std::abort();
   }
 
   virtual void VisitFnCall(FnCallExpression*) override {

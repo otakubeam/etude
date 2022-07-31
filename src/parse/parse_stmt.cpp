@@ -26,52 +26,11 @@ FunDeclStatement* Parser::ParseFunDeclStatement() {
 
   Consume(lex::TokenType::RIGHT_BRACE);
 
-  auto block = ParseBlockStatement();
-  return new FunDeclStatement{fun_name, std::move(formals), block};
-}
-
-///////////////////////////////////////////////////////////////////
-
-BlockStatement* Parser::ParseBlockStatement() {
-  if (!Matches(lex::TokenType::LEFT_CBRACE)) {
-    return nullptr;
+  if (auto block = dynamic_cast<BlockExpression*>(ParseBlockExpression())) {
+    return new FunDeclStatement{fun_name, std::move(formals), block};
+  } else {
+    throw "Could not parse block expression";
   }
-
-  std::vector<Statement*> stmts;
-
-  while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
-    auto stmt = ParseStatement();
-    stmts.push_back(stmt);
-  }
-
-  return new BlockStatement{std::move(stmts)};
-}
-
-///////////////////////////////////////////////////////////////////
-
-IfStatement* Parser::ParseIfStatement() {
-  if (!Matches(lex::TokenType::IF)) {
-    return nullptr;
-  }
-
-  // This should be fine even without parentheses, right?
-  auto condition = ParseExpression();
-  AssertParsed(condition,  //
-               "If statement without condition");
-
-  auto true_branch = ParseBlockStatement();
-  AssertParsed(true_branch,  //
-               "If statement without true branch");
-
-  BlockStatement* false_branch = nullptr;
-
-  if (Matches(lex::TokenType::ELSE)) {
-    false_branch = ParseBlockStatement();
-    AssertParsed(false_branch,  //
-                 "Else clause without an associated statement");
-  }
-
-  return new IfStatement(condition, true_branch, false_branch);
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -138,7 +97,20 @@ VarDeclStatement* Parser::ParseVarDeclStatement() {
 
 ExprStatement* Parser::ParseExprStatement() {
   auto expr = ParseExpression();
-  Consume(lex::TokenType::SEMICOLUMN);
+
+  // Lol
+  try {
+    Consume(lex::TokenType::SEMICOLUMN);
+  } catch (...) {
+    // So that the last expression in block can be caught
+    //   {
+    //     stmt;
+    //     stmt;   <<<--- parse all of it as statements
+    //     expr           but catch the last one
+    //   }
+    //
+    throw new ExprStatement{expr};
+  }
 
   return new ExprStatement{expr};
 }

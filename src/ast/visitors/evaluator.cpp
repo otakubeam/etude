@@ -94,7 +94,7 @@ void Evaluator::VisitFnCall(FnCallExpression* node) {
   auto ret = SBObject{};
 
   try {
-    fn_object->Compute(this, args);
+    ret = fn_object->Compute(this, args);
   } catch (ReturnedValue val) {
     ret = val.value;
   }
