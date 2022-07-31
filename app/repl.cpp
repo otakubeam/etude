@@ -2,6 +2,9 @@
 
 #include <parse/parser.hpp>
 
+#include <chrono>
+#include <thread>
+
 int main() {
   Evaluator e;
   auto p = new Parser(lex::Lexer{std::cin});
@@ -12,7 +15,10 @@ int main() {
     } catch (ParseError e) {
       fmt::print("{}\n", e.msg);
 
-      delete p; // Reset parser
+      fmt::print("[!] Resetting parser \n", e.msg);
+      std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+      delete p;  // Reset parser
       p = new Parser(lex::Lexer{std::cin});
     } catch (...) {
       fmt::print("Unrecognized error\n");
