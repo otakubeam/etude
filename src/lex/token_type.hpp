@@ -37,10 +37,15 @@ enum class TokenType {
 
   VAR,
 
+  TY_INT,
+  TY_BOOL,
+  TY_STRING,
+
   IF,
   ELSE,
   FOR,
 
+  COLUMN,
   SEMICOLUMN,
   RETURN,
   YIELD,
@@ -73,9 +78,13 @@ enum class TokenType {
   code(FUN)                 \
   code(COMMA)               \
   code(VAR)                 \
+  code(TY_INT)              \
+  code(TY_BOOL)             \
+  code(TY_STRING)           \
   code(IF)                  \
   code(ELSE)                \
   code(FOR)                 \
+  code(COLUMN)              \
   code(SEMICOLUMN)          \
   code(RETURN)              \
   code(YIELD)               \

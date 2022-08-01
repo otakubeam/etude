@@ -56,6 +56,8 @@ std::optional<TokenType> Lexer::MatchOperator() {
       return TokenType::RIGHT_CBRACE;
     case ';':
       return TokenType::SEMICOLUMN;
+    case ':':
+      return TokenType::COLUMN;
     case ',':
       return TokenType::COMMA;
     case EOF:
