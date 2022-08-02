@@ -27,14 +27,14 @@ class ReturnVisitor : public Visitor {
 template <typename T>
 class EnvVisitor : public ReturnVisitor<T> {
  public:
-  EnvVisitor() : global_environment(Environment::MakeGlobal()) {
+  EnvVisitor() : global_environment(Environment<T>::MakeGlobal()) {
     env_ = &global_environment;
   }
 
   ~EnvVisitor() = default;
 
-  Environment global_environment;
-  Environment* env_{nullptr};
+  Environment<T> global_environment;
+  Environment<T>* env_{nullptr};
 };
 
 //////////////////////////////////////////////////////////////////////

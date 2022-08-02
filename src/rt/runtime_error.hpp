@@ -2,6 +2,6 @@
 
 #include <string>
 
-struct TypeError {
+struct RuntimeError {
   std::string message;
 };

@@ -2,7 +2,7 @@
 
 #include <rt/user_defined_type.hpp>
 #include <rt/primitive_type.hpp>
-#include <rt/type_error.hpp>
+#include <rt/runtime_error.hpp>
 
 //////////////////////////////////////////////////////////////////////
 

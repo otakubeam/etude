@@ -36,6 +36,10 @@ class FnType : public Type {
     return true;
   }
 
+  Type* GetReturnType() {
+    return return_type_;
+  }
+
  private:
   std::vector<Type*> arg_types_;
   Type* return_type_{&builtin_unit};

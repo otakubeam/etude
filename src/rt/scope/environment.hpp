@@ -1,11 +1,10 @@
 #pragma once
 
-#include <rt/base_object.hpp>
-
 #include <unordered_map>
 #include <optional>
 #include <string>
 
+template <typename T>
 class Environment {
  public:
   using Name = std::string;
@@ -37,7 +36,7 @@ class Environment {
 
   ////////////////////////////////////////////////////////////////////
 
-  std::optional<SBObject> Get(Name name) {
+  std::optional<T> Get(Name name) {
     if (auto mb_iter = FindInternal(name)) {
       return {mb_iter.value()->second};
     } else {
@@ -46,7 +45,7 @@ class Environment {
   }
 
   // For example: name = 3;
-  bool TryAssign(Name name, SBObject val) {
+  bool TryAssign(Name name, T val) {
     if (auto mb_iter = FindInternal(name)) {
       mb_iter.value()->second = val;
       return true;
@@ -56,7 +55,7 @@ class Environment {
   }
 
   // For example: var new_name = 1;
-  void Declare(Name name, SBObject val) {
+  void Declare(Name name, T val) {
     state_.insert_or_assign(name, val);
   }
 
@@ -67,7 +66,7 @@ class Environment {
   }
 
   auto FindInternal(Name name)
-      -> std::optional<std::unordered_map<Name, SBObject>::iterator> {
+      -> std::optional<typename std::unordered_map<Name, T>::iterator> {
     auto iter = state_.find(name);
 
     if (iter != state_.end()) {
@@ -81,5 +80,5 @@ class Environment {
  private:
   Environment* parent_scope_;
 
-  std::unordered_map<Name, SBObject> state_{};
+  std::unordered_map<Name, T> state_{};
 };

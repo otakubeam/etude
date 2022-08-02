@@ -8,7 +8,7 @@ SBObject BinaryOp(char op_type, SBObject lhs, SBObject rhs) {
     auto prim_two = std::get<PrimitiveType>(rhs);
     return {BinaryOp(op_type, prim_one, prim_two)};
   } catch (std::bad_variant_access&) {
-    throw TypeError{};
+    throw RuntimeError{};
   }
 }
 
@@ -28,7 +28,7 @@ SBObject UnaryOp(char op_type, SBObject operand) {
     return {op_type == '!' ? Bang(prim_operand)  //
                            : Negate(prim_operand)};
   } catch (std::bad_variant_access&) {
-    throw TypeError{};
+    throw RuntimeError{};
   }
 }
 
@@ -47,7 +47,7 @@ std::string Format(const SBObject& object) {
     PrimitiveType prim_operand = std::get<PrimitiveType>(object);
     return Format(prim_operand);
   } catch (std::bad_variant_access&) {
-    throw TypeError{};
+    throw RuntimeError{};
   }
 }
 
