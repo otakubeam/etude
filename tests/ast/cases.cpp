@@ -145,7 +145,7 @@ TEST_CASE("Eval string literal", "[ast]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Eval fn decl", "[ast]") {
-  std::stringstream source("fun f     ()      { 123; }");
+  std::stringstream source("fun f  () Unit     { 123; }");
   //                        -----  --------  -------------
   //                        name   no args   block-expr
   Parser p{lex::Lexer{source}};
@@ -157,9 +157,11 @@ TEST_CASE("Eval fn decl", "[ast]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Eval fn decl args", "[ast]") {
-  std::stringstream source("fun f  (a1, a2, a3)    { 123; }");
-  //                        -----  ------------  -------------
-  //                        name       args      block-expr
+  std::stringstream source(
+      "fun f"
+      "(a1: Int, a2: Bool, a3: String) Unit"
+      "{ 123; }");
+
   Parser p{lex::Lexer{source}};
 
   Evaluator e;
@@ -182,7 +184,7 @@ TEST_CASE("Bad scope access", "[ast]") {
 TEST_CASE("Fn call", "[ast]") {
   std::stringstream source(
       "var a = 3;"
-      "fun f() { return a; }"
+      "fun f() Int { return a; }"
       "f()");
   Parser p{lex::Lexer{source}};
 
@@ -205,9 +207,9 @@ TEST_CASE("Intrinsic print", "[ast][.]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Return value", "[ast]") {
-  std::stringstream source(      //
-      "fun f() { return 123; }"  //
-      "f()"                      //
+  std::stringstream source(          //
+      "fun f() Int { return 123; }"  //
+      "f()"                          //
   );
   Parser p{lex::Lexer{source}};
 
@@ -234,7 +236,7 @@ TEST_CASE("Yield as break", "[ast]") {
 TEST_CASE("If statement (I)", "[ast]") {
   std::stringstream source(  //
       "{                                         "
-      "      fun retval() {                      "
+      "      fun retval() Int {                  "
       "        if true {                         "
       "          return 1;                       "
       "        } else {                          "
@@ -257,13 +259,13 @@ TEST_CASE("If statement (I)", "[ast]") {
 TEST_CASE("If statement (II)", "[ast]") {
   std::stringstream source(  //
       "{                                         "
-      "         fun negate(val) {                "
-      "           if val {                       "
-      "             false                        "
-      "           } else {                       "
-      "             true                         "
-      "           }                              "
-      "         }                                "
+      "      fun negate(val: Bool) Bool {        "
+      "        if val {                          "
+      "          false                           "
+      "        } else {                          "
+      "          true                            "
+      "        }                                 "
+      "      }                                   "
       "                                          "
       "    var a = negate(true);                 "
       "                                          "
@@ -280,7 +282,7 @@ TEST_CASE("If statement (II)", "[ast]") {
 TEST_CASE("Recursive", "[ast]") {
   std::stringstream source(  //
       "{                                         "
-      "      fun sum(n) {                        "
+      "      fun sum(n: Int) Int {               "
       "         if n == 0 {                      "
       "             1                            "
       "         } else {                         "
