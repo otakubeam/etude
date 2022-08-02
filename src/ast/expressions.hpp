@@ -14,7 +14,6 @@ class Expression : public TreeNode {
  public:
   virtual void Accept(Visitor* /* visitor */){};
 
- protected:
   types::Type* type_ = nullptr;
 };
 
@@ -132,6 +131,21 @@ class LiteralExpression : public Expression {
   }
 
   lex::Token token_{};
+};
+
+//////////////////////////////////////////////////////////////////////
+
+// Identifier, Named entity
+class LvalueExpression : public Expression {
+ public:
+  LvalueExpression(lex::Token name) : name_{name} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitLvalue(this);
+  }
+
+  lex::Token name_{};
 };
 
 //////////////////////////////////////////////////////////////////////

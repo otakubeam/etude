@@ -83,6 +83,11 @@ class PrintingVisitor : public ReturnVisitor<std::string> {
     return_value = fmt::format("Literal {}", lit_string);
   }
 
+  virtual void VisitLvalue(LvalueExpression* node) override {
+    auto lit_string = Format(literal_eval_.Eval(node));
+    return_value = fmt::format("Literal {}", lit_string);
+  }
+
  private:
   Evaluator literal_eval_;
 };

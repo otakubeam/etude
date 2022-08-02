@@ -11,23 +11,27 @@ FunDeclStatement* Parser::ParseFunDeclStatement() {
   Consume(lex::TokenType::IDENTIFIER);
   Consume(lex::TokenType::LEFT_BRACE);
 
-  //// TODO: separate into fn GetFormals()
-  std::vector<lex::Token> formals;
   auto formal_param = lexer_.Peek();
 
+  std::vector<FunDeclStatement::FormalParam> typed_formals;
+
   while (Matches(lex::TokenType::IDENTIFIER)) {
-    formals.push_back(formal_param);
+    Consume(lex::TokenType::COLUMN);
+    auto type = ParseType();
+    typed_formals.push_back(          //
+        FunDeclStatement::FormalParam{//
+                                      .ident = formal_param,
+                                      .type = type});
     if (!Matches(lex::TokenType::COMMA)) {
       break;
     }
     formal_param = lexer_.Peek();
   }
-  //// separate into fn GetFormals()
 
   Consume(lex::TokenType::RIGHT_BRACE);
 
   if (auto block = dynamic_cast<BlockExpression*>(ParseBlockExpression())) {
-    return new FunDeclStatement{fun_name, std::move(formals), block};
+    return new FunDeclStatement{fun_name, std::move(typed_formals), block};
   } else {
     throw "Could not parse block expression";
   }
@@ -50,8 +54,6 @@ ReturnStatement* Parser::ParseReturnStatement() {
 }
 
 ///////////////////////////////////////////////////////////////////
-
-// Doesn't this sound a bit like `break`?
 
 YieldStatement* Parser::ParseYieldStatement() {
   if (!Matches(lex::TokenType::YIELD)) {
@@ -79,7 +81,7 @@ VarDeclStatement* Parser::ParseVarDeclStatement() {
   auto token = lexer_.Peek();
 
   Consume(lex::TokenType::IDENTIFIER);
-  auto lvalue = new LiteralExpression{std::move(token)};
+  auto lvalue = new LvalueExpression{std::move(token)};
 
   // 2. Get an expression to assign to
 
@@ -98,7 +100,6 @@ VarDeclStatement* Parser::ParseVarDeclStatement() {
 ExprStatement* Parser::ParseExprStatement() {
   auto expr = ParseExpression();
 
-  // Lol
   try {
     Consume(lex::TokenType::SEMICOLUMN);
   } catch (...) {

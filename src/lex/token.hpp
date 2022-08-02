@@ -10,6 +10,7 @@ namespace lex {
 //////////////////////////////////////////////////////////////////////
 
 struct Token {
+  // TODO: remove bool from SemInfo
   using SemInfo = std::variant<  //
       std::monostate,            //
       std::string,               //

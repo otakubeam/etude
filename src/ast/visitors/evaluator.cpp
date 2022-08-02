@@ -106,15 +106,8 @@ void Evaluator::VisitFnCall(FnCallExpression* node) {
 
 void Evaluator::VisitLiteral(LiteralExpression* lit) {
   switch (lit->token_.type) {
-    case lex::TokenType::IDENTIFIER: {
-      auto name = std::get<std::string>(lit->token_.sem_info);
-
-      // TODO: think better about error handling
-      return_value = env_->Get(name).value();
-      //                            ----------
-
-      break;
-    }
+    case lex::TokenType::IDENTIFIER:
+      std::abort();
 
     case lex::TokenType::TRUE:
       return_value = {PrimitiveType{true}};
@@ -128,6 +121,18 @@ void Evaluator::VisitLiteral(LiteralExpression* lit) {
       auto val = lit->token_.sem_info;
       return_value = {FromSemInfo(val)};
   }
+}
+
+//////////////////////////////////////////////////////////////////////
+
+// In this case we promote it to rvalue
+// In assignment we would want to extract the name
+void Evaluator::VisitLvalue(LvalueExpression* lit) {
+  // Asserts that we are an IDENTIFIER
+  auto name = lit->name_.GetName();
+
+  // Name should be bound during type-cheking
+  return_value = env_->Get(name).value();
 }
 
 //////////////////////////////////////////////////////////////////////

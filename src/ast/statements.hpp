@@ -32,7 +32,7 @@ class ExprStatement : public Statement {
 
 class VarDeclStatement : public Statement {
  public:
-  VarDeclStatement(LiteralExpression* lvalue, Expression* value)
+  VarDeclStatement(LvalueExpression* lvalue, Expression* value)
       : lvalue_{lvalue}, value_{value} {
   }
 
@@ -40,7 +40,7 @@ class VarDeclStatement : public Statement {
     visitor->VisitVarDecl(this);
   }
 
-  LiteralExpression* lvalue_;
+  LvalueExpression* lvalue_;
   Expression* value_;
 };
 
@@ -50,7 +50,12 @@ class VarDeclStatement : public Statement {
 
 class FunDeclStatement : public Statement {
  public:
-  FunDeclStatement(lex::Token name, std::vector<lex::Token> formals,
+  struct FormalParam {
+    lex::Token ident;
+    types::Type* type;
+  };
+
+  FunDeclStatement(lex::Token name, std::vector<FormalParam> formals,
                    BlockExpression* block)
       : name_{name}, formals_{std::move(formals)}, block_{block} {
   }
@@ -61,7 +66,8 @@ class FunDeclStatement : public Statement {
 
   lex::Token name_;
   types::FnType* type_;
-  std::vector<lex::Token> formals_;
+
+  std::vector<FormalParam> formals_;
   BlockExpression* block_;
 };
 

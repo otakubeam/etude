@@ -23,6 +23,7 @@ class BlockExpression;
 
 class FnCallExpression;
 class LiteralExpression;
+class LvalueExpression;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -74,6 +75,8 @@ class Visitor {
   virtual void VisitFnCall(FnCallExpression* node) = 0;
 
   virtual void VisitLiteral(LiteralExpression* node) = 0;
+
+  virtual void VisitLvalue(LvalueExpression* node) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////

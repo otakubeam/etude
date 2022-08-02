@@ -168,12 +168,15 @@ Expression* Parser::ParsePrimary() {
   auto token = lexer_.Peek();
 
   switch (token.type) {
-    case lex::TokenType::IDENTIFIER:
     case lex::TokenType::NUMBER:
     case lex::TokenType::STRING:
     case lex::TokenType::FALSE:
     case lex::TokenType::TRUE:
       result = new LiteralExpression{std::move(token)};
+      break;
+
+    case lex::TokenType::IDENTIFIER:
+      result = new LvalueExpression{std::move(token)};
       break;
 
     default:

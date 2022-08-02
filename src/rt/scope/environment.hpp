@@ -45,7 +45,7 @@ class Environment {
     }
   }
 
-  // name = 3;
+  // For example: name = 3;
   bool TryAssign(Name name, SBObject val) {
     if (auto mb_iter = FindInternal(name)) {
       mb_iter.value()->second = val;
@@ -55,7 +55,7 @@ class Environment {
     return false;
   }
 
-  // var new_name = 1;
+  // For example: var new_name = 1;
   void Declare(Name name, SBObject val) {
     state_.insert_or_assign(name, val);
   }

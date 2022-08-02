@@ -25,7 +25,7 @@ class Evaluator : public EnvVisitor<SBObject> {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitVarDecl(VarDeclStatement* node) override {
-    auto name = node->lvalue_->token_.GetName();
+    auto name = node->lvalue_->name_.GetName();
     auto val = Eval(node->value_);
     env_->Declare(name, val);
   }
@@ -107,30 +107,7 @@ class Evaluator : public EnvVisitor<SBObject> {
 
   virtual void VisitFnCall(FnCallExpression* node) override;
   virtual void VisitLiteral(LiteralExpression* lit) override;
+  virtual void VisitLvalue(LvalueExpression* ident) override;
 
- private:
-  // TODO: Translation from SemInfo to AST nodes
-  // should have happened during parsing
-  PrimitiveType FromSemInfo(lex::Token::SemInfo sem_info) {
-    switch (sem_info.index()) {
-        // std::monostate
-      case 0:
-        throw "Error: evaluating monostate literal";
-
-        // std::string
-      case 1:
-        return PrimitiveType{std::get<std::string>(sem_info)};
-
-        // bool
-      case 2:
-        FMT_ASSERT(false, "\n Error: Unreachable \n");
-
-        // int
-      case 3:
-        return PrimitiveType{std::get<int>(sem_info)};
-
-      default:
-        FMT_ASSERT(false, "\n Error: Non-exhaustive match \n");
-    }
-  }
+  ////////////////////////////////////////////////////////////////////
 };

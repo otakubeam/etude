@@ -18,8 +18,8 @@ TEST_CASE("Just works", "[types]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Resolution", "[types]") {
-  types::Type* fst = new types::FnType{};
-  types::Type* fst_beta = new types::FnType{};
+  types::Type* fst = new types::FnType{{}, {}};
+  types::Type* fst_beta = new types::FnType{{}, {}};
   types::Type* snd = new types::BuiltinType{};
 
   CHECK_FALSE(fst->IsEqual(snd));

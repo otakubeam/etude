@@ -4,6 +4,9 @@
 
 #include <ast/statements.hpp>
 
+#include <types/builtins.hpp>
+#include <types/fn_type.hpp>
+
 #include <lex/lexer.hpp>
 
 class Parser {
@@ -64,16 +67,7 @@ class Parser {
   //                                                               //
   //             ~~ Old stuff omitted ~~                           //
   //                                                               //
-  //   Right now I cannot even do                                  //
-  //                                                               //
-  //            if true -3 else 2 + 3                              //
-  //                                                               //
-  //   However I can do:   - if true 3 else { 2 + 3 }              //
-  //             ---                                               //
-  //   I am not sure what to think about it. One one hand not      //
-  //    being able to write like 1. feels strange, on the other    //
-  //         it's probably a good idea to delimit both clauses     //
-  //    with the {}                                                //
+  //             ~~ Old stuff omitted ~~   (II)                    //
   //                                                               //
   //                                                               //
   ///////////////////////////////////////////////////////////////////
@@ -88,6 +82,48 @@ class Parser {
   Expression* ParseBlockExpression();
   Expression* ParseFunApplication();
   Expression* ParsePrimary();
+
+  ////////////////////////////////////////////////////////////////////
+
+  types::Type* ParseType() {
+    auto token = lexer_.Peek();
+
+    switch (token.type) {
+      case lex::TokenType::TY_INT:
+        return &types::builtin_int;
+
+      case lex::TokenType::TY_BOOL:
+        return &types::builtin_bool;
+
+      case lex::TokenType::TY_STRING:
+        return &types::builtin_string;
+
+      // Syntax: (Int, Int) -> Unit
+      //         () -> Unit
+      //         ((Int) -> Bool, String) -> Unit
+      //          -------------  ------
+      case lex::TokenType::LEFT_BRACE: {
+        std::vector<types::Type*> args;
+
+        while (auto type = ParseType()) {
+          args.push_back(type);
+
+          if (!Matches(lex::TokenType::COMMA)) {
+            break;
+          }
+        }
+
+        Consume(lex::TokenType::RIGHT_BRACE);
+
+        auto return_type = ParseType();
+
+        return new types::FnType{std::move(args), return_type};
+      }
+
+      default:
+        return nullptr;
+    }
+  }
 
   ////////////////////////////////////////////////////////////////////
 

@@ -15,6 +15,7 @@ struct FunctionType : public IFunction {
 
   virtual SBObject Compute(EnvVisitor<SBObject>* e,
                            std::vector<SBObject> args) override {
+    // TODO: remove this as soon as I check this in typechecker
     if (args.size() != fn->formals_.size()) {
       throw "Bad function call: " //
          "args and params size do not correspond";
@@ -23,7 +24,7 @@ struct FunctionType : public IFunction {
     Environment::ScopeGuard(&e->env_);
 
     for (size_t i = 0; i < args.size(); i++) {
-      auto name = fn->formals_[i].GetName();
+      auto name = fn->formals_[i].ident.GetName();
       e->env_->Declare(name, args[i]);
     }
 

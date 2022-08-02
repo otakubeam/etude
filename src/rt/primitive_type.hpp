@@ -1,5 +1,7 @@
 #pragma once
 
+#include <lex/token.hpp>
+
 #include <fmt/format.h>
 
 #include <cstdint>
@@ -26,5 +28,6 @@ PrimitiveType Bang(PrimitiveType one);
 PrimitiveType Negate(PrimitiveType one);
 
 std::string Format(PrimitiveType value);
+PrimitiveType FromSemInfo(lex::Token::SemInfo sem_info);
 
 //////////////////////////////////////////////////////////////////////
