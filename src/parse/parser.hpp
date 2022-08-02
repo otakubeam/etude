@@ -86,25 +86,34 @@ class Parser {
   ////////////////////////////////////////////////////////////////////
 
   types::Type* ParseType() {
+    types::Type* result = nullptr;
     auto token = lexer_.Peek();
 
     switch (token.type) {
       case lex::TokenType::TY_INT:
-        return &types::builtin_int;
+        result = &types::builtin_int;
+        break;
 
       case lex::TokenType::TY_BOOL:
-        return &types::builtin_bool;
+        result = &types::builtin_bool;
+        break;
 
       case lex::TokenType::TY_STRING:
-        return &types::builtin_string;
+        result = &types::builtin_string;
+        break;
+
+      case lex::TokenType::TY_UNIT:
+        result = &types::builtin_unit;
+        break;
 
       // Syntax: (Int, Int) -> Unit
       //         () -> Unit
       //         ((Int) -> Bool, String) -> Unit
       //          -------------  ------
       case lex::TokenType::LEFT_BRACE: {
-        std::vector<types::Type*> args;
+        Consume(lex::TokenType::LEFT_BRACE);
 
+        std::vector<types::Type*> args;
         while (auto type = ParseType()) {
           args.push_back(type);
 
@@ -123,6 +132,10 @@ class Parser {
       default:
         return nullptr;
     }
+
+    // Advance for simple types
+    lexer_.Advance();
+    return result;
   }
 
   ////////////////////////////////////////////////////////////////////

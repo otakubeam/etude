@@ -116,7 +116,7 @@ TEST_CASE("Parse string literal (II)", "[parser]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Parse function decl", "[parser]") {
-  std::stringstream source("fun f     ()       { 123; }");
+  std::stringstream source("fun f  () Unit   { 123; }");
   //                        -----  --------  -------------
   //                        name   no args   expr-statement
 
@@ -128,10 +128,22 @@ TEST_CASE("Parse function decl", "[parser]") {
 
 //////////////////////////////////////////////////////////////////////
 
+TEST_CASE("Parse complex type", "[parser]") {
+  std::stringstream source("((Unit, Int) String, () Bool) Int");
+  //                         ------------------  -------- ---
+
+  Parser p{lex::Lexer{source}};
+
+  auto type = p.ParseType();
+  REQUIRE(typeid(*type) == typeid(types::FnType));
+}
+
+//////////////////////////////////////////////////////////////////////
+
 TEST_CASE("Parse function declaration (II)", "[parser]") {
-  std::stringstream source("fun f     (a1, a2, a3)   {  123; 1 }");
-  //                        -----     -------------  -------------
-  //                        name          args       expr-statement
+  std::stringstream source(
+      "fun f(a1 : Int, a2 : Bool) Unit "
+      "{ 1; }");
 
   Parser p{lex::Lexer{source}};
 
@@ -142,7 +154,7 @@ TEST_CASE("Parse function declaration (II)", "[parser]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Block statement", "[parser]") {
-  std::stringstream source("{ 123; var a = 5; fun f() {}}");
+  std::stringstream source("{ 123; var a = 5; fun f() Unit {}}");
 
   Parser p{lex::Lexer{source}};
   auto expr = p.ParseExpression();
@@ -159,6 +171,19 @@ TEST_CASE("Block statement", "[parser]") {
   CHECK(typeid(r1) == typeid(ExprStatement));
   CHECK(typeid(r2) == typeid(VarDeclStatement));
   CHECK(typeid(r3) == typeid(FunDeclStatement));
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Variable usage", "[parser]") {
+  std::stringstream source("var a = 5; a");
+
+  Parser p{lex::Lexer{source}};
+  auto stmt = p.ParseStatement();
+  REQUIRE(typeid(*stmt) == typeid(VarDeclStatement));
+
+  auto expr = p.ParseExpression();
+  REQUIRE(typeid(*expr) == typeid(LvalueExpression));
 }
 
 //////////////////////////////////////////////////////////////////////

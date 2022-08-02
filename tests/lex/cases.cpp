@@ -161,14 +161,14 @@ TEST_CASE("Assign vs Equals", "[lex]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Lex types", "[lex]") {
-  std::stringstream source("123: int bool string");
+  std::stringstream source(": Int Bool String Unit");
   lex::Lexer l{source};
 
-  CHECK(l.Peek().type == lex::TokenType::NUMBER);
-  CHECK(l.Advance().type == lex::TokenType::COLUMN);
+  CHECK(l.Peek().type == lex::TokenType::COLUMN);
   CHECK(l.Advance().type == lex::TokenType::TY_INT);
   CHECK(l.Advance().type == lex::TokenType::TY_BOOL);
   CHECK(l.Advance().type == lex::TokenType::TY_STRING);
+  CHECK(l.Advance().type == lex::TokenType::TY_UNIT);
 }
 
 //////////////////////////////////////////////////////////////////////

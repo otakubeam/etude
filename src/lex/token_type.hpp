@@ -39,6 +39,7 @@ enum class TokenType {
 
   TY_INT,
   TY_BOOL,
+  TY_UNIT,
   TY_STRING,
 
   IF,
@@ -80,6 +81,7 @@ enum class TokenType {
   code(VAR)                 \
   code(TY_INT)              \
   code(TY_BOOL)             \
+  code(TY_UNIT)             \
   code(TY_STRING)           \
   code(IF)                  \
   code(ELSE)                \

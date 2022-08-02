@@ -1,4 +1,5 @@
 #include <rt/scope/environment.hpp>
+#include <rt/base_object.hpp>
 
 // Finally,
 #include <catch2/catch.hpp>
@@ -6,14 +7,14 @@
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Scoping", "[rt]") {
-  Environment global = Environment::MakeGlobal();
+  Environment<SBObject> global = Environment<SBObject>::MakeGlobal();
 
-  Environment* interpreter_scope = &global;
+  Environment<SBObject>* interpreter_scope = &global;
   interpreter_scope->Declare("a", FromPrim(3));
   CHECK(interpreter_scope->Get("a") == FromPrim(3));
 
   {
-    Environment::ScopeGuard guard1{&interpreter_scope};
+    Environment<SBObject>::ScopeGuard guard1{&interpreter_scope};
 
     // Shadow global a
 
@@ -21,7 +22,7 @@ TEST_CASE("Scoping", "[rt]") {
     CHECK(interpreter_scope->Get("a") == FromPrim(5));
 
     {
-      Environment::ScopeGuard guard2{&interpreter_scope};
+      Environment<SBObject>::ScopeGuard guard2{&interpreter_scope};
 
       // Assign to a from the first outer scope
 
@@ -37,13 +38,13 @@ TEST_CASE("Scoping", "[rt]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Shadowing", "[rt]") {
-  Environment global = Environment::MakeGlobal();
+  Environment<SBObject> global = Environment<SBObject>::MakeGlobal();
 
-  Environment* interpreter_scope = &global;
+  Environment<SBObject>* interpreter_scope = &global;
   interpreter_scope->Declare("a", FromPrim(3));
 
   {
-    Environment::ScopeGuard guard1{&interpreter_scope};
+    Environment<SBObject>::ScopeGuard guard1{&interpreter_scope};
     CHECK(interpreter_scope->Get("a") == FromPrim(3));
 
     // Shadow
@@ -58,13 +59,13 @@ TEST_CASE("Shadowing", "[rt]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Assign", "[rt]") {
-  Environment global = Environment::MakeGlobal();
+  Environment<SBObject> global = Environment<SBObject>::MakeGlobal();
 
-  Environment* interpreter_scope = &global;
+  Environment<SBObject>* interpreter_scope = &global;
   interpreter_scope->Declare("a", FromPrim(3));
 
   {
-    Environment::ScopeGuard guard1{&interpreter_scope};
+    Environment<SBObject>::ScopeGuard guard1{&interpreter_scope};
 
     // Insert
     interpreter_scope->Declare("b", FromPrim(4));
@@ -79,17 +80,17 @@ TEST_CASE("Assign", "[rt]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Get", "[rt]") {
-  Environment global = Environment::MakeGlobal();
+  Environment<SBObject> global = Environment<SBObject>::MakeGlobal();
 
-  Environment* interpreter_scope = &global;
+  Environment<SBObject>* interpreter_scope = &global;
   interpreter_scope->Declare("a", FromPrim(3));
 
   {
-    Environment::ScopeGuard guard1{&interpreter_scope};
+    Environment<SBObject>::ScopeGuard guard1{&interpreter_scope};
     interpreter_scope->Declare("b", FromPrim(4));
 
     {
-      Environment::ScopeGuard guard2{&interpreter_scope};
+      Environment<SBObject>::ScopeGuard guard2{&interpreter_scope};
       interpreter_scope->Declare("c", FromPrim(5));
       CHECK_NOTHROW(interpreter_scope->Get("a").value());
       CHECK_NOTHROW(interpreter_scope->Get("b").value());

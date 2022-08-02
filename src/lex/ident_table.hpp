@@ -22,14 +22,16 @@ class IdentTable {
 
  private:
   void Populate() {
-    map_.insert({"string", TokenType::TY_STRING});
+    map_.insert({"String", TokenType::TY_STRING});
+    map_.insert({"Bool", TokenType::TY_BOOL});
+    map_.insert({"Unit", TokenType::TY_UNIT});
+    map_.insert({"Int", TokenType::TY_INT});
+
     map_.insert({"return", TokenType::RETURN});
     map_.insert({"yield", TokenType::YIELD});
     map_.insert({"false", TokenType::FALSE});
-    map_.insert({"bool", TokenType::TY_BOOL});
     map_.insert({"else", TokenType::ELSE});
     map_.insert({"true", TokenType::TRUE});
-    map_.insert({"int", TokenType::TY_INT});
     map_.insert({"var", TokenType::VAR});
     map_.insert({"fun", TokenType::FUN});
     map_.insert({"for", TokenType::FOR});

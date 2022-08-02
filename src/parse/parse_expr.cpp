@@ -125,7 +125,7 @@ Expression* Parser::ParseFunApplication() {
   // At this point we have already consumed the token
   // Now it's our responsibility
   if (!Matches(lex::TokenType::LEFT_BRACE)) {
-    return new LiteralExpression{std::move(fun_name)};
+    return new LvalueExpression{std::move(fun_name)};
   }
 
   std::vector<Expression*> args;

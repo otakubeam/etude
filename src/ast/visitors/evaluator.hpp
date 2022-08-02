@@ -89,7 +89,7 @@ class Evaluator : public EnvVisitor<SBObject> {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitBlock(BlockExpression* node) override {
-    Environment::ScopeGuard guard{&env_};
+    Environment<SBObject>::ScopeGuard guard{&env_};
 
     try {
       for (auto stmt : node->stmts_) {

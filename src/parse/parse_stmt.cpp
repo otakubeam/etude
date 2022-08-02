@@ -11,27 +11,39 @@ FunDeclStatement* Parser::ParseFunDeclStatement() {
   Consume(lex::TokenType::IDENTIFIER);
   Consume(lex::TokenType::LEFT_BRACE);
 
-  auto formal_param = lexer_.Peek();
+  auto param_ident = lexer_.Peek();
 
   std::vector<FunDeclStatement::FormalParam> typed_formals;
+  std::vector<types::Type*> just_arg_types;
 
   while (Matches(lex::TokenType::IDENTIFIER)) {
     Consume(lex::TokenType::COLUMN);
+
     auto type = ParseType();
+
+    just_arg_types.push_back(type);
     typed_formals.push_back(          //
         FunDeclStatement::FormalParam{//
-                                      .ident = formal_param,
+                                      .ident = param_ident,
                                       .type = type});
+
     if (!Matches(lex::TokenType::COMMA)) {
       break;
     }
-    formal_param = lexer_.Peek();
+
+    param_ident = lexer_.Peek();
   }
 
   Consume(lex::TokenType::RIGHT_BRACE);
 
+  auto ret_type = ParseType();
+
+  types::FnType* declared_type =
+      new types::FnType{std::move(just_arg_types), ret_type};
+
   if (auto block = dynamic_cast<BlockExpression*>(ParseBlockExpression())) {
-    return new FunDeclStatement{fun_name, std::move(typed_formals), block};
+    return new FunDeclStatement{fun_name, declared_type,
+                                std::move(typed_formals), block};
   } else {
     throw "Could not parse block expression";
   }

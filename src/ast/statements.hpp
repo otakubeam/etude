@@ -55,9 +55,9 @@ class FunDeclStatement : public Statement {
     types::Type* type;
   };
 
-  FunDeclStatement(lex::Token name, std::vector<FormalParam> formals,
-                   BlockExpression* block)
-      : name_{name}, formals_{std::move(formals)}, block_{block} {
+  FunDeclStatement(lex::Token name, types::FnType* type,
+                   std::vector<FormalParam> formals, BlockExpression* block)
+      : name_{name}, type_{type}, formals_{std::move(formals)}, block_{block} {
   }
 
   virtual void Accept(Visitor* visitor) override {
