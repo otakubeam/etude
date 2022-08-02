@@ -1,6 +1,10 @@
+#include <types/builtins.hpp>
+
 #include <types/type.hpp>
 
 namespace types {
+
+BuiltinType builtin_unit;
 
 BuiltinType builtin_int;
 

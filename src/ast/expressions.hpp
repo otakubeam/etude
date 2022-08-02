@@ -2,6 +2,8 @@
 
 #include <ast/syntax_tree.hpp>
 
+#include <types/type.hpp>
+
 #include <lex/token.hpp>
 
 #include <vector>
@@ -11,6 +13,9 @@
 class Expression : public TreeNode {
  public:
   virtual void Accept(Visitor* /* visitor */){};
+
+ protected:
+  types::Type* type_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////

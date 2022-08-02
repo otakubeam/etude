@@ -40,7 +40,6 @@ class VarDeclStatement : public Statement {
     visitor->VisitVarDecl(this);
   }
 
-  // TODO: TypeExpression* type_;
   LiteralExpression* lvalue_;
   Expression* value_;
 };
@@ -61,6 +60,7 @@ class FunDeclStatement : public Statement {
   }
 
   lex::Token name_;
+  types::FnType* type_;
   std::vector<lex::Token> formals_;
   BlockExpression* block_;
 };

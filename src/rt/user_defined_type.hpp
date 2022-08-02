@@ -7,4 +7,8 @@ struct UserDefinedType {
   uint64_t* data = nullptr;
 };
 
+// TODO: allocate memory
+
+// TODO: calculate offsets for filed access
+
 //////////////////////////////////////////////////////////////////////
