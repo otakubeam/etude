@@ -299,3 +299,23 @@ TEST_CASE("Recursive", "[ast]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Test evaluation from checker", "[ast]") {
+  std::stringstream source(  //
+      "{                                         "
+      "      fun sum(n: Bool) Bool {             "
+      "         if n { return true; } else       "
+      "              { return false; };          "
+      "                                          "
+      "         false                            "
+      "      }                                   "
+      "                                          "
+      "      sum(true)                           "
+      "}                                         ");
+  Parser p{lex::Lexer{source}};
+
+  Evaluator e;
+  CHECK(e.Eval(p.ParseExpression()) == FromPrim(true));
+}
+
+//////////////////////////////////////////////////////////////////////

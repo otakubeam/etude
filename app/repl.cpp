@@ -1,5 +1,7 @@
 #include <ast/visitors/evaluator.hpp>
 
+#include <types/type_error.hpp>
+
 #include <parse/parser.hpp>
 
 #include <chrono>
@@ -20,6 +22,9 @@ int main() {
 
       delete p;  // Reset parser
       p = new Parser(lex::Lexer{std::cin});
+
+    } catch (types::TypeError& type_error) {
+      fmt::print("Type error: {}", type_error.msg);
     } catch (...) {
       fmt::print("Unrecognized error\n");
     }
