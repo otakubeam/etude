@@ -16,7 +16,9 @@ class TypeChecker : public EnvVisitor<types::Type*> {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitVarDecl(VarDeclStatement*) override {
+  virtual void VisitVarDecl(VarDeclStatement* var_decl) override {
+    auto type = Eval(var_decl->value_);
+    env_->Declare(var_decl->lvalue_->name_.GetName(), type);
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -57,8 +59,18 @@ class TypeChecker : public EnvVisitor<types::Type*> {
     std::abort();
   }
 
-  virtual void VisitBinary(BinaryExpression*) override {
-    std::abort();
+  virtual void VisitBinary(BinaryExpression* bin_expr) override {
+    if (Eval(bin_expr->left_) != &types::builtin_int) {
+      throw types::TypeError{fmt::format(
+          "Binary expression at {} has non-int left operand", "Unknown")};
+    }
+
+    if (Eval(bin_expr->right_) != &types::builtin_int) {
+      throw types::TypeError{fmt::format(
+          "Binary expression at {} has non-int right operand", "Unknown")};
+    }
+
+    return_value = &types::builtin_int;
   }
 
   virtual void VisitUnary(UnaryExpression*) override {

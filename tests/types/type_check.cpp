@@ -12,15 +12,27 @@
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Checker: Just works", "[checker]") {
-  std::stringstream source(  //
-      "      fun sum(n: Int) Int {               "
-      "         1                                "
-      "      }                                   "
-      "                                          "
-      "      sum(4)                              ");
+  std::stringstream source("1 + true");
   Parser p{lex::Lexer{source}};
 
   TypeChecker tchk;
-  tchk.Eval(p.ParseStatement());
-  tchk.Eval(p.ParseExpression());
+  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::TypeError);
 }
+
+//////////////////////////////////////////////////////////////////////
+
+// TEST_CASE("Check variable declaration", "[checker]") {
+//   std::stringstream source(  //
+//       "      fun sum(n: Int) Int {               "
+//       "         1                                "
+//       "      }                                   "
+//       "                                          "
+//       "      sum(4)                              ");
+//   Parser p{lex::Lexer{source}};
+//
+//   TypeChecker tchk;
+//   tchk.Eval(p.ParseStatement());
+//   tchk.Eval(p.ParseExpression());
+// }
+
+//////////////////////////////////////////////////////////////////////
