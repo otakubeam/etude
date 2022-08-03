@@ -14,7 +14,7 @@ namespace lex {
 class Lexer {
  public:
   Lexer(std::istream& source) : scanner_{source} {
-    Advance();  // so that it starts in a valid state for Peek()
+    // Advance();  // so that it starts in a valid state for Peek()
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -41,12 +41,29 @@ class Lexer {
 
   ////////////////////////////////////////////////////////////////////
 
-  Token Advance() {
-    peek_ = GetNextToken();
-    return peek_;
+  void Advance() {
+    if (!need_advance) {
+      need_advance = true;
+    } else {
+      peek_ = GetNextToken();
+      need_advance = false;
+    }
   }
 
-  Token Peek() const {
+  // For use in testing
+  bool Matches(lex::TokenType type) {
+    if (Peek().type != type) {
+      return false;
+    }
+
+    Advance();
+    return true;
+  }
+
+  Token Peek() {
+    if (need_advance) {
+      Advance();
+    }
     return peek_;
   }
 
@@ -79,7 +96,10 @@ class Lexer {
 
  private:
   Token peek_{};
+
   Scanner scanner_;
+  bool need_advance = true;
+
   IdentTable table_;
 };
 

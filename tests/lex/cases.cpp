@@ -11,9 +11,9 @@ TEST_CASE("Lexer: Just works", "[lex]") {
   std::stringstream source("1 + 2");
   lex::Lexer l{source};
 
-  REQUIRE(l.Peek().type == lex::TokenType::NUMBER);
-  CHECK(l.Advance().type == lex::TokenType::PLUS);
-  CHECK(l.Advance().type == lex::TokenType::NUMBER);
+  CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::PLUS));
+  CHECK(l.Matches(lex::TokenType::NUMBER));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -22,11 +22,11 @@ TEST_CASE("Braces", "[lex]") {
   std::stringstream source("1 + (1)");
   lex::Lexer l{source};
 
-  REQUIRE(l.Peek().type == lex::TokenType::NUMBER);
-  CHECK(l.Advance().type == lex::TokenType::PLUS);
-  CHECK(l.Advance().type == lex::TokenType::LEFT_BRACE);
-  CHECK(l.Advance().type == lex::TokenType::NUMBER);
-  CHECK(l.Advance().type == lex::TokenType::RIGHT_BRACE);
+  CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::PLUS));
+  CHECK(l.Matches(lex::TokenType::LEFT_BRACE));
+  CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::RIGHT_BRACE));
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -36,16 +36,15 @@ TEST_CASE("Keywords", "[lex]") {
       "var fun for if else "
       "return yield true false");
   lex::Lexer l{source};
-
-  REQUIRE(l.Peek().type == lex::TokenType::VAR);
-  CHECK(l.Advance().type == lex::TokenType::FUN);
-  CHECK(l.Advance().type == lex::TokenType::FOR);
-  CHECK(l.Advance().type == lex::TokenType::IF);
-  CHECK(l.Advance().type == lex::TokenType::ELSE);
-  CHECK(l.Advance().type == lex::TokenType::RETURN);
-  CHECK(l.Advance().type == lex::TokenType::YIELD);
-  CHECK(l.Advance().type == lex::TokenType::TRUE);
-  CHECK(l.Advance().type == lex::TokenType::FALSE);
+  CHECK(l.Matches(lex::TokenType::VAR));
+  CHECK(l.Matches(lex::TokenType::FUN));
+  CHECK(l.Matches(lex::TokenType::FOR));
+  CHECK(l.Matches(lex::TokenType::IF));
+  CHECK(l.Matches(lex::TokenType::ELSE));
+  CHECK(l.Matches(lex::TokenType::RETURN));
+  CHECK(l.Matches(lex::TokenType::YIELD));
+  CHECK(l.Matches(lex::TokenType::TRUE));
+  CHECK(l.Matches(lex::TokenType::FALSE));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -54,8 +53,8 @@ TEST_CASE("Consequent", "[lex]") {
   std::stringstream source("!true");
   lex::Lexer l{source};
 
-  CHECK(l.Peek().type == lex::TokenType::NOT);
-  CHECK(l.Advance().type == lex::TokenType::TRUE);
+  CHECK(l.Matches(lex::TokenType::NOT));
+  CHECK(l.Matches(lex::TokenType::TRUE));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -69,7 +68,7 @@ TEST_CASE("Comments", "[lex]") {
   lex::Lexer l{source};
 
   // parses to just `1`
-  REQUIRE(l.Peek().type == lex::TokenType::NUMBER);
+  CHECK(l.Matches(lex::TokenType::NUMBER));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -78,11 +77,11 @@ TEST_CASE("Statement", "[lex]") {
   std::stringstream source("var abc = 0;");
   lex::Lexer l{source};
 
-  CHECK(l.Peek().type == lex::TokenType::VAR);
-  CHECK(l.Advance().type == lex::TokenType::IDENTIFIER);
-  CHECK(l.Advance().type == lex::TokenType::ASSIGN);
-  CHECK(l.Advance().type == lex::TokenType::NUMBER);
-  CHECK(l.Advance().type == lex::TokenType::SEMICOLUMN);
+  CHECK(l.Matches(lex::TokenType::VAR));
+  CHECK(l.Matches(lex::TokenType::IDENTIFIER));
+  CHECK(l.Matches(lex::TokenType::ASSIGN));
+  CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::SEMICOLUMN));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -91,50 +90,22 @@ TEST_CASE("String literal", "[lex]") {
   std::stringstream source("\"Hello world\"");
   lex::Lexer l{source};
 
-  CHECK(l.Peek().type == lex::TokenType::STRING);
-}
-
-//////////////////////////////////////////////////////////////////////
-
-TEST_CASE("Funtion declaration noargs", "[lex]") {
-  std::stringstream source("fun f     ()       123;");
-  //                        -----  --------  -------------
-  //                        name   no args   expr-statement
-  lex::Lexer l{source};
-
-  CHECK(l.Peek().type == lex::TokenType::FUN);
-  CHECK(l.Advance().type == lex::TokenType::IDENTIFIER);
-  CHECK(l.Advance().type == lex::TokenType::LEFT_BRACE);
-  CHECK(l.Advance().type == lex::TokenType::RIGHT_BRACE);
-  CHECK(l.Advance().type == lex::TokenType::NUMBER);
-  CHECK(l.Advance().type == lex::TokenType::SEMICOLUMN);
+  CHECK(l.Matches(lex::TokenType::STRING));
 }
 
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Funtion declaration args", "[lex]") {
-  std::stringstream source("fun f     (a1, a2, a3)       123;");
+  std::stringstream source("(a1, a2)");
   //                        -----     -------------  -------------
   //                        name          args       expr-statement
   lex::Lexer l{source};
 
-  CHECK(l.Peek().type == lex::TokenType::FUN);
-  CHECK(l.Advance().type == lex::TokenType::IDENTIFIER);
-  CHECK(l.Advance().type == lex::TokenType::LEFT_BRACE);
-
-  /// Args
-  CHECK(l.Advance().type == lex::TokenType::IDENTIFIER);
-  CHECK(l.Advance().type == lex::TokenType::COMMA);
-
-  CHECK(l.Advance().type == lex::TokenType::IDENTIFIER);
-  CHECK(l.Advance().type == lex::TokenType::COMMA);
-
-  CHECK(l.Advance().type == lex::TokenType::IDENTIFIER);
-  ///
-
-  CHECK(l.Advance().type == lex::TokenType::RIGHT_BRACE);
-  CHECK(l.Advance().type == lex::TokenType::NUMBER);
-  CHECK(l.Advance().type == lex::TokenType::SEMICOLUMN);
+  CHECK(l.Matches(lex::TokenType::LEFT_BRACE));
+  CHECK(l.Matches(lex::TokenType::IDENTIFIER));
+  CHECK(l.Matches(lex::TokenType::COMMA));
+  CHECK(l.Matches(lex::TokenType::IDENTIFIER));
+  CHECK(l.Matches(lex::TokenType::RIGHT_BRACE));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -143,8 +114,8 @@ TEST_CASE("Curly", "[lex]") {
   std::stringstream source("{ }");
   lex::Lexer l{source};
 
-  CHECK(l.Peek().type == lex::TokenType::LEFT_CBRACE);
-  CHECK(l.Advance().type == lex::TokenType::RIGHT_CBRACE);
+  CHECK(l.Matches(lex::TokenType::LEFT_CBRACE));
+  CHECK(l.Matches(lex::TokenType::RIGHT_CBRACE));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -153,9 +124,9 @@ TEST_CASE("Assign vs Equals", "[lex]") {
   std::stringstream source("== = ==");
   lex::Lexer l{source};
 
-  CHECK(l.Peek().type == lex::TokenType::EQUALS);
-  CHECK(l.Advance().type == lex::TokenType::ASSIGN);
-  CHECK(l.Advance().type == lex::TokenType::EQUALS);
+  CHECK(l.Matches(lex::TokenType::EQUALS));
+  CHECK(l.Matches(lex::TokenType::ASSIGN));
+  CHECK(l.Matches(lex::TokenType::EQUALS));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -164,11 +135,12 @@ TEST_CASE("Lex types", "[lex]") {
   std::stringstream source(": Int Bool String Unit");
   lex::Lexer l{source};
 
-  CHECK(l.Peek().type == lex::TokenType::COLUMN);
-  CHECK(l.Advance().type == lex::TokenType::TY_INT);
-  CHECK(l.Advance().type == lex::TokenType::TY_BOOL);
-  CHECK(l.Advance().type == lex::TokenType::TY_STRING);
-  CHECK(l.Advance().type == lex::TokenType::TY_UNIT);
+  CHECK(l.Matches(lex::TokenType::COLUMN));
+
+  CHECK(l.Matches(lex::TokenType::TY_INT));
+  CHECK(l.Matches(lex::TokenType::TY_BOOL));
+  CHECK(l.Matches(lex::TokenType::TY_STRING));
+  CHECK(l.Matches(lex::TokenType::TY_UNIT));
 }
 
 //////////////////////////////////////////////////////////////////////
