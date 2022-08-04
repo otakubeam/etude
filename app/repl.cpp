@@ -19,13 +19,12 @@ int main() {
       auto stmt = p->ParseStatement();
 
       tchk.Eval(stmt);
-
       e.Eval(stmt);
 
     } catch (ParseError e) {
       fmt::print("Parse error: {}\n", e.msg);
       fmt::print("[!] Resetting parser \n", e.msg);
-      std::this_thread::sleep_for(std::chrono::milliseconds(300));
+      std::this_thread::sleep_for(std::chrono::milliseconds(800));
       delete p;  // Reset parser
       p = new Parser(lex::Lexer{std::cin});
 

@@ -28,6 +28,13 @@ class TypeChecker : public EnvVisitor<types::Type*> {
 
     {
       Environment<types::Type*>::ScopeGuard guard{&env_};
+
+      // Declare the function itself (to enable checking recursive fns)
+
+      env_->Declare(fn_decl->name_.GetName(), declared_type);
+
+      // Declare all the parameters of a function
+
       for (auto fm : fn_decl->formals_) {
         env_->Declare(fm.ident.GetName(), fm.type);
       }
@@ -86,6 +93,8 @@ class TypeChecker : public EnvVisitor<types::Type*> {
     FMT_ASSERT(false, "Visiting bare expression");
   }
 
+  ////////////////////////////////////////////////////////////////////
+
   virtual void VisitComparison(ComparisonExpression* cmp_expr) override {
     if (Eval(cmp_expr->left_) != &types::builtin_int) {
       throw types::TypeError{fmt::format(
@@ -100,6 +109,8 @@ class TypeChecker : public EnvVisitor<types::Type*> {
     return_value = &types::builtin_bool;
   }
 
+  ////////////////////////////////////////////////////////////////////
+
   virtual void VisitBinary(BinaryExpression* bin_expr) override {
     if (Eval(bin_expr->left_) != &types::builtin_int) {
       throw types::TypeError{fmt::format(
@@ -113,6 +124,8 @@ class TypeChecker : public EnvVisitor<types::Type*> {
 
     return_value = &types::builtin_int;
   }
+
+  ////////////////////////////////////////////////////////////////////
 
   virtual void VisitUnary(UnaryExpression* un_expr) override {
     switch (un_expr->operator_.type) {
@@ -164,12 +177,15 @@ class TypeChecker : public EnvVisitor<types::Type*> {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitBlock(BlockExpression* block) override {
-    for (auto stmt : block->stmts_) {
-      Eval(stmt);
-    }
+    {
+      Environment<types::Type*>::ScopeGuard guard{&env_};
+      for (auto stmt : block->stmts_) {
+        Eval(stmt);
+      }
 
-    return_value = block->final_ ? Eval(block->final_)  //
-                                 : &types::builtin_unit;
+      return_value = block->final_ ? Eval(block->final_)  //
+                                   : &types::builtin_unit;
+    }
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -196,8 +212,10 @@ class TypeChecker : public EnvVisitor<types::Type*> {
           fn_call->fn_name_.start.Format())};
     }
 
-    return_value = fn_call->type_;
+    return_value = fn_type->GetReturnType();
   }
+
+  ////////////////////////////////////////////////////////////////////
 
   virtual void VisitLiteral(LiteralExpression* lit) override {
     switch (lit->token_.type) {
@@ -218,6 +236,8 @@ class TypeChecker : public EnvVisitor<types::Type*> {
         FMT_ASSERT(false, "Typechecking unknown literal");
     }
   }
+
+  ////////////////////////////////////////////////////////////////////
 
   virtual void VisitLvalue(LvalueExpression* ident) override {
     types::Type* t = env_->Get(ident->name_.GetName()).value();

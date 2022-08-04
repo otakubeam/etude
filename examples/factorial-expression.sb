@@ -1,9 +1,7 @@
-print("Here");
-
 # Atm, there is no built-in multiplication
 # And also no cycles, all by hand
 
-fun mul(a, b) {
+fun mul(a: Int, b: Int) Int {
    if a == 1 {
       b 
    } else {
@@ -11,9 +9,7 @@ fun mul(a, b) {
    }
 }
 
-print("Here");
-
-fun factorial(n) {
+fun factorial(n: Int) Int {
    if n == 0 {
       1
    } else {
@@ -21,6 +17,4 @@ fun factorial(n) {
    }
 }
 
-print("Here");
-
-print(factorial(3));
+factorial(3);

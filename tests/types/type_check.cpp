@@ -155,25 +155,17 @@ TEST_CASE("Check fn decl params", "[checker]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Check complex", "[checker]") {
+TEST_CASE("Check correct recursive", "[checker]") {
   std::stringstream source(  //
-      "{                                         "
-      "      fun f(a: Int, b: (Bool) String)     "
-      "      String {                            "
-      "         var s = b(true);                 "
-      "         s                                "
-      "      }                                   "
-      "                                          "
-      // "      fun g(b: Bool) String {             "
-      // "        if b { \"Yes\" } else { \"No\" }  "
-      // "      }                                   "
-      // "                                          "
-      // "      f(5, g)                             "
-      "}                                         ");
+      "     fun mul(a: Int, b: Int) Int {        "
+      "       if a == 1 { b } else               "
+      "         { b + mul(a-1, b) }              "
+      "     }                                    "
+      "                                          ");
   Parser p{lex::Lexer{source}};
 
   TypeChecker tchk;
-  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::TypeError);
+  CHECK_NOTHROW(tchk.Eval(p.ParseStatement()));
 }
 
 //////////////////////////////////////////////////////////////////////
