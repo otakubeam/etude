@@ -4,8 +4,9 @@
 - [[lists]]
 - [[tagged unions]]
 - [[types]]
-  - Simple checking
+  - Simple checking  <<<---- done!
   - Hindley-Milner
+    - (?) Generics
 - [[condegen]]
   - manual
   - qbe

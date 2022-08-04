@@ -10,6 +10,11 @@
 
 class TypeChecker : public EnvVisitor<types::Type*> {
  public:
+  TypeChecker() {
+    // Declare intrinsics
+    env_->Declare("print", new types::FnType({}));
+  }
+
   virtual void VisitStatement(Statement*) override {
     FMT_ASSERT(false, "Visiting bare statement");
   }
@@ -204,7 +209,9 @@ class TypeChecker : public EnvVisitor<types::Type*> {
     types::FnType inferred_type{std::move(args_types),
                                 fn_type->GetReturnType()};
 
-    if (!fn_type->IsEqual(&inferred_type)) {
+    if (global_environment.Get(fn_call->fn_name_.GetName())) {
+      // Intrinsic: don't type-check
+    } else if (!fn_type->IsEqual(&inferred_type)) {
       throw types::TypeError{fmt::format(
           "Function {} at {} and its invocation at {} do not correspond",
           fn_call->fn_name_.GetName(),  //

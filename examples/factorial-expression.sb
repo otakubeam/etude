@@ -17,4 +17,6 @@ fun factorial(n: Int) Int {
    }
 }
 
-factorial(3);
+var result = factorial(3);
+
+print("Here is your output for factorial(3): ", result);
