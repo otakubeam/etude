@@ -4,35 +4,35 @@ namespace rt {
 
 //////////////////////////////////////////////////////////////////////
 
-PrimitiveType BinaryOp(char op_type, PrimitiveType lhs, PrimitiveType rhs) {
+PrimitiveObject BinaryOp(char op_type, PrimitiveObject lhs, PrimitiveObject rhs) {
   auto int_one = std::get<int>(lhs);
   auto int_two = std::get<int>(rhs);
   return {op_type == '+' ? int_one + int_two : int_one - int_two};
 }
 
-PrimitiveType Plus(PrimitiveType one, PrimitiveType two) {
+PrimitiveObject Plus(PrimitiveObject one, PrimitiveObject two) {
   return BinaryOp('+', one, two);
 }
 
-PrimitiveType Minus(PrimitiveType one, PrimitiveType two) {
+PrimitiveObject Minus(PrimitiveObject one, PrimitiveObject two) {
   return BinaryOp('-', one, two);
 }
 
 //////////////////////////////////////////////////////////////////////
 
-PrimitiveType Bang(PrimitiveType one) {
+PrimitiveObject Bang(PrimitiveObject one) {
   auto int_one = std::get<bool>(one);
   return {!int_one};
 }
 
-PrimitiveType Negate(PrimitiveType one) {
+PrimitiveObject Negate(PrimitiveObject one) {
   auto int_one = std::get<int>(one);
   return {-int_one};
 }
 
 //////////////////////////////////////////////////////////////////////
 
-std::string Format(PrimitiveType value) {
+std::string Format(PrimitiveObject value) {
   return std::visit(
       [](const auto& x) {
         return fmt::format("{}", x);
@@ -42,16 +42,16 @@ std::string Format(PrimitiveType value) {
 
 //////////////////////////////////////////////////////////////////////
 
-PrimitiveType FromSemInfo(lex::Token::SemInfo sem_info) {
+PrimitiveObject FromSemInfo(lex::Token::SemInfo sem_info) {
   switch (sem_info.index()) {
       // std::monostate
     case 0:
       // unit
-      return PrimitiveType{nullptr};
+      return PrimitiveObject{nullptr};
 
       // std::string
     case 1:
-      return PrimitiveType{std::get<std::string>(sem_info)};
+      return PrimitiveObject{std::get<std::string>(sem_info)};
 
       // bool
     case 2:
@@ -59,7 +59,7 @@ PrimitiveType FromSemInfo(lex::Token::SemInfo sem_info) {
 
       // int
     case 3:
-      return PrimitiveType{std::get<int>(sem_info)};
+      return PrimitiveObject{std::get<int>(sem_info)};
 
     default:
       FMT_ASSERT(false, "\n Error: Non-exhaustive match \n");

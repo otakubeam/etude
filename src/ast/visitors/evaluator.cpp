@@ -24,7 +24,7 @@ void Evaluator::VisitComparison(ComparisonExpression* node) {
 
   switch (node->operator_.type) {
     case lex::TokenType::EQUALS:
-      return_value = {rt::PrimitiveType{lhs == rhs}};
+      return_value = {rt::PrimitiveObject{lhs == rhs}};
       break;
 
     case lex::TokenType::LT:
@@ -110,11 +110,11 @@ void Evaluator::VisitLiteral(LiteralExpression* lit) {
       std::abort();
 
     case lex::TokenType::TRUE:
-      return_value = {rt::PrimitiveType{true}};
+      return_value = {rt::PrimitiveObject{true}};
       break;
 
     case lex::TokenType::FALSE:
-      return_value = {rt::PrimitiveType{false}};
+      return_value = {rt::PrimitiveObject{false}};
       break;
 
     default:

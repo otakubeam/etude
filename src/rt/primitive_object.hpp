@@ -12,7 +12,7 @@ namespace rt {
 
 //////////////////////////////////////////////////////////////////////
 
-using PrimitiveType = std::variant<  //
+using PrimitiveObject = std::variant<  //
     std::nullptr_t,                  //
     int,                             //
     bool,                            //
@@ -21,16 +21,16 @@ using PrimitiveType = std::variant<  //
 
 //////////////////////////////////////////////////////////////////////
 
-PrimitiveType BinaryOp(char op_type, PrimitiveType lhs, PrimitiveType rhs);
+PrimitiveObject BinaryOp(char op_type, PrimitiveObject lhs, PrimitiveObject rhs);
 
-PrimitiveType Plus(PrimitiveType one, PrimitiveType two);
-PrimitiveType Minus(PrimitiveType one, PrimitiveType two);
+PrimitiveObject Plus(PrimitiveObject one, PrimitiveObject two);
+PrimitiveObject Minus(PrimitiveObject one, PrimitiveObject two);
 
-PrimitiveType Bang(PrimitiveType one);
-PrimitiveType Negate(PrimitiveType one);
+PrimitiveObject Bang(PrimitiveObject one);
+PrimitiveObject Negate(PrimitiveObject one);
 
-std::string Format(PrimitiveType value);
-PrimitiveType FromSemInfo(lex::Token::SemInfo sem_info);
+std::string Format(PrimitiveObject value);
+PrimitiveObject FromSemInfo(lex::Token::SemInfo sem_info);
 
 //////////////////////////////////////////////////////////////////////
 

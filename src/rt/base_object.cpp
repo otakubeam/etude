@@ -5,8 +5,8 @@ namespace rt {
 
 SBObject BinaryOp(char op_type, SBObject lhs, SBObject rhs) {
   try {
-    auto prim_one = std::get<PrimitiveType>(lhs);
-    auto prim_two = std::get<PrimitiveType>(rhs);
+    auto prim_one = std::get<PrimitiveObject>(lhs);
+    auto prim_two = std::get<PrimitiveObject>(rhs);
     return {BinaryOp(op_type, prim_one, prim_two)};
   } catch (std::bad_variant_access&) {
     throw RuntimeError{};
@@ -25,7 +25,7 @@ SBObject Minus(SBObject one, SBObject two) {
 
 SBObject UnaryOp(char op_type, SBObject operand) {
   try {
-    PrimitiveType prim_operand = std::get<PrimitiveType>(operand);
+    PrimitiveObject prim_operand = std::get<PrimitiveObject>(operand);
     return {op_type == '!' ? Bang(prim_operand)  //
                            : Negate(prim_operand)};
   } catch (std::bad_variant_access&) {
@@ -45,7 +45,7 @@ SBObject Negate(SBObject one) {
 
 std::string Format(const SBObject& object) {
   try {
-    PrimitiveType prim_operand = std::get<PrimitiveType>(object);
+    PrimitiveObject prim_operand = std::get<PrimitiveObject>(object);
     return Format(prim_operand);
   } catch (std::bad_variant_access&) {
     throw RuntimeError{};

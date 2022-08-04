@@ -8,54 +8,54 @@ using namespace rt;
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Rt: Just works", "[rt]") {
-  CHECK(PrimitiveType{1} != PrimitiveType{'a'});
-  CHECK(PrimitiveType{true} != PrimitiveType{});
+  CHECK(PrimitiveObject{1} != PrimitiveObject{'a'});
+  CHECK(PrimitiveObject{true} != PrimitiveObject{});
 
-  CHECK(PrimitiveType{1} == PrimitiveType{1});
-  CHECK(PrimitiveType{1} != PrimitiveType{2});
+  CHECK(PrimitiveObject{1} == PrimitiveObject{1});
+  CHECK(PrimitiveObject{1} != PrimitiveObject{2});
 }
 
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Throws", "[rt]") {
-  CHECK_THROWS_AS(std::get<int>(PrimitiveType{}),  //
+  CHECK_THROWS_AS(std::get<int>(PrimitiveObject{}),  //
                   std::bad_variant_access);
-  CHECK_THROWS_AS(std::get<std::string>(PrimitiveType{1}),  //
+  CHECK_THROWS_AS(std::get<std::string>(PrimitiveObject{1}),  //
                   std::bad_variant_access);
-  CHECK_THROWS_AS(std::get<int>(PrimitiveType{true}),  //
+  CHECK_THROWS_AS(std::get<int>(PrimitiveObject{true}),  //
                   std::bad_variant_access);
-  CHECK_THROWS_AS(std::get<std::nullptr_t>(PrimitiveType{0}),  //
+  CHECK_THROWS_AS(std::get<std::nullptr_t>(PrimitiveObject{0}),  //
                   std::bad_variant_access);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Binary", "[rt]") {
-  CHECK(Plus(PrimitiveType{1},     //
-             PrimitiveType{2}) ==  //
+  CHECK(Plus(PrimitiveObject{1},     //
+             PrimitiveObject{2}) ==  //
         //----------------------
-        PrimitiveType{3});
+        PrimitiveObject{3});
 
-  CHECK(Minus(PrimitiveType{1},     //
-              PrimitiveType{2}) ==  //
+  CHECK(Minus(PrimitiveObject{1},     //
+              PrimitiveObject{2}) ==  //
         //----------------------
-        PrimitiveType{-1});
+        PrimitiveObject{-1});
 }
 
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Unary", "[rt]") {
-  CHECK(Negate(PrimitiveType{1}) == PrimitiveType{-1});
-  CHECK(Bang(PrimitiveType{true}) == PrimitiveType{false});
+  CHECK(Negate(PrimitiveObject{1}) == PrimitiveObject{-1});
+  CHECK(Bang(PrimitiveObject{true}) == PrimitiveObject{false});
 }
 
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Prints", "[rt]") {
-  CHECK(Format(PrimitiveType{1}) == "1");
-  CHECK(Format(PrimitiveType{}) == "0x0");
-  CHECK(Format(PrimitiveType{"a"}) == "a");
-  CHECK(Format(PrimitiveType{true}) == "true");
+  CHECK(Format(PrimitiveObject{1}) == "1");
+  CHECK(Format(PrimitiveObject{}) == "0x0");
+  CHECK(Format(PrimitiveObject{"a"}) == "a");
+  CHECK(Format(PrimitiveObject{true}) == "true");
 }
 
 //////////////////////////////////////////////////////////////////////

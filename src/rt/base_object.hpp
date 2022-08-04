@@ -10,7 +10,7 @@ namespace rt {
 struct IFunction;
 
 using SBObject = std::variant<  //
-    PrimitiveType,              //
+    PrimitiveObject,              //
     IFunction*,                 //
     UserDefinedType*            //
     >;
@@ -19,13 +19,13 @@ using SBObject = std::variant<  //
 
 template <typename T>
 inline T GetPrim(const SBObject& object) {
-  auto prim = std::get<PrimitiveType>(object);
+  auto prim = std::get<PrimitiveObject>(object);
   return std::get<T>(prim);
 }
 
 template <typename T>
 inline SBObject FromPrim(T value) {
-  return SBObject{PrimitiveType{value}};
+  return SBObject{PrimitiveObject{value}};
 }
 
 /////////////////////////////////////////////////////////////////////
