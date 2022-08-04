@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <ranges>
 
+namespace rt {
+
 //////////////////////////////////////////////////////////////////////
 
 struct FunctionType : public IFunction {
@@ -33,3 +35,5 @@ inline bool operator==(FunctionType lhs, FunctionType rhs) {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+}  // namespace rt

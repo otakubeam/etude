@@ -1,7 +1,9 @@
-#include <rt/primitive_type.hpp>
+#include <rt/primitive_object.hpp>
 
 // Finally,
 #include <catch2/catch.hpp>
+
+using namespace rt;
 
 //////////////////////////////////////////////////////////////////////
 

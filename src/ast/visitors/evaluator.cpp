@@ -5,7 +5,7 @@
 //////////////////////////////////////////////////////////////////////
 
 Evaluator::Evaluator() {
-  env_->Declare("print", new Print{});
+  env_->Declare("print", new rt::Print{});
 }
 
 Evaluator::~Evaluator() = default;
@@ -24,7 +24,7 @@ void Evaluator::VisitComparison(ComparisonExpression* node) {
 
   switch (node->operator_.type) {
     case lex::TokenType::EQUALS:
-      return_value = {PrimitiveType{lhs == rhs}};
+      return_value = {rt::PrimitiveType{lhs == rhs}};
       break;
 
     case lex::TokenType::LT:
@@ -80,18 +80,18 @@ void Evaluator::VisitUnary(UnaryExpression* node) {
 //////////////////////////////////////////////////////////////////////
 
 void Evaluator::VisitFnCall(FnCallExpression* node) {
-  std::vector<SBObject> args;
+  std::vector<rt::SBObject> args;
 
   for (auto expr : node->arguments_) {
     args.push_back(Eval(expr));
   }
 
-  auto fn_object = std::get<IFunction*>(  //
-      env_->Get(                          //
+  auto fn_object = std::get<rt::IFunction*>(  //
+      env_->Get(                              //
               node->fn_name_.GetName())
           .value());
 
-  auto ret = SBObject{};
+  auto ret = rt::SBObject{};
 
   try {
     ret = fn_object->Compute(this, args);
@@ -110,16 +110,16 @@ void Evaluator::VisitLiteral(LiteralExpression* lit) {
       std::abort();
 
     case lex::TokenType::TRUE:
-      return_value = {PrimitiveType{true}};
+      return_value = {rt::PrimitiveType{true}};
       break;
 
     case lex::TokenType::FALSE:
-      return_value = {PrimitiveType{false}};
+      return_value = {rt::PrimitiveType{false}};
       break;
 
     default:
       auto val = lit->token_.sem_info;
-      return_value = {FromSemInfo(val)};
+      return_value = {rt::FromSemInfo(val)};
   }
 }
 

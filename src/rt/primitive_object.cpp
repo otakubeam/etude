@@ -1,4 +1,6 @@
-#include <rt/primitive_type.hpp>
+#include <rt/primitive_object.hpp>
+
+namespace rt {
 
 //////////////////////////////////////////////////////////////////////
 
@@ -65,3 +67,5 @@ PrimitiveType FromSemInfo(lex::Token::SemInfo sem_info) {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+}  // namespace rt

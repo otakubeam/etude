@@ -6,9 +6,13 @@
 
 #include <vector>
 
+namespace rt {
+
 struct IFunction {
   virtual ~IFunction() = default;
 
   virtual SBObject Compute(EnvVisitor<SBObject>* e,  //
                            std::vector<SBObject>) = 0;
 };
+
+}

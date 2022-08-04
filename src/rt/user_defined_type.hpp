@@ -2,6 +2,8 @@
 
 //////////////////////////////////////////////////////////////////////
 
+namespace rt {
+
 struct UserDefinedType {
   // TODO: Declaration object
   uint64_t* data = nullptr;
@@ -10,5 +12,7 @@ struct UserDefinedType {
 // TODO: allocate memory
 
 // TODO: calculate offsets for filed access
+
+}  // namespace rt
 
 //////////////////////////////////////////////////////////////////////

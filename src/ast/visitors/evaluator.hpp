@@ -1,15 +1,14 @@
 #pragma once
 
 #include <ast/visitors/template_visitor.hpp>
+#include <ast/scope/environment.hpp>
 #include <ast/expressions.hpp>
 #include <ast/statements.hpp>
 
-#include <rt/scope/environment.hpp>
 #include <rt/native_function.hpp>
-#include <rt/primitive_type.hpp>
 #include <rt/base_object.hpp>
 
-class Evaluator : public EnvVisitor<SBObject> {
+class Evaluator : public EnvVisitor<rt::SBObject> {
  public:
   friend struct IFunction;
 
@@ -34,33 +33,33 @@ class Evaluator : public EnvVisitor<SBObject> {
 
   virtual void VisitFunDecl(FunDeclStatement* node) override {
     auto name = node->name_.GetName();
-    SBObject val = {new FunctionType{node}};
+    rt::SBObject val = {new rt::FunctionType{node}};
     env_->Declare(name, val);
   }
 
   ////////////////////////////////////////////////////////////////////
 
   struct ReturnedValue {
-    SBObject value;
+    rt::SBObject value;
   };
 
   virtual void VisitReturn(ReturnStatement* node) override {
     auto ret = node->return_value_ ?  //
                    Eval(node->return_value_)
-                                   : SBObject{};
+                                   : rt::SBObject{};
     throw ReturnedValue{ret};
   }
 
   ////////////////////////////////////////////////////////////////////
 
   struct YieldedValue {
-    SBObject value;
+    rt::SBObject value;
   };
 
   virtual void VisitYield(YieldStatement* node) override {
     auto ret = node->yield_value_ ?  //
                    Eval(node->yield_value_)
-                                  : SBObject{};
+                                  : rt::SBObject{};
     throw YieldedValue{ret};
   }
 
@@ -89,7 +88,7 @@ class Evaluator : public EnvVisitor<SBObject> {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitBlock(BlockExpression* node) override {
-    Environment<SBObject>::ScopeGuard guard{&env_};
+    Environment<rt::SBObject>::ScopeGuard guard{&env_};
 
     try {
       for (auto stmt : node->stmts_) {
@@ -100,7 +99,7 @@ class Evaluator : public EnvVisitor<SBObject> {
       return;
     }
 
-    return_value = node->final_ ? Eval(node->final_) : SBObject{};
+    return_value = node->final_ ? Eval(node->final_) : rt::SBObject{};
   }
 
   ////////////////////////////////////////////////////////////////////

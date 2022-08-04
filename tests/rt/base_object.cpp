@@ -3,6 +3,8 @@
 // Finally,
 #include <catch2/catch.hpp>
 
+using namespace rt;
+
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("From Primitive", "[rt]") {

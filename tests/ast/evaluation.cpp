@@ -11,6 +11,8 @@
 // Finally,
 #include <catch2/catch.hpp>
 
+using rt::FromPrim;
+
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Grouping", "[ast]") {

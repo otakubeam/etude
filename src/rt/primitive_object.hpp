@@ -8,6 +8,8 @@
 #include <variant>
 #include <string>
 
+namespace rt {
+
 //////////////////////////////////////////////////////////////////////
 
 using PrimitiveType = std::variant<  //
@@ -31,3 +33,5 @@ std::string Format(PrimitiveType value);
 PrimitiveType FromSemInfo(lex::Token::SemInfo sem_info);
 
 //////////////////////////////////////////////////////////////////////
+
+}  // namespace rt

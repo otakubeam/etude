@@ -64,7 +64,7 @@ class TypeChecker : public EnvVisitor<types::Type*> {
   ////////////////////////////////////////////////////////////////////
 
   struct ReturnedValue {
-    SBObject value;
+    rt::SBObject value;
   };
 
   virtual void VisitReturn(ReturnStatement* return_stmt) override {
@@ -82,7 +82,7 @@ class TypeChecker : public EnvVisitor<types::Type*> {
   ////////////////////////////////////////////////////////////////////
 
   struct YieldedValue {
-    SBObject value;
+    rt::SBObject value;
   };
 
   virtual void VisitYield(YieldStatement*) override {

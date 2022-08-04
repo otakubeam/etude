@@ -1,9 +1,10 @@
 #pragma once
 
 #include <rt/user_defined_type.hpp>
-#include <rt/primitive_type.hpp>
+#include <rt/primitive_object.hpp>
 #include <rt/runtime_error.hpp>
 
+namespace rt {
 //////////////////////////////////////////////////////////////////////
 
 struct IFunction;
@@ -45,3 +46,4 @@ std::string Format(const SBObject& object);
 std::ostream& operator<<(std::ostream& os, const SBObject& object);
 
 /////////////////////////////////////////////////////////////////////
+}  // namespace rt

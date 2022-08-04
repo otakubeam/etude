@@ -1,8 +1,10 @@
-#include <rt/scope/environment.hpp>
+#include <ast/scope/environment.hpp>
 #include <rt/base_object.hpp>
 
 // Finally,
 #include <catch2/catch.hpp>
+
+using namespace rt;
 
 //////////////////////////////////////////////////////////////////////
 
