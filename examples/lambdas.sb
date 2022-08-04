@@ -1,0 +1,13 @@
+# Functions can take functions as parameters
+
+fun takingBool(b: Bool) Int {
+   if b { 1 } else { 0 }
+}
+
+fun takingFunction(f: (Bool) Int ) Int {
+   f(true)
+}
+
+var result = takingFunction(takingBool);
+
+return result;
