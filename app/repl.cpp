@@ -31,6 +31,10 @@ int main() {
     } catch (types::TypeError& type_error) {
       fmt::print("Type error: {}\n", type_error.msg);
 
+    } catch (Evaluator::ReturnedValue rv) {
+      fmt::print("Bye! Your rv is {}\n", Format(rv.value));
+      return 0;
+
     } catch (...) {
       fmt::print("Unrecognized error\n");
     }

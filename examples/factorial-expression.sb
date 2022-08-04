@@ -20,3 +20,5 @@ fun factorial(n: Int) Int {
 var result = factorial(3);
 
 print("Here is your output for factorial(3): ", result);
+
+return result;

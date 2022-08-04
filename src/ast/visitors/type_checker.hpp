@@ -47,6 +47,7 @@ class TypeChecker : public EnvVisitor<types::Type*> {
       auto saved = fn_return_expect;
       fn_return_expect = declared_type->GetReturnType();
 
+      // TODO: Allow for final return?
       if (Eval(fn_decl->block_) != fn_return_expect) {
         throw types::TypeError{
             .msg = fmt::format(
@@ -67,6 +68,10 @@ class TypeChecker : public EnvVisitor<types::Type*> {
   };
 
   virtual void VisitReturn(ReturnStatement* return_stmt) override {
+    if (!fn_return_expect) {
+      return;  // Program finishes
+    }
+
     if (fn_return_expect != Eval(return_stmt->return_value_)) {
       throw types::TypeError{
           .msg = fmt::format(
@@ -209,7 +214,7 @@ class TypeChecker : public EnvVisitor<types::Type*> {
     types::FnType inferred_type{std::move(args_types),
                                 fn_type->GetReturnType()};
 
-    if (global_environment.Get(fn_call->fn_name_.GetName())) {
+    if (fn_call->fn_name_.GetName() == "print") {
       // Intrinsic: don't type-check
     } else if (!fn_type->IsEqual(&inferred_type)) {
       throw types::TypeError{fmt::format(

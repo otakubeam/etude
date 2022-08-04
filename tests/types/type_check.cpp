@@ -169,3 +169,44 @@ TEST_CASE("Check correct recursive", "[checker]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Typechecking fun params", "[checker]") {
+  std::stringstream source(  //
+      "fun takingFunction(f: (Bool) Int ) Int {"
+      "   f(123)                               "
+      "}                                       ");
+  Parser p{lex::Lexer{source}};
+
+  TypeChecker tchk;
+  CHECK_THROWS_AS(tchk.Eval(p.ParseStatement()), types::TypeError);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Typechecking fun arguments", "[checker]") {
+  std::stringstream source(  //
+      "   # This is ok \n                               "
+      "                                                 "
+      "   fun takingBool(b: Bool) String {              "
+      "      if b { \" True !\" }                       "
+      "      else { \" False\" }                        "
+      "   }                                             "
+      "                                                 "
+      "   # This is alright too \n                      "
+      "                                                 "
+      "   fun takingFunction(f: (Bool) Int ) Int {      "
+      "      f(true)                                    "
+      "   }                                             "
+      "                # But this is clearly wrong \n   "
+      "   var result = takingFunction(takingBool);      "
+      "                                                 ");
+  Parser p{lex::Lexer{source}};
+
+  TypeChecker tchk;
+  tchk.Eval(p.ParseStatement());
+  tchk.Eval(p.ParseStatement());
+
+  CHECK_THROWS_AS(tchk.Eval(p.ParseStatement()), types::TypeError);
+}
+
+//////////////////////////////////////////////////////////////////////
