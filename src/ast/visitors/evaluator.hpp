@@ -5,7 +5,7 @@
 #include <ast/expressions.hpp>
 #include <ast/statements.hpp>
 
-#include <rt/native_function.hpp>
+#include <rt/functions/native_function.hpp>
 #include <rt/base_object.hpp>
 
 class Evaluator : public EnvVisitor<rt::SBObject> {
@@ -33,7 +33,7 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
 
   virtual void VisitFunDecl(FunDeclStatement* node) override {
     auto name = node->name_.GetName();
-    rt::SBObject val = {new rt::FunctionType{node}};
+    rt::SBObject val = {new rt::FunctionObject{node}};
     env_->Declare(name, val);
   }
 

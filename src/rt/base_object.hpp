@@ -5,12 +5,13 @@
 #include <rt/runtime_error.hpp>
 
 namespace rt {
+
 //////////////////////////////////////////////////////////////////////
 
 struct IFunction;
 
 using SBObject = std::variant<  //
-    PrimitiveObject,              //
+    PrimitiveObject,            //
     IFunction*,                 //
     UserDefinedType*            //
     >;

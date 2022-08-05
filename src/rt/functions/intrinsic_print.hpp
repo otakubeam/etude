@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rt/ifunction.hpp>
+#include <rt/functions/function.hpp>
 
 #include <fmt/core.h>
 
@@ -22,4 +22,4 @@ struct Print : public IFunction {
 
 //////////////////////////////////////////////////////////////////////
 
-}
+}  // namespace rt

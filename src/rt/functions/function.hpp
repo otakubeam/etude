@@ -8,6 +8,7 @@
 
 namespace rt {
 
+// TODO: template <T> ?
 struct IFunction {
   virtual ~IFunction() = default;
 

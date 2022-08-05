@@ -1,10 +1,12 @@
+#pragma once
+
 #include <cstdint>
 
 //////////////////////////////////////////////////////////////////////
 
 namespace rt {
 
-struct UserDefinedType {
+struct StructObject {
   // TODO: Declaration object
   uint64_t* data = nullptr;
 };

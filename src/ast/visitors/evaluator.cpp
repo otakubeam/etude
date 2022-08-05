@@ -1,6 +1,6 @@
 #include <ast/visitors/evaluator.hpp>
 
-#include <rt/intrinsic.hpp>
+#include <rt/functions/intrinsic_print.hpp>
 
 //////////////////////////////////////////////////////////////////////
 

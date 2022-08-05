@@ -1,18 +1,15 @@
 #pragma once
 
+#include <rt/functions/function.hpp>
+
 #include <ast/statements.hpp>
-
-#include <rt/ifunction.hpp>
-
-#include <algorithm>
-#include <ranges>
 
 namespace rt {
 
 //////////////////////////////////////////////////////////////////////
 
-struct FunctionType : public IFunction {
-  FunctionType(FunDeclStatement* fn) : fn{fn} {
+struct FunctionObject : public IFunction {
+  FunctionObject(FunDeclStatement* fn) : fn{fn} {
   }
 
   virtual SBObject Compute(EnvVisitor<SBObject>* e,
@@ -30,7 +27,7 @@ struct FunctionType : public IFunction {
   FunDeclStatement* fn;
 };
 
-inline bool operator==(FunctionType lhs, FunctionType rhs) {
+inline bool operator==(FunctionObject lhs, FunctionObject rhs) {
   return lhs.fn == rhs.fn;
 }
 
