@@ -36,6 +36,8 @@ enum class TokenType {
   COMMA,
 
   VAR,
+  TYPE,
+  STRUCT,
 
   TY_INT,
   TY_BOOL,
@@ -79,6 +81,8 @@ enum class TokenType {
   code(FUN)                 \
   code(COMMA)               \
   code(VAR)                 \
+  code(TYPE)                \
+  code(STRUCT)              \
   code(TY_INT)              \
   code(TY_BOOL)             \
   code(TY_UNIT)             \

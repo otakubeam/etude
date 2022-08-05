@@ -13,7 +13,7 @@ struct IFunction;
 using SBObject = std::variant<  //
     PrimitiveObject,            //
     IFunction*,                 //
-    UserDefinedType*            //
+    StructObject*            //
     >;
 
 //////////////////////////////////////////////////////////////////////

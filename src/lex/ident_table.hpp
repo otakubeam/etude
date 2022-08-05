@@ -28,10 +28,12 @@ class IdentTable {
     map_.insert({"Int", TokenType::TY_INT});
 
     map_.insert({"return", TokenType::RETURN});
+    map_.insert({"struct", TokenType::STRUCT});
     map_.insert({"yield", TokenType::YIELD});
     map_.insert({"false", TokenType::FALSE});
     map_.insert({"else", TokenType::ELSE});
     map_.insert({"true", TokenType::TRUE});
+    map_.insert({"type", TokenType::TYPE});
     map_.insert({"var", TokenType::VAR});
     map_.insert({"fun", TokenType::FUN});
     map_.insert({"for", TokenType::FOR});
