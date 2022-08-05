@@ -1,5 +1,11 @@
 # TODO
 
+Tasks:
+
+- Add location info for all AST nodes in typechecker
+
+Language features:
+
 - [[structs]]
 - [[lists]]
 - [[tagged unions]]
