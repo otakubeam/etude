@@ -24,6 +24,10 @@ class FnType : public Type {
     return false;
   }
 
+  bool IsEqual(StructType*) override {
+    return false;
+  }
+
   bool IsEqual(FnType* other) override {
     if (!return_type_->IsEqual(other->return_type_) ||
         arg_types_.size() != other->arg_types_.size()) {

@@ -21,6 +21,10 @@ class Parser {
   ///////////////////////////////////////////////////////////////////
 
   Statement* ParseStatement() {
+    if (auto strcuct_decl = ParseStructDeclStatement()) {
+      return strcuct_decl;
+    }
+
     if (auto var_decl = ParseVarDeclStatement()) {
       return var_decl;
     }
@@ -49,6 +53,7 @@ class Parser {
   ///////////////////////////////////////////////////////////////////
 
   // TODO: why different?
+  StructDeclStatement* ParseStructDeclStatement();
   FunDeclStatement* ParseFunDeclStatement();
   ReturnStatement* ParseReturnStatement();
   YieldStatement* ParseYieldStatement();
@@ -80,7 +85,7 @@ class Parser {
   Expression* ParseUnary();
   Expression* ParseIfExpression();
   Expression* ParseBlockExpression();
-  Expression* ParseFunApplication();
+  Expression* ParseFunctionLike();
   Expression* ParsePrimary();
 
   ////////////////////////////////////////////////////////////////////
@@ -158,7 +163,7 @@ class Parser {
     }
   }
 
-  void AssertParsed(TreeNode* node, const char* error_msg) {
+  void AssertParsed(void* node, const char* error_msg) {
     if (node == nullptr) {
       throw ParseError{error_msg};
     }

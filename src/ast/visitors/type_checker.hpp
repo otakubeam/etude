@@ -28,6 +28,12 @@ class TypeChecker : public EnvVisitor<types::Type*> {
 
   ////////////////////////////////////////////////////////////////////
 
+  virtual void VisitStructDecl(StructDeclStatement*) override {
+    std::abort();
+  }
+
+  ////////////////////////////////////////////////////////////////////
+
   virtual void VisitFunDecl(FunDeclStatement* fn_decl) override {
     auto declared_type = fn_decl->type_;
 
@@ -225,6 +231,12 @@ class TypeChecker : public EnvVisitor<types::Type*> {
     }
 
     return_value = fn_type->GetReturnType();
+  }
+
+  ////////////////////////////////////////////////////////////////////
+
+  virtual void VisitStructConstruction(StructConstructionExpression*) override {
+    std::abort();
   }
 
   ////////////////////////////////////////////////////////////////////

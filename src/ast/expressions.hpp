@@ -85,6 +85,24 @@ class FnCallExpression : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
+// At least for now let's call it that
+class StructConstructionExpression : public Expression {
+ public:
+  StructConstructionExpression(lex::Token struct_name,
+                               std::vector<Expression*> values)
+      : struct_name_{struct_name}, values_{values} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitStructConstruction(this);
+  }
+
+  lex::Token struct_name_;
+  std::vector<Expression*> values_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
 class IfExpression : public Expression {
  public:
   IfExpression(Expression* condition, Expression* true_branch,

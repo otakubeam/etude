@@ -39,6 +39,12 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
 
   ////////////////////////////////////////////////////////////////////
 
+  virtual void VisitStructDecl(StructDeclStatement*) override {
+    std::abort();
+  }
+
+  ////////////////////////////////////////////////////////////////////
+
   struct ReturnedValue {
     rt::SBObject value;
   };
@@ -100,6 +106,12 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
     }
 
     return_value = node->final_ ? Eval(node->final_) : rt::SBObject{};
+  }
+
+  ////////////////////////////////////////////////////////////////////
+
+  virtual void VisitStructConstruction(StructConstructionExpression*) override {
+    std::abort();
   }
 
   ////////////////////////////////////////////////////////////////////

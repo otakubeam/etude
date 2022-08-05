@@ -93,7 +93,7 @@ Expression* Parser::ParseIfExpression() {
 
 Expression* Parser::ParseBlockExpression() {
   if (!Matches(lex::TokenType::LEFT_CBRACE)) {
-    return ParseFunApplication();
+    return ParseFunctionLike();
   }
 
   std::vector<Statement*> stmts;
@@ -115,8 +115,9 @@ Expression* Parser::ParseBlockExpression() {
 
 ////////////////////////////////////////////////////////////////////
 
-Expression* Parser::ParseFunApplication() {
-  auto fun_name = lexer_.Peek();
+// Function application and struct creation are "function-like"
+Expression* Parser::ParseFunctionLike() {
+  auto cons_name = lexer_.Peek();
 
   if (!Matches(lex::TokenType::IDENTIFIER)) {
     return ParsePrimary();
@@ -124,26 +125,44 @@ Expression* Parser::ParseFunApplication() {
 
   // At this point we have already consumed the token
   // Now it's our responsibility
-  if (!Matches(lex::TokenType::LEFT_BRACE)) {
-    return new LvalueExpression{std::move(fun_name)};
+  if (!Matches(lex::TokenType::LEFT_BRACE) &&
+      !Matches(lex::TokenType::LEFT_CBRACE)) {
+    return new LvalueExpression{std::move(cons_name)};
   }
 
-  std::vector<Expression*> args;
+  // Args or Initializers
+  std::vector<Expression*> exprs;
 
   // Parse csv
 
-  if (!Matches(lex::TokenType::RIGHT_BRACE)) {
-    while (auto expr = ParseExpression()) {
-      args.push_back(expr);
-      if (!Matches(lex::TokenType::COMMA)) {
-        break;
-      }
-    }
+  // 1. Case of empty list
 
-    Consume(lex::TokenType::RIGHT_BRACE);
+  if (Matches(lex::TokenType::RIGHT_BRACE)) {
+    return new FnCallExpression{cons_name, std::move(exprs)};
+  } else if (Matches(lex::TokenType::RIGHT_CBRACE)) {
+    return new StructConstructionExpression{cons_name, std::move(exprs)};
   }
 
-  return new FnCallExpression{fun_name, std::move(args)};
+  // 2. Non-empty list case: parse it
+
+  while (auto expr = ParseExpression()) {
+    exprs.push_back(expr);
+    if (!Matches(lex::TokenType::COMMA)) {
+      break;
+    }
+  }
+
+  // 3. Return result
+
+  if (Matches(lex::TokenType::RIGHT_BRACE)) {
+    return new FnCallExpression{cons_name, std::move(exprs)};
+  }
+
+  if (Matches(lex::TokenType::RIGHT_CBRACE)) {
+    return new StructConstructionExpression{cons_name, std::move(exprs)};
+  }
+
+  throw "Parse error\n";
 }
 
 ////////////////////////////////////////////////////////////////////

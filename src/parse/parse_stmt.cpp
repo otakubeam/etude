@@ -83,6 +83,38 @@ YieldStatement* Parser::ParseYieldStatement() {
 
 ///////////////////////////////////////////////////////////////////
 
+StructDeclStatement* Parser::ParseStructDeclStatement() {
+  if (!Matches(lex::TokenType::STRUCT)) {
+    return nullptr;
+  }
+
+  // 1. Get the name of the new struct
+
+  auto struct_name = lexer_.Peek();
+  Consume(lex::TokenType::IDENTIFIER);
+
+  Consume(lex::TokenType::LEFT_CBRACE);
+
+  // 2. Parse contents
+
+  auto field_name = lexer_.Peek();
+  std::vector<lex::Token> fields_;
+  while (Matches(lex::TokenType::IDENTIFIER)) {
+    fields_.push_back(field_name);
+    Consume(lex::TokenType::COLUMN);
+    // TODO: do not ignore
+    AssertParsed(ParseType(), "Could not parse type in struct declaration");
+    Consume(lex::TokenType::COMMA);
+  }
+
+  Consume(lex::TokenType::RIGHT_CBRACE);
+  Consume(lex::TokenType::SEMICOLUMN);
+
+  return new StructDeclStatement{struct_name, std::move(fields_)};
+}
+
+///////////////////////////////////////////////////////////////////
+
 VarDeclStatement* Parser::ParseVarDeclStatement() {
   if (!Matches(lex::TokenType::VAR)) {
     return nullptr;

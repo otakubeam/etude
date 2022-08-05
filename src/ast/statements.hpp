@@ -30,6 +30,26 @@ class ExprStatement : public Statement {
 
 //////////////////////////////////////////////////////////////////////
 
+class StructDeclStatement : public Statement {
+ public:
+  StructDeclStatement(lex::Token name, std::vector<lex::Token> field_names)
+      : name_{name}, field_names_{field_names} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitStructDecl(this);
+  }
+
+  lex::Token name_;
+  // TODO:
+  // types::StrcutType* type_;
+
+  std::vector<lex::Token> field_names_;
+  // std::vector<types::Type*> field_types_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
 class VarDeclStatement : public Statement {
  public:
   VarDeclStatement(LvalueExpression* lvalue, Expression* value)

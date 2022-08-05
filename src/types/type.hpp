@@ -5,6 +5,7 @@
 namespace types {
 
 class BuiltinType;
+class StructType;
 class FnType;
 
 //////////////////////////////////////////////////////////////////////
@@ -18,6 +19,7 @@ class Type {
 
   // To resolve the second type
   virtual bool IsEqual(BuiltinType* other) = 0;
+  virtual bool IsEqual(StructType* other) = 0;
   virtual bool IsEqual(FnType* other) = 0;
 };
 
@@ -29,12 +31,4 @@ class Type {
 // };
 
 //////////////////////////////////////////////////////////////////////
-
-// class StructType : public Type {
-//  private:
-//   Type* types_;
-// };
-
-//////////////////////////////////////////////////////////////////////
-
 };  // namespace types

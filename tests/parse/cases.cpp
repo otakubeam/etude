@@ -292,12 +292,34 @@ TEST_CASE("Block final expr", "[parser]") {
   REQUIRE(typeid(*expr) == typeid(BlockExpression));
 }
 
+//////////////////////////////////////////////////////////////////////
+
 TEST_CASE("If Expr", "[parser]") {
   std::stringstream source("if true { 123 } else { false }");
   Parser p{lex::Lexer{source}};
 
   auto expr = p.ParseExpression();
   REQUIRE(typeid(*expr) == typeid(IfExpression));
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Struct declaration", "[parser]") {
+  std::stringstream source("struct Str{ a: Int, b: Bool, };");
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseStatement();
+  REQUIRE(typeid(*expr) == typeid(StructDeclStatement));
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Struct creation", "[parser]") {
+  std::stringstream source("struct Str{ 123 , true }");
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+  REQUIRE(typeid(*expr) == typeid(StructConstructionExpression));
 }
 
 //////////////////////////////////////////////////////////////////////

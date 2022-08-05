@@ -22,6 +22,8 @@ class IfExpression;
 class BlockExpression;
 
 class FnCallExpression;
+class StructConstructionExpression;
+
 class LiteralExpression;
 class LvalueExpression;
 
@@ -35,6 +37,7 @@ class ExprStatement;
 class YieldStatement;
 class ReturnStatement;
 
+class StructDeclStatement;
 class VarDeclStatement;
 class FunDeclStatement;
 
@@ -51,6 +54,8 @@ class Visitor {
   virtual void VisitYield(YieldStatement* node) = 0;
 
   virtual void VisitReturn(ReturnStatement* node) = 0;
+
+  virtual void VisitStructDecl(StructDeclStatement* node) = 0;
 
   virtual void VisitVarDecl(VarDeclStatement* node) = 0;
 
@@ -73,6 +78,8 @@ class Visitor {
   virtual void VisitBlock(BlockExpression* node) = 0;
 
   virtual void VisitFnCall(FnCallExpression* node) = 0;
+
+  virtual void VisitStructConstruction(StructConstructionExpression* node) = 0;
 
   virtual void VisitLiteral(LiteralExpression* node) = 0;
 
