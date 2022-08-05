@@ -1,6 +1,5 @@
 #pragma once
 
-#include <rt/user_defined_type.hpp>
 #include <rt/primitive_object.hpp>
 #include <rt/runtime_error.hpp>
 
@@ -9,11 +8,12 @@ namespace rt {
 //////////////////////////////////////////////////////////////////////
 
 struct IFunction;
+struct StructObject;
 
 using SBObject = std::variant<  //
     PrimitiveObject,            //
     IFunction*,                 //
-    StructObject*            //
+    StructObject*               //
     >;
 
 //////////////////////////////////////////////////////////////////////

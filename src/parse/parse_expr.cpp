@@ -70,6 +70,8 @@ Expression* Parser::ParseIfExpression() {
   }
 
   // This should be fine even without parentheses, right?
+  // TODO: fix if
+  // No, it breaks in presense of structs with if b { ... } else { ... }
   auto condition = ParseExpression();
   AssertParsed(condition,  //
                "If statement without condition");
