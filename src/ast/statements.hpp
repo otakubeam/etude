@@ -30,6 +30,7 @@ class ExprStatement : public Statement {
 
 //////////////////////////////////////////////////////////////////////
 
+// Also stands for symbol
 class StructDeclStatement : public Statement {
  public:
   StructDeclStatement(lex::Token name, std::vector<lex::Token> field_names)
@@ -41,8 +42,22 @@ class StructDeclStatement : public Statement {
   }
 
   lex::Token name_;
+
   // TODO:
   // types::StrcutType* type_;
+
+  // Supposes offset in SBValue types
+  size_t OffsetOf(std::string name) const {
+    for (size_t i = 0; i < field_names_.size(); i++) {
+      auto& t = field_names_[i];
+      if (t.GetName() == name) {
+        return i;
+      }
+    }
+
+    // In well types program should not happen
+    FMT_ASSERT(false, "No offset");
+  }
 
   std::vector<lex::Token> field_names_;
   // std::vector<types::Type*> field_types_;

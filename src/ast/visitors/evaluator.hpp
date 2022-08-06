@@ -6,6 +6,7 @@
 #include <ast/statements.hpp>
 
 #include <rt/functions/native_function.hpp>
+#include <rt/structs/struct_object.hpp>
 #include <rt/base_object.hpp>
 
 class Evaluator : public EnvVisitor<rt::SBObject> {
@@ -39,8 +40,9 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitStructDecl(StructDeclStatement*) override {
-    std::abort();
+  virtual void VisitStructDecl(StructDeclStatement* node) override {
+    auto name = node->name_.GetName();
+    struct_decls_.Declare(name, node);
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -110,8 +112,20 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitStructConstruction(StructConstructionExpression*) override {
-    std::abort();
+  virtual void VisitStructConstruction(
+      StructConstructionExpression* s_cons) override {
+    auto s_decl = struct_decls_.Get(s_cons->struct_name_.GetName()).value();
+
+    // It's there, right?
+    auto so = new rt::StructObject{s_decl};
+
+    for (size_t i = 0; i < s_decl->field_names_.size(); i++) {
+      auto field_name = s_decl->field_names_[i].GetName();
+      auto field_initializer = Eval(s_cons->values_[i]);
+      *so->FieldAccess(field_name) = field_initializer;
+    }
+
+    return_value = so;
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -121,4 +135,7 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
   virtual void VisitLvalue(LvalueExpression* ident) override;
 
   ////////////////////////////////////////////////////////////////////
+
+ private:
+  Environment<StructDeclStatement*> struct_decls_;
 };

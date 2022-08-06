@@ -16,12 +16,15 @@ struct StructObject {
     data = new SBObject[struct_decl->field_names_.size()];
   }
 
+  SBObject* FieldAccess(std::string name) {
+    size_t i = struct_decl->OffsetOf(name);
+    return data + i;
+  }
+
   StructDeclStatement* struct_decl;
 
   SBObject* data = nullptr;
 };
-
-// TODO: calculate offsets for filed access
 
 }  // namespace rt
 
