@@ -265,7 +265,7 @@ TEST_CASE("Typechecking correct nested", "[checker]") {
   tchk.Eval(p.ParseStatement());
   tchk.Eval(p.ParseStatement());
   tchk.Eval(p.ParseStatement());
-  // CHECK_NOTHROW(tchk.Eval(p.ParseStatement()));
+  CHECK_NOTHROW(tchk.Eval(p.ParseStatement()));
 }
 
 //////////////////////////////////////////////////////////////////////
