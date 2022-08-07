@@ -33,6 +33,7 @@ enum class TokenType {
   PRINT,
 
   FUN,
+  DOT,
   COMMA,
 
   VAR,
@@ -79,6 +80,7 @@ enum class TokenType {
   code(NOT)                 \
   code(PRINT)               \
   code(FUN)                 \
+  code(DOT)                 \
   code(COMMA)               \
   code(VAR)                 \
   code(TYPE)                \

@@ -263,7 +263,7 @@ class TypeChecker : public EnvVisitor<types::Type*> {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitLvalue(LvalueExpression* ident) override {
+  virtual void VisitLvalue(VarAccessExpression* ident) override {
     types::Type* t = env_->Get(ident->name_.GetName()).value();
     return_value = t;
   }

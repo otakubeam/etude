@@ -13,9 +13,12 @@
 class Expression : public TreeNode {
  public:
   virtual void Accept(Visitor* /* visitor */){};
-
-  types::Type* type_ = nullptr;
 };
+
+//////////////////////////////////////////////////////////////////////
+
+// Identifier, Named entity
+class LvalueExpression : public Expression {};
 
 //////////////////////////////////////////////////////////////////////
 
@@ -103,6 +106,22 @@ class StructConstructionExpression : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
+class FieldAccessExpression : public LvalueExpression {
+ public:
+  FieldAccessExpression(lex::Token struct_name, lex::Token field_name)
+      : struct_name_{struct_name}, field_name_{field_name} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitFieldAccess(this);
+  }
+
+  lex::Token struct_name_;
+  lex::Token field_name_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
 class IfExpression : public Expression {
  public:
   IfExpression(Expression* condition, Expression* true_branch,
@@ -153,10 +172,9 @@ class LiteralExpression : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
-// Identifier, Named entity
-class LvalueExpression : public Expression {
+class VarAccessExpression : public LvalueExpression {
  public:
-  LvalueExpression(lex::Token name) : name_{name} {
+  VarAccessExpression(lex::Token name) : name_{name} {
   }
 
   virtual void Accept(Visitor* visitor) override {

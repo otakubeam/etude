@@ -23,9 +23,10 @@ class BlockExpression;
 
 class FnCallExpression;
 class StructConstructionExpression;
+class FieldAccessExpression;
 
 class LiteralExpression;
-class LvalueExpression;
+class VarAccessExpression;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -81,9 +82,11 @@ class Visitor {
 
   virtual void VisitStructConstruction(StructConstructionExpression* node) = 0;
 
+  virtual void VisitFieldAccess(FieldAccessExpression* node) = 0;
+
   virtual void VisitLiteral(LiteralExpression* node) = 0;
 
-  virtual void VisitLvalue(LvalueExpression* node) = 0;
+  virtual void VisitLvalue(VarAccessExpression* node) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////

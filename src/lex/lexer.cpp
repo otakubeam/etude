@@ -60,6 +60,8 @@ std::optional<TokenType> Lexer::MatchOperator() {
       return TokenType::COLUMN;
     case ',':
       return TokenType::COMMA;
+    case '.':
+      return TokenType::DOT;
     case EOF:
       return TokenType::TOKEN_EOF;
     default:

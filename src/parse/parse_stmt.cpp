@@ -125,7 +125,7 @@ VarDeclStatement* Parser::ParseVarDeclStatement() {
   auto token = lexer_.Peek();
 
   Consume(lex::TokenType::IDENTIFIER);
-  auto lvalue = new LvalueExpression{std::move(token)};
+  auto lvalue = new VarAccessExpression{std::move(token)};
 
   // 2. Get an expression to assign to
 

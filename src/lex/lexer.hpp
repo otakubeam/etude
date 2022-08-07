@@ -14,7 +14,6 @@ namespace lex {
 class Lexer {
  public:
   Lexer(std::istream& source) : scanner_{source} {
-    // Advance();  // so that it starts in a valid state for Peek()
   }
 
   ////////////////////////////////////////////////////////////////////

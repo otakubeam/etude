@@ -183,7 +183,7 @@ TEST_CASE("Variable usage", "[parser]") {
   REQUIRE(typeid(*stmt) == typeid(VarDeclStatement));
 
   auto expr = p.ParseExpression();
-  REQUIRE(typeid(*expr) == typeid(LvalueExpression));
+  REQUIRE(typeid(*expr) == typeid(VarAccessExpression));
 }
 
 //////////////////////////////////////////////////////////////////////

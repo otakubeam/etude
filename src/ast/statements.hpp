@@ -67,7 +67,7 @@ class StructDeclStatement : public Statement {
 
 class VarDeclStatement : public Statement {
  public:
-  VarDeclStatement(LvalueExpression* lvalue, Expression* value)
+  VarDeclStatement(VarAccessExpression* lvalue, Expression* value)
       : lvalue_{lvalue}, value_{value} {
   }
 
@@ -75,7 +75,7 @@ class VarDeclStatement : public Statement {
     visitor->VisitVarDecl(this);
   }
 
-  LvalueExpression* lvalue_;
+  VarAccessExpression* lvalue_;
   Expression* value_;
 };
 
