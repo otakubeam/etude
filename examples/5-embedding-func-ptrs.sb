@@ -1,0 +1,22 @@
+struct Abc {
+  a: Int,
+  b: Bool,
+  c: (Int) Bool,
+};
+
+fun isEven(i: Int) Bool {
+  if i == 1 { true } else { false }
+}
+
+var t = Abc:{123, true, isEven};
+var t2 = Abc:{1, true, isEven};
+
+fun apply(abc: Abc) Bool {
+  # would like to do this:
+     # abc.c(abc.a)
+
+  var fLocal = abc.c;
+  fLocal(abc.a)
+}
+
+return apply(t2);
