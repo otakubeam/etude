@@ -95,7 +95,7 @@ Expression* Parser::ParseIfExpression() {
 
 Expression* Parser::ParseBlockExpression() {
   if (!Matches(lex::TokenType::LEFT_CBRACE)) {
-    return ParseFunctionLike();
+    return SwitchOnId();
   }
 
   std::vector<Statement*> stmts;
@@ -117,21 +117,48 @@ Expression* Parser::ParseBlockExpression() {
 
 ////////////////////////////////////////////////////////////////////
 
-// Function application and struct creation are "function-like"
-Expression* Parser::ParseFunctionLike() {
-  auto cons_name = lexer_.Peek();
+Expression* Parser::SwitchOnId() {
+  auto id = lexer_.Peek();
 
   if (!Matches(lex::TokenType::IDENTIFIER)) {
     return ParsePrimary();
   }
 
-  // At this point we have already consumed the token
-  // Now it's our responsibility
-  if (!Matches(lex::TokenType::LEFT_BRACE) &&
-      !Matches(lex::TokenType::LEFT_CBRACE)) {
-    return new LvalueExpression{std::move(cons_name)};
-  }
+  // Four possibilities:
+  // 1. Function call   ~ id '('
+  // 2. Struct access   ~ id '.'
+  // 3. Struct creation ~ id ':'
+  // 4. Variable access ~ id
 
+  switch (lexer_.Peek().type) {
+    case lex::TokenType::LEFT_BRACE:
+      Consume(lex::TokenType::LEFT_BRACE);
+
+      return ParseFunctionLike(id);
+
+    case lex::TokenType::COLUMN:
+      Consume(lex::TokenType::COLUMN);
+      Consume(lex::TokenType::LEFT_CBRACE);
+
+      return ParseFunctionLike(id);
+
+    case lex::TokenType::DOT: {
+      Consume(lex::TokenType::DOT);
+      auto field_name = lexer_.Peek();
+      Consume(lex::TokenType::IDENTIFIER);
+
+      return new FieldAccessExpression(id, field_name);
+    }
+
+    default:
+      return new VarAccessExpression(id);
+  }
+}
+
+////////////////////////////////////////////////////////////////////
+
+// Function application and struct creation are "function-like"
+Expression* Parser::ParseFunctionLike(lex::Token id) {
   // Args or Initializers
   std::vector<Expression*> exprs;
 
@@ -140,9 +167,9 @@ Expression* Parser::ParseFunctionLike() {
   // 1. Case of empty list
 
   if (Matches(lex::TokenType::RIGHT_BRACE)) {
-    return new FnCallExpression{cons_name, std::move(exprs)};
+    return new FnCallExpression{id, std::move(exprs)};
   } else if (Matches(lex::TokenType::RIGHT_CBRACE)) {
-    return new StructConstructionExpression{cons_name, std::move(exprs)};
+    return new StructConstructionExpression{id, std::move(exprs)};
   }
 
   // 2. Non-empty list case: parse it
@@ -157,11 +184,11 @@ Expression* Parser::ParseFunctionLike() {
   // 3. Return result
 
   if (Matches(lex::TokenType::RIGHT_BRACE)) {
-    return new FnCallExpression{cons_name, std::move(exprs)};
+    return new FnCallExpression{id, std::move(exprs)};
   }
 
   if (Matches(lex::TokenType::RIGHT_CBRACE)) {
-    return new StructConstructionExpression{cons_name, std::move(exprs)};
+    return new StructConstructionExpression{id, std::move(exprs)};
   }
 
   throw "Parse error\n";
@@ -197,7 +224,7 @@ Expression* Parser::ParsePrimary() {
       break;
 
     case lex::TokenType::IDENTIFIER:
-      result = new LvalueExpression{std::move(token)};
+      result = new VarAccessExpression{std::move(token)};
       break;
 
     default:

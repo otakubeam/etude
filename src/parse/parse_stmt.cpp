@@ -99,12 +99,14 @@ StructDeclStatement* Parser::ParseStructDeclStatement() {
 
   auto field_name = lexer_.Peek();
   std::vector<lex::Token> fields_;
+
   while (Matches(lex::TokenType::IDENTIFIER)) {
     fields_.push_back(field_name);
     Consume(lex::TokenType::COLUMN);
     // TODO: do not ignore
     AssertParsed(ParseType(), "Could not parse type in struct declaration");
     Consume(lex::TokenType::COMMA);
+    field_name = lexer_.Peek();
   }
 
   Consume(lex::TokenType::RIGHT_CBRACE);

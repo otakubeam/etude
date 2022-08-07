@@ -130,6 +130,18 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
 
   ////////////////////////////////////////////////////////////////////
 
+  virtual void VisitFieldAccess(FieldAccessExpression* node) override {
+    auto obj_name = node->struct_name_.GetName();
+    auto sb_obj = env_->Get(obj_name).value();
+    auto so = std::get<rt::StructObject*>(sb_obj);
+
+    fmt::print("Name: {}", node->field_name_.GetName());
+    auto offset = so->struct_decl->OffsetOf(node->field_name_.GetName());
+    return_value = so->data[offset];
+  }
+
+  ////////////////////////////////////////////////////////////////////
+
   virtual void VisitFnCall(FnCallExpression* node) override;
   virtual void VisitLiteral(LiteralExpression* lit) override;
   virtual void VisitLvalue(VarAccessExpression* ident) override;

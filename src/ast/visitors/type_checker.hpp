@@ -241,6 +241,12 @@ class TypeChecker : public EnvVisitor<types::Type*> {
 
   ////////////////////////////////////////////////////////////////////
 
+  virtual void VisitFieldAccess(FieldAccessExpression* node) override {
+    (void)node;
+  }
+
+  ////////////////////////////////////////////////////////////////////
+
   virtual void VisitLiteral(LiteralExpression* lit) override {
     switch (lit->token_.type) {
       case lex::TokenType::NUMBER:

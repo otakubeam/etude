@@ -4,7 +4,8 @@
 
 //////////////////////////////////////////////////////////////////////
 
-Evaluator::Evaluator() {
+Evaluator::Evaluator()
+    : struct_decls_{Environment<StructDeclStatement*>::MakeGlobal()} {
   env_->Declare("print", new rt::Print{});
 }
 

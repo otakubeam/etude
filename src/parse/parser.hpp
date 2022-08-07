@@ -85,7 +85,7 @@ class Parser {
   Expression* ParseUnary();
   Expression* ParseIfExpression();
   Expression* ParseBlockExpression();
-  Expression* ParseFunctionLike();
+  Expression* ParseFunctionLike(lex::Token);
   Expression* ParsePrimary();
 
   ////////////////////////////////////////////////////////////////////
@@ -146,6 +146,8 @@ class Parser {
   ////////////////////////////////////////////////////////////////////
 
  private:
+  Expression* SwitchOnId();
+
   bool Matches(lex::TokenType type) {
     if (lexer_.Peek().type != type) {
       return false;

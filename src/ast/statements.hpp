@@ -35,6 +35,9 @@ class StructDeclStatement : public Statement {
  public:
   StructDeclStatement(lex::Token name, std::vector<lex::Token> field_names)
       : name_{name}, field_names_{field_names} {
+    for (auto t : field_names) {
+      fmt::print("{}\n", t.GetName());
+    }
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -48,6 +51,8 @@ class StructDeclStatement : public Statement {
 
   // Supposes offset in SBValue types
   size_t OffsetOf(std::string name) const {
+    fmt::print("Searching for {}\n", name);
+
     for (size_t i = 0; i < field_names_.size(); i++) {
       auto& t = field_names_[i];
       if (t.GetName() == name) {
