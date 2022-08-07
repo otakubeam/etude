@@ -116,28 +116,11 @@ class FieldAccessExpression : public LvalueExpression {
     visitor->VisitFieldAccess(this);
   }
 
+  // I would like to write Expession* instead of struct name
+  // but that would need a different kind of parser
+
   lex::Token struct_name_;
   lex::Token field_name_;
-};
-
-//////////////////////////////////////////////////////////////////////
-
-class IfExpression : public Expression {
- public:
-  IfExpression(Expression* condition, Expression* true_branch,
-               Expression* false_branch = nullptr)
-      : condition_{condition},
-        true_branch_{true_branch},
-        false_branch_{false_branch} {
-  }
-
-  virtual void Accept(Visitor* visitor) override {
-    visitor->VisitIf(this);
-  }
-
-  Expression* condition_;
-  Expression* true_branch_;
-  Expression* false_branch_;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -154,6 +137,29 @@ class BlockExpression : public Expression {
 
   std::vector<Statement*> stmts_;
   Expression* final_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class IfExpression : public Expression {
+ public:
+  IfExpression(Expression* condition, Expression* true_branch,
+               Expression* false_branch = nullptr)
+      : condition_{condition},
+        true_branch_{true_branch},
+        false_branch_{false_branch} {
+    if (false_branch_ == nullptr) {
+      false_branch_ = new BlockExpression{{}};
+    }
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitIf(this);
+  }
+
+  Expression* condition_;
+  Expression* true_branch_;
+  Expression* false_branch_;
 };
 
 //////////////////////////////////////////////////////////////////////

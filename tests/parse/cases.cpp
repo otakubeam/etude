@@ -315,7 +315,7 @@ TEST_CASE("Struct declaration", "[parser]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Struct creation", "[parser]") {
-  std::stringstream source("struct Str{ 123 , true }");
+  std::stringstream source("Str:{ 123 , true }");
   Parser p{lex::Lexer{source}};
 
   auto expr = p.ParseExpression();

@@ -2,12 +2,19 @@
 
 #include <types/type.hpp>
 
+#include <fmt/core.h>
+
+#include <string>
+
 namespace types {
 
 //////////////////////////////////////////////////////////////////////
 
 class StructType : public Type {
  public:
+  StructType(std::string name) : name_{name} {
+  }
+
   virtual bool IsEqual(Type* other) {
     return other->IsEqual(this);
   }
@@ -17,25 +24,33 @@ class StructType : public Type {
   }
 
   virtual bool IsEqual(StructType* other) {
-    if (other->types_.size() != types_.size()) {
-      return false;
-    }
+    // XXX: Radically simplify!
+    return other->name_ == name_;
 
-    for (std::size_t i = 0; i < types_.size(); i++) {
-      if (!types_[i]->IsEqual(other->types_[i])) {
-        return false;
-      }
-    }
-
-    return true;
+    // if (other->types_.size() != types_.size()) {
+    //   return false;
+    // }
+    //
+    // for (std::size_t i = 0; i < types_.size(); i++) {
+    //   if (!types_[i]->IsEqual(other->types_[i])) {
+    //     return false;
+    //   }
+    // }
+    //
+    // return true;
   }
 
   virtual bool IsEqual(FnType*) {
     return false;
   }
 
+  std::string GetName() {
+    return name_;
+  }
+
  private:
-  std::vector<Type*> types_;
+  std::string name_;
+  // std::vector<Type*> types_;
 };
 
 //////////////////////////////////////////////////////////////////////

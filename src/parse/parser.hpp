@@ -4,6 +4,7 @@
 
 #include <ast/statements.hpp>
 
+#include <types/struct_type.hpp>
 #include <types/builtins.hpp>
 #include <types/fn_type.hpp>
 
@@ -132,6 +133,11 @@ class Parser {
         auto return_type = ParseType();
 
         return new types::FnType{std::move(args), return_type};
+      }
+
+      case lex::TokenType::IDENTIFIER: {
+        Consume(lex::TokenType::IDENTIFIER);
+        return new types::StructType{token.GetName()};
       }
 
       default:

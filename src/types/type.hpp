@@ -21,6 +21,9 @@ class Type {
   virtual bool IsEqual(BuiltinType* other) = 0;
   virtual bool IsEqual(StructType* other) = 0;
   virtual bool IsEqual(FnType* other) = 0;
+
+  // TODO:
+  // virtual bool IsEqual(TypeAlias* other) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////

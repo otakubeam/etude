@@ -210,3 +210,63 @@ TEST_CASE("Typechecking fun arguments", "[checker]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Typechecking correct structs", "[checker]") {
+  std::stringstream source(  //
+      "                                                 "
+      "   struct Str {                                  "
+      "     a: Int,                                     "
+      "     b: Bool,                                    "
+      "   };                                            "
+      "                                                 "
+      "   var inst = Str:{123, true};                   "
+      "                                                 "
+      "   fun takingStruct(str: Str) Int {              "
+      "     var local = str.a;                          "
+      "     local                                       "
+      "   }                                             "
+      "                                                 "
+      "   takingStruct(inst);                           "
+      "                                                 ");
+  Parser p{lex::Lexer{source}};
+
+  TypeChecker tchk;
+  tchk.Eval(p.ParseStatement());
+  tchk.Eval(p.ParseStatement());
+  tchk.Eval(p.ParseStatement());
+  CHECK_NOTHROW(tchk.Eval(p.ParseStatement()));
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Typechecking correct nested", "[checker]") {
+  std::stringstream source(  //
+      "                                                 "
+      "   struct Base {                                 "
+      "     a: Int,                                     "
+      "   };                                            "
+      "                                                 "
+      "   struct Nested {                               "
+      "     b: Base,                                    "
+      "   };                                            "
+      "                                                 "
+      "   var inst = Nested:{Base:{123}};               "
+      "                                                 "
+      "   fun takingStruct(str: Nested) Base {          "
+      "     Base:{123}                                  "
+      // "     str.b                                       "
+      "   }                                             "
+      "                                                 "
+      "   takingStruct(inst);                           "
+      "                                                 ");
+  Parser p{lex::Lexer{source}};
+
+  TypeChecker tchk;
+  tchk.Eval(p.ParseStatement());
+  tchk.Eval(p.ParseStatement());
+  tchk.Eval(p.ParseStatement());
+  tchk.Eval(p.ParseStatement());
+  // CHECK_NOTHROW(tchk.Eval(p.ParseStatement()));
+}
+
+//////////////////////////////////////////////////////////////////////

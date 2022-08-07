@@ -4,13 +4,17 @@
 #include <ast/expressions.hpp>
 #include <ast/statements.hpp>
 
+#include <rt/structs/struct_object.hpp>
+
+#include <types/struct_type.hpp>
 #include <types/type_error.hpp>
 #include <types/builtins.hpp>
 #include <types/fn_type.hpp>
 
 class TypeChecker : public EnvVisitor<types::Type*> {
  public:
-  TypeChecker() {
+  TypeChecker()
+      : struct_decls_{Environment<StructDeclStatement*>::MakeGlobal()} {
     // Declare intrinsics
     env_->Declare("print", new types::FnType({}));
   }
@@ -28,8 +32,9 @@ class TypeChecker : public EnvVisitor<types::Type*> {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitStructDecl(StructDeclStatement*) override {
-    std::abort();
+  virtual void VisitStructDecl(StructDeclStatement* node) override {
+    auto name = node->name_.GetName();
+    struct_decls_.Declare(name, node);
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -53,8 +58,7 @@ class TypeChecker : public EnvVisitor<types::Type*> {
       auto saved = fn_return_expect;
       fn_return_expect = declared_type->GetReturnType();
 
-      // TODO: Allow for final return?
-      if (Eval(fn_decl->block_) != fn_return_expect) {
+      if (!Eval(fn_decl->block_)->IsEqual(fn_return_expect)) {
         throw types::TypeError{
             .msg = fmt::format(
                 "Return type does not match the function declaration")};
@@ -235,14 +239,44 @@ class TypeChecker : public EnvVisitor<types::Type*> {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitStructConstruction(StructConstructionExpression*) override {
-    std::abort();
+  virtual void VisitStructConstruction(
+      StructConstructionExpression* s_cons) override {
+    auto s_decl = struct_decls_.Get(s_cons->struct_name_.GetName()).value();
+
+    for (size_t i = 0; i < s_decl->field_names_.size(); i++) {
+      auto field_decl_type = s_decl->field_types_[i];
+      auto field_initializer_type = Eval(s_cons->values_[i]);
+
+      if (!field_decl_type->IsEqual(field_initializer_type)) {
+        throw types::TypeError{fmt::format("Bad struct construction")};
+      }
+    }
+
+    return_value = s_decl->type_;
   }
 
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitFieldAccess(FieldAccessExpression* node) override {
-    (void)node;
+    types::Type* t = env_->Get(  //
+                             node->struct_name_.GetName())
+                         .value();
+
+    auto str_t = dynamic_cast<types::StructType*>(t);
+    auto s_decl = struct_decls_.Get(str_t->GetName()).value();
+
+    auto searching = node->field_name_.GetName();
+
+    for (size_t i = 0; i < s_decl->field_names_.size(); i++) {
+      if (searching == s_decl->field_names_[i].GetName()) {
+        return_value = s_decl->field_types_[i];
+        return;
+      }
+    }
+
+    throw types::TypeError{fmt::format("No such field {} in struct {}",
+                                       searching,
+                                       node->struct_name_.GetName())};
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -276,4 +310,6 @@ class TypeChecker : public EnvVisitor<types::Type*> {
 
  private:
   types::Type* fn_return_expect = nullptr;
+
+  Environment<StructDeclStatement*> struct_decls_;
 };

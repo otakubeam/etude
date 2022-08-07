@@ -98,13 +98,17 @@ StructDeclStatement* Parser::ParseStructDeclStatement() {
   // 2. Parse contents
 
   auto field_name = lexer_.Peek();
-  std::vector<lex::Token> fields_;
+  std::vector<lex::Token> fields;
+  std::vector<types::Type*> types;
 
   while (Matches(lex::TokenType::IDENTIFIER)) {
-    fields_.push_back(field_name);
+    fields.push_back(field_name);
     Consume(lex::TokenType::COLUMN);
-    // TODO: do not ignore
-    AssertParsed(ParseType(), "Could not parse type in struct declaration");
+
+    auto t = ParseType();
+    AssertParsed(t, "Could not parse type in struct declaration");
+    types.push_back(t);
+
     Consume(lex::TokenType::COMMA);
     field_name = lexer_.Peek();
   }
@@ -112,7 +116,8 @@ StructDeclStatement* Parser::ParseStructDeclStatement() {
   Consume(lex::TokenType::RIGHT_CBRACE);
   Consume(lex::TokenType::SEMICOLUMN);
 
-  return new StructDeclStatement{struct_name, std::move(fields_)};
+  return new StructDeclStatement{struct_name, std::move(fields),
+                                 std::move(types)};
 }
 
 ///////////////////////////////////////////////////////////////////

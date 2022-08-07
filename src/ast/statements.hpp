@@ -3,6 +3,8 @@
 #include <ast/syntax_tree.hpp>
 #include <ast/expressions.hpp>
 
+#include <types/struct_type.hpp>
+
 #include <lex/token.hpp>
 
 #include <vector>
@@ -33,26 +35,18 @@ class ExprStatement : public Statement {
 // Also stands for symbol
 class StructDeclStatement : public Statement {
  public:
-  StructDeclStatement(lex::Token name, std::vector<lex::Token> field_names)
-      : name_{name}, field_names_{field_names} {
-    for (auto t : field_names) {
-      fmt::print("{}\n", t.GetName());
-    }
+  StructDeclStatement(lex::Token name, std::vector<lex::Token> field_names,
+                      std::vector<types::Type*> field_types)
+      : name_{name}, field_names_{field_names}, field_types_{field_types} {
+    type_ = new types::StructType{name.GetName()};
   }
 
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitStructDecl(this);
   }
 
-  lex::Token name_;
-
-  // TODO:
-  // types::StrcutType* type_;
-
-  // Supposes offset in SBValue types
+  // Assumes offset in SBValue widths
   size_t OffsetOf(std::string name) const {
-    fmt::print("Searching for {}\n", name);
-
     for (size_t i = 0; i < field_names_.size(); i++) {
       auto& t = field_names_[i];
       if (t.GetName() == name) {
@@ -64,8 +58,11 @@ class StructDeclStatement : public Statement {
     FMT_ASSERT(false, "No offset");
   }
 
+  lex::Token name_;
+  types::StructType* type_;
+
   std::vector<lex::Token> field_names_;
-  // std::vector<types::Type*> field_types_;
+  std::vector<types::Type*> field_types_;
 };
 
 //////////////////////////////////////////////////////////////////////

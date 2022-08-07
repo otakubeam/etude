@@ -135,7 +135,6 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
     auto sb_obj = env_->Get(obj_name).value();
     auto so = std::get<rt::StructObject*>(sb_obj);
 
-    fmt::print("Name: {}", node->field_name_.GetName());
     auto offset = so->struct_decl->OffsetOf(node->field_name_.GetName());
     return_value = so->data[offset];
   }
@@ -149,5 +148,6 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
   ////////////////////////////////////////////////////////////////////
 
  private:
+  // TODO: remove? It's really shared 
   Environment<StructDeclStatement*> struct_decls_;
 };
