@@ -1,0 +1,32 @@
+# Use structs to bind related data together
+
+struct Str { 
+   count: Int,
+   ismodified: Bool,
+};
+
+var instance = Str:{0, true};
+var instance2 = Str:{123, false};
+
+var result = instance.ismodified;
+var result2 = instance.count;
+
+return result;
+
+# Structs can nest and typecheck
+
+struct Base {                       
+  a: Int,                           
+};                                  
+                                    
+struct Nested {                     
+  b: Base,                          
+};                                  
+                                    
+var inst = Nested:{Base:{123}};     
+                                    
+fun takingStruct(str: Nested) Base {
+  str.b                             
+}                                   
+                                    
+takingStruct(inst);                 

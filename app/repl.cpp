@@ -18,7 +18,7 @@ int main() {
       fmt::print("> ");
       auto stmt = p->ParseStatement();
 
-      // tchk.Eval(stmt);
+      tchk.Eval(stmt);
       e.Eval(stmt);
 
     } catch (ParseError e) {
