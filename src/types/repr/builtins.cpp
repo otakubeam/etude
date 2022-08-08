@@ -1,6 +1,4 @@
-#include <types/builtins.hpp>
-
-#include <types/type.hpp>
+#include <types/repr/builtins.hpp>
 
 namespace types {
 

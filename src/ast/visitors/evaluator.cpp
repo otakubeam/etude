@@ -128,7 +128,7 @@ void Evaluator::VisitLiteral(LiteralExpression* lit) {
 
 // In this case we promote it to rvalue
 // In assignment we would want to extract the name
-void Evaluator::VisitLvalue(VarAccessExpression* lit) {
+void Evaluator::VisitVarAccess(VarAccessExpression* lit) {
   // Asserts that we are an IDENTIFIER
   auto name = lit->name_.GetName();
 

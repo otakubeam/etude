@@ -1,6 +1,7 @@
 #include <rt/base_object.hpp>
 
 namespace rt {
+
 //////////////////////////////////////////////////////////////////////
 
 SBObject BinaryOp(char op_type, SBObject lhs, SBObject rhs) {

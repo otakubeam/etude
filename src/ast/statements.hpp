@@ -3,7 +3,7 @@
 #include <ast/syntax_tree.hpp>
 #include <ast/expressions.hpp>
 
-#include <types/struct_type.hpp>
+#include <types/repr/struct_type.hpp>
 
 #include <lex/token.hpp>
 

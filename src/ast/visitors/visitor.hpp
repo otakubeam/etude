@@ -1,43 +1,25 @@
 #pragma once
 
-#include <rt/base_object.hpp>
-
-//////////////////////////////////////////////////////////////////////
-
-class TreeNode;
-
 //////////////////////////////////////////////////////////////////////
 
 class Expression;
-//---------------
-
-// In order of precedence
 class ComparisonExpression;
 class BinaryExpression;
 class UnaryExpression;
-
-// If and Block expressions act something like function
-// calls, so let's place them here in precedence
 class IfExpression;
 class BlockExpression;
-
 class FnCallExpression;
 class StructConstructionExpression;
 class FieldAccessExpression;
-
 class LiteralExpression;
 class VarAccessExpression;
 
 //////////////////////////////////////////////////////////////////////
 
 class Statement;
-//---------------
-
 class ExprStatement;
-
 class YieldStatement;
 class ReturnStatement;
-
 class StructDeclStatement;
 class VarDeclStatement;
 class FunDeclStatement;
@@ -84,9 +66,9 @@ class Visitor {
 
   virtual void VisitFieldAccess(FieldAccessExpression* node) = 0;
 
-  virtual void VisitLiteral(LiteralExpression* node) = 0;
+  virtual void VisitVarAccess(VarAccessExpression* node) = 0;
 
-  virtual void VisitLvalue(VarAccessExpression* node) = 0;
+  virtual void VisitLiteral(LiteralExpression* node) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////

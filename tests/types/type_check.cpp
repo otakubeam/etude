@@ -1,10 +1,11 @@
-#include <ast/visitors/type_checker.hpp>
+#include <types/check/type_checker.hpp>
+
+#include <types/repr/builtins.hpp>
+#include <types/repr/fn_type.hpp>
+
+#include <types/type.hpp>
 
 #include <parse/parser.hpp>
-
-#include <types/builtins.hpp>
-#include <types/fn_type.hpp>
-#include <types/type.hpp>
 
 // Finally,
 #include <catch2/catch.hpp>
@@ -15,8 +16,8 @@ TEST_CASE("Checker: Just works", "[checker]") {
   std::stringstream source("1 + true");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
-  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::TypeError);
+  types::check::TypeChecker tchk;
+  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::check::TypeError);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -27,9 +28,9 @@ TEST_CASE("Check variable declaration", "[checker]") {
       "1 + a");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
+  types::check::TypeChecker tchk;
   tchk.Eval(p.ParseStatement());
-  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::TypeError);
+  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::check::TypeError);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -38,7 +39,7 @@ TEST_CASE("Correct if", "[checker]") {
   std::stringstream source("if true { \"Hello\" } else { \"world\" }");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
+  types::check::TypeChecker tchk;
   CHECK(tchk.Eval(p.ParseExpression()) == &types::builtin_string);
 }
 
@@ -48,8 +49,8 @@ TEST_CASE("If wrong condition", "[checker]") {
   std::stringstream source("if 1 { \"Hello\" } else { \"world\" }");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
-  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::TypeError);
+  types::check::TypeChecker tchk;
+  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::check::TypeError);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -58,8 +59,8 @@ TEST_CASE("If diverging arms", "[checker]") {
   std::stringstream source("if true { 123 } else { \"world\" }");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
-  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::TypeError);
+  types::check::TypeChecker tchk;
+  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::check::TypeError);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -75,7 +76,7 @@ TEST_CASE("Check correct function", "[checker]") {
       "}                                         ");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
+  types::check::TypeChecker tchk;
   CHECK_NOTHROW(tchk.Eval(p.ParseExpression()));
 }
 
@@ -92,8 +93,8 @@ TEST_CASE("Check fn call place", "[checker]") {
       "}                                         ");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
-  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::TypeError);
+  types::check::TypeChecker tchk;
+  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::check::TypeError);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -109,8 +110,8 @@ TEST_CASE("Check fn decl return value", "[checker]") {
       "}                                         ");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
-  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::TypeError);
+  types::check::TypeChecker tchk;
+  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::check::TypeError);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -129,8 +130,8 @@ TEST_CASE("Check nested return value", "[checker]") {
       "}                                         ");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
-  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::TypeError);
+  types::check::TypeChecker tchk;
+  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::check::TypeError);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -149,8 +150,8 @@ TEST_CASE("Check fn decl params", "[checker]") {
       "}                                         ");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
-  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::TypeError);
+  types::check::TypeChecker tchk;
+  CHECK_THROWS_AS(tchk.Eval(p.ParseExpression()), types::check::TypeError);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -164,7 +165,7 @@ TEST_CASE("Check correct recursive", "[checker]") {
       "                                          ");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
+  types::check::TypeChecker tchk;
   CHECK_NOTHROW(tchk.Eval(p.ParseStatement()));
 }
 
@@ -177,8 +178,8 @@ TEST_CASE("Typechecking fun params", "[checker]") {
       "}                                       ");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
-  CHECK_THROWS_AS(tchk.Eval(p.ParseStatement()), types::TypeError);
+  types::check::TypeChecker tchk;
+  CHECK_THROWS_AS(tchk.Eval(p.ParseStatement()), types::check::TypeError);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -202,11 +203,11 @@ TEST_CASE("Typechecking fun arguments", "[checker]") {
       "                                                 ");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
+  types::check::TypeChecker tchk;
   tchk.Eval(p.ParseStatement());
   tchk.Eval(p.ParseStatement());
 
-  CHECK_THROWS_AS(tchk.Eval(p.ParseStatement()), types::TypeError);
+  CHECK_THROWS_AS(tchk.Eval(p.ParseStatement()), types::check::TypeError);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -230,7 +231,7 @@ TEST_CASE("Typechecking correct structs", "[checker]") {
       "                                                 ");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
+  types::check::TypeChecker tchk;
   tchk.Eval(p.ParseStatement());
   tchk.Eval(p.ParseStatement());
   tchk.Eval(p.ParseStatement());
@@ -260,7 +261,7 @@ TEST_CASE("Typechecking correct nested", "[checker]") {
       "                                                 ");
   Parser p{lex::Lexer{source}};
 
-  TypeChecker tchk;
+  types::check::TypeChecker tchk;
   tchk.Eval(p.ParseStatement());
   tchk.Eval(p.ParseStatement());
   tchk.Eval(p.ParseStatement());

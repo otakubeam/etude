@@ -143,7 +143,7 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
 
   virtual void VisitFnCall(FnCallExpression* node) override;
   virtual void VisitLiteral(LiteralExpression* lit) override;
-  virtual void VisitLvalue(VarAccessExpression* ident) override;
+  virtual void VisitVarAccess(VarAccessExpression* ident) override;
 
   ////////////////////////////////////////////////////////////////////
 

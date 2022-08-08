@@ -1,9 +1,10 @@
 #pragma once
 
 #include <ast/scope/environment.hpp>
-
 #include <ast/visitors/visitor.hpp>
 #include <ast/syntax_tree.hpp>
+
+#include <fmt/core.h>
 
 //////////////////////////////////////////////////////////////////////
 

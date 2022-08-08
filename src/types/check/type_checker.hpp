@@ -1,22 +1,23 @@
 #pragma once
 
+#include <types/check/type_error.hpp>
+#include <types/repr/struct_type.hpp>
+#include <types/repr/builtins.hpp>
+#include <types/repr/fn_type.hpp>
+
 #include <ast/visitors/template_visitor.hpp>
-#include <ast/expressions.hpp>
-#include <ast/statements.hpp>
 
 #include <rt/structs/struct_object.hpp>
 
-#include <types/struct_type.hpp>
-#include <types/type_error.hpp>
-#include <types/builtins.hpp>
-#include <types/fn_type.hpp>
+namespace types::check {
 
-class TypeChecker : public EnvVisitor<types::Type*> {
+//////////////////////////////////////////////////////////////////////
+
+class TypeChecker : public ReturnVisitor<Type*> {
  public:
-  TypeChecker()
-      : struct_decls_{Environment<StructDeclStatement*>::MakeGlobal()} {
+  TypeChecker() {
     // Declare intrinsics
-    env_->Declare("print", new types::FnType({}));
+    global_type_store.Declare("print", new FnType({}));
   }
 
   virtual void VisitStatement(Statement*) override {
@@ -43,7 +44,7 @@ class TypeChecker : public EnvVisitor<types::Type*> {
     auto declared_type = fn_decl->type_;
 
     {
-      Environment<types::Type*>::ScopeGuard guard{&env_};
+      Environment<Type*>::ScopeGuard guard{&env_};
 
       // Declare the function itself (to enable checking recursive fns)
 
@@ -55,56 +56,48 @@ class TypeChecker : public EnvVisitor<types::Type*> {
         env_->Declare(fm.ident.GetName(), fm.type);
       }
 
+      // A little dance to handle nesting of functions:
+      // 1. Save previous return_expect
       auto saved = fn_return_expect;
       fn_return_expect = declared_type->GetReturnType();
 
-      if (!Eval(fn_decl->block_)->IsEqual(fn_return_expect)) {
-        throw types::TypeError{
-            .msg = fmt::format(
-                "Return type does not match the function declaration")};
+      // 2. Do the check
+      if (fn_return_expect->DiffersFrom(Eval(fn_decl->block_))) {
+        throw check::FnBlockError{};
       }
 
+      // 3. Restore previous return expect
       fn_return_expect = saved;
     }
 
-    // If everything went good.
+    // If everything went good
     env_->Declare(fn_decl->name_.GetName(), declared_type);
   }
 
   ////////////////////////////////////////////////////////////////////
-
-  struct ReturnedValue {
-    rt::SBObject value;
-  };
 
   virtual void VisitReturn(ReturnStatement* return_stmt) override {
     if (!fn_return_expect) {
       return;  // Program finishes
     }
 
-    if (fn_return_expect != Eval(return_stmt->return_value_)) {
-      throw types::TypeError{
-          .msg = fmt::format(
-              "Return type does not match the function declaration")};
+    if (fn_return_expect->DiffersFrom(Eval(return_stmt->return_value_))) {
+      throw check::FnDeclarationError{};
     }
   }
 
   ////////////////////////////////////////////////////////////////////
 
-  struct YieldedValue {
-    rt::SBObject value;
-  };
-
   virtual void VisitYield(YieldStatement*) override {
     // TODO: throw up to closest match
-    return_value = &types::builtin_unit;
+    return_value = &builtin_unit;
   }
 
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitExprStatement(ExprStatement* expr_stmt) override {
     Eval(expr_stmt->expr_);  // Type-check
-    return_value = &types::builtin_unit;
+    return_value = &builtin_unit;
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -116,54 +109,50 @@ class TypeChecker : public EnvVisitor<types::Type*> {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitComparison(ComparisonExpression* cmp_expr) override {
-    if (Eval(cmp_expr->left_) != &types::builtin_int) {
-      throw types::TypeError{fmt::format(
-          "Comparison expression at {} has non-int left operand", "Unknown")};
+    if (Eval(cmp_expr->left_) != &builtin_int) {
+      throw check::ArithCmpError{"left"};
     }
 
-    if (Eval(cmp_expr->right_) != &types::builtin_int) {
-      throw types::TypeError{fmt::format(
-          "Comparison expression at {} has non-int right operand", "Unknown")};
+    if (Eval(cmp_expr->right_) != &builtin_int) {
+      throw check::ArithCmpError{"right"};
     }
 
-    return_value = &types::builtin_bool;
+    return_value = &builtin_bool;
   }
 
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitBinary(BinaryExpression* bin_expr) override {
-    if (Eval(bin_expr->left_) != &types::builtin_int) {
-      throw types::TypeError{fmt::format(
-          "Binary expression at {} has non-int left operand", "Unknown")};
+    if (Eval(bin_expr->left_) != &builtin_int) {
+      throw check::ArithAddError{"left"};
     }
 
-    if (Eval(bin_expr->right_) != &types::builtin_int) {
-      throw types::TypeError{fmt::format(
-          "Binary expression at {} has non-int right operand", "Unknown")};
+    if (Eval(bin_expr->right_) != &builtin_int) {
+      throw check::ArithAddError{"right"};
     }
 
-    return_value = &types::builtin_int;
+    return_value = &builtin_int;
   }
 
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitUnary(UnaryExpression* un_expr) override {
+    auto operand_type = Eval(un_expr->operand_);
+
     switch (un_expr->operator_.type) {
       case lex::TokenType::NOT:
-        if (Eval(un_expr->operand_) != &types::builtin_bool) {
-          throw types::TypeError{"Negating non-bool"};
-        } else {
-          return_value = &types::builtin_bool;
-          return;
+        if (builtin_bool.DiffersFrom(operand_type)) {
+          throw check::TypeError{"Negating non-bool"};
         }
+        return_value = &builtin_bool;
+        break;
 
       case lex::TokenType::MINUS:
-        if (Eval(un_expr->operand_) != &types::builtin_int) {
-          throw types::TypeError{"Negating non-int"};
-        } else {
-          return_value = &types::builtin_int;
-          return;
+        if (builtin_int.DiffersFrom(operand_type)) {
+          throw check::TypeError{"Negating non-int"};
         }
+        return_value = &builtin_int;
+        break;
 
       default:
         FMT_ASSERT(false, "Unreachable");
@@ -173,22 +162,15 @@ class TypeChecker : public EnvVisitor<types::Type*> {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitIf(IfExpression* if_expr) override {
-    if (!types::builtin_bool.IsEqual(Eval(if_expr->condition_))) {
-      throw types::TypeError{fmt::format(
-          "If expression at {} has non-bool condition",
-          "Unknown "  //
-          )};
+    if (builtin_bool.DiffersFrom(Eval(if_expr->condition_))) {
+      throw check::IfCondError{"<unknown-loc>"};
     }
 
     auto true_type = Eval(if_expr->true_branch_);
-
-    auto false_type = Eval(if_expr->false_branch_);
-
-    if (!true_type->IsEqual(false_type)) {
-      throw types::TypeError{fmt::format(
-          "If expression at {} has arms of different types",
-          "Unknown "  //
-          )};
+    auto false_type = if_expr->false_branch_ ? Eval(if_expr->false_branch_)  //
+                                             : &builtin_unit;
+    if (true_type->DiffersFrom(false_type)) {
+      throw check::IfArmsError{"<unknown-loc>"};
     }
 
     return_value = true_type;
@@ -197,15 +179,13 @@ class TypeChecker : public EnvVisitor<types::Type*> {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitBlock(BlockExpression* block) override {
-    {
-      Environment<types::Type*>::ScopeGuard guard{&env_};
-      for (auto stmt : block->stmts_) {
-        Eval(stmt);
-      }
-
-      return_value = block->final_ ? Eval(block->final_)  //
-                                   : &types::builtin_unit;
+    Environment<Type*>::ScopeGuard guard{&env_};
+    for (auto stmt : block->stmts_) {
+      Eval(stmt);
     }
+
+    return_value = block->final_ ? Eval(block->final_)  //
+                                 : &builtin_unit;
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -213,25 +193,21 @@ class TypeChecker : public EnvVisitor<types::Type*> {
   virtual void VisitFnCall(FnCallExpression* fn_call) override {
     // The fact that the fucntion block returns the
     // declared type is checked on declaration place
-    types::Type* stored_type = env_->Get(fn_call->fn_name_.GetName()).value();
-    auto fn_type = dynamic_cast<types::FnType*>(stored_type);
+    Type* stored_type = env_->Get(fn_call->fn_name_.GetName()).value();
+    auto fn_type = dynamic_cast<FnType*>(stored_type);
 
-    std::vector<types::Type*> args_types;
+    std::vector<Type*> args_types;
     for (auto arg : fn_call->arguments_) {
       args_types.push_back(Eval(arg));
     }
 
-    types::FnType inferred_type{std::move(args_types),
-                                fn_type->GetReturnType()};
+    FnType inferred_type{std::move(args_types), fn_type->GetReturnType()};
 
     if (fn_call->fn_name_.GetName() == "print") {
       // Intrinsic: don't type-check
-    } else if (!fn_type->IsEqual(&inferred_type)) {
-      throw types::TypeError{fmt::format(
-          "Function {} at {} and its invocation at {} do not correspond",
-          fn_call->fn_name_.GetName(),  //
-          "Unknown ",                   //
-          fn_call->fn_name_.start.Format())};
+    } else if (fn_type->DiffersFrom(&inferred_type)) {
+      throw check::FnInvokeError{fn_call->fn_name_.GetName(), "Unknown",
+                                 fn_call->fn_name_.start.Format()};
     }
 
     return_value = fn_type->GetReturnType();
@@ -245,10 +221,11 @@ class TypeChecker : public EnvVisitor<types::Type*> {
 
     for (size_t i = 0; i < s_decl->field_names_.size(); i++) {
       auto field_decl_type = s_decl->field_types_[i];
+
       auto field_initializer_type = Eval(s_cons->values_[i]);
 
-      if (!field_decl_type->IsEqual(field_initializer_type)) {
-        throw types::TypeError{fmt::format("Bad struct construction")};
+      if (field_decl_type->DiffersFrom(field_initializer_type)) {
+        throw check::StructInitializationError{};
       }
     }
 
@@ -258,11 +235,13 @@ class TypeChecker : public EnvVisitor<types::Type*> {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitFieldAccess(FieldAccessExpression* node) override {
-    types::Type* t = env_->Get(  //
-                             node->struct_name_.GetName())
-                         .value();
+    Type* t = env_->Get(  //
+                      node->struct_name_.GetName())
+                  .value();
 
-    auto str_t = dynamic_cast<types::StructType*>(t);
+    // TODO: think better!
+    auto str_t = dynamic_cast<StructType*>(t);
+
     auto s_decl = struct_decls_.Get(str_t->GetName()).value();
 
     auto searching = node->field_name_.GetName();
@@ -274,9 +253,7 @@ class TypeChecker : public EnvVisitor<types::Type*> {
       }
     }
 
-    throw types::TypeError{fmt::format("No such field {} in struct {}",
-                                       searching,
-                                       node->struct_name_.GetName())};
+    throw check::FieldAccessError{searching, node->struct_name_.GetName()};
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -284,16 +261,16 @@ class TypeChecker : public EnvVisitor<types::Type*> {
   virtual void VisitLiteral(LiteralExpression* lit) override {
     switch (lit->token_.type) {
       case lex::TokenType::NUMBER:
-        return_value = &types::builtin_int;
+        return_value = &builtin_int;
         break;
 
       case lex::TokenType::STRING:
-        return_value = &types::builtin_string;
+        return_value = &builtin_string;
         break;
 
       case lex::TokenType::TRUE:
       case lex::TokenType::FALSE:
-        return_value = &types::builtin_bool;
+        return_value = &builtin_bool;
         break;
 
       default:
@@ -303,13 +280,27 @@ class TypeChecker : public EnvVisitor<types::Type*> {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitLvalue(VarAccessExpression* ident) override {
-    types::Type* t = env_->Get(ident->name_.GetName()).value();
+  virtual void VisitVarAccess(VarAccessExpression* ident) override {
+    Type* t = env_->Get(ident->name_.GetName()).value();
     return_value = t;
   }
 
  private:
-  types::Type* fn_return_expect = nullptr;
+  Type* fn_return_expect = nullptr;
 
-  Environment<StructDeclStatement*> struct_decls_;
+  ////////////////////////////////////////////////////////////////////
+
+  using TypeStore = Environment<Type*>;
+  TypeStore global_type_store = Environment<Type*>::MakeGlobal();
+
+  TypeStore* env_ = &global_type_store;
+
+  ////////////////////////////////////////////////////////////////////
+
+  Environment<StructDeclStatement*> struct_decls_ =
+      Environment<StructDeclStatement*>::MakeGlobal();
 };
+
+//////////////////////////////////////////////////////////////////////
+
+}  // namespace types::chec

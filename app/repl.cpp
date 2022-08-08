@@ -1,7 +1,6 @@
-#include <ast/visitors/type_checker.hpp>
-#include <ast/visitors/evaluator.hpp>
+#include <types/check/type_checker.hpp>
 
-#include <types/type_error.hpp>
+#include <ast/visitors/evaluator.hpp>
 
 #include <parse/parser.hpp>
 
@@ -10,7 +9,7 @@
 
 int main() {
   Evaluator e;
-  TypeChecker tchk;
+  types::check::TypeChecker tchk;
 
   auto p = new Parser(lex::Lexer{std::cin});
 
@@ -28,7 +27,7 @@ int main() {
       delete p;  // Reset parser
       p = new Parser(lex::Lexer{std::cin});
 
-    } catch (types::TypeError& type_error) {
+    } catch (types::check::TypeError& type_error) {
       fmt::print("Type error: {}\n", type_error.msg);
 
     } catch (Evaluator::ReturnedValue rv) {

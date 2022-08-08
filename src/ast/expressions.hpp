@@ -184,7 +184,7 @@ class VarAccessExpression : public LvalueExpression {
   }
 
   virtual void Accept(Visitor* visitor) override {
-    visitor->VisitLvalue(this);
+    visitor->VisitVarAccess(this);
   }
 
   lex::Token name_{};

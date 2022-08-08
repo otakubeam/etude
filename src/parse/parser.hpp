@@ -4,9 +4,9 @@
 
 #include <ast/statements.hpp>
 
-#include <types/struct_type.hpp>
-#include <types/builtins.hpp>
-#include <types/fn_type.hpp>
+#include <types/repr/struct_type.hpp>
+#include <types/repr/builtins.hpp>
+#include <types/repr/fn_type.hpp>
 
 #include <lex/lexer.hpp>
 

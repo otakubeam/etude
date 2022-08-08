@@ -1,5 +1,5 @@
-#include <types/builtins.hpp>
-#include <types/fn_type.hpp>
+#include <types/repr/builtins.hpp>
+#include <types/repr/fn_type.hpp>
 #include <types/type.hpp>
 
 // Finally,
