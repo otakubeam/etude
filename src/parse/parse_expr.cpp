@@ -8,14 +8,9 @@ Expression* Parser::ParseComparison() {
   using lex::TokenType;
   auto token = lexer_.Peek();
 
-  while (Matches(TokenType::LT) || Matches(TokenType::EQUALS)) {
-    if (auto snd = ParseBinary()) {
-      fst = new ComparisonExpression(fst, token, snd);
-    } else {
-      // TODO: here I can catch the expection from the lower level
-      // and throw the more informative one instead
-      throw ParseError{"Incomplete Comparison Expression"};
-    }
+  if (Matches(TokenType::LT) || Matches(TokenType::EQUALS)) {
+    auto snd = ParseBinary();
+    fst = new ComparisonExpression(fst, token, snd);
   }
 
   return fst;
@@ -26,17 +21,11 @@ Expression* Parser::ParseComparison() {
 Expression* Parser::ParseBinary() {
   Expression* fst = ParseUnary();
 
-  using lex::TokenType;
   auto token = lexer_.Peek();
 
-  while (Matches(TokenType::PLUS) || Matches(TokenType::MINUS)) {
-    if (auto snd = ParseUnary()) {
-      fst = new BinaryExpression(fst, token, snd);
-    } else {
-      // TODO: here I can catch the expection from the lower level
-      // and throw the more informative one instead
-      throw ParseError{"Incomplete Binary Expression"};
-    }
+  while (Matches(lex::TokenType::PLUS) || Matches(lex::TokenType::MINUS)) {
+    auto snd = ParseUnary();
+    fst = new BinaryExpression(fst, token, snd);
   }
 
   return fst;
@@ -48,18 +37,11 @@ Expression* Parser::ParseUnary() {
   auto token = lexer_.Peek();
 
   if (Matches(lex::TokenType::MINUS) || Matches(lex::TokenType::NOT)) {
-    if (auto expr = ParseIfExpression()) {
-      return new UnaryExpression{token, expr};
-    } else {
-      throw ParseError{"Could not parse primary starting with minus"};
-    }
+    auto expr = ParseIfExpression();
+    return new UnaryExpression{token, expr};
   }
 
-  if (auto expr = ParseIfExpression()) {
-    return expr;
-  } else {
-    throw ParseError{"Could not match Unary Expression \n"};
-  }
+  return ParseIfExpression();
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -69,23 +51,12 @@ Expression* Parser::ParseIfExpression() {
     return ParseBlockExpression();
   }
 
-  // This should be fine even without parentheses, right?
-  // TODO: fix if
-  // No, it breaks in presense of structs with if b { ... } else { ... }
   auto condition = ParseExpression();
-  AssertParsed(condition,  //
-               "If statement without condition");
-
   auto true_branch = ParseBlockExpression();
-  AssertParsed(true_branch,  //
-               "If statement without true branch");
 
   Expression* false_branch = nullptr;
-
   if (Matches(lex::TokenType::ELSE)) {
     false_branch = ParseBlockExpression();
-    AssertParsed(false_branch,  //
-                 "Else clause without an associated statement");
   }
 
   return new IfExpression(condition, true_branch, false_branch);
@@ -132,15 +103,10 @@ Expression* Parser::SwitchOnId() {
 
   switch (lexer_.Peek().type) {
     case lex::TokenType::LEFT_BRACE:
-      Consume(lex::TokenType::LEFT_BRACE);
-
-      return ParseFunctionLike(id);
+      ParseFnCallExpression(id);
 
     case lex::TokenType::COLUMN:
-      Consume(lex::TokenType::COLUMN);
-      Consume(lex::TokenType::LEFT_CBRACE);
-
-      return ParseFunctionLike(id);
+      ParseConstructionExpression(id);
 
     case lex::TokenType::DOT: {
       Consume(lex::TokenType::DOT);
@@ -157,22 +123,9 @@ Expression* Parser::SwitchOnId() {
 
 ////////////////////////////////////////////////////////////////////
 
-// Function application and struct creation are "function-like"
-Expression* Parser::ParseFunctionLike(lex::Token id) {
-  // Args or Initializers
+// Assume non-empty
+std::vector<Expression*> Parser::ParseCSV() {
   std::vector<Expression*> exprs;
-
-  // Parse csv
-
-  // 1. Case of empty list
-
-  if (Matches(lex::TokenType::RIGHT_BRACE)) {
-    return new FnCallExpression{id, std::move(exprs)};
-  } else if (Matches(lex::TokenType::RIGHT_CBRACE)) {
-    return new StructConstructionExpression{id, std::move(exprs)};
-  }
-
-  // 2. Non-empty list case: parse it
 
   while (auto expr = ParseExpression()) {
     exprs.push_back(expr);
@@ -181,17 +134,38 @@ Expression* Parser::ParseFunctionLike(lex::Token id) {
     }
   }
 
-  // 3. Return result
+  return exprs;
+}
+
+////////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseFnCallExpression(lex::Token id) {
+  Consume(lex::TokenType::LEFT_BRACE);
 
   if (Matches(lex::TokenType::RIGHT_BRACE)) {
-    return new FnCallExpression{id, std::move(exprs)};
+    return new FnCallExpression{id, {}};
   }
+
+  auto args = ParseCSV();
+  Consume(lex::TokenType::RIGHT_BRACE);
+
+  return new FnCallExpression{id, std::move(args)};
+}
+
+////////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseConstructionExpression(lex::Token id) {
+  Consume(lex::TokenType::COLUMN);
+  Consume(lex::TokenType::LEFT_CBRACE);
 
   if (Matches(lex::TokenType::RIGHT_CBRACE)) {
-    return new StructConstructionExpression{id, std::move(exprs)};
+    return new StructConstructionExpression{id, {}};
   }
 
-  throw "Parse error\n";
+  auto initializers = ParseCSV();
+  Consume(lex::TokenType::RIGHT_CBRACE);
+
+  return new StructConstructionExpression{id, std::move(initializers)};
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -202,13 +176,9 @@ Expression* Parser::ParsePrimary() {
   // Try parsing grouping first
 
   if (Matches(lex::TokenType::LEFT_BRACE)) {
-    if (auto expr = ParseExpression()) {
-      if (Matches(lex::TokenType::RIGHT_BRACE)) {
-        return expr;
-      }
-      throw ParseError{"Missing right brace\n"};
-    }
-    std::abort();  // unreachable
+    auto expr = ParseExpression();
+    Consume(lex::TokenType::RIGHT_BRACE);
+    return expr;
   }
 
   // Then all the base cases

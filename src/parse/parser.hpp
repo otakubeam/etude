@@ -53,31 +53,12 @@ class Parser {
 
   ///////////////////////////////////////////////////////////////////
 
-  // TODO: why different?
   StructDeclStatement* ParseStructDeclStatement();
   FunDeclStatement* ParseFunDeclStatement();
   ReturnStatement* ParseReturnStatement();
   YieldStatement* ParseYieldStatement();
   VarDeclStatement* ParseVarDeclStatement();
   ExprStatement* ParseExprStatement();
-
-  ///////////////////////////////////////////////////////////////////
-
-  // clang-format off
-  ///////////////////////////////////////////////////////////////////
-  //                                                               //
-  //   This area is used for literate prgramming                   //
-  //                         ===================                   //
-  //        Use it however you wish                                //
-  //        -----------------------                                //
-  //                                                               //
-  //             ~~ Old stuff omitted ~~                           //
-  //                                                               //
-  //             ~~ Old stuff omitted ~~   (II)                    //
-  //                                                               //
-  //                                                               //
-  ///////////////////////////////////////////////////////////////////
-  // clang-format on
 
   ////////////////////////////////////////////////////////////////////
 
@@ -86,7 +67,8 @@ class Parser {
   Expression* ParseUnary();
   Expression* ParseIfExpression();
   Expression* ParseBlockExpression();
-  Expression* ParseFunctionLike(lex::Token);
+  Expression* ParseFnCallExpression(lex::Token id);
+  Expression* ParseConstructionExpression(lex::Token id);
   Expression* ParsePrimary();
 
   ////////////////////////////////////////////////////////////////////
@@ -153,6 +135,7 @@ class Parser {
 
  private:
   Expression* SwitchOnId();
+  std::vector<Expression*> ParseCSV();
 
   bool Matches(lex::TokenType type) {
     if (lexer_.Peek().type != type) {

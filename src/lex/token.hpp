@@ -21,7 +21,7 @@ struct Token {
   Token(TokenType type,  //
         Location start,  //
         SemInfo sem_info = {})
-      : type{type}, start{start}, sem_info{sem_info} {
+      : type{type}, tk_loc{start}, sem_info{sem_info} {
   }
 
   Token() = default;
@@ -34,7 +34,7 @@ struct Token {
 
   TokenType type;
 
-  Location start;
+  Location tk_loc;
 
   SemInfo sem_info = {};
 };

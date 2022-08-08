@@ -207,7 +207,7 @@ class TypeChecker : public ReturnVisitor<Type*> {
       // Intrinsic: don't type-check
     } else if (fn_type->DiffersFrom(&inferred_type)) {
       throw check::FnInvokeError{fn_call->fn_name_.GetName(), "Unknown",
-                                 fn_call->fn_name_.start.Format()};
+                                 fn_call->fn_name_.tk_loc.Format()};
     }
 
     return_value = fn_type->GetReturnType();
@@ -303,4 +303,4 @@ class TypeChecker : public ReturnVisitor<Type*> {
 
 //////////////////////////////////////////////////////////////////////
 
-}  // namespace types::chec
+}  // namespace types::check
