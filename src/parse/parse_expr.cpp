@@ -2,13 +2,18 @@
 
 ////////////////////////////////////////////////////////////////////
 
+Expression* Parser::ParseExpression() {
+  return ParseComparison();
+}
+
+////////////////////////////////////////////////////////////////////
+
 Expression* Parser::ParseComparison() {
   Expression* fst = ParseBinary();
 
-  using lex::TokenType;
   auto token = lexer_.Peek();
-
-  if (Matches(TokenType::LT) || Matches(TokenType::EQUALS)) {
+  if (Matches(lex::TokenType::LT) ||  //
+      Matches(lex::TokenType::EQUALS)) {
     auto snd = ParseBinary();
     fst = new ComparisonExpression(fst, token, snd);
   }
@@ -22,8 +27,8 @@ Expression* Parser::ParseBinary() {
   Expression* fst = ParseUnary();
 
   auto token = lexer_.Peek();
-
-  while (Matches(lex::TokenType::PLUS) || Matches(lex::TokenType::MINUS)) {
+  while (Matches(lex::TokenType::PLUS) ||  //
+         Matches(lex::TokenType::MINUS)) {
     auto snd = ParseUnary();
     fst = new BinaryExpression(fst, token, snd);
   }
@@ -35,8 +40,8 @@ Expression* Parser::ParseBinary() {
 
 Expression* Parser::ParseUnary() {
   auto token = lexer_.Peek();
-
-  if (Matches(lex::TokenType::MINUS) || Matches(lex::TokenType::NOT)) {
+  if (Matches(lex::TokenType::MINUS) ||  //
+      Matches(lex::TokenType::NOT)) {
     auto expr = ParseIfExpression();
     return new UnaryExpression{token, expr};
   }
@@ -103,10 +108,10 @@ Expression* Parser::SwitchOnId() {
 
   switch (lexer_.Peek().type) {
     case lex::TokenType::LEFT_BRACE:
-      ParseFnCallExpression(id);
+      return ParseFnCallExpression(id);
 
     case lex::TokenType::COLUMN:
-      ParseConstructionExpression(id);
+      return ParseConstructionExpression(id);
 
     case lex::TokenType::DOT: {
       Consume(lex::TokenType::DOT);

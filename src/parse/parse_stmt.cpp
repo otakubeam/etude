@@ -2,6 +2,36 @@
 
 ///////////////////////////////////////////////////////////////////
 
+Statement* Parser::ParseStatement() {
+  if (auto strcuct_decl = ParseStructDeclStatement()) {
+    return strcuct_decl;
+  }
+
+  if (auto var_decl = ParseVarDeclStatement()) {
+    return var_decl;
+  }
+
+  if (auto fun_decl = ParseFunDeclStatement()) {
+    return fun_decl;
+  }
+
+  if (auto ret_stmt = ParseReturnStatement()) {
+    return ret_stmt;
+  }
+
+  if (auto yield_stmt = ParseYieldStatement()) {
+    return yield_stmt;
+  }
+
+  if (auto expr_stmt = ParseExprStatement()) {
+    return expr_stmt;
+  }
+
+  std::abort();
+}
+
+///////////////////////////////////////////////////////////////////
+
 FunDeclStatement* Parser::ParseFunDeclStatement() {
   if (!Matches(lex::TokenType::FUN)) {
     return nullptr;
@@ -9,23 +39,75 @@ FunDeclStatement* Parser::ParseFunDeclStatement() {
 
   auto fun_name = lexer_.Peek();
   Consume(lex::TokenType::IDENTIFIER);
+
+  auto typed_formals = ParseFormals();
+  auto ret_type = ParseType();
+
+  if (auto block = dynamic_cast<BlockExpression*>(ParseBlockExpression())) {
+    return new FunDeclStatement{fun_name, ret_type, std::move(typed_formals),
+                                block};
+  }
+
+  throw "Could not parse block expression";
+}
+
+///////////////////////////////////////////////////////////////////
+
+StructDeclStatement* Parser::ParseStructDeclStatement() {
+  if (!Matches(lex::TokenType::STRUCT)) {
+    return nullptr;
+  }
+
+  // 1. Get the name of the new struct
+
+  auto struct_name = lexer_.Peek();
+  Consume(lex::TokenType::IDENTIFIER);
+
+  Consume(lex::TokenType::LEFT_CBRACE);
+
+  // 2. Parse contents
+
+  auto field_name = lexer_.Peek();
+  std::vector<lex::Token> fields;
+  std::vector<types::Type*> types;
+
+  while (Matches(lex::TokenType::IDENTIFIER)) {
+    fields.push_back(field_name);
+    Consume(lex::TokenType::COLUMN);
+
+    auto t = ParseType();
+    AssertParsed(t, "Could not parse type in struct declaration");
+    types.push_back(t);
+
+    // Subtly different from Parse Formals
+    Consume(lex::TokenType::COMMA);
+    field_name = lexer_.Peek();
+  }
+
+  Consume(lex::TokenType::RIGHT_CBRACE);
+  Consume(lex::TokenType::SEMICOLUMN);
+
+  return new StructDeclStatement{struct_name, std::move(fields),
+                                 std::move(types)};
+}
+
+///////////////////////////////////////////////////////////////////
+
+auto Parser::ParseFormals() -> std::vector<FunDeclStatement::FormalParam> {
   Consume(lex::TokenType::LEFT_BRACE);
 
   auto param_ident = lexer_.Peek();
 
   std::vector<FunDeclStatement::FormalParam> typed_formals;
-  std::vector<types::Type*> just_arg_types;
 
   while (Matches(lex::TokenType::IDENTIFIER)) {
     Consume(lex::TokenType::COLUMN);
 
     auto type = ParseType();
 
-    just_arg_types.push_back(type);
-    typed_formals.push_back(          //
-        FunDeclStatement::FormalParam{//
-                                      .ident = param_ident,
-                                      .type = type});
+    auto fp = FunDeclStatement::FormalParam{.ident = param_ident,  //
+                                            .type = type};
+    typed_formals.push_back(fp);
 
     if (!Matches(lex::TokenType::COMMA)) {
       break;
@@ -35,18 +117,7 @@ FunDeclStatement* Parser::ParseFunDeclStatement() {
   }
 
   Consume(lex::TokenType::RIGHT_BRACE);
-
-  auto ret_type = ParseType();
-
-  types::FnType* declared_type =
-      new types::FnType{std::move(just_arg_types), ret_type};
-
-  if (auto block = dynamic_cast<BlockExpression*>(ParseBlockExpression())) {
-    return new FunDeclStatement{fun_name, declared_type,
-                                std::move(typed_formals), block};
-  } else {
-    throw "Could not parse block expression";
-  }
+  return typed_formals;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -79,45 +150,6 @@ YieldStatement* Parser::ParseYieldStatement() {
   }
 
   return new YieldStatement{ret_expr};
-}
-
-///////////////////////////////////////////////////////////////////
-
-StructDeclStatement* Parser::ParseStructDeclStatement() {
-  if (!Matches(lex::TokenType::STRUCT)) {
-    return nullptr;
-  }
-
-  // 1. Get the name of the new struct
-
-  auto struct_name = lexer_.Peek();
-  Consume(lex::TokenType::IDENTIFIER);
-
-  Consume(lex::TokenType::LEFT_CBRACE);
-
-  // 2. Parse contents
-
-  auto field_name = lexer_.Peek();
-  std::vector<lex::Token> fields;
-  std::vector<types::Type*> types;
-
-  while (Matches(lex::TokenType::IDENTIFIER)) {
-    fields.push_back(field_name);
-    Consume(lex::TokenType::COLUMN);
-
-    auto t = ParseType();
-    AssertParsed(t, "Could not parse type in struct declaration");
-    types.push_back(t);
-
-    Consume(lex::TokenType::COMMA);
-    field_name = lexer_.Peek();
-  }
-
-  Consume(lex::TokenType::RIGHT_CBRACE);
-  Consume(lex::TokenType::SEMICOLUMN);
-
-  return new StructDeclStatement{struct_name, std::move(fields),
-                                 std::move(types)};
 }
 
 ///////////////////////////////////////////////////////////////////

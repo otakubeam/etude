@@ -4,6 +4,7 @@
 #include <ast/expressions.hpp>
 
 #include <types/repr/struct_type.hpp>
+#include <types/repr/fn_type.hpp>
 
 #include <lex/token.hpp>
 
@@ -32,7 +33,6 @@ class ExprStatement : public Statement {
 
 //////////////////////////////////////////////////////////////////////
 
-// Also stands for symbol
 class StructDeclStatement : public Statement {
  public:
   StructDeclStatement(lex::Token name, std::vector<lex::Token> field_names,
@@ -92,9 +92,20 @@ class FunDeclStatement : public Statement {
     types::Type* type;
   };
 
-  FunDeclStatement(lex::Token name, types::FnType* type,
+  FunDeclStatement(lex::Token name, types::Type* return_type,
                    std::vector<FormalParam> formals, BlockExpression* block)
-      : name_{name}, type_{type}, formals_{std::move(formals)}, block_{block} {
+      : name_{name}, formals_{std::move(formals)}, block_{block} {
+    InitFnType(return_type);
+  }
+
+  void InitFnType(types::Type* return_type) {
+    std::vector<types::Type*> just_arg_types;
+
+    for (auto fm : formals_) {
+      just_arg_types.push_back(fm.type);
+    }
+
+    type_ = new types::FnType{std::move(just_arg_types), return_type};
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -102,7 +113,7 @@ class FunDeclStatement : public Statement {
   }
 
   lex::Token name_;
-  types::FnType* type_;
+  types::FnType* type_ = nullptr;
 
   std::vector<FormalParam> formals_;
   BlockExpression* block_;

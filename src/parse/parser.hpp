@@ -15,43 +15,9 @@ class Parser {
   Parser(lex::Lexer l) : lexer_{l} {
   }
 
-  Expression* ParseExpression() {
-    return ParseComparison();
-  }
-
   ///////////////////////////////////////////////////////////////////
 
-  Statement* ParseStatement() {
-    if (auto strcuct_decl = ParseStructDeclStatement()) {
-      return strcuct_decl;
-    }
-
-    if (auto var_decl = ParseVarDeclStatement()) {
-      return var_decl;
-    }
-
-    if (auto fun_decl = ParseFunDeclStatement()) {
-      return fun_decl;
-    }
-
-    if (auto ret_stmt = ParseReturnStatement()) {
-      return ret_stmt;
-    }
-
-    if (auto yield_stmt = ParseYieldStatement()) {
-      return yield_stmt;
-    }
-
-    if (auto expr_stmt = ParseExprStatement()) {
-      return expr_stmt;
-    }
-
-    // TODO: WHILE statemnt
-
-    std::abort();
-  }
-
-  ///////////////////////////////////////////////////////////////////
+  Statement* ParseStatement();
 
   StructDeclStatement* ParseStructDeclStatement();
   FunDeclStatement* ParseFunDeclStatement();
@@ -61,6 +27,8 @@ class Parser {
   ExprStatement* ParseExprStatement();
 
   ////////////////////////////////////////////////////////////////////
+
+  Expression* ParseExpression();
 
   Expression* ParseComparison();
   Expression* ParseBinary();
@@ -73,68 +41,18 @@ class Parser {
 
   ////////////////////////////////////////////////////////////////////
 
-  types::Type* ParseType() {
-    types::Type* result = nullptr;
-    auto token = lexer_.Peek();
-
-    switch (token.type) {
-      case lex::TokenType::TY_INT:
-        result = &types::builtin_int;
-        break;
-
-      case lex::TokenType::TY_BOOL:
-        result = &types::builtin_bool;
-        break;
-
-      case lex::TokenType::TY_STRING:
-        result = &types::builtin_string;
-        break;
-
-      case lex::TokenType::TY_UNIT:
-        result = &types::builtin_unit;
-        break;
-
-      // Syntax: (Int, Int) -> Unit
-      //         () -> Unit
-      //         ((Int) -> Bool, String) -> Unit
-      //          -------------  ------
-      case lex::TokenType::LEFT_BRACE: {
-        Consume(lex::TokenType::LEFT_BRACE);
-
-        std::vector<types::Type*> args;
-        while (auto type = ParseType()) {
-          args.push_back(type);
-
-          if (!Matches(lex::TokenType::COMMA)) {
-            break;
-          }
-        }
-
-        Consume(lex::TokenType::RIGHT_BRACE);
-
-        auto return_type = ParseType();
-
-        return new types::FnType{std::move(args), return_type};
-      }
-
-      case lex::TokenType::IDENTIFIER: {
-        Consume(lex::TokenType::IDENTIFIER);
-        return new types::StructType{token.GetName()};
-      }
-
-      default:
-        return nullptr;
-    }
-
-    // Advance for simple types
-    lexer_.Advance();
-    return result;
-  }
+  types::Type* ParseType();
+  types::Type* ParseFunctionType();
+  types::Type* ParseStructType();
 
   ////////////////////////////////////////////////////////////////////
 
  private:
+  auto ParseFormals()  //
+      -> std::vector<FunDeclStatement::FormalParam>;
+
   Expression* SwitchOnId();
+
   std::vector<Expression*> ParseCSV();
 
   bool Matches(lex::TokenType type) {
