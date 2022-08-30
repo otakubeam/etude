@@ -11,7 +11,7 @@ enum class InstrType : u_int8_t {
   POP_STACK,      // pop
   RET_FN,         // ret
   CALL_FN,        // call $1 $2 $3 ($1 = chunk, $23 = offset)
-  JUMP_IF_FALSE,  // jump_if_false $1 $2 ($12 = absolute offset)
+  JUMP_IF_FALSE,  // jump_if_false $2 $3 ($23 = absolute offset withing chunk)
 };
 
 struct Instr {
@@ -28,7 +28,7 @@ inline u_int8_t ReadByte(const Instr& inst) {
 }
 
 inline u_int16_t ReadWord(const Instr& inst) {
-  return ((inst.arg1 << 8) + inst.arg2) & 0xFF;
+  return ((inst.arg2 << 8) + inst.arg3);
 }
 
 //////////////////////////////////////////////////////////////////////

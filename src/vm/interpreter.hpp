@@ -9,12 +9,12 @@ namespace vm {
 
 class BytecodeInterpreter {
  public:
-  void Interpret(Instr instruction) {
-    switch (instruction.type) {
+  void Interpret(const Instr* instruction) {
+    switch (instruction->type) {
       case InstrType::PUSH_STACK: {
-        size_t index = instruction.arg1;
+        size_t index = instruction->arg1;
 
-        stack_.Push(current_->attached_vals[index]);
+        stack_.Push(Current()->attached_vals[index]);
 
         break;
       }
@@ -52,27 +52,55 @@ class BytecodeInterpreter {
         stack_.PrepareCallframe();
 
         // Jmp into the function
-        ip_ = ReadWord(instruction);
+        ip_ = ReadWord(*instruction);
+
+        break;
+      }
+
+      case InstrType::JUMP_IF_FALSE: {
+        auto val = stack_.Pop();
+
+        FMT_ASSERT(val.tag == rt::ValueTag::Bool,  //
+                   "Typechecker fault");
+
+        if (!val.as_bool) {
+          ip_ = ReadWord(*instruction);
+        }
 
         break;
       }
     }
   }
 
-  int Interpret(ExecutableChunk* chunk_main) {
-    current_ = chunk_main;
-
-    for (auto& i : current_->instructions) {
-      Interpret(i);
+  int Interpret() {
+    while (auto instr = NextInstruction()) {
+      Interpret(instr);
     }
 
     // Exit code
     return stack_.Pop().as_int;
   }
 
+  static int InterpretStandalone(ExecutableChunk* chunk) {
+    BytecodeInterpreter a;
+    a.chunks = {*chunk};
+    return a.Interpret();
+  }
+
+ private:
+  const ExecutableChunk* Current() const {
+    return &chunks[current_chunk];
+  }
+
+  auto NextInstruction() const -> const Instr* {
+    return ip_ < Current()->instructions.size()
+               ? &Current()->instructions[ip_++]
+               : nullptr;
+  }
+
  private:
   // Instruction pointer
-  size_t ip_ = 0;
+  mutable size_t ip_ = 0;
 
   vm::VmStack stack_;
 
@@ -80,7 +108,7 @@ class BytecodeInterpreter {
   // Return value (makes life easier)
   Retval eax;
 
-  ExecutableChunk* current_ = nullptr;
+  size_t current_chunk = 0;
   std::vector<ExecutableChunk> chunks;
 };
 
