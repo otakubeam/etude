@@ -5,7 +5,7 @@
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Return exit code", "[vm]") {
+TEST_CASE("vm: retval", "[vm]") {
   vm::ExecutableChunk chunk{
       .instructions =
           {
@@ -24,7 +24,7 @@ TEST_CASE("Return exit code", "[vm]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("Push and pop", "[vm]") {
+TEST_CASE("vm: push and pop", "[vm]") {
   vm::ExecutableChunk chunk{
       .instructions =
           {
@@ -48,7 +48,7 @@ TEST_CASE("Push and pop", "[vm]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("JUMP_IF_FALSE instr", "[vm]") {
+TEST_CASE("vm: JUMP_IF_FALSE instr", "[vm]") {
   vm::ExecutableChunk chunk{
       .instructions =
           {
@@ -70,6 +70,8 @@ TEST_CASE("JUMP_IF_FALSE instr", "[vm]") {
                   .arg3 = 5,  // skip next instr
               },
               vm::Instr{
+                  // if this is executed, the value is 100 returned
+                  // otherwise it's 500
                   .type = vm::InstrType::POP_STACK,
               },
           },
@@ -85,6 +87,88 @@ TEST_CASE("JUMP_IF_FALSE instr", "[vm]") {
   };
 
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(&chunk) == 500);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm: add", "[vm]") {
+  vm::ExecutableChunk chunk{
+      .instructions =
+          {
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push 100
+              },
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push 100
+              },
+              vm::Instr{
+                  .type = vm::InstrType::ADD,
+              },
+          },
+      .attached_vals{
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
+                                 .as_int = 100},                //
+      },
+  };
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(&chunk) == 200);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm: fn call", "[vm]") {
+  vm::ExecutableChunk chunk{
+      .instructions =
+          {
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push 100
+              },
+              vm::Instr{
+                  .type = vm::InstrType::CALL_FN,
+                  .arg1 = 1,  // chunk 1 ~ compiled_fn
+                  .arg2 = 0,  // ip is 0
+                  .arg3 = 0,
+              },
+              vm::Instr{
+                  .type = vm::InstrType::FIN_CALL,
+                  .arg1 = 1,  // pop one arg from the stack
+              },
+          },
+      .attached_vals{
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
+                                 .as_int = 100},                //
+      },
+  };
+
+  vm::ExecutableChunk compiled_fn{
+      .instructions =
+          {
+              vm::Instr{
+                  .type = vm::InstrType::FROM_STACK,
+                  .arg1 = 0,  // push argument i
+              },
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push constant 1
+              },
+              vm::Instr{
+                  .type = vm::InstrType::ADD,
+              },
+              vm::Instr{
+                  .type = vm::InstrType::RET_FN,
+              },
+          },
+      .attached_vals{
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
+                                 .as_int = 1},                  //
+      },
+  };
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone({chunk, compiled_fn}) ==
+        101);
 }
 
 //////////////////////////////////////////////////////////////////////
