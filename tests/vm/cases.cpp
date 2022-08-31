@@ -239,13 +239,13 @@ TEST_CASE("vm: function with if statements", "[vm]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("vm: function with if statements", "[vm]") {
+TEST_CASE("vm: recursive function", "[vm]") {
   vm::ExecutableChunk chunk{
       .instructions =
           {
               vm::Instr{
                   .type = vm::InstrType::PUSH_STACK,
-                  .arg1 = 0,  // push true
+                  .arg1 = 0,  // push 2
               },
               vm::Instr{
                   .type = vm::InstrType::CALL_FN,
@@ -259,12 +259,12 @@ TEST_CASE("vm: function with if statements", "[vm]") {
               },
           },
       .attached_vals{
-          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Bool,  //
-                                 .as_bool = true},               //
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
+                                 .as_int = 3},                  //
       },
   };
 
-  vm::ExecutableChunk compiled_fn_invert_bool{
+  vm::ExecutableChunk compiled_fn_sum{
       .instructions =
           {
               vm::Instr{
@@ -272,35 +272,80 @@ TEST_CASE("vm: function with if statements", "[vm]") {
                   .arg1 = 0,  // push argument i
               },
               vm::Instr{
-                  .type = vm::InstrType::JUMP_IF_FALSE,
-                  .arg2 = 0,
-                  .arg3 = 4,  // maybe skip next 2 instrs
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push constant 0
               },
               vm::Instr{
+                  .type = vm::InstrType::CMP_EQ,
+              },
+              vm::Instr{
+                  .type = vm::InstrType::JUMP_IF_FALSE,
+                  .arg2 = 0,
+                  .arg3 = 6,  // maybe skip next 2 instrs
+              },
+
+              // fini:
+              // ----
+
+              vm::Instr{
                   .type = vm::InstrType::PUSH_STACK,
-                  .arg1 = 1,  // push constant false
+                  .arg1 = 0,  // push constant 0
               },
               vm::Instr{
                   .type = vm::InstrType::RET_FN,
               },
+
+              // recur:
+              // -----
+
+              // 1) Place (i-1) as argument
+              vm::Instr{
+                  .type = vm::InstrType::FROM_STACK,
+                  .arg1 = 0,  // push argument i
+              },
               vm::Instr{
                   .type = vm::InstrType::PUSH_STACK,
-                  .arg1 = 0,  // push constant true
+                  .arg1 = 1,  // push constant -1
               },
+              vm::Instr{
+                  .type = vm::InstrType::ADD,
+              },
+
+              // 2) Call the function
+              vm::Instr{
+                  .type = vm::InstrType::CALL_FN,
+                  .arg1 = 1,  // chunk 1 ~ compiled_fn
+                  .arg2 = 0,  // ip is 0
+                  .arg3 = 0,
+              },
+              vm::Instr{
+                  .type = vm::InstrType::FIN_CALL,
+                  .arg1 = 1,  // pop one arg from the stack
+              },
+
+              // 3) Add f(i-1) and i
+              vm::Instr{
+                  .type = vm::InstrType::FROM_STACK,
+                  .arg1 = 0,  // push argument i
+              },
+              vm::Instr{
+                  .type = vm::InstrType::ADD,
+              },
+
               vm::Instr{
                   .type = vm::InstrType::RET_FN,
               },
           },
       .attached_vals{
-          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Bool,  //
-                                 .as_bool = true},               //
-          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Bool,  //
-                                 .as_bool = false},              //
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
+                                 .as_int = 0},                  //
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
+                                 .as_int = -1},                 //
       },
   };
 
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(
-            {chunk, compiled_fn_invert_bool}) == (int)false);
+            {chunk, compiled_fn_sum}) == 6);
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -15,6 +15,7 @@ enum class InstrType : u_int8_t {
   ADD,            // add (pops 2 and pushes)
   FROM_STACK,     // from_stack $1 (get value at offset $1 from the current fp)
   FIN_CALL,       // fin_call $1 (clean up $1 args from the stack and push eax)
+  CMP_EQ,         // cmp_eq (pops 2 and pushes)
 };
 
 struct Instr {

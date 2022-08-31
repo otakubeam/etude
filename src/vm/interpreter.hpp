@@ -12,7 +12,7 @@ class BytecodeInterpreter {
   void Interpret(const Instr* instruction) {
     switch (instruction->type) {
       case InstrType::PUSH_STACK: {
-        size_t index = instruction->arg1;
+        size_t index = ReadByte(*instruction);
         stack_.Push(Current()->attached_vals[index]);
         break;
       }
@@ -95,13 +95,24 @@ class BytecodeInterpreter {
         break;
       }
 
-        // Alias: GetArg
       case InstrType::FIN_CALL: {
         size_t count = ReadByte(*instruction);
         stack_.PopCount(count);
 
-        // Safety: teh value must be present in eax after the call
+        // Safety: the value must be present in eax after the call
         stack_.Push(eax.value());
+
+        break;
+      }
+
+      case InstrType::CMP_EQ: {
+        auto a = stack_.Pop();
+        auto b = stack_.Pop();
+
+        // XXX: this may be wrong wrt to UB but should work at first
+        auto result = (a.tag == b.tag) && (a.as_int == b.as_int);
+
+        stack_.Push({.tag = rt::ValueTag::Bool, .as_bool = result});
 
         break;
       }
