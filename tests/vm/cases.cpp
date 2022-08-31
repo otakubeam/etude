@@ -172,3 +172,135 @@ TEST_CASE("vm: fn call", "[vm]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm: function with if statements", "[vm]") {
+  vm::ExecutableChunk chunk{
+      .instructions =
+          {
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push true
+              },
+              vm::Instr{
+                  .type = vm::InstrType::CALL_FN,
+                  .arg1 = 1,  // chunk 1 ~ compiled_fn
+                  .arg2 = 0,  // ip is 0
+                  .arg3 = 0,
+              },
+              vm::Instr{
+                  .type = vm::InstrType::FIN_CALL,
+                  .arg1 = 1,  // pop one arg from the stack
+              },
+          },
+      .attached_vals{
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Bool,  //
+                                 .as_bool = true},               //
+      },
+  };
+
+  vm::ExecutableChunk compiled_fn_invert_bool{
+      .instructions =
+          {
+              vm::Instr{
+                  .type = vm::InstrType::FROM_STACK,
+                  .arg1 = 0,  // push argument i
+              },
+              vm::Instr{
+                  .type = vm::InstrType::JUMP_IF_FALSE,
+                  .arg2 = 0,
+                  .arg3 = 4,  // maybe skip next 2 instrs
+              },
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 1,  // push constant false
+              },
+              vm::Instr{
+                  .type = vm::InstrType::RET_FN,
+              },
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push constant true
+              },
+              vm::Instr{
+                  .type = vm::InstrType::RET_FN,
+              },
+          },
+      .attached_vals{
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Bool,  //
+                                 .as_bool = true},               //
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Bool,  //
+                                 .as_bool = false},              //
+      },
+  };
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(
+            {chunk, compiled_fn_invert_bool}) == (int)false);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm: function with if statements", "[vm]") {
+  vm::ExecutableChunk chunk{
+      .instructions =
+          {
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push true
+              },
+              vm::Instr{
+                  .type = vm::InstrType::CALL_FN,
+                  .arg1 = 1,  // chunk 1 ~ compiled_fn
+                  .arg2 = 0,  // ip is 0
+                  .arg3 = 0,
+              },
+              vm::Instr{
+                  .type = vm::InstrType::FIN_CALL,
+                  .arg1 = 1,  // pop one arg from the stack
+              },
+          },
+      .attached_vals{
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Bool,  //
+                                 .as_bool = true},               //
+      },
+  };
+
+  vm::ExecutableChunk compiled_fn_invert_bool{
+      .instructions =
+          {
+              vm::Instr{
+                  .type = vm::InstrType::FROM_STACK,
+                  .arg1 = 0,  // push argument i
+              },
+              vm::Instr{
+                  .type = vm::InstrType::JUMP_IF_FALSE,
+                  .arg2 = 0,
+                  .arg3 = 4,  // maybe skip next 2 instrs
+              },
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 1,  // push constant false
+              },
+              vm::Instr{
+                  .type = vm::InstrType::RET_FN,
+              },
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push constant true
+              },
+              vm::Instr{
+                  .type = vm::InstrType::RET_FN,
+              },
+          },
+      .attached_vals{
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Bool,  //
+                                 .as_bool = true},               //
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Bool,  //
+                                 .as_bool = false},              //
+      },
+  };
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(
+            {chunk, compiled_fn_invert_bool}) == (int)false);
+}
+
+//////////////////////////////////////////////////////////////////////

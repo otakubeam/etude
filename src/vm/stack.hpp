@@ -27,12 +27,12 @@ class VmStack {
     // Move the stack pointer
     sp_ = fp_;
 
+    // Expect by ABI to be an integer offset
+    FMT_ASSERT(stack_.at(fp_).tag == rt::ValueTag::Int,
+               "Expected an Int in fp slot");
+
     // Move the frame pointer
     fp_ = stack_.at(fp_).as_int;
-
-    // Expect by ABI to be an integer offset
-    FMT_ASSERT(stack_[fp_].tag == rt::ValueTag::Int,
-               "Expected an Int in fp slot");
   }
 
   void PrepareCallframe() {
