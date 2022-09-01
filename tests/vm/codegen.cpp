@@ -40,7 +40,7 @@ TEST_CASE("vm:codegen: push constant", "[vm]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("vm:codegen: add", "[vm]") {
+TEST_CASE("vm:codegen:add", "[vm]") {
   char stream[] = "1 + 2";
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
@@ -51,6 +51,21 @@ TEST_CASE("vm:codegen: add", "[vm]") {
   auto res = c.Compile(pr);
 
   CHECK(vm::BytecodeInterpreter::InterpretStandalone({res}) == 3);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:if", "[vm:codegen]") {
+  char stream[] = "if true { 2 }";
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto pr = p.ParseExpression();
+
+  vm::codegen::Compiler c;
+  auto res = c.Compile(pr);
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone({res}) == 2);
 }
 
 //////////////////////////////////////////////////////////////////////
