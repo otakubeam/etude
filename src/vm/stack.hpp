@@ -55,7 +55,7 @@ class VmStack {
     return GetAtFp(count);
   }
 
-  auto GetSavedIp() -> int {
+  int GetSavedIp() {
     return GetAtFp(-1).as_int;
   }
 

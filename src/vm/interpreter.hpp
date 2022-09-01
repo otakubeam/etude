@@ -121,11 +121,9 @@ class BytecodeInterpreter {
 
   int Interpret() {
     while (auto instr = NextInstruction()) {
-      stack_.PrintStack();
       Interpret(instr);
+      stack_.PrintStack();
     }
-
-    stack_.PrintStack();
 
     // Exit code
     return stack_.Pop().as_int;

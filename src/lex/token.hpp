@@ -14,7 +14,6 @@ struct Token {
   using SemInfo = std::variant<  //
       std::monostate,            //
       std::string,               //
-      bool,                      //
       int                        //
       >;
 

@@ -11,7 +11,7 @@ enum class InstrType : u_int8_t {
   POP_STACK,      // pop
   RET_FN,         // ret
   CALL_FN,        // call $1 $2 $3 ($1 = chunk, $23 = offset)
-  JUMP_IF_FALSE,  // jump_if_false $2 $3 ($23 = absolute offset withing chunk)
+  JUMP_IF_FALSE,  // jump_if_false $2 $3 ($23 = absolute offset within a chunk)
   ADD,            // add (pops 2 and pushes)
   FROM_STACK,     // from_stack $1 (get value at offset $1 from the current fp)
   FIN_CALL,       // fin_call $1 (clean up $1 args from the stack and push eax)

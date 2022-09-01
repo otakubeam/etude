@@ -53,12 +53,8 @@ PrimitiveObject FromSemInfo(lex::Token::SemInfo sem_info) {
     case 1:
       return PrimitiveObject{std::get<std::string>(sem_info)};
 
-      // bool
-    case 2:
-      FMT_ASSERT(false, "\n Error: Unreachable \n");
-
       // int
-    case 3:
+    case 2:
       return PrimitiveObject{std::get<int>(sem_info)};
 
     default:
