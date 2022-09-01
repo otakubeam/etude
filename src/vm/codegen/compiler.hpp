@@ -25,19 +25,19 @@ class Compiler : public Visitor {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitVarDecl(VarDeclStatement* node) override {
+  virtual void VisitVarDecl(VarDeclStatement*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitFunDecl(FunDeclStatement* node) override {
+  virtual void VisitFunDecl(FunDeclStatement*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitStructDecl(StructDeclStatement* node) override {
+  virtual void VisitStructDecl(StructDeclStatement*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
@@ -47,13 +47,13 @@ class Compiler : public Visitor {
     // rt::SBObject value;
   };
 
-  virtual void VisitReturn(ReturnStatement* node) override {
+  virtual void VisitReturn(ReturnStatement*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitYield(YieldStatement* node) override {
+  virtual void VisitYield(YieldStatement*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
@@ -65,11 +65,11 @@ class Compiler : public Visitor {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitExpression(Expression* node) override {
+  virtual void VisitExpression(Expression*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
-  virtual void VisitComparison(ComparisonExpression* node) override {
+  virtual void VisitComparison(ComparisonExpression*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
@@ -92,7 +92,7 @@ class Compiler : public Visitor {
     }
   }
 
-  virtual void VisitUnary(UnaryExpression* node) override {
+  virtual void VisitUnary(UnaryExpression*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
@@ -144,20 +144,19 @@ class Compiler : public Visitor {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitStructConstruction(
-      StructConstructionExpression* s_cons) override {
+  virtual void VisitStructConstruction(StructConstructionExpression*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitFieldAccess(FieldAccessExpression* node) override {
+  virtual void VisitFieldAccess(FieldAccessExpression*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitFnCall(FnCallExpression* node) override {
+  virtual void VisitFnCall(FnCallExpression*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
@@ -203,7 +202,7 @@ class Compiler : public Visitor {
     }
   }
 
-  virtual void VisitVarAccess(VarAccessExpression* ident) override {
+  virtual void VisitVarAccess(VarAccessExpression*) override {
     FMT_ASSERT(false, "Unimplemented!");
   }
 
