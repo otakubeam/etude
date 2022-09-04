@@ -69,3 +69,33 @@ TEST_CASE("vm:codegen:if", "[vm:codegen]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:if-else-true", "[vm:codegen]") {
+  char stream[] = "if true { 2 } else { 3 }";
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto pr = p.ParseExpression();
+
+  vm::codegen::Compiler c;
+  auto res = c.Compile(pr);
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone({res}) == 2);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:if-else-false", "[vm:codegen]") {
+  char stream[] = "if false { 2 } else { 3 }";
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto pr = p.ParseExpression();
+
+  vm::codegen::Compiler c;
+  auto res = c.Compile(pr);
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone({res}) == 3);
+}
+
+//////////////////////////////////////////////////////////////////////

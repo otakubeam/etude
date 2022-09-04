@@ -64,6 +64,11 @@ class BytecodeInterpreter {
         break;
       }
 
+      case InstrType::JUMP: {
+        ip_ = ReadWord(*instruction);
+        break;
+      }
+
       case InstrType::JUMP_IF_FALSE: {
         auto val = stack_.Pop();
 

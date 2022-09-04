@@ -99,26 +99,46 @@ class Compiler : public Visitor {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitIf(IfExpression* node) override {
+    /////////
+
     node->condition_->Accept(this);
-    auto jump_ip = chunk_.instructions.size();
+
+    auto jump_to_false_ip = chunk_.instructions.size();
 
     chunk_.instructions.push_back(vm::Instr{
         .type = InstrType::JUMP_IF_FALSE,
     });
 
+    /////////
+
     node->true_branch_->Accept(this);
 
-    // TODO: jump to end
+    auto jump_to_end_ip = chunk_.instructions.size();
+
+    chunk_.instructions.push_back(vm::Instr{
+        .type = InstrType::JUMP,
+    });
+
+    /////////
 
     auto false_ip_start = chunk_.instructions.size();
 
-    // TODO: generate false branch
+    node->false_branch_->Accept(this);
 
-    // Backpatch
-    chunk_.instructions.at(jump_ip) = vm::Instr{
+    auto false_ip_end = chunk_.instructions.size();
+
+    // Backpatch JUMP_IF_FALSE
+    chunk_.instructions.at(jump_to_false_ip) = vm::Instr{
         .type = InstrType::JUMP_IF_FALSE,
         .arg2 = (uint8_t)(false_ip_start >> 8),
         .arg3 = (uint8_t)(false_ip_start),
+    };
+
+    // Backpatch JUMP
+    chunk_.instructions.at(jump_to_end_ip) = vm::Instr{
+        .type = InstrType::JUMP,
+        .arg2 = (uint8_t)(false_ip_end >> 8),
+        .arg3 = (uint8_t)(false_ip_end),
     };
   }
 

@@ -349,3 +349,58 @@ TEST_CASE("vm: recursive function", "[vm]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm: using locals", "[vm]") {
+  vm::ExecutableChunk chunk{
+      .instructions =
+          {
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push 2
+              },
+              vm::Instr{
+                  .type = vm::InstrType::CALL_FN,
+                  .arg1 = 1,  // chunk 1 ~ compiled_fn
+                  .arg2 = 0,  // ip is 0
+                  .arg3 = 0,
+              },
+              vm::Instr{
+                  .type = vm::InstrType::FIN_CALL,
+                  .arg1 = 1,  // pop one arg from the stack
+              },
+          },
+      .attached_vals{
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
+                                 .as_int = 3},                  //
+      },
+  };
+
+  vm::ExecutableChunk compiled_fn_sum{
+      .instructions =
+          {
+              vm::Instr{
+                  .type = vm::InstrType::FROM_STACK,
+                  .arg1 = 0,  // push argument i
+              },
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push constant 0
+              },
+              vm::Instr{
+                  .type = vm::InstrType::CMP_EQ,
+              },
+
+          },
+      .attached_vals{
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
+                                 .as_int = 0},                  //
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
+                                 .as_int = -1},                 //
+      },
+  };
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(
+            {chunk, compiled_fn_sum}) == 6);
+}
+
+//////////////////////////////////////////////////////////////////////
