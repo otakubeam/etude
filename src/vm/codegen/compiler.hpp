@@ -1,8 +1,9 @@
 #pragma once
+
+#include <vm/codegen/stack_builder.hpp>
 #include <vm/chunk.hpp>
 
 #include <ast/visitors/template_visitor.hpp>
-
 #include <ast/expressions.hpp>
 #include <ast/statements.hpp>
 
@@ -31,8 +32,10 @@ class Compiler : public Visitor {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitFunDecl(FunDeclStatement*) override {
-    FMT_ASSERT(false, "Unimplemented!");
+  virtual void VisitFunDecl(FunDeclStatement* node) override {
+    StackBuilder builder{node};
+    current = &builder;
+    node->block_->Accept(this);
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -234,6 +237,7 @@ class Compiler : public Visitor {
   // Environment
 
   // StackEmulation
+  StackBuilder* current = nullptr;
 };
 
 }  // namespace vm::codegen

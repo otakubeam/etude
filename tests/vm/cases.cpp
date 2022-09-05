@@ -356,7 +356,11 @@ TEST_CASE("vm: using locals", "[vm]") {
           {
               vm::Instr{
                   .type = vm::InstrType::PUSH_STACK,
-                  .arg1 = 0,  // push 2
+                  .arg1 = 0,  // push 3
+              },
+              vm::Instr{
+                  .type = vm::InstrType::PUSH_STACK,
+                  .arg1 = 0,  // push 3
               },
               vm::Instr{
                   .type = vm::InstrType::CALL_FN,

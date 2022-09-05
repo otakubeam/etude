@@ -99,3 +99,25 @@ TEST_CASE("vm:codegen:if-else-false", "[vm:codegen]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:if-else-false", "[vm:codegen]") {
+  char stream[] =
+      "                                                 "
+      "fun f(b: Bool) {                                 "
+      "    var res = if b { 100 } else { 101 };         "
+      "    res + res                                    "
+      "}                                                "
+      "                                                 "
+      "                                                 ";
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto pr = p.ParseStatement();
+
+  vm::codegen::Compiler c;
+  auto res = c.Compile(pr);
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone({res}) == 3);
+}
+
+//////////////////////////////////////////////////////////////////////
