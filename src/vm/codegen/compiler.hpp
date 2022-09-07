@@ -1,11 +1,14 @@
 #pragma once
 
-#include <vm/codegen/stack_builder.hpp>
+#include <vm/codegen/frame_translator.hpp>
 #include <vm/chunk.hpp>
 
 #include <ast/visitors/template_visitor.hpp>
 #include <ast/expressions.hpp>
 #include <ast/statements.hpp>
+
+#include <algorithm>
+#include <ranges>
 
 namespace vm::codegen {
 
@@ -33,11 +36,50 @@ class Compiler : public Visitor {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitFunDecl(FunDeclStatement* node) override {
-    StackBuilder builder{node};
-    current = &builder;
-    node->block_->Accept(this);
+    Compiler chunk_compiler;
+    FrameTranslator builder{node};
+    chunk_compiler.current = &builder;
+
+    auto chunk = chunk_compiler.Compile(node->block_);
+
+    current->AddLocal(node->name_.GetName());
+
+    // TODO: what? (chunk numbers)
   }
 
+  virtual void VisitFnCall(FnCallExpression* node) override {
+    for (size_t i = node->arguments_.size(); i != 0; i -= 1) {
+      node->arguments_[i]->Accept(this);
+    }
+
+    auto mb_offset = current->Lookup(node->fn_name_.GetName());
+
+    chunk_.instructions.push_back(vm::Instr{
+        .type = vm::InstrType::CALL_FN,
+        .arg1 = 0,
+    });
+
+    int offset = mb_offset.value();
+
+    GenerateVarFetch(offset);
+  }
+
+ private:
+  void GenerateVarFetch(int offset) {
+    if (offset > 0) {
+      chunk_.instructions.push_back(vm::Instr{
+          .type = vm::InstrType::GET_LOCAL,
+          .arg1 = (uint8_t)offset,
+      });
+    } else {
+      chunk_.instructions.push_back(vm::Instr{
+          .type = vm::InstrType::GET_ARG,
+          .arg1 = (uint8_t)(-offset),
+      });
+    }
+  }
+
+ public:
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitStructDecl(StructDeclStatement*) override {
@@ -179,10 +221,6 @@ class Compiler : public Visitor {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitFnCall(FnCallExpression*) override {
-    FMT_ASSERT(false, "Unimplemented!");
-  }
-
   virtual void VisitLiteral(LiteralExpression* lit) override {
     chunk_.instructions.push_back(vm::Instr{
         .type = InstrType::PUSH_STACK,
@@ -237,7 +275,7 @@ class Compiler : public Visitor {
   // Environment
 
   // StackEmulation
-  StackBuilder* current = nullptr;
+  FrameTranslator* current = nullptr;
 };
 
 }  // namespace vm::codegen

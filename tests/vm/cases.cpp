@@ -147,7 +147,7 @@ TEST_CASE("vm: fn call", "[vm]") {
       .instructions =
           {
               vm::Instr{
-                  .type = vm::InstrType::FROM_STACK,
+                  .type = vm::InstrType::GET_ARG,
                   .arg1 = 0,  // push argument i
               },
               vm::Instr{
@@ -202,7 +202,7 @@ TEST_CASE("vm: function with if statements", "[vm]") {
       .instructions =
           {
               vm::Instr{
-                  .type = vm::InstrType::FROM_STACK,
+                  .type = vm::InstrType::GET_ARG,
                   .arg1 = 0,  // push argument i
               },
               vm::Instr{
@@ -268,7 +268,7 @@ TEST_CASE("vm: recursive function", "[vm]") {
       .instructions =
           {
               vm::Instr{
-                  .type = vm::InstrType::FROM_STACK,
+                  .type = vm::InstrType::GET_ARG,
                   .arg1 = 0,  // push argument i
               },
               vm::Instr{
@@ -300,7 +300,7 @@ TEST_CASE("vm: recursive function", "[vm]") {
 
               // 1) Place (i-1) as argument
               vm::Instr{
-                  .type = vm::InstrType::FROM_STACK,
+                  .type = vm::InstrType::GET_ARG,
                   .arg1 = 0,  // push argument i
               },
               vm::Instr{
@@ -325,7 +325,7 @@ TEST_CASE("vm: recursive function", "[vm]") {
 
               // 3) Add f(i-1) and i
               vm::Instr{
-                  .type = vm::InstrType::FROM_STACK,
+                  .type = vm::InstrType::GET_ARG,
                   .arg1 = 0,  // push argument i
               },
               vm::Instr{
@@ -350,7 +350,11 @@ TEST_CASE("vm: recursive function", "[vm]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("vm: using locals", "[vm]") {
+// TEST_CASE("vm: using locals", "[vm]") {
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm: indirect call", "[vm]") {
   vm::ExecutableChunk chunk{
       .instructions =
           {
@@ -360,13 +364,10 @@ TEST_CASE("vm: using locals", "[vm]") {
               },
               vm::Instr{
                   .type = vm::InstrType::PUSH_STACK,
-                  .arg1 = 0,  // push 3
+                  .arg1 = 1,  // push chunk no. 1
               },
               vm::Instr{
-                  .type = vm::InstrType::CALL_FN,
-                  .arg1 = 1,  // chunk 1 ~ compiled_fn
-                  .arg2 = 0,  // ip is 0
-                  .arg3 = 0,
+                  .type = vm::InstrType::INDIRECT_CALL,
               },
               vm::Instr{
                   .type = vm::InstrType::FIN_CALL,
@@ -376,35 +377,51 @@ TEST_CASE("vm: using locals", "[vm]") {
       .attached_vals{
           vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
                                  .as_int = 3},                  //
+          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
+                                 .as_int = 1},                  //
       },
   };
 
-  vm::ExecutableChunk compiled_fn_sum{
+  vm::ExecutableChunk compiled_fn_inc{
       .instructions =
           {
               vm::Instr{
-                  .type = vm::InstrType::FROM_STACK,
+                  .type = vm::InstrType::GET_ARG,
                   .arg1 = 0,  // push argument i
               },
               vm::Instr{
                   .type = vm::InstrType::PUSH_STACK,
-                  .arg1 = 0,  // push constant 0
+                  .arg1 = 0,  // push constant 1
               },
               vm::Instr{
-                  .type = vm::InstrType::CMP_EQ,
+                  .type = vm::InstrType::ADD,
               },
-
+              vm::Instr{
+                  .type = vm::InstrType::RET_FN,
+              },
           },
       .attached_vals{
           vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
-                                 .as_int = 0},                  //
-          vm::rt::PrimitiveValue{.tag = vm::rt::ValueTag::Int,  //
-                                 .as_int = -1},                 //
+                                 .as_int = 1},                  //
       },
   };
 
+  vm::ExecutableChunk compiled_fn_id{
+      .instructions =
+          {
+              vm::Instr{
+                  .type = vm::InstrType::GET_ARG,
+                  .arg1 = 0,  // push argument i
+              },
+              vm::Instr{
+                  .type = vm::InstrType::RET_FN,
+              },
+          },
+      .attached_vals{},
+  };
+
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(
-            {chunk, compiled_fn_sum}) == 6);
+            {chunk, compiled_fn_inc, compiled_fn_id}) == 4);
 }
 
 //////////////////////////////////////////////////////////////////////

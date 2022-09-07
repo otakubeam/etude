@@ -100,7 +100,7 @@ TEST_CASE("vm:codegen:if-else-false", "[vm:codegen]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("vm:codegen:if-else-false", "[vm:codegen]") {
+TEST_CASE("vm:codegen:local", "[vm:codegen]") {
   char stream[] =
       "                                                 "
       "fun f(b: Bool) {                                 "

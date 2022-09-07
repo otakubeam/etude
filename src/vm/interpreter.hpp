@@ -64,6 +64,36 @@ class BytecodeInterpreter {
         break;
       }
 
+      case InstrType::INDIRECT_CALL: {
+        // Note: Args have been placed
+
+        // Get the chunk to jump to
+        auto chunk_no = stack_.Pop();
+
+        // Push IP onto the stack
+        stack_.Push(rt::PrimitiveValue{
+            .tag = rt::ValueTag::Int,
+            .as_int = (int)ip_,
+        });
+
+        // Push chunk number onto the stack
+        stack_.Push(rt::PrimitiveValue{
+            .tag = rt::ValueTag::Int,
+            .as_int = (int)current_chunk,
+        });
+
+        // Create a new call frame
+        stack_.PrepareCallframe();
+
+        // Jmp into the function
+        FMT_ASSERT(chunk_no.tag == vm::rt::ValueTag::Int,
+                   "Chunk no. should be int\n");
+        current_chunk = chunk_no.as_int;
+        ip_ = 0;
+
+        break;
+      }
+
       case InstrType::JUMP: {
         ip_ = ReadWord(*instruction);
         break;
@@ -92,10 +122,16 @@ class BytecodeInterpreter {
         break;
       }
 
-        // Alias: GetArg
-      case InstrType::FROM_STACK: {
+      case InstrType::GET_ARG: {
         size_t offset = ReadByte(*instruction);
         auto arg = stack_.GetFnArg(offset);
+        stack_.Push(arg);
+        break;
+      }
+
+      case InstrType::GET_LOCAL: {
+        size_t offset = ReadByte(*instruction);
+        auto arg = stack_.GetLocalVar(offset);
         stack_.Push(arg);
         break;
       }

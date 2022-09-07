@@ -4,6 +4,7 @@
 
 #include <ast/statements.hpp>
 
+#include <optional>
 #include <vector>
 
 namespace vm::codegen {
@@ -38,9 +39,17 @@ class FrameTranslator {
   }
 
   // Returns offset from the fp
-  // (positive if in the cuurent frame)
+  // (positive if in the current frame)
   // (nagative if from the past frames)
-  size_t Lookup(std::string name) {
+  std::optional<int> Lookup(std::string name) {
+    // Check args
+    for (size_t i = 0; i < fp_; i++) {
+      auto& stack_name = layout_.at(i).name;
+      if (stack_name == name) {
+        return (i - fp_);
+      }
+    }
+
     // Check locals
     for (size_t i = fp_; i < layout_.size(); i++) {
       auto& stack_name = layout_.at(i).name;
@@ -48,6 +57,8 @@ class FrameTranslator {
         return i;
       }
     }
+
+    return std::nullopt;
   }
 
   void AddLocal(std::string name) {
