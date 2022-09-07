@@ -100,24 +100,52 @@ TEST_CASE("vm:codegen:if-else-false", "[vm:codegen]") {
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("vm:codegen:local", "[vm:codegen]") {
+TEST_CASE("vm:codegen:function", "[vm:codegen]") {
   char stream[] =
+      "{                                                "
+      "  fun f(i: Int) Int {                            "
+      "      i + i                                      "
+      "  }                                              "
       "                                                 "
-      "fun f(b: Bool) {                                 "
-      "    var res = if b { 100 } else { 101 };         "
-      "    res + res                                    "
-      "}                                                "
-      "                                                 "
-      "                                                 ";
+      "  f(23)                                          "
+      "}                                                ";
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
 
-  auto pr = p.ParseStatement();
+  auto pr = p.ParseExpression();
 
   vm::codegen::Compiler c;
-  auto res = c.Compile(pr);
+  auto res = c.CompileScript(pr);
 
-  CHECK(vm::BytecodeInterpreter::InterpretStandalone({res}) == 3);
+  for (auto r : *res) {
+    r.Print();
+  }
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 46);
 }
+
+//////////////////////////////////////////////////////////////////////
+
+// TEST_CASE("vm:codegen:local", "[vm:codegen]") {
+//   char stream[] =
+//       "{                                                "
+//       "  fun f(b: Bool) Int {                           "
+//       "      var res = if b { 100 } else { 101 };       "
+//       "      res + res                                  "
+//       "  }                                              "
+//       "                                                 "
+//       "  f(true)                                        "
+//       "}                                                ";
+//
+//   std::stringstream source{stream};
+//   Parser p{lex::Lexer{source}};
+//
+//   auto pr = p.ParseExpression();
+//
+//   vm::codegen::Compiler c;
+//   auto res = c.CompileScript(pr);
+//
+//   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 200);
+// }
 
 //////////////////////////////////////////////////////////////////////

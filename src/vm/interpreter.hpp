@@ -124,7 +124,7 @@ class BytecodeInterpreter {
 
       case InstrType::GET_ARG: {
         size_t offset = ReadByte(*instruction);
-        auto arg = stack_.GetFnArg(offset);
+        auto arg = stack_.GetFnArg(offset - 2 /*account for ip*/);
         stack_.Push(arg);
         break;
       }
@@ -163,6 +163,8 @@ class BytecodeInterpreter {
   int Interpret() {
     while (auto instr = NextInstruction()) {
       Interpret(instr);
+
+      fmt::print("[^] Instr: {}\n", PrintInstr(*instr));
       stack_.PrintStack();
     }
 
@@ -179,6 +181,11 @@ class BytecodeInterpreter {
   static int InterpretStandalone(std::vector<ExecutableChunk> chunks) {
     BytecodeInterpreter a;
     a.chunks = std::move(chunks);
+
+    // Start executing from the last chunk
+    FMT_ASSERT(a.chunks.size() >= 1, "");
+    a.current_chunk = a.chunks.size() - 1;
+
     return a.Interpret();
   }
 

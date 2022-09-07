@@ -21,6 +21,20 @@ class Compiler : public Visitor {
     return chunk_;
   }
 
+  static std::vector<ExecutableChunk>* CompileScript(TreeNode* node) {
+    auto result = new std::vector<ExecutableChunk>;
+
+    Compiler c;
+    c.compiled_chunks_ = result;
+    c.current = new FrameTranslator{};
+
+    node->Accept(&c);
+
+    result->push_back(c.chunk_);
+
+    return result;
+  }
+
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitStatement(Statement* /* node */) override {
@@ -36,32 +50,51 @@ class Compiler : public Visitor {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitFunDecl(FunDeclStatement* node) override {
-    Compiler chunk_compiler;
     FrameTranslator builder{node};
+
+    Compiler chunk_compiler;
     chunk_compiler.current = &builder;
+    // For the case of nested fn declarations
+    chunk_compiler.compiled_chunks_ = compiled_chunks_;
 
     auto chunk = chunk_compiler.Compile(node->block_);
 
+    int chunk_no = compiled_chunks_->size();
+    uint8_t const_no = chunk_.attached_vals.size();
+
+    chunk_.attached_vals.push_back(rt::PrimitiveValue{
+        .tag = rt::ValueTag::Int,
+        .as_int = chunk_no,
+    });
+
+    compiled_chunks_->push_back(chunk);
+
+    // This allows for lookup of this symbol later at the callsite
     current->AddLocal(node->name_.GetName());
 
-    // TODO: what? (chunk numbers)
+    chunk_.instructions.push_back(vm::Instr{
+        .type = InstrType::PUSH_STACK,
+        .arg1 = const_no,  // push the constant of the compiled chunk
+    });
   }
 
   virtual void VisitFnCall(FnCallExpression* node) override {
-    for (size_t i = node->arguments_.size(); i != 0; i -= 1) {
+    // Place in reverse order
+    for (int i = node->arguments_.size() - 1; i >= 0; i -= 1) {
       node->arguments_[i]->Accept(this);
     }
 
     auto mb_offset = current->Lookup(node->fn_name_.GetName());
 
-    chunk_.instructions.push_back(vm::Instr{
-        .type = vm::InstrType::CALL_FN,
-        .arg1 = 0,
-    });
-
     int offset = mb_offset.value();
 
+    // TODO: branch direct / indirect
+
     GenerateVarFetch(offset);
+
+    chunk_.instructions.push_back(vm::Instr{
+        .type = vm::InstrType::INDIRECT_CALL,
+    });
   }
 
  private:
@@ -191,7 +224,6 @@ class Compiler : public Visitor {
 
   virtual void VisitBlock(BlockExpression* node) override {
     for (auto& st : node->stmts_) {
-      FMT_ASSERT(false, "Unimplemented!");
       st->Accept(this);
     }
 
@@ -263,16 +295,23 @@ class Compiler : public Visitor {
     }
   }
 
-  virtual void VisitVarAccess(VarAccessExpression*) override {
-    FMT_ASSERT(false, "Unimplemented!");
+  virtual void VisitVarAccess(VarAccessExpression* node) override {
+    auto mb_offset = current->Lookup(node->name_.GetName());
+    int offset = mb_offset.value();
+    GenerateVarFetch(offset);
   }
 
   ////////////////////////////////////////////////////////////////////
 
  private:
+  // Compiler(std::vector<ExecutableChunk>& chnks) : compiled_chunks_{chnks} {
+  // }
+
+ private:
   ExecutableChunk chunk_;
 
   // Environment
+  std::vector<ExecutableChunk>* compiled_chunks_ = nullptr;
 
   // StackEmulation
   FrameTranslator* current = nullptr;

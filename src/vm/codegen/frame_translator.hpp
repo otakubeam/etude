@@ -11,16 +11,20 @@ namespace vm::codegen {
 
 class FrameTranslator {
  public:
+  FrameTranslator() {
+    // Dummy value in the first slot of fp
+    layout_.push_back(Slot{});
+  }
+
   struct Slot {
     std::string name;
     size_t depth = 0;
   };
 
   FrameTranslator(FunDeclStatement* decl) {
-    for (auto fm : decl->formals_) {
+    for (int i = decl->formals_.size() - 1; i >= 0; i--) {
       layout_.emplace_back(Slot{
-          .name = "+formal." + fm.ident.GetName() + "@" +
-                  std::to_string(current_depth_),
+          .name = decl->formals_[i].ident.GetName(),
           .depth = 0,
       });
     }
@@ -46,7 +50,7 @@ class FrameTranslator {
     for (size_t i = 0; i < fp_; i++) {
       auto& stack_name = layout_.at(i).name;
       if (stack_name == name) {
-        return (i - fp_);
+        return {i - fp_};
       }
     }
 
@@ -54,7 +58,7 @@ class FrameTranslator {
     for (size_t i = fp_; i < layout_.size(); i++) {
       auto& stack_name = layout_.at(i).name;
       if (stack_name == name) {
-        return i;
+        return {i - fp_};
       }
     }
 
@@ -63,7 +67,7 @@ class FrameTranslator {
 
   void AddLocal(std::string name) {
     layout_.emplace_back(Slot{
-        .name = "+local." + name + "@" + std::to_string(current_depth_),
+        .name = name,
         .depth = current_depth_,
     });
   }

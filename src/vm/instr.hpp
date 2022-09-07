@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fmt/core.h>
+
 #include <cstdlib>
 
 namespace vm {
@@ -35,6 +37,39 @@ inline u_int8_t ReadByte(const Instr& inst) {
 
 inline u_int16_t ReadWord(const Instr& inst) {
   return ((inst.arg2 << 8) + inst.arg3);
+}
+
+inline std::string PrintInstrType(InstrType type) {
+  switch (type) {
+    case InstrType::CALL_FN:
+      return "call_fn";
+
+    case InstrType::RET_FN:
+      return "ret_fn";
+
+    case InstrType::GET_ARG:
+      return "get_arg";
+
+    case InstrType::GET_LOCAL:
+      return "get_local";
+
+    case InstrType::INDIRECT_CALL:
+      return "indirect_call";
+
+    case InstrType::PUSH_STACK:
+      return "push_stack";
+
+    case InstrType::ADD:
+      return "add";
+
+    default:
+      return std::to_string(uint8_t(type));
+  }
+}
+
+inline std::string PrintInstr(const Instr& inst) {
+  return fmt::format("{}, {} {} {}", PrintInstrType(inst.type), inst.arg1,
+                     inst.arg2, inst.arg3);
 }
 
 //////////////////////////////////////////////////////////////////////
