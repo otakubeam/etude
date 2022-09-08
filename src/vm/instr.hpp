@@ -53,6 +53,12 @@ inline std::string PrintInstrType(InstrType type) {
     case InstrType::GET_LOCAL:
       return "get_local";
 
+    case InstrType::JUMP:
+      return "jump";
+
+    case InstrType::JUMP_IF_FALSE:
+      return "jump_if_false";
+
     case InstrType::INDIRECT_CALL:
       return "indirect_call";
 
@@ -61,6 +67,9 @@ inline std::string PrintInstrType(InstrType type) {
 
     case InstrType::ADD:
       return "add";
+
+    case InstrType::FIN_CALL:
+      return "fin_call";
 
     default:
       return std::to_string(uint8_t(type));

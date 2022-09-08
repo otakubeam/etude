@@ -43,8 +43,13 @@ class Compiler : public Visitor {
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitVarDecl(VarDeclStatement*) override {
-    FMT_ASSERT(false, "Unimplemented!");
+  virtual void VisitVarDecl(VarDeclStatement* node) override {
+    // Generate code to place value on stack
+    node->value_->Accept(this);
+
+    // Infrom FrameTranslator about this location
+    auto name = node->lvalue_->name_;
+    current->AddLocal(name.GetName());
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -58,6 +63,10 @@ class Compiler : public Visitor {
     chunk_compiler.compiled_chunks_ = compiled_chunks_;
 
     auto chunk = chunk_compiler.Compile(node->block_);
+
+    chunk.instructions.push_back(vm::Instr{
+        .type = InstrType::RET_FN,
+    });
 
     int chunk_no = compiled_chunks_->size();
     uint8_t const_no = chunk_.attached_vals.size();
@@ -94,6 +103,11 @@ class Compiler : public Visitor {
 
     chunk_.instructions.push_back(vm::Instr{
         .type = vm::InstrType::INDIRECT_CALL,
+    });
+
+    chunk_.instructions.push_back(vm::Instr{
+        .type = vm::InstrType::FIN_CALL,
+        .arg1 = (uint8_t)node->arguments_.size(),
     });
   }
 

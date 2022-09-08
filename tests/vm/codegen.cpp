@@ -117,35 +117,39 @@ TEST_CASE("vm:codegen:function", "[vm:codegen]") {
   vm::codegen::Compiler c;
   auto res = c.CompileScript(pr);
 
-  for (auto r : *res) {
-    r.Print();
-  }
+  // for (auto r : *res) {
+  //   r.Print();
+  // }
 
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 46);
 }
 
 //////////////////////////////////////////////////////////////////////
 
-// TEST_CASE("vm:codegen:local", "[vm:codegen]") {
-//   char stream[] =
-//       "{                                                "
-//       "  fun f(b: Bool) Int {                           "
-//       "      var res = if b { 100 } else { 101 };       "
-//       "      res + res                                  "
-//       "  }                                              "
-//       "                                                 "
-//       "  f(true)                                        "
-//       "}                                                ";
-//
-//   std::stringstream source{stream};
-//   Parser p{lex::Lexer{source}};
-//
-//   auto pr = p.ParseExpression();
-//
-//   vm::codegen::Compiler c;
-//   auto res = c.CompileScript(pr);
-//
-//   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 200);
-// }
+TEST_CASE("vm:codegen:local", "[vm:codegen]") {
+  char stream[] =
+      "{                                                "
+      "  fun f(b: Bool) Int {                           "
+      "      var res = if b { 100 } else { 101 };       "
+      "      res + res                                  "
+      "  }                                              "
+      "                                                 "
+      "  f(true)                                        "
+      "}                                                ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto pr = p.ParseExpression();
+
+  vm::codegen::Compiler c;
+  auto res = c.CompileScript(pr);
+
+  for (auto r : *res) {
+    r.Print();
+  }
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 200);
+}
 
 //////////////////////////////////////////////////////////////////////
