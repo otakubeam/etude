@@ -15,15 +15,15 @@ class StructType : public Type {
   StructType(std::string name) : name_{name} {
   }
 
-  virtual bool IsEqual(Type* other) {
+  virtual bool IsEqual(Type* other) override {
     return other->IsEqual(this);
   }
 
-  virtual bool IsEqual(BuiltinType*) {
+  virtual bool IsEqual(BuiltinType*) override {
     return false;
   }
 
-  virtual bool IsEqual(StructType* other) {
+  virtual bool IsEqual(StructType* other) override {
     // XXX: Radically simplify!
     return other->name_ == name_;
 
@@ -40,12 +40,16 @@ class StructType : public Type {
     // return true;
   }
 
-  virtual bool IsEqual(FnType*) {
+  virtual bool IsEqual(FnType*) override {
     return false;
   }
 
   std::string GetName() {
     return name_;
+  }
+
+  virtual bool IsStruct() override {
+    return true;
   }
 
  private:

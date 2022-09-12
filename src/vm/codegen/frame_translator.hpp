@@ -18,6 +18,7 @@ class FrameTranslator {
 
   struct Slot {
     std::string name;
+    size_t size = 1;
     size_t depth = 0;
   };
 
@@ -65,11 +66,17 @@ class FrameTranslator {
     return std::nullopt;
   }
 
-  void AddLocal(std::string name) {
+  void AddLocal(std::string name, size_t size = 1) {
     layout_.emplace_back(Slot{
         .name = name,
+        .size = size,
         .depth = current_depth_,
     });
+
+    // Lazy but works
+    while (--size > 0) {
+      PushAnonValue();
+    }
   }
 
   void CreateNewScope() {
@@ -85,10 +92,25 @@ class FrameTranslator {
     return popped;
   }
 
+  void PushAnonValue() {
+    layout_.emplace_back(Slot{.name = "", .depth = current_depth_});
+  }
+
+  void SetNextSize(size_t size) {
+    next_local_size_ = size;
+  }
+
+  size_t GetNextSize() {
+    return std::exchange(next_local_size_, 1);
+  }
+
  private:
   std::vector<Slot> layout_;
   size_t current_depth_ = 0;
   size_t fp_ = 0;
+
+  // Detail
+  size_t next_local_size_ = 1;
 };
 
 }  // namespace vm::codegen

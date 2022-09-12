@@ -1,9 +1,12 @@
 #pragma once
 
+#include <vm/codegen/detail/struct_symbol.hpp>
 #include <vm/codegen/frame_translator.hpp>
 #include <vm/chunk.hpp>
 
 #include <ast/visitors/template_visitor.hpp>
+#include <ast/scope/environment.hpp>
+
 #include <ast/expressions.hpp>
 #include <ast/statements.hpp>
 
@@ -49,7 +52,7 @@ class Compiler : public Visitor {
 
     // Infrom FrameTranslator about this location
     auto name = node->lvalue_->name_;
-    current->AddLocal(name.GetName());
+    current->AddLocal(name.GetName(), current->GetNextSize());
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -147,8 +150,9 @@ class Compiler : public Visitor {
  public:
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitStructDecl(StructDeclStatement*) override {
-    FMT_ASSERT(false, "Unimplemented!");
+  virtual void VisitStructDecl(StructDeclStatement* node) override {
+    structs_.Declare(node->name_.GetName(),
+                     new detail::StructSymbol{node, structs_});
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -268,23 +272,28 @@ class Compiler : public Visitor {
       return;
     }
 
-    chunk_.instructions.push_back(vm::Instr{
-        .type = InstrType::PUSH_STACK,
-        // XXX: this is obviously wrong
-        .arg1 = 0,  // push nil instead
-    });
+    AddNewConstant(999 /* mark */);
   }
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitStructConstruction(StructConstructionExpression*) override {
-    FMT_ASSERT(false, "Unimplemented!");
+  virtual void VisitStructConstruction(
+      StructConstructionExpression* node) override {
+    auto fetch = structs_.Get(node->struct_name_.GetName());
+    auto str_size = fetch.value()->Size();
+
+    // Generate code for placing all initializers on stack
+    for (auto v : node->values_) {
+      v->Accept(this);
+    }
+
+    current->SetNextSize(str_size);
   }
 
   ////////////////////////////////////////////////////////////////////
 
-  virtual void VisitFieldAccess(FieldAccessExpression*) override {
-    FMT_ASSERT(false, "Unimplemented!");
+  virtual void VisitFieldAccess(FieldAccessExpression* node) override {
+    node->GetAddress().
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -357,8 +366,11 @@ class Compiler : public Visitor {
  private:
   ExecutableChunk chunk_;
 
-  // Environment
   std::vector<ExecutableChunk>* compiled_chunks_ = nullptr;
+
+  // Environment
+  using Env = Environment<detail::StructSymbol*>;
+  Env structs_ = Env::MakeGlobal();
 
   // StackEmulation
   FrameTranslator* current = nullptr;

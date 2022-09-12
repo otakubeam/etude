@@ -145,10 +145,6 @@ TEST_CASE("vm:codegen:local", "[vm:codegen]") {
   vm::codegen::Compiler c;
   auto res = c.CompileScript(pr);
 
-  for (auto r : *res) {
-    r.Print();
-  }
-
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 200);
 }
 
@@ -170,11 +166,36 @@ TEST_CASE("vm:codegen:assignment", "[vm:codegen]") {
   vm::codegen::Compiler c;
   auto res = c.CompileScript(pr);
 
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 6);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:struct", "[vm:codegen]") {
+  char stream[] =
+      "{                                                "
+      "  struct Str {                                   "
+      "     count: Int,                                 "
+      "     ismodified: Bool,                           "
+      "  };                                             "
+      "                                                 "
+      "  var instance = Str:{4, true};                  "
+      "  instance.count                                 "
+      "}                                                ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto pr = p.ParseExpression();
+
+  vm::codegen::Compiler c;
+  auto res = c.CompileScript(pr);
+
   for (auto r : *res) {
     r.Print();
   }
 
-  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 6);
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 4);
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -122,7 +122,7 @@ class FieldAccessExpression : public LvalueExpression {
 
   // This can be an Identifier or result of a function call
   // or result of indexing an array, or of a field access.
-  Expression* struct_expression_;
+  LvalueExpression* struct_expression_;
 
   // TODO: deprecate, remove
   lex::Token struct_name_;

@@ -47,6 +47,10 @@ class FnType : public Type {
     return return_type_;
   }
 
+  virtual bool IsFnType() override {
+    return true;
+  }
+
  private:
   std::vector<Type*> arg_types_;
   Type* return_type_ = nullptr;

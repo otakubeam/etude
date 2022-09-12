@@ -14,6 +14,10 @@ class BuiltinType : public Type {
     return other == this;
   }
 
+  bool IsBuiltin() override {
+    return true;
+  }
+
   bool IsEqual(StructType*) override {
     return false;
   }
