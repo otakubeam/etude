@@ -54,6 +54,24 @@ class Compiler : public Visitor {
 
   ////////////////////////////////////////////////////////////////////
 
+  virtual void VisitAssignment(AssignmentStatement* node) override {
+    if (auto var = dynamic_cast<VarAccessExpression*>(node->target_)) {
+      // Lookup this variable name
+      auto mb_offset = current->Lookup(var->name_.GetName());
+      auto offset = mb_offset.value();
+
+      node->value_->Accept(this);
+
+      chunk_.instructions.push_back(vm::Instr{
+          .type = InstrType::STORE_STACK,
+          .addr = (int16_t)offset,
+      });
+
+    } else {
+      FMT_ASSERT(false, "Unimplemented!");
+    }
+  }
+
   virtual void VisitFunDecl(FunDeclStatement* node) override {
     FrameTranslator builder{node};
 
@@ -320,6 +338,21 @@ class Compiler : public Visitor {
   }
 
   ////////////////////////////////////////////////////////////////////
+
+ private:
+  void AddNewConstant(int value) {
+    uint8_t const_no = chunk_.attached_vals.size();
+
+    chunk_.attached_vals.push_back(rt::PrimitiveValue{
+        .tag = rt::ValueTag::Int,
+        .as_int = value,
+    });
+
+    chunk_.instructions.push_back(vm::Instr{
+        .type = InstrType::PUSH_STACK,
+        .arg1 = const_no,
+    });
+  }
 
  private:
   ExecutableChunk chunk_;

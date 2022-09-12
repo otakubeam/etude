@@ -54,7 +54,7 @@ class StructDeclStatement : public Statement {
       }
     }
 
-    // In well types program should not happen
+    // In well typed programs should not happen
     FMT_ASSERT(false, "No offset");
   }
 
@@ -82,8 +82,6 @@ class VarDeclStatement : public Statement {
 };
 
 //////////////////////////////////////////////////////////////////////
-
-// fun f(a1, a2, a3) { }
 
 class FunDeclStatement : public Statement {
  public:
@@ -148,3 +146,17 @@ class YieldStatement : public Statement {
 };
 
 //////////////////////////////////////////////////////////////////////
+
+class AssignmentStatement : public Statement {
+ public:
+  AssignmentStatement(LvalueExpression* target, Expression* value)
+      : target_{target}, value_{value} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitAssignment(this);
+  }
+
+  LvalueExpression* target_;
+  Expression* value_;
+};

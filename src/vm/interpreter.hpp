@@ -157,6 +157,12 @@ class BytecodeInterpreter {
 
         break;
       }
+
+      case InstrType::STORE_STACK: {
+        auto value = stack_.Pop();
+        stack_.StoreAt(instruction->addr, value);
+        break;
+      }
     }
   }
 

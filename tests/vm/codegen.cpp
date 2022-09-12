@@ -153,3 +153,28 @@ TEST_CASE("vm:codegen:local", "[vm:codegen]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:assignment", "[vm:codegen]") {
+  char stream[] =
+      "{                                                "
+      "  var x = 5;                                     "
+      "  x = 6;                                         "
+      "  x                                              "
+      "}                                                ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto pr = p.ParseExpression();
+
+  vm::codegen::Compiler c;
+  auto res = c.CompileScript(pr);
+
+  for (auto r : *res) {
+    r.Print();
+  }
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 6);
+}
+
+//////////////////////////////////////////////////////////////////////

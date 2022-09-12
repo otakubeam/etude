@@ -24,7 +24,8 @@ class Parser {
   ReturnStatement* ParseReturnStatement();
   YieldStatement* ParseYieldStatement();
   VarDeclStatement* ParseVarDeclStatement();
-  ExprStatement* ParseExprStatement();
+  Statement* ParseExprStatement();
+  AssignmentStatement* ParseAssignment(LvalueExpression* target);
 
   ////////////////////////////////////////////////////////////////////
 

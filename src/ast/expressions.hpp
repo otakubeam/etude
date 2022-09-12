@@ -18,7 +18,11 @@ class Expression : public TreeNode {
 //////////////////////////////////////////////////////////////////////
 
 // Identifier, Named entity
-class LvalueExpression : public Expression {};
+class LvalueExpression : public Expression {
+ public:
+  virtual void GetAddress() {
+  }
+};
 
 //////////////////////////////////////////////////////////////////////
 
@@ -116,10 +120,13 @@ class FieldAccessExpression : public LvalueExpression {
     visitor->VisitFieldAccess(this);
   }
 
-  // I would like to write Expession* instead of struct name
-  // but that would need a different kind of parser
+  // This can be an Identifier or result of a function call
+  // or result of indexing an array, or of a field access.
+  Expression* struct_expression_;
 
+  // TODO: deprecate, remove
   lex::Token struct_name_;
+
   lex::Token field_name_;
 };
 

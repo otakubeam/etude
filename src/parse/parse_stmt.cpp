@@ -180,8 +180,16 @@ VarDeclStatement* Parser::ParseVarDeclStatement() {
 
 ///////////////////////////////////////////////////////////////////
 
-ExprStatement* Parser::ParseExprStatement() {
+Statement* Parser::ParseExprStatement() {
   auto expr = ParseExpression();
+
+  if (Matches(lex::TokenType::ASSIGN)) {
+    auto target = dynamic_cast<LvalueExpression*>(expr);
+    if (!target) {
+      throw "Assigning to non-lvalue";
+    }
+    return ParseAssignment(target);
+  }
 
   try {
     Consume(lex::TokenType::SEMICOLUMN);
@@ -197,4 +205,10 @@ ExprStatement* Parser::ParseExprStatement() {
   }
 
   return new ExprStatement{expr};
+}
+
+AssignmentStatement* Parser::ParseAssignment(LvalueExpression* target) {
+  auto value = ParseExpression();
+  Consume(lex::TokenType::SEMICOLUMN);
+  return new AssignmentStatement{target, value};
 }

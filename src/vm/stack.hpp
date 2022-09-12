@@ -55,6 +55,10 @@ class VmStack {
     return GetAtFp(count);
   }
 
+  void StoreAt(int16_t offset, rt::PrimitiveValue value) {
+    GetAtFp(offset) = value;
+  }
+
   int GetSavedIp() {
     return GetAtFp(-1).as_int;
   }
@@ -93,7 +97,7 @@ class VmStack {
     return stack_.at(sp_ - 1);
   }
 
-  auto GetAtFp(int offset) -> rt::PrimitiveValue {
+  auto GetAtFp(int offset) -> rt::PrimitiveValue& {
     return stack_.at(fp_ + offset);
   }
 

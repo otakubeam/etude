@@ -22,6 +22,11 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
     FMT_ASSERT(false, "Visiting bare statement");
   }
 
+  virtual void VisitAssignment(AssignmentStatement* /* node */) override {
+    // See vm::codegen::Compiler
+    FMT_ASSERT(false, "Unimplemented!");
+  }
+
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitVarDecl(VarDeclStatement* node) override {
@@ -148,6 +153,6 @@ class Evaluator : public EnvVisitor<rt::SBObject> {
   ////////////////////////////////////////////////////////////////////
 
  private:
-  // TODO: remove? It's really shared 
+  // TODO: remove? It's really shared
   Environment<StructDeclStatement*> struct_decls_;
 };
