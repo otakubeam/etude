@@ -152,13 +152,17 @@ class Compiler : public Visitor {
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitExprStatement(ExprStatement* node) override {
-    VisitExpression(node->expr_);
+    node->expr_->Accept(this);
+
+    chunk_.instructions.push_back(vm::Instr{
+        .type = InstrType::POP_STACK,
+    });
   }
 
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitExpression(Expression*) override {
-    FMT_ASSERT(false, "Unimplemented!");
+    FMT_ASSERT(false, "Unreachable!");
   }
 
   virtual void VisitComparison(ComparisonExpression*) override {
@@ -316,10 +320,6 @@ class Compiler : public Visitor {
   }
 
   ////////////////////////////////////////////////////////////////////
-
- private:
-  // Compiler(std::vector<ExecutableChunk>& chnks) : compiled_chunks_{chnks} {
-  // }
 
  private:
   ExecutableChunk chunk_;
