@@ -20,8 +20,7 @@ class Expression : public TreeNode {
 // Identifier, Named entity
 class LvalueExpression : public Expression {
  public:
-  virtual void GetAddress() {
-  }
+  virtual int GetAddress() = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -112,12 +111,19 @@ class StructConstructionExpression : public Expression {
 
 class FieldAccessExpression : public LvalueExpression {
  public:
-  FieldAccessExpression(lex::Token struct_name, lex::Token field_name)
-      : struct_name_{struct_name}, field_name_{field_name} {
+  FieldAccessExpression(lex::Token struct_name, lex::Token field_name,
+                        LvalueExpression* lvalue)
+      : struct_expression_{lvalue},
+        struct_name_{struct_name},
+        field_name_{field_name} {
   }
 
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitFieldAccess(this);
+  }
+
+  virtual int GetAddress() override {
+    return address_;
   }
 
   // This can be an Identifier or result of a function call
@@ -128,6 +134,8 @@ class FieldAccessExpression : public LvalueExpression {
   lex::Token struct_name_;
 
   lex::Token field_name_;
+
+  int address_ = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -194,7 +202,12 @@ class VarAccessExpression : public LvalueExpression {
     visitor->VisitVarAccess(this);
   }
 
+  virtual int GetAddress() override {
+    return address_;
+  }
+
   lex::Token name_{};
+  int address_ = 0;
 };
 
 //////////////////////////////////////////////////////////////////////

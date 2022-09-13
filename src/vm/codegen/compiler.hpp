@@ -4,6 +4,8 @@
 #include <vm/codegen/frame_translator.hpp>
 #include <vm/chunk.hpp>
 
+#include <types/check/type_checker.hpp>
+
 #include <ast/visitors/template_visitor.hpp>
 #include <ast/scope/environment.hpp>
 
@@ -29,7 +31,7 @@ class Compiler : public Visitor {
 
     Compiler c;
     c.compiled_chunks_ = result;
-    c.current = new FrameTranslator{};
+    c.current_frame_ = new FrameTranslator{};
 
     node->Accept(&c);
 
@@ -52,34 +54,31 @@ class Compiler : public Visitor {
 
     // Infrom FrameTranslator about this location
     auto name = node->lvalue_->name_;
-    current->AddLocal(name.GetName(), current->GetNextSize());
+    current_frame_->AddLocal(name.GetName(), current_frame_->GetNextSize());
   }
 
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitAssignment(AssignmentStatement* node) override {
-    if (auto var = dynamic_cast<VarAccessExpression*>(node->target_)) {
-      // Lookup this variable name
-      auto mb_offset = current->Lookup(var->name_.GetName());
-      auto offset = mb_offset.value();
+    node->value_->Accept(this);
 
-      node->value_->Accept(this);
-
-      chunk_.instructions.push_back(vm::Instr{
-          .type = InstrType::STORE_STACK,
-          .addr = (int16_t)offset,
-      });
-
-    } else {
-      FMT_ASSERT(false, "Unimplemented!");
+    {
+      emit_mem_fetch_ = false;
+      node->target_->Accept(this);
+      emit_mem_fetch_ = true;
     }
+
+    chunk_.instructions.push_back(vm::Instr{
+        .type = InstrType::STORE_STACK,
+        .addr = (int16_t)node->target_->GetAddress(),
+    });
   }
 
   virtual void VisitFunDecl(FunDeclStatement* node) override {
     FrameTranslator builder{node};
 
     Compiler chunk_compiler;
-    chunk_compiler.current = &builder;
+    chunk_compiler.current_frame_ = &builder;
     // For the case of nested fn declarations
     chunk_compiler.compiled_chunks_ = compiled_chunks_;
 
@@ -100,7 +99,7 @@ class Compiler : public Visitor {
     compiled_chunks_->push_back(chunk);
 
     // This allows for lookup of this symbol later at the callsite
-    current->AddLocal(node->name_.GetName());
+    current_frame_->AddLocal(node->name_.GetName());
 
     chunk_.instructions.push_back(vm::Instr{
         .type = InstrType::PUSH_STACK,
@@ -114,13 +113,13 @@ class Compiler : public Visitor {
       node->arguments_[i]->Accept(this);
     }
 
-    auto mb_offset = current->Lookup(node->fn_name_.GetName());
+    auto mb_offset = current_frame_->Lookup(node->fn_name_.GetName());
 
     int offset = mb_offset.value();
 
     // TODO: branch direct / indirect
 
-    GenerateVarFetch(offset);
+    MabyeEmitMemFetch(offset);
 
     chunk_.instructions.push_back(vm::Instr{
         .type = vm::InstrType::INDIRECT_CALL,
@@ -133,7 +132,11 @@ class Compiler : public Visitor {
   }
 
  private:
-  void GenerateVarFetch(int offset) {
+  void MabyeEmitMemFetch(int offset) {
+    if (emit_mem_fetch_ == false) {
+      return;
+    }
+
     if (offset > 0) {
       chunk_.instructions.push_back(vm::Instr{
           .type = vm::InstrType::GET_LOCAL,
@@ -287,15 +290,38 @@ class Compiler : public Visitor {
       v->Accept(this);
     }
 
-    current->SetNextSize(str_size);
+    current_frame_->SetNextPushSize(str_size);
   }
 
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitFieldAccess(FieldAccessExpression* node) override {
-    node->GetAddress().
+    // Do this for the first time on the top level
+    // (emit mem fetch only on the top level)
+    bool top_level = std::exchange(emit_mem_fetch_, false);
+
+    node->struct_expression_->Accept(this);
+
+    // Cancel the effect on the top level
+    if (top_level) {
+      emit_mem_fetch_ = true;
+    }
+
+    // TODO: get offset in the type lvalue for node->field_name_
+    node->address_ =
+        node->struct_expression_->GetAddress() /* + offset of the field */;
+    // (for now offset will be zero)
+
+    MabyeEmitMemFetch(node->address_);
   }
 
+ private:
+  int LookupVarAddress(std::string name) {
+    auto mb_offset = current_frame_->Lookup(name);
+    return mb_offset.value();
+  }
+
+ public:
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitLiteral(LiteralExpression* lit) override {
@@ -341,9 +367,13 @@ class Compiler : public Visitor {
   }
 
   virtual void VisitVarAccess(VarAccessExpression* node) override {
-    auto mb_offset = current->Lookup(node->name_.GetName());
+    // LookupVarAddress(node->name_.GetName());
+    auto mb_offset = current_frame_->Lookup(node->name_.GetName());
     int offset = mb_offset.value();
-    GenerateVarFetch(offset);
+
+    node->address_ = offset;
+
+    MabyeEmitMemFetch(offset);
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -366,14 +396,16 @@ class Compiler : public Visitor {
  private:
   ExecutableChunk chunk_;
 
+  bool emit_mem_fetch_ = true;
+
   std::vector<ExecutableChunk>* compiled_chunks_ = nullptr;
 
   // Environment
-  using Env = Environment<detail::StructSymbol*>;
-  Env structs_ = Env::MakeGlobal();
+  using StructEnv = Environment<detail::StructSymbol*>;
+  StructEnv structs_ = StructEnv::MakeGlobal();
 
   // StackEmulation
-  FrameTranslator* current = nullptr;
+  FrameTranslator* current_frame_ = nullptr;
 };
 
 }  // namespace vm::codegen

@@ -180,6 +180,7 @@ TEST_CASE("vm:codegen:struct", "[vm:codegen]") {
       "  };                                             "
       "                                                 "
       "  var instance = Str:{4, true};                  "
+      "  instance.count = 5;                            "
       "  instance.count                                 "
       "}                                                ";
 
@@ -195,7 +196,7 @@ TEST_CASE("vm:codegen:struct", "[vm:codegen]") {
     r.Print();
   }
 
-  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 4);
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 5);
 }
 
 //////////////////////////////////////////////////////////////////////

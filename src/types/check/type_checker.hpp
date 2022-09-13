@@ -24,9 +24,10 @@ class TypeChecker : public ReturnVisitor<Type*> {
     FMT_ASSERT(false, "Visiting bare statement");
   }
 
-  virtual void VisitAssignment(AssignmentStatement* node) override {
-
-     auto type = Eval(node->value_);
+  virtual void VisitAssignment(AssignmentStatement*) override {
+    // auto type = Eval(node->value_);
+    // auto type2 = Eval(node->target_);
+    // if (DiffersFrom(type1, type2)) {...}
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -149,6 +150,7 @@ class TypeChecker : public ReturnVisitor<Type*> {
         if (builtin_bool.DiffersFrom(operand_type)) {
           throw check::TypeError{"Negating non-bool"};
         }
+
         return_value = &builtin_bool;
         break;
 
@@ -156,6 +158,7 @@ class TypeChecker : public ReturnVisitor<Type*> {
         if (builtin_int.DiffersFrom(operand_type)) {
           throw check::TypeError{"Negating non-int"};
         }
+
         return_value = &builtin_int;
         break;
 

@@ -96,7 +96,7 @@ class FrameTranslator {
     layout_.emplace_back(Slot{.name = "", .depth = current_depth_});
   }
 
-  void SetNextSize(size_t size) {
+  void SetNextPushSize(size_t size) {
     next_local_size_ = size;
   }
 

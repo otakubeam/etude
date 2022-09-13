@@ -61,7 +61,6 @@ Expression* Parser::ParseIfExpression() {
 
   Expression* false_branch = nullptr;
   if (Matches(lex::TokenType::ELSE)) {
-
     false_branch = ParseBlockExpression();
   }
 
@@ -119,7 +118,8 @@ Expression* Parser::SwitchOnId() {
       auto field_name = lexer_.Peek();
       Consume(lex::TokenType::IDENTIFIER);
 
-      return new FieldAccessExpression(id, field_name);
+      return new FieldAccessExpression(id, field_name,
+                                       new VarAccessExpression(id));
     }
 
     default:
