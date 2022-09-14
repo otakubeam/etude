@@ -234,11 +234,8 @@ TEST_CASE("Typechecking correct structs", "[checker]") {
   types::check::TypeChecker tchk;
   tchk.Eval(p.ParseStatement());
   tchk.Eval(p.ParseStatement());
-
-  // TODO: problem with str.a
-
-  // tchk.Eval(p.ParseStatement());
-  // CHECK_NOTHROW(tchk.Eval(p.ParseStatement()));
+  tchk.Eval(p.ParseStatement());
+  CHECK_NOTHROW(tchk.Eval(p.ParseStatement()));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -254,10 +251,17 @@ TEST_CASE("Typechecking correct nested", "[checker]") {
       "     b: Base,                                    "
       "   };                                            "
       "                                                 "
+      "   # Want: type A = Base | Nested ;              "
+      "   # (with implicit tags and match cases)        "
+      "                                                 "
       "   var inst = Nested:{Base:{123}};               "
       "                                                 "
       "   fun takingStruct(str: Nested) Base {          "
       "     str.b                                       "
+      "   }                                             "
+      "                                                 "
+      "   fun takingStruct(str: Nested) Int {           "
+      "     str.b.a                                     "
       "   }                                             "
       "                                                 "
       "   takingStruct(inst);                           "
@@ -268,8 +272,9 @@ TEST_CASE("Typechecking correct nested", "[checker]") {
   tchk.Eval(p.ParseStatement());
   tchk.Eval(p.ParseStatement());
   tchk.Eval(p.ParseStatement());
-  // tchk.Eval(p.ParseStatement());
-  // CHECK_NOTHROW(tchk.Eval(p.ParseStatement()));
+  tchk.Eval(p.ParseStatement());
+  tchk.Eval(p.ParseStatement());
+  CHECK_NOTHROW(tchk.Eval(p.ParseStatement()));
 }
 
 //////////////////////////////////////////////////////////////////////

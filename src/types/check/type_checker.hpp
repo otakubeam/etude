@@ -25,7 +25,6 @@ class TypeChecker : public ReturnVisitor<Type*> {
   }
 
   virtual void VisitAssignment(AssignmentStatement* node) override {
-
     // auto type = Eval(node->value_);
     // auto type2 = Eval(node->target_);
     // if (DiffersFrom(type1, type2)) {...}
@@ -239,25 +238,32 @@ class TypeChecker : public ReturnVisitor<Type*> {
     }
 
     return_value = s_decl->type_;
+    s_cons->type_ = return_value;
   }
 
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitFieldAccess(FieldAccessExpression* node) override {
-    Type* t = env_->Get(  //
-                      node->struct_name_.GetName())
-                  .value();
+    node->struct_expression_->Accept(this);
 
-    // TODO: think better!
+    auto t = node->struct_expression_->GetType();
+    FMT_ASSERT(t, "FieldAccessExpression: Typechecker fault");
+
     auto str_t = dynamic_cast<StructType*>(t);
 
-    auto s_decl = struct_decls_.Get(str_t->GetName()).value();
-
     auto searching = node->field_name_.GetName();
+
+    if (str_t == nullptr) {
+      throw FieldAccessError::NotAStruct("<some-expression> before " +
+                                         searching);
+    }
+
+    auto s_decl = struct_decls_.Get(str_t->GetName()).value();
 
     for (size_t i = 0; i < s_decl->field_names_.size(); i++) {
       if (searching == s_decl->field_names_[i].GetName()) {
         return_value = s_decl->field_types_[i];
+        node->type_ = return_value;
         return;
       }
     }
@@ -285,12 +291,15 @@ class TypeChecker : public ReturnVisitor<Type*> {
       default:
         FMT_ASSERT(false, "Typechecking unknown literal");
     }
+
+    lit->type_ = return_value;
   }
 
   ////////////////////////////////////////////////////////////////////
 
   virtual void VisitVarAccess(VarAccessExpression* ident) override {
     Type* t = env_->Get(ident->name_.GetName()).value();
+    ident->type_ = t;
     return_value = t;
   }
 
@@ -300,14 +309,14 @@ class TypeChecker : public ReturnVisitor<Type*> {
   ////////////////////////////////////////////////////////////////////
 
   using TypeStore = Environment<Type*>;
-  TypeStore global_type_store = Environment<Type*>::MakeGlobal();
+  TypeStore global_type_store = TypeStore::MakeGlobal();
 
   TypeStore* env_ = &global_type_store;
 
   ////////////////////////////////////////////////////////////////////
 
-  Environment<StructDeclStatement*> struct_decls_ =
-      Environment<StructDeclStatement*>::MakeGlobal();
+  using DeclStore = Environment<StructDeclStatement*>;
+  DeclStore struct_decls_ = DeclStore::MakeGlobal();
 };
 
 //////////////////////////////////////////////////////////////////////

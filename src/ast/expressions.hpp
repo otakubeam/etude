@@ -13,6 +13,8 @@
 class Expression : public TreeNode {
  public:
   virtual void Accept(Visitor* /* visitor */){};
+
+  virtual types::Type* GetType() = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -35,6 +37,11 @@ class ComparisonExpression : public Expression {
     visitor->VisitComparison(this);
   }
 
+  virtual types::Type* GetType() override {
+    FMT_ASSERT(false, "Unreachable!");
+    return nullptr;
+  };
+
   Expression* left_;
   lex::Token operator_;
   Expression* right_;
@@ -51,6 +58,11 @@ class BinaryExpression : public Expression {
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitBinary(this);
   }
+
+  virtual types::Type* GetType() override {
+    FMT_ASSERT(false, "Unreachable!");
+    return nullptr;
+  };
 
   Expression* left_;
   lex::Token operator_;
@@ -69,6 +81,11 @@ class UnaryExpression : public Expression {
     visitor->VisitUnary(this);
   }
 
+  virtual types::Type* GetType() override {
+    FMT_ASSERT(false, "Unreachable!");
+    return nullptr;
+  };
+
   lex::Token operator_;
   Expression* operand_;
 };
@@ -84,6 +101,11 @@ class FnCallExpression : public Expression {
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitFnCall(this);
   }
+
+  virtual types::Type* GetType() override {
+    FMT_ASSERT(false, "Unreachable!");
+    return nullptr;
+  };
 
   lex::Token fn_name_;
   std::vector<Expression*> arguments_;
@@ -103,8 +125,15 @@ class StructConstructionExpression : public Expression {
     visitor->VisitStructConstruction(this);
   }
 
+  virtual types::Type* GetType() override {
+    FMT_ASSERT(type_, "Oh-huh!");
+    return type_;
+  };
+
   lex::Token struct_name_;
   std::vector<Expression*> values_;
+
+  types::Type* type_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -126,9 +155,16 @@ class FieldAccessExpression : public LvalueExpression {
     return address_;
   }
 
+  virtual types::Type* GetType() override {
+    FMT_ASSERT(type_, "Returning unassigned type");
+    return type_;
+  };
+
   // This can be an Identifier or result of a function call
   // or result of indexing an array, or of a field access.
   LvalueExpression* struct_expression_;
+
+  types::Type* type_ = nullptr;
 
   // TODO: deprecate, remove
   lex::Token struct_name_;
@@ -149,6 +185,11 @@ class BlockExpression : public Expression {
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitBlock(this);
   }
+
+  virtual types::Type* GetType() override {
+    FMT_ASSERT(false, "Unreachable!");
+    return nullptr;
+  };
 
   std::vector<Statement*> stmts_;
   Expression* final_;
@@ -172,6 +213,11 @@ class IfExpression : public Expression {
     visitor->VisitIf(this);
   }
 
+  virtual types::Type* GetType() override {
+    FMT_ASSERT(false, "Unreachable!");
+    return nullptr;
+  };
+
   Expression* condition_;
   Expression* true_branch_;
   Expression* false_branch_;
@@ -188,6 +234,12 @@ class LiteralExpression : public Expression {
     visitor->VisitLiteral(this);
   }
 
+  virtual types::Type* GetType() override {
+    FMT_ASSERT(false, "Unreachable!");
+    return nullptr;
+  };
+
+  types::Type* type_ = nullptr;
   lex::Token token_{};
 };
 
@@ -206,7 +258,15 @@ class VarAccessExpression : public LvalueExpression {
     return address_;
   }
 
+  virtual types::Type* GetType() override {
+    FMT_ASSERT(type_, "Type field is not set!");
+    return type_;
+  };
+
   lex::Token name_{};
+
+  types::Type* type_ = nullptr;
+
   int address_ = 0;
 };
 

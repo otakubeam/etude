@@ -21,8 +21,16 @@ struct StructInitializationError : public TypeError {
 };
 
 struct FieldAccessError : public TypeError {
+  FieldAccessError() = default;
+
   FieldAccessError(std::string field, std::string struct_var) {
     msg = fmt::format("No such field {} in struct {}", field, struct_var);
+  }
+
+  static FieldAccessError NotAStruct(std::string var_name) {
+    auto fae = FieldAccessError{};
+    fae.msg = fmt::format("{} is not a struct", var_name);
+    return fae;
   }
 };
 
