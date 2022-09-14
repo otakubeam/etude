@@ -34,6 +34,7 @@ class Parser {
   Expression* ParseComparison();
   Expression* ParseBinary();
   Expression* ParseUnary();
+  Expression* ParseFieldAccess(LvalueExpression* expr);
   Expression* ParseIfExpression();
   Expression* ParseBlockExpression();
   Expression* ParseFnCallExpression(lex::Token id);

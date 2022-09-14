@@ -3,7 +3,58 @@
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseExpression() {
+  if (auto if_expr = ParseIfExpression()) {
+    return if_expr;
+  }
+
+  if (auto block_expr = ParseBlockExpression()) {
+    return block_expr;
+  }
+
   return ParseComparison();
+}
+
+///////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseIfExpression() {
+  if (!Matches(lex::TokenType::IF)) {
+    return nullptr;
+  }
+
+  auto condition = ParseExpression();
+  auto true_branch = ParseBlockExpression();
+  AssertParsed(true_branch, "Could not parse true block");
+
+  Expression* false_branch = nullptr;
+  if (Matches(lex::TokenType::ELSE)) {
+    false_branch = ParseBlockExpression();
+  }
+
+  return new IfExpression(condition, true_branch, false_branch);
+}
+
+////////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseBlockExpression() {
+  if (!Matches(lex::TokenType::LEFT_CBRACE)) {
+    return nullptr;
+  }
+
+  std::vector<Statement*> stmts;
+  Expression* final_expr = nullptr;
+
+  while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
+    try {
+      auto stmt = ParseStatement();
+      stmts.push_back(stmt);
+    } catch (ExprStatement* e) {
+      final_expr = e->expr_;
+      Consume(lex::TokenType::RIGHT_CBRACE);
+      break;
+    }
+  }
+
+  return new BlockExpression{std::move(stmts), final_expr};
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -42,89 +93,23 @@ Expression* Parser::ParseUnary() {
   auto token = lexer_.Peek();
   if (Matches(lex::TokenType::MINUS) ||  //
       Matches(lex::TokenType::NOT)) {
-    auto expr = ParseIfExpression();
+    auto expr = ParsePrimary();
     return new UnaryExpression{token, expr};
   }
 
-  return ParseIfExpression();
+  return ParsePrimary();
 }
 
 ///////////////////////////////////////////////////////////////////
 
-Expression* Parser::ParseIfExpression() {
-  if (!Matches(lex::TokenType::IF)) {
-    return ParseBlockExpression();
-  }
+Expression* Parser::ParseFieldAccess(LvalueExpression* expr) {
+  do {
+    auto field_name = lexer_.Peek();
+    Consume(lex::TokenType::IDENTIFIER);
+    expr = new FieldAccessExpression(lex::Token{}, field_name, expr);
+  } while (Matches(lex::TokenType::DOT));
 
-  auto condition = ParseExpression();
-  auto true_branch = ParseBlockExpression();
-
-  Expression* false_branch = nullptr;
-  if (Matches(lex::TokenType::ELSE)) {
-    false_branch = ParseBlockExpression();
-  }
-
-  return new IfExpression(condition, true_branch, false_branch);
-}
-
-///////////////////////////////////////////////////////////////////
-
-Expression* Parser::ParseBlockExpression() {
-  if (!Matches(lex::TokenType::LEFT_CBRACE)) {
-    return SwitchOnId();
-  }
-
-  std::vector<Statement*> stmts;
-  Expression* final_expr = nullptr;
-
-  while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
-    try {
-      auto stmt = ParseStatement();
-      stmts.push_back(stmt);
-    } catch (ExprStatement* e) {
-      final_expr = e->expr_;
-      Consume(lex::TokenType::RIGHT_CBRACE);
-      break;
-    }
-  }
-
-  return new BlockExpression{std::move(stmts), final_expr};
-}
-
-////////////////////////////////////////////////////////////////////
-
-Expression* Parser::SwitchOnId() {
-  auto id = lexer_.Peek();
-
-  if (!Matches(lex::TokenType::IDENTIFIER)) {
-    return ParsePrimary();
-  }
-
-  // Four possibilities:
-  // 1. Function call   ~ id '('
-  // 2. Struct access   ~ id '.'
-  // 3. Struct creation ~ id ':'
-  // 4. Variable access ~ id
-
-  switch (lexer_.Peek().type) {
-    case lex::TokenType::LEFT_BRACE:
-      return ParseFnCallExpression(id);
-
-    case lex::TokenType::COLUMN:
-      return ParseConstructionExpression(id);
-
-    case lex::TokenType::DOT: {
-      Consume(lex::TokenType::DOT);
-      auto field_name = lexer_.Peek();
-      Consume(lex::TokenType::IDENTIFIER);
-
-      return new FieldAccessExpression(id, field_name,
-                                       new VarAccessExpression(id));
-    }
-
-    default:
-      return new VarAccessExpression(id);
-  }
+  return expr;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -146,7 +131,7 @@ std::vector<Expression*> Parser::ParseCSV() {
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseFnCallExpression(lex::Token id) {
-  Consume(lex::TokenType::LEFT_BRACE);
+  // Consume(lex::TokenType::LEFT_BRACE);
 
   if (Matches(lex::TokenType::RIGHT_BRACE)) {
     return new FnCallExpression{id, {}};
@@ -161,7 +146,6 @@ Expression* Parser::ParseFnCallExpression(lex::Token id) {
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseConstructionExpression(lex::Token id) {
-  Consume(lex::TokenType::COLUMN);
   Consume(lex::TokenType::LEFT_CBRACE);
 
   if (Matches(lex::TokenType::RIGHT_CBRACE)) {
@@ -196,12 +180,26 @@ Expression* Parser::ParsePrimary() {
     case lex::TokenType::STRING:
     case lex::TokenType::FALSE:
     case lex::TokenType::TRUE:
-      result = new LiteralExpression{std::move(token)};
+      result = new LiteralExpression{token};
       break;
 
-    case lex::TokenType::IDENTIFIER:
-      result = new VarAccessExpression{std::move(token)};
-      break;
+    case lex::TokenType::IDENTIFIER: {
+      Consume(lex::TokenType::IDENTIFIER);
+
+      if (Matches(lex::TokenType::COLUMN)) {
+        return ParseConstructionExpression(token);
+      }
+
+      if (Matches(lex::TokenType::LEFT_BRACE)) {
+        return ParseFnCallExpression(token);
+      }
+
+      if (Matches(lex::TokenType::DOT)) {
+        return ParseFieldAccess(new VarAccessExpression{token});
+      }
+
+      return new VarAccessExpression{token};
+    }
 
     default:
       throw ParseError{"Could not match primary expression\n"};

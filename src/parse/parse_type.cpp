@@ -21,7 +21,7 @@ types::Type* Parser::ParseType() {
       result = &types::builtin_unit;
       break;
 
-    // Syntax: (Int) -> Unit
+    // Syntax: (Int) Unit
     case lex::TokenType::LEFT_BRACE:
       return ParseFunctionType();
 

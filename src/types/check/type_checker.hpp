@@ -24,7 +24,8 @@ class TypeChecker : public ReturnVisitor<Type*> {
     FMT_ASSERT(false, "Visiting bare statement");
   }
 
-  virtual void VisitAssignment(AssignmentStatement*) override {
+  virtual void VisitAssignment(AssignmentStatement* node) override {
+
     // auto type = Eval(node->value_);
     // auto type2 = Eval(node->target_);
     // if (DiffersFrom(type1, type2)) {...}

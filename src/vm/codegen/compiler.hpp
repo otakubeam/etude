@@ -275,7 +275,7 @@ class Compiler : public Visitor {
       return;
     }
 
-    AddNewConstant(999 /* mark */);
+    AddIntegerConsnant(999 /* mark */);
   }
 
   ////////////////////////////////////////////////////////////////////
@@ -367,19 +367,16 @@ class Compiler : public Visitor {
   }
 
   virtual void VisitVarAccess(VarAccessExpression* node) override {
-    // LookupVarAddress(node->name_.GetName());
-    auto mb_offset = current_frame_->Lookup(node->name_.GetName());
-    int offset = mb_offset.value();
-
+    int offset = LookupVarAddress(node->name_.GetName());
     node->address_ = offset;
-
     MabyeEmitMemFetch(offset);
   }
 
   ////////////////////////////////////////////////////////////////////
 
  private:
-  void AddNewConstant(int value) {
+  // Belongs to ExecutableChunk, move it!
+  void AddIntegerConsnant(int value) {
     uint8_t const_no = chunk_.attached_vals.size();
 
     chunk_.attached_vals.push_back(rt::PrimitiveValue{
