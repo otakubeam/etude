@@ -9,6 +9,8 @@
 // Finally,
 #include <catch2/catch.hpp>
 
+extern bool print_debug_info;
+
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("vm:codegen: push constant", "[vm]") {
@@ -242,10 +244,6 @@ TEST_CASE("vm:codegen:struct:nested", "[vm:codegen]") {
   vm::codegen::Compiler c;
   auto res = c.CompileScript(expr);
 
-  for (auto r : *res) {
-    r.Print();
-  }
-
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 1);
 }
 
@@ -264,6 +262,42 @@ TEST_CASE("vm:codegen:struct:copy", "[vm:codegen]") {
       "                                                 "
       "  instance.count = instance.count + 1;           "
       "  instance2.count                                "
+      "}                                                ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+
+  types::check::TypeChecker tchk;
+  CHECK_NOTHROW(tchk.Eval(expr));
+
+  vm::codegen::Compiler c;
+  auto res = c.CompileScript(expr);
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 12);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:struct:fn-arg", "[vm:codegen]") {
+  print_debug_info = true;
+
+  char stream[] =
+      "{                                                "
+      "  struct Str {                                   "
+      "     ismodified: Bool,                           "
+      "     count: Int,                                 "
+      "  };                                             "
+      "                                                 "
+      "  fun f(s: Str) Int {                            "
+      "     s.ismodified;                               "
+      "     s.count                                     "
+      "  }                                              "
+      "                                                 "
+      "  var inst = Str:{true, 12};                     "
+      "                                                 "
+      "  f(inst)                                        "
       "}                                                ";
 
   std::stringstream source{stream};

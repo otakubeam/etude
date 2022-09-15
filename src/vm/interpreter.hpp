@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vm/debug/stack_printer.hpp>
+
 #include <vm/stack.hpp>
 #include <vm/chunk.hpp>
 
@@ -170,8 +172,8 @@ class BytecodeInterpreter {
     while (auto instr = NextInstruction()) {
       Interpret(instr);
 
-      fmt::print("[^] Instr: {}\n", PrintInstr(*instr));
-      stack_.PrintStack();
+      // fmt::print("[^] Instr: {}\n", PrintInstr(*instr));
+      stack_printer_.Print();
     }
 
     // Exit code
@@ -211,6 +213,7 @@ class BytecodeInterpreter {
   mutable size_t ip_ = 0;
 
   vm::VmStack stack_;
+  debug::StackPrinter stack_printer_{stack_};
 
   using Retval = std::optional<rt::PrimitiveValue>;
   // Return value (makes life easier)

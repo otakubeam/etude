@@ -36,16 +36,13 @@ enum class InstrType : u_int8_t {
 struct Instr {
   InstrType type;
 
-  union {
-    int16_t addr;
+  // The members below should actually be a union but it's such a pain with
+  // -Wmissing-initializers, so ...
+  int16_t addr = 0;
 
-    // TODO: Get rid of extension
-    struct {
-      u_int8_t arg1 = 0;
-      u_int8_t arg2 = 0;
-      u_int8_t arg3 = 0;
-    };
-  };
+  u_int8_t arg1 = 0;
+  u_int8_t arg2 = 0;
+  u_int8_t arg3 = 0;
 };
 
 inline u_int8_t ReadByte(const Instr& inst) {
@@ -56,6 +53,10 @@ inline u_int16_t ReadWord(const Instr& inst) {
   return ((inst.arg2 << 8) + inst.arg3);
 }
 
+inline u_int16_t ReadAddr(const Instr& inst) {
+  return ((inst.arg1 << 8) + inst.arg2);
+}
+
 inline std::string PrintInstrType(InstrType type) {
   switch (type) {
     case InstrType::CALL_FN:
@@ -63,6 +64,9 @@ inline std::string PrintInstrType(InstrType type) {
 
     case InstrType::RET_FN:
       return "ret_fn";
+
+    case InstrType::POP_STACK:
+      return "pop";
 
     case InstrType::GET_ARG:
       return "get_arg";
@@ -87,6 +91,9 @@ inline std::string PrintInstrType(InstrType type) {
 
     case InstrType::FIN_CALL:
       return "fin_call";
+
+    case InstrType::STORE_STACK:
+      return "store_stack";
 
     default:
       return std::to_string(uint8_t(type));

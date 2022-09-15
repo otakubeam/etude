@@ -5,10 +5,17 @@
 #include <cstdlib>
 #include <vector>
 
+// Forward declare class from another namespace
+namespace vm::debug {
+class StackPrinter;
+}
+
 namespace vm {
 
 class VmStack {
  public:
+  friend class debug::StackPrinter;
+
   void Push(rt::PrimitiveValue value) {
     stack_.at(sp_) = std::move(value);
     sp_ += 1;
@@ -61,35 +68,6 @@ class VmStack {
 
   int GetSavedIp() {
     return GetAtFp(-1).as_int;
-  }
-
-  void PrintStack() const {
-    fmt::print("[!] Stack:\n");
-
-    for (int i = 0; i < 16; i++) {
-      fmt::print("{}\t", i);
-    }
-
-    fmt::print("\n");
-
-    for (int i = 0; i < 16; i++) {
-      fmt::print("{}\t", stack_.at(i).as_int);
-    }
-
-    fmt::print("\n");
-
-    for (int i = 0; i < 16; i++) {
-      if (i == (int)sp_) {
-        fmt::print("sp\t");
-      } else if (i == (int)fp_) {
-        fmt::print("fp\t");
-      } else {
-        fmt::print("  \t");
-      }
-    }
-
-    fmt::print("\n");
-    fmt::print("\n");
   }
 
  private:

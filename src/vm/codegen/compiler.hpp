@@ -78,6 +78,9 @@ class Compiler : public Visitor {
     FrameTranslator builder{node};
 
     Compiler chunk_compiler;
+
+    // TODO: avoid copying
+    chunk_compiler.structs_ = structs_;
     chunk_compiler.current_frame_ = &builder;
     // For the case of nested fn declarations
     chunk_compiler.compiled_chunks_ = compiled_chunks_;
