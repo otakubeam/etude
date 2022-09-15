@@ -376,9 +376,27 @@ class Compiler : public Visitor {
   }
 
   virtual void VisitVarAccess(VarAccessExpression* node) override {
-    int offset = LookupVarAddress(node->name_.GetName());
+    auto name = node->name_.GetName();
+    int offset = LookupVarAddress(name);
+
     node->address_ = offset;
-    MabyeEmitMemFetch(offset);
+
+    if (!node->GetType()->IsStruct()) {
+      MabyeEmitMemFetch(offset);
+      return;
+    }
+
+    // Deep struct copy
+
+    // Guaranteed to be non-zero
+    auto str = dynamic_cast<types::StructType*>(node->GetType());
+
+    auto type_name = str->GetName();
+    auto type_size = structs_.Get(type_name).value()->Size();
+
+    for (size_t i = 0; i < type_size; i++) {
+      MabyeEmitMemFetch(offset + i);
+    }
   }
 
   ////////////////////////////////////////////////////////////////////

@@ -114,10 +114,13 @@ TEST_CASE("vm:codegen:function", "[vm:codegen]") {
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
 
-  auto pr = p.ParseExpression();
+  auto expr = p.ParseExpression();
+
+  types::check::TypeChecker tchk;
+  CHECK_NOTHROW(tchk.Eval(expr));
 
   vm::codegen::Compiler c;
-  auto res = c.CompileScript(pr);
+  auto res = c.CompileScript(expr);
 
   // for (auto r : *res) {
   //   r.Print();
@@ -142,10 +145,13 @@ TEST_CASE("vm:codegen:local", "[vm:codegen]") {
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
 
-  auto pr = p.ParseExpression();
+  auto expr = p.ParseExpression();
+
+  types::check::TypeChecker tchk;
+  CHECK_NOTHROW(tchk.Eval(expr));
 
   vm::codegen::Compiler c;
-  auto res = c.CompileScript(pr);
+  auto res = c.CompileScript(expr);
 
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 200);
 }
@@ -163,10 +169,13 @@ TEST_CASE("vm:codegen:assignment", "[vm:codegen]") {
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
 
-  auto pr = p.ParseExpression();
+  auto expr = p.ParseExpression();
+
+  types::check::TypeChecker tchk;
+  CHECK_NOTHROW(tchk.Eval(expr));
 
   vm::codegen::Compiler c;
-  auto res = c.CompileScript(pr);
+  auto res = c.CompileScript(expr);
 
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 6);
 }
