@@ -16,16 +16,24 @@ class StructSymbol {
   }
 
   size_t Size() {
+    return SizeBefore("<does-not-exist>");
+  }
+
+  size_t SizeBefore(std::string field_name) {
     size_t result = 0;
 
     for (size_t i = 0; i < node_->field_names_.size(); i++) {
+      if (node_->field_names_[i].GetName() == field_name) {
+        return result;
+      }
+
       if (!node_->field_types_[i]->IsStruct()) {
         result += 1;  // primitive and fn_ptr types
         continue;
       }
 
-      auto& name = node_->field_names_[i];
-      result += others_.Get(name.GetName()).value()->Size();
+      auto name = dynamic_cast<types::StructType*>(node_->field_types_[i]);
+      result += others_.Get(name->GetName()).value()->Size();
     }
 
     return result;

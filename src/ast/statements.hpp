@@ -35,28 +35,57 @@ class ExprStatement : public Statement {
 
 class StructDeclStatement : public Statement {
  public:
+  ///////////////////////////////////////////////////////////////////////
+
   StructDeclStatement(lex::Token name, std::vector<lex::Token> field_names,
                       std::vector<types::Type*> field_types)
       : name_{name}, field_names_{field_names}, field_types_{field_types} {
-    type_ = new types::StructType{name.GetName()};
+    type_ = new types::StructType{
+        name.GetName(),
+        ZipMembers(),
+    };
   }
+
+  ///////////////////////////////////////////////////////////////////////
+
+  struct Member {
+    std::string name;
+    types::Type* type;
+  };
 
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitStructDecl(this);
   }
 
-  // Assumes offset in SBValue widths
+  ///////////////////////////////////////////////////////////////////////
+
+  // Todo: deprecate, remove
   size_t OffsetOf(std::string name) const {
+    // Assumes offset in SBValue widths
     for (size_t i = 0; i < field_names_.size(); i++) {
       auto& t = field_names_[i];
       if (t.GetName() == name) {
         return i;
       }
     }
-
     // In well typed programs should not happen
     FMT_ASSERT(false, "No offset");
   }
+
+  ///////////////////////////////////////////////////////////////////////
+
+  std::vector<types::StructType::Member> ZipMembers() {
+    std::vector<types::StructType::Member> result;
+    for (size_t i = 0; i < field_names_.size(); i++) {
+      result.push_back({
+          .name = field_names_[i].GetName(),
+          .type = field_types_[i],
+      });
+    }
+    return result;
+  }
+
+  ///////////////////////////////////////////////////////////////////////
 
   lex::Token name_;
   types::StructType* type_;

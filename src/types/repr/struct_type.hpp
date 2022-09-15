@@ -12,7 +12,16 @@ namespace types {
 
 class StructType : public Type {
  public:
-  StructType(std::string name) : name_{name} {
+  struct Member {
+    std::string name;
+    types::Type* type;
+  };
+
+  StructType(std::string name) : struct_name_{name} {
+  }
+
+  StructType(std::string name, std::vector<Member> members)
+      : struct_name_{name}, members_{std::move(members)} {
   }
 
   virtual bool IsEqual(Type* other) override {
@@ -25,7 +34,7 @@ class StructType : public Type {
 
   virtual bool IsEqual(StructType* other) override {
     // XXX: Radically simplify!
-    return other->name_ == name_;
+    return other->struct_name_ == struct_name_;
 
     // if (other->types_.size() != types_.size()) {
     //   return false;
@@ -45,7 +54,23 @@ class StructType : public Type {
   }
 
   std::string GetName() {
-    return name_;
+    return struct_name_;
+  }
+
+  // Logically, type is not responsible for calculating the offsets of field
+  // (this might differ in an interpreter and in a compiler for example)
+  // so just send back all the types and let the caller calculate the offset
+  std::vector<Type*> AllTypesBeforeField(std::string field_name) {
+    std::vector<Type*> result;
+
+    for (auto m : members_) {
+      if (m.name == field_name) {
+        return result;
+      }
+      result.push_back(m.type);
+    }
+
+    throw "Error: no such field";
   }
 
   virtual bool IsStruct() override {
@@ -53,8 +78,8 @@ class StructType : public Type {
   }
 
  private:
-  std::string name_;
-  // std::vector<Type*> types_;
+  std::string struct_name_;
+  std::vector<Member> members_;
 };
 
 //////////////////////////////////////////////////////////////////////

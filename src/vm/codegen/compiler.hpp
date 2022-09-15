@@ -307,10 +307,19 @@ class Compiler : public Visitor {
       emit_mem_fetch_ = true;
     }
 
-    // TODO: get offset in the type lvalue for node->field_name_
-    node->address_ =
-        node->struct_expression_->GetAddress() /* + offset of the field */;
-    // (for now offset will be zero)
+    // This succeeds because of typechecking
+    auto t =
+        dynamic_cast<types::StructType*>(node->struct_expression_->GetType());
+
+    auto struct_type_name = t->GetName();
+
+    // Symbol encapsulate knowledge about the size of primitive fields
+    // which might be differenct from implementation to implementation
+    auto struct_symbol = structs_.Get(struct_type_name).value();
+
+    auto offset = struct_symbol->SizeBefore(node->field_name_.GetName());
+
+    node->address_ = node->struct_expression_->GetAddress() + offset;
 
     MabyeEmitMemFetch(node->address_);
   }

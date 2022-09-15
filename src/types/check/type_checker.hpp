@@ -25,9 +25,11 @@ class TypeChecker : public ReturnVisitor<Type*> {
   }
 
   virtual void VisitAssignment(AssignmentStatement* node) override {
-    // auto type = Eval(node->value_);
-    // auto type2 = Eval(node->target_);
-    // if (DiffersFrom(type1, type2)) {...}
+    auto type1 = Eval(node->value_);
+    auto type2 = Eval(node->target_);
+    if (type1->DiffersFrom(type2)) {
+      throw "error";
+    }
   }
 
   ////////////////////////////////////////////////////////////////////
