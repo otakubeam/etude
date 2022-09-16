@@ -16,7 +16,7 @@ class StructSymbol {
   }
 
   size_t Size() {
-    return SizeBefore("<does-not-exist>");
+    return SizeBefore("<infinity>");
   }
 
   size_t SizeBefore(std::string field_name) {

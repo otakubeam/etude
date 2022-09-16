@@ -148,7 +148,7 @@ TEST_CASE("vm: add", "[vm]") {
 //           {
 //               vm::Instr{
 //                   .type = vm::InstrType::GET_ARG,
-//                   .arg1 = 2,  // push argument i
+//                   .arg1 = 3,  // push argument i
 //               },
 //               vm::Instr{
 //                   .type = vm::InstrType::PUSH_STACK,
@@ -205,7 +205,7 @@ TEST_CASE("vm: function with if statements", "[vm]") {
           {
               vm::Instr{
                   .type = vm::InstrType::GET_ARG,
-                  .arg1 = 2,  // push argument i
+                  .arg1 = 3,  // push argument i
               },
               vm::Instr{
                   .type = vm::InstrType::JUMP_IF_FALSE,
@@ -273,7 +273,7 @@ TEST_CASE("vm: recursive function", "[vm]") {
           {
               vm::Instr{
                   .type = vm::InstrType::GET_ARG,
-                  .arg1 = 2,  // push argument i
+                  .arg1 = 3,  // push argument i
               },
               vm::Instr{
                   .type = vm::InstrType::PUSH_STACK,
@@ -305,7 +305,7 @@ TEST_CASE("vm: recursive function", "[vm]") {
               // 1) Place (i-1) as argument
               vm::Instr{
                   .type = vm::InstrType::GET_ARG,
-                  .arg1 = 2,  // push argument i
+                  .arg1 = 3,  // push argument i
               },
               vm::Instr{
                   .type = vm::InstrType::PUSH_STACK,
@@ -330,7 +330,7 @@ TEST_CASE("vm: recursive function", "[vm]") {
               // 3) Add f(i-1) and i
               vm::Instr{
                   .type = vm::InstrType::GET_ARG,
-                  .arg1 = 2,  // push argument i
+                  .arg1 = 3,  // push argument i
               },
               vm::Instr{
                   .type = vm::InstrType::ADD,
@@ -393,7 +393,7 @@ TEST_CASE("vm: indirect call", "[vm]") {
           {
               vm::Instr{
                   .type = vm::InstrType::GET_ARG,
-                  .arg1 = 2,  // push argument i
+                  .arg1 = 3,  // push argument i
               },
               vm::Instr{
                   .type = vm::InstrType::PUSH_STACK,
@@ -417,7 +417,7 @@ TEST_CASE("vm: indirect call", "[vm]") {
           {
               vm::Instr{
                   .type = vm::InstrType::GET_ARG,
-                  .arg1 = 2,  // push argument i
+                  .arg1 = 3,  // push argument i
               },
               vm::Instr{
                   .type = vm::InstrType::RET_FN,

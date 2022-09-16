@@ -75,7 +75,7 @@ class Compiler : public Visitor {
   }
 
   virtual void VisitFunDecl(FunDeclStatement* node) override {
-    FrameTranslator builder{node};
+    FrameTranslator builder{node, structs_};
 
     Compiler chunk_compiler;
 

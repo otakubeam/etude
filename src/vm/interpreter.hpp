@@ -126,7 +126,7 @@ class BytecodeInterpreter {
 
       case InstrType::GET_ARG: {
         size_t offset = ReadByte(*instruction);
-        auto arg = stack_.GetFnArg(offset - 2 /*account for ip*/);
+        auto arg = stack_.GetFnArg(offset);
         stack_.Push(arg);
         break;
       }
@@ -172,7 +172,7 @@ class BytecodeInterpreter {
     while (auto instr = NextInstruction()) {
       Interpret(instr);
 
-      // fmt::print("[^] Instr: {}\n", PrintInstr(*instr));
+      fmt::print("[^] Instr: {}\n", PrintInstr(*instr));
       stack_printer_.Print();
     }
 

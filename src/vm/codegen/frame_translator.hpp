@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vm/codegen/detail/struct_symbol.hpp>
 #include <vm/rt/primitive.hpp>
 
 #include <ast/statements.hpp>
@@ -22,18 +23,29 @@ class FrameTranslator {
     size_t depth = 0;
   };
 
-  FrameTranslator(FunDeclStatement* decl) {
+  using StructEnv = Environment<detail::StructSymbol*>;
+  FrameTranslator(FunDeclStatement* decl, StructEnv env) {
     for (int i = decl->formals_.size() - 1; i >= 0; i--) {
-      layout_.emplace_back(Slot{
-          .name = decl->formals_[i].ident.GetName(),
-          .depth = 0,
-      });
+      auto name = decl->formals_[i].ident.GetName();
+      auto type = decl->formals_[i].type;
+
+      if (!type->IsStruct()) {
+        fmt::print("Not is struct");
+        AddLocal(name);
+      } else {
+        auto struct_type = dynamic_cast<types::StructType*>(type);
+        auto size = env.Get(struct_type->GetName()).value()->Size();
+        fmt::print("struct with size {}", size);
+        AddLocal(name, size);
+      }
     }
 
     layout_.emplace_back(Slot{
         .name = "+ip@" + std::to_string(current_depth_),
         .depth = 0,
     });
+
+    PushAnonValue();
 
     fp_ = layout_.size();
 

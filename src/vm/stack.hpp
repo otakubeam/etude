@@ -55,7 +55,7 @@ class VmStack {
   }
 
   auto GetFnArg(size_t count) -> rt::PrimitiveValue {
-    return GetAtFp(-3 - count);
+    return GetAtFp(-count);
   }
 
   auto GetLocalVar(size_t count) -> rt::PrimitiveValue {
