@@ -357,3 +357,30 @@ TEST_CASE("vm:codegen:struct:fn-arg:nested", "[vm:codegen]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:print", "[vm:codegen]") {
+  char stream[] =
+      " {                                         "
+      "     print(1234);                          "
+      " }                                         ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+
+  types::check::TypeChecker tchk;
+  CHECK_NOTHROW(tchk.Eval(expr));
+
+  vm::codegen::Compiler c;
+  auto res = c.CompileScript(expr);
+
+  // print_debug_info = true;
+  // for (auto r : *res) {
+  //   r.Print();
+  // }
+
+  CHECK_NOTHROW(vm::BytecodeInterpreter::InterpretStandalone(*res));
+}
+
+//////////////////////////////////////////////////////////////////////

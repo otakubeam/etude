@@ -12,9 +12,6 @@
 #include <ast/expressions.hpp>
 #include <ast/statements.hpp>
 
-#include <algorithm>
-#include <ranges>
-
 namespace vm::codegen {
 
 class Compiler : public Visitor {
@@ -116,6 +113,15 @@ class Compiler : public Visitor {
       node->arguments_[i]->Accept(this);
     }
 
+    if (node->is_native_call_) {
+      AddIntegerConsnant(node->arguments_.size());
+      chunk_.instructions.push_back(vm::Instr{
+          .type = vm::InstrType::NATIVE_CALL,
+          .arg1 = 0,  // print
+      });
+      return;
+    }
+
     auto mb_offset = current_frame_->Lookup(node->fn_name_.GetName());
 
     int offset = mb_offset.value();
@@ -193,8 +199,25 @@ class Compiler : public Visitor {
     FMT_ASSERT(false, "Unreachable!");
   }
 
-  virtual void VisitComparison(ComparisonExpression*) override {
-    FMT_ASSERT(false, "Unimplemented!");
+  virtual void VisitComparison(ComparisonExpression* node) override {
+    node->left_->Accept(this);
+    node->right_->Accept(this);
+
+    switch (node->operator_.type) {
+      case lex::TokenType::EQUALS:
+        chunk_.instructions.push_back({vm::Instr{
+            .type = vm::InstrType::CMP_EQ,
+        }});
+        break;
+
+      case lex::TokenType::LT:
+        // a < b <=> b - a > 0
+        FMT_ASSERT(false, "Unimplemented!");
+        break;
+
+      default:
+        FMT_ASSERT(false, "Unreachable!");
+    }
   }
 
   virtual void VisitBinary(BinaryExpression* node) override {
@@ -209,7 +232,10 @@ class Compiler : public Visitor {
         break;
 
       case lex::TokenType::MINUS:
-        FMT_ASSERT(false, "Unimplemented!");
+        chunk_.instructions.push_back(vm::Instr{
+            .type = InstrType::SUBTRACT,
+        });
+        break;
 
       default:
         FMT_ASSERT(false, "Unreachable!");

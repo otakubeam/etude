@@ -29,7 +29,7 @@ class StackPrinter {
     fmt::print("{}", Format());
   }
 
-  std::string Format() const {
+  std::string Format() {
     if (!print_debug_info) {
       return "";
     }
@@ -59,7 +59,7 @@ class StackPrinter {
   }
 
  private:
-  void FormatHeader(fmt::memory_buffer& buf) const {
+  void FormatHeader(fmt::memory_buffer& buf) {
     fmt::format_to(std::back_inserter(buf), bold, "[!] Stack:\n");
 
     for (int i = 0; i < 16; i++) {
@@ -69,13 +69,13 @@ class StackPrinter {
     fmt::format_to(std::back_inserter(buf), "\n");
   }
 
-  void FormatStackCells(fmt::memory_buffer& buf) const {
-    for (int i = 0; i < 16; i++) {
+  void FormatStackCells(fmt::memory_buffer& buf) {
+    for (int i = 0; i < 24; i++) {
       FormatOneCell(buf, i);
     }
   }
 
-  void FormatOneCell(fmt::memory_buffer& buf, size_t index) const {
+  void FormatOneCell(fmt::memory_buffer& buf, size_t index) {
     auto& cell = stack_.stack_.at(index);
     auto& an = annotations_.at(index);
 
@@ -99,15 +99,16 @@ class StackPrinter {
   }
 
  private:
-  VmStack& stack_;
-
   const static auto italic{fmt::emphasis::italic};
   const static auto bold{fmt::emphasis::bold};
 
   const static auto red{fmt::terminal_color::bright_red};
   const static auto cyan{fmt::color::cyan};
 
-  mutable std::vector<AnnotatedSlot> annotations_{65536};
+ private:
+  const VmStack& stack_;
+
+  std::vector<AnnotatedSlot> annotations_{65536};
 };
 
 }  // namespace vm::debug

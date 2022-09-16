@@ -70,11 +70,11 @@ class VmStack {
     return GetAtFp(-1).as_int;
   }
 
- private:
-  auto Top() -> rt::PrimitiveValue {
+  auto Top() -> rt::PrimitiveValue& {
     return stack_.at(sp_ - 1);
   }
 
+ private:
   auto GetAtFp(int offset) -> rt::PrimitiveValue& {
     return stack_.at(fp_ + offset);
   }

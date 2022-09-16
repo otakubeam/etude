@@ -109,6 +109,8 @@ class FnCallExpression : public Expression {
 
   lex::Token fn_name_;
   std::vector<Expression*> arguments_;
+
+  bool is_native_call_ = false;
 };
 
 //////////////////////////////////////////////////////////////////////

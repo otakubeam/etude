@@ -2,6 +2,8 @@
 
 #include <vm/debug/stack_printer.hpp>
 
+#include <vm/rt/native_table.hpp>
+
 #include <vm/stack.hpp>
 #include <vm/chunk.hpp>
 
@@ -66,6 +68,18 @@ class BytecodeInterpreter {
         break;
       }
 
+      case InstrType::NATIVE_CALL: {
+        auto offset = instruction->arg1;
+        auto fn = native_table_.Get(offset);
+
+        auto args_count = stack_.Pop();
+        FMT_ASSERT(args_count.tag == rt::ValueTag::Int, "");
+
+        fn(args_count.as_int, &stack_.Top());
+
+        break;
+      }
+
       case InstrType::INDIRECT_CALL: {
         // Note: Args have been placed
 
@@ -124,6 +138,16 @@ class BytecodeInterpreter {
         break;
       }
 
+      case InstrType::SUBTRACT: {
+        auto rhs = stack_.Pop();
+        auto lhs = stack_.Pop();
+        stack_.Push({
+            .tag = rt::ValueTag::Int,
+            .as_int = lhs.as_int - rhs.as_int,
+        });
+        break;
+      }
+
       case InstrType::GET_ARG: {
         size_t offset = ReadByte(*instruction);
         auto arg = stack_.GetFnArg(offset);
@@ -152,8 +176,19 @@ class BytecodeInterpreter {
         auto a = stack_.Pop();
         auto b = stack_.Pop();
 
-        // XXX: this may be wrong wrt to UB but should work at first
         auto result = (a.tag == b.tag) && (a.as_int == b.as_int);
+
+        stack_.Push({.tag = rt::ValueTag::Bool, .as_bool = result});
+
+        break;
+      }
+
+      case InstrType::CMP_LESS: {
+        auto a = stack_.Pop();
+        auto b = stack_.Pop();
+
+        // Can only compare integers, typechecker ensures
+        auto result = a.as_int < b.as_int;
 
         stack_.Push({.tag = rt::ValueTag::Bool, .as_bool = result});
 
@@ -221,6 +256,8 @@ class BytecodeInterpreter {
 
   size_t current_chunk = 0;
   std::vector<ExecutableChunk> chunks;
+
+  rt::NativeTable native_table_{rt::NativeTable::SaneDefaults()};
 };
 
 }  // namespace vm

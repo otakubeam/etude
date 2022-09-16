@@ -215,6 +215,7 @@ class TypeChecker : public ReturnVisitor<Type*> {
 
     if (fn_call->fn_name_.GetName() == "print") {
       // Intrinsic: don't type-check
+      fn_call->is_native_call_ = true;
     } else if (fn_type->DiffersFrom(&inferred_type)) {
       throw check::FnInvokeError{fn_call->fn_name_.GetName(), "Unknown",
                                  fn_call->fn_name_.tk_loc.Format()};

@@ -14,23 +14,21 @@ enum class InstrType : u_int8_t {
   RET_FN,         // ret
   CALL_FN,        // call $1 $2 $3 ($1 = chunk, $23 = offset)
   INDIRECT_CALL,  // call (gets the chunk num. from stack)
+  NATIVE_CALL,    // native_call $1 ($1 = offset in the table)
   JUMP,           // jump $2 $3 ($23 = absolute offset within a chunk)
   JUMP_IF_FALSE,  // jump_if_false $2 $3 ($23 = absolute offset within a chunk)
   ADD,            // add (pops 2 and pushes)
-
-  GET_ARG,  // get_arg $1
-            //(get value at offset -3 - $1 from the current fp)
-
-  GET_LOCAL,  // get_local $1
-              // (get value at offset $1 from the current fp)
-
-  FIN_CALL,  // fin_call $1
-             // (clean up $1 args from the stack and push eax)
-
-  CMP_EQ,  // cmp_eq (pops 2 and pushes bool)
-
-  STORE_STACK,  // store_stack $addr
-                // (pop value and store at offset $addr from fp)
+  SUBTRACT,       // add (pops 2 and pushes)
+  GET_ARG,        // get_arg $1
+                  //(get value at offset -3 - $1 from the current fp)
+  GET_LOCAL,      // get_local $1
+                  // (get value at offset $1 from the current fp)
+  FIN_CALL,       // fin_call $1
+                  // (clean up $1 args from the stack and push eax)
+  CMP_EQ,         // cmp_eq (pops 2 and pushes bool)
+  CMP_LESS,       // cmp_eq (pops 2 and pushes bool)
+  STORE_STACK,    // store_stack $addr
+                  // (pop value and store at offset $addr from fp)
 };
 
 struct Instr {
@@ -61,6 +59,9 @@ inline std::string PrintInstrType(InstrType type) {
   switch (type) {
     case InstrType::CALL_FN:
       return "call_fn";
+
+    case InstrType::NATIVE_CALL:
+      return "native_call";
 
     case InstrType::RET_FN:
       return "ret_fn";
@@ -101,8 +102,8 @@ inline std::string PrintInstrType(InstrType type) {
 }
 
 inline std::string PrintInstr(const Instr& inst) {
-  return fmt::format("{}, {} {} {}", PrintInstrType(inst.type), inst.arg1,
-                     inst.arg2, inst.arg3);
+  return fmt::format("{}, {} {} {}, addr: {}", PrintInstrType(inst.type), inst.arg1,
+                     inst.arg2, inst.arg3, inst.addr);
 }
 
 //////////////////////////////////////////////////////////////////////

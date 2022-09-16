@@ -30,12 +30,10 @@ class FrameTranslator {
       auto type = decl->formals_[i].type;
 
       if (!type->IsStruct()) {
-        fmt::print("Not is struct");
         AddLocal(name);
       } else {
         auto struct_type = dynamic_cast<types::StructType*>(type);
         auto size = env.Get(struct_type->GetName()).value()->Size();
-        fmt::print("struct with size {}", size);
         AddLocal(name, size);
       }
     }
