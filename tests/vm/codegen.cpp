@@ -281,8 +281,6 @@ TEST_CASE("vm:codegen:struct:copy", "[vm:codegen]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("vm:codegen:struct:fn-arg", "[vm:codegen]") {
-  print_debug_info = true;
-
   char stream[] =
       "{                                                "
       "  struct Str {                                   "
@@ -292,7 +290,7 @@ TEST_CASE("vm:codegen:struct:fn-arg", "[vm:codegen]") {
       "                                                 "
       "  fun f(s: Str, ss: Str) Int {                   "
       "     s.ismodified = false;                       "
-      "     ss.ismodified = false;                       "
+      "     ss.ismodified = false;                      "
       "     ss.count = 123;                             "
       "     s.count + ss.count                          "
       "  }                                              "
@@ -313,11 +311,49 @@ TEST_CASE("vm:codegen:struct:fn-arg", "[vm:codegen]") {
   vm::codegen::Compiler c;
   auto res = c.CompileScript(expr);
 
-  for (auto r : *res) {
-    r.Print();
-  }
-
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 135);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:struct:fn-arg:nested", "[vm:codegen]") {
+  char stream[] =
+      " {                                         "
+      "     struct Str {                          "
+      "        guard: Int,                        "
+      "        count: Int,                        "
+      "     };                                    "
+      "                                           "
+      "     fun g(i: Str) Int {                   "
+      "        (i.count + 1)                      "
+      "     }                                     "
+      "                                           "
+      "     fun f(i: Str, g: (Str) Int) Int {     "
+      "        g(i)                               "
+      "     }                                     "
+      "                                           "
+      "     var inst = Str:{1234, 3};             "
+      "                                           "
+      "     f(inst, g)                            "
+      " }                                         ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+
+  types::check::TypeChecker tchk;
+  CHECK_NOTHROW(tchk.Eval(expr));
+
+  vm::codegen::Compiler c;
+  auto res = c.CompileScript(expr);
+
+  // print_debug_info = true;
+  // for (auto r : *res) {
+  //   r.Print();
+  // }
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 4);
 }
 
 //////////////////////////////////////////////////////////////////////
