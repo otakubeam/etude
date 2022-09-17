@@ -348,10 +348,10 @@ TEST_CASE("vm:codegen:struct:fn-arg:nested", "[vm:codegen]") {
   vm::codegen::Compiler c;
   auto res = c.CompileScript(expr);
 
-  // print_debug_info = true;
-  // for (auto r : *res) {
-  //   r.Print();
-  // }
+  print_debug_info = true;
+  for (auto r : *res) {
+    r.Print();
+  }
 
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 4);
 }
