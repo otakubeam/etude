@@ -5,10 +5,14 @@ namespace vm::codegen {
 Compiler::Compiler() = default;
 Compiler::~Compiler() = default;
 
+////////////////////////////////////////////////////////////////////
+
 ExecutableChunk Compiler::Compile(TreeNode* node) {
   node->Accept(this);
   return chunk_;
 }
+
+////////////////////////////////////////////////////////////////////
 
 std::vector<ExecutableChunk>* Compiler::CompileScript(TreeNode* node) {
   auto result = new std::vector<ExecutableChunk>;
@@ -23,8 +27,6 @@ std::vector<ExecutableChunk>* Compiler::CompileScript(TreeNode* node) {
 
   return result;
 }
-
-////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
 
