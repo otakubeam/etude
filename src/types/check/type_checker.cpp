@@ -18,12 +18,26 @@ void TypeChecker::VisitStatement(Statement*) {
   FMT_ASSERT(false, "Visiting bare statement");
 }
 
+////////////////////////////////////////////////////////////////////
+
 void TypeChecker::VisitAssignment(AssignmentStatement* node) {
   auto type1 = Eval(node->value_);
   auto type2 = Eval(node->target_);
   if (type1->DiffersFrom(type2)) {
     throw "error";
   }
+}
+
+////////////////////////////////////////////////////////////////////
+
+void TypeChecker::VisitDeref(DereferenceExpression*) {
+  FMT_ASSERT(false, "Unimplemented!");
+}
+
+////////////////////////////////////////////////////////////////////
+
+void TypeChecker::VisitAddressof(AddressofExpression*) {
+  FMT_ASSERT(false, "Unimplemented!");
 }
 
 ////////////////////////////////////////////////////////////////////

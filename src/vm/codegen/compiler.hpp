@@ -38,6 +38,8 @@ class Compiler : public Visitor {
   virtual void VisitExprStatement(ExprStatement* node) override;
 
   virtual void VisitExpression(Expression*) override;
+  virtual void VisitDeref(DereferenceExpression* node) override;
+  virtual void VisitAddressof(AddressofExpression* node) override;
   virtual void VisitIf(IfExpression* node) override;
   virtual void VisitBlock(BlockExpression* node) override;
   virtual void VisitComparison(ComparisonExpression* node) override;

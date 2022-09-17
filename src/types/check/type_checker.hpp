@@ -25,6 +25,8 @@ class TypeChecker : public ReturnVisitor<Type*> {
 
   virtual void VisitExpression(Expression*) override;
 
+  virtual void VisitDeref(DereferenceExpression* node) override;
+  virtual void VisitAddressof(AddressofExpression* node) override;
   virtual void VisitComparison(ComparisonExpression* cmp_expr) override;
   virtual void VisitBinary(BinaryExpression* bin_expr) override;
   virtual void VisitUnary(UnaryExpression* un_expr) override;

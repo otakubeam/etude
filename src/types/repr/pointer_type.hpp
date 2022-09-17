@@ -35,6 +35,10 @@ class PointerType : public Type {
     return false;
   }
 
+  Type* Underlying() {
+    return underlying_;
+  }
+
  private:
   // Perhaps should not work with functions?
   // They are already pointers, after all

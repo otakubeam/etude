@@ -1,7 +1,5 @@
 #include <types/check/type_checker.hpp>
 
-#include <ast/visitors/evaluator.hpp>
-
 #include <vm/codegen/compiler.hpp>
 #include <vm/interpreter.hpp>
 

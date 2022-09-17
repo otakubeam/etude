@@ -2,6 +2,7 @@
 
 #include <ast/syntax_tree.hpp>
 
+#include <types/repr/pointer_type.hpp>
 #include <types/type.hpp>
 
 #include <lex/token.hpp>
@@ -88,6 +89,61 @@ class UnaryExpression : public Expression {
 
   lex::Token operator_;
   Expression* operand_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class DereferenceExpression : public LvalueExpression {
+ public:
+  DereferenceExpression(lex::Token star, Expression* operand)
+      : star_{star}, operand_{operand} {
+    type_ =
+        dynamic_cast<types::PointerType*>(operand_->GetType())->Underlying();
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitDeref(this);
+  }
+
+  virtual types::Type* GetType() override {
+    return type_;
+  };
+
+  virtual int GetAddress() override {
+    return address_;
+  }
+
+  lex::Token star_;
+  // The pointer expression
+  Expression* operand_;
+
+  int address_ = 0;
+
+  types::Type* type_ = nullptr;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class AddressofExpression : public Expression {
+ public:
+  AddressofExpression(lex::Token ampersand, LvalueExpression* operand)
+      : ampersand_{ampersand}, operand_{operand} {
+    type_ = new types::PointerType{operand_->GetType()};
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitAddressof(this);
+  }
+
+  virtual types::Type* GetType() override {
+    return type_;
+  };
+
+  lex::Token ampersand_;
+  LvalueExpression* operand_;
+
+  // Mabye embed and save allocation
+  types::PointerType* type_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////

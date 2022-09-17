@@ -6,6 +6,8 @@ class Expression;
 class ComparisonExpression;
 class BinaryExpression;
 class UnaryExpression;
+class DereferenceExpression;
+class AddressofExpression;
 class IfExpression;
 class BlockExpression;
 class FnCallExpression;
@@ -58,6 +60,10 @@ class Visitor {
   virtual void VisitBinary(BinaryExpression* node) = 0;
 
   virtual void VisitUnary(UnaryExpression* node) = 0;
+
+  virtual void VisitDeref(DereferenceExpression* node) = 0;
+
+  virtual void VisitAddressof(AddressofExpression* node) = 0;
 
   virtual void VisitIf(IfExpression* node) = 0;
 

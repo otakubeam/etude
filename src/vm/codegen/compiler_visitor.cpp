@@ -146,6 +146,18 @@ void Compiler::VisitExpression(Expression*) {
 
 ////////////////////////////////////////////////////////////////////
 
+void Compiler::VisitDeref(DereferenceExpression*) {
+  FMT_ASSERT(false, "Unimplemented!");
+}
+
+////////////////////////////////////////////////////////////////////
+
+void Compiler::VisitAddressof(AddressofExpression*) {
+  FMT_ASSERT(false, "Unimplemented!");
+}
+
+////////////////////////////////////////////////////////////////////
+
 void Compiler::VisitComparison(ComparisonExpression* node) {
   node->left_->Accept(this);
   node->right_->Accept(this);
@@ -372,6 +384,5 @@ void Compiler::VisitVarAccess(VarAccessExpression* node) {
 }
 
 ////////////////////////////////////////////////////////////////////
-
 
 }  // namespace vm::codegen
