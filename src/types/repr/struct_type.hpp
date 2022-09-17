@@ -28,7 +28,11 @@ class StructType : public Type {
     return other->IsEqual(this);
   }
 
-  virtual bool IsEqual(BuiltinType*) override {
+  bool IsEqual(PointerType*) override {
+    return false;
+  }
+
+  bool IsEqual(BuiltinType*) override {
     return false;
   }
 

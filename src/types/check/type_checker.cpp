@@ -1,5 +1,9 @@
 #include <types/check/type_checker.hpp>
 
+#include <types/check/type_error.hpp>
+
+#include <ast/statements.hpp>
+
 namespace types::check {
 
 TypeChecker::TypeChecker() {

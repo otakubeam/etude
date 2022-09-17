@@ -19,6 +19,10 @@ class FnType : public Type {
     return other->IsEqual(this);
   }
 
+  bool IsEqual(PointerType*) override {
+    return false;
+  }
+
   bool IsEqual(BuiltinType*) override {
     // TODO: is builtin a function taking no arguments?
     return false;

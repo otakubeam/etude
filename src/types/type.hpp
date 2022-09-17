@@ -6,6 +6,7 @@ namespace types {
 
 class BuiltinType;
 class StructType;
+class PointerType;
 class FnType;
 
 //////////////////////////////////////////////////////////////////////
@@ -21,8 +22,8 @@ class Type {
   }
 
   // To resolve the second type
+  virtual bool IsEqual(PointerType* other) = 0;
   virtual bool IsEqual(BuiltinType* other) = 0;
-
   virtual bool IsEqual(StructType* other) = 0;
   virtual bool IsEqual(FnType* other) = 0;
 
@@ -37,9 +38,6 @@ class Type {
   virtual bool IsFnType() {
     return false;
   }
-
-  // TODO:
-  // virtual bool IsEqual(TypeAlias* other) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////

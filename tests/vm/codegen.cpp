@@ -361,7 +361,7 @@ TEST_CASE("vm:codegen:struct:fn-arg:nested", "[vm:codegen]") {
 TEST_CASE("vm:codegen:print", "[vm:codegen]") {
   char stream[] =
       " {                                         "
-      "     print(1234);                          "
+      "     print(123);                           "
       " }                                         ";
 
   std::stringstream source{stream};

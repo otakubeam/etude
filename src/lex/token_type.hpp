@@ -30,7 +30,8 @@ enum class TokenType {
 
   NOT,
 
-  PRINT,
+  ADDR,
+  STAR,
 
   FUN,
   DOT,
@@ -78,7 +79,8 @@ enum class TokenType {
   code(LEFT_CBRACE)         \
   code(RIGHT_CBRACE)        \
   code(NOT)                 \
-  code(PRINT)               \
+  code(ADDR)                \
+  code(STAR)                \
   code(FUN)                 \
   code(DOT)                 \
   code(COMMA)               \

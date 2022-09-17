@@ -42,6 +42,10 @@ std::optional<TokenType> Lexer::MatchOperator() {
       return TokenType::PLUS;
     case '-':
       return TokenType::MINUS;
+    case '*':
+      return TokenType::STAR;
+    case '&':
+      return TokenType::ADDR;
     case '!':
       return TokenType::NOT;
     case '<':

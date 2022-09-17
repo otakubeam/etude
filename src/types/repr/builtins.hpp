@@ -18,6 +18,10 @@ class BuiltinType : public Type {
     return true;
   }
 
+  bool IsEqual(PointerType*) override {
+    return false;
+  }
+
   bool IsEqual(StructType*) override {
     return false;
   }

@@ -1,9 +1,5 @@
 #include <types/check/type_checker.hpp>
-
-#include <types/repr/builtins.hpp>
-#include <types/repr/fn_type.hpp>
-
-#include <types/type.hpp>
+#include <types/check/type_error.hpp>
 
 #include <parse/parser.hpp>
 

@@ -1,5 +1,10 @@
 #include <parse/parser.hpp>
 
+#include <types/repr/pointer_type.hpp>
+#include <types/repr/struct_type.hpp>
+#include <types/repr/builtins.hpp>
+#include <types/repr/fn_type.hpp>
+
 ///////////////////////////////////////////////////////////////////
 
 types::Type* Parser::ParseType() {
@@ -20,6 +25,9 @@ types::Type* Parser::ParseType() {
     case lex::TokenType::TY_UNIT:
       result = &types::builtin_unit;
       break;
+
+    case lex::TokenType::STAR:
+      return new types::PointerType{ParseType()};
 
     // Syntax: (Int) Unit
     case lex::TokenType::LEFT_BRACE:

@@ -1,13 +1,8 @@
 #pragma once
 
-#include <types/check/type_error.hpp>
-#include <types/repr/struct_type.hpp>
-#include <types/repr/builtins.hpp>
-#include <types/repr/fn_type.hpp>
+#include <types/type.hpp>
 
 #include <ast/visitors/template_visitor.hpp>
-
-#include <rt/structs/struct_object.hpp>
 
 namespace types::check {
 

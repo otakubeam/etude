@@ -2,6 +2,11 @@
 
 #include <rt/functions/intrinsic_print.hpp>
 
+#include <types/repr/pointer_type.hpp>
+#include <types/repr/struct_type.hpp>
+#include <types/repr/builtins.hpp>
+#include <types/repr/fn_type.hpp>
+
 //////////////////////////////////////////////////////////////////////
 
 Evaluator::Evaluator()
