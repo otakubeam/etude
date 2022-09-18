@@ -1,5 +1,7 @@
 #pragma once
 
+#include <types/repr/builtins.hpp>
+
 #include <types/type.hpp>
 
 #include <fmt/core.h>
@@ -23,8 +25,9 @@ class PointerType : public Type {
     return other->underlying_->IsEqual(this->underlying_);
   };
 
-  virtual bool IsEqual(BuiltinType*) override {
-    return false;
+  virtual bool IsEqual(BuiltinType* other) override {
+    // Allow initializing pointers with unit
+    return other == &builtin_unit;
   }
 
   virtual bool IsEqual(StructType*) override {

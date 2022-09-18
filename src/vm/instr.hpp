@@ -77,6 +77,12 @@ inline std::string PrintInstrType(InstrType type) {
     case InstrType::GET_LOCAL:
       return "get_local";
 
+    case InstrType::LOAD:
+      return "load";
+
+    case InstrType::STORE:
+      return "store";
+
     case InstrType::JUMP:
       return "jump";
 

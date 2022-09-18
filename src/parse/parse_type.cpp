@@ -27,6 +27,7 @@ types::Type* Parser::ParseType() {
       break;
 
     case lex::TokenType::STAR:
+      lexer_.Advance();
       return new types::PointerType{ParseType()};
 
     // Syntax: (Int) Unit

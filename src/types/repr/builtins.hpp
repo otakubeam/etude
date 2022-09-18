@@ -4,6 +4,15 @@
 
 namespace types {
 
+// Built-in type singletons
+extern BuiltinType  //
+    builtin_unit,   //
+    builtin_int,    //
+    builtin_bool,   //
+    builtin_string;
+
+//////////////////////////////////////////////////////////////////////
+
 class BuiltinType : public Type {
  public:
   bool IsEqual(Type* other) override {
@@ -19,7 +28,8 @@ class BuiltinType : public Type {
   }
 
   bool IsEqual(PointerType*) override {
-    return false;
+    // Allow initializing pointers with unit
+    return this == &builtin_unit;
   }
 
   bool IsEqual(StructType*) override {
@@ -32,12 +42,5 @@ class BuiltinType : public Type {
 };
 
 //////////////////////////////////////////////////////////////////////
-
-// Built-in type singletons
-extern BuiltinType  //
-    builtin_unit,   //
-    builtin_int,    //
-    builtin_bool,   //
-    builtin_string;
 
 }  // namespace types

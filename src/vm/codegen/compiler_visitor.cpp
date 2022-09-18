@@ -47,14 +47,23 @@ void Compiler::VisitAssignment(AssignmentStatement* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitFunDecl(FunDeclStatement* node) {
+  // Make space for our own chunk
+
+  auto saved_size = compiled_chunks_->size();
+
+  compiled_chunks_->push_back(ExecutableChunk{});
+
+  functions_.Declare(node->name_.GetName(), saved_size);
+
+  // Build frame
+
   FrameTranslator builder{node, structs_};
 
   Compiler chunk_compiler;
 
-  // TODO: avoid copying
-  chunk_compiler.structs_ = structs_;
+  chunk_compiler.structs_ = structs_;  // TODO: avoid copying
   chunk_compiler.current_frame_ = &builder;
-  // For the case of nested fn declarations
+  // For the case of nested fn declarations (TODO: unnecessary?)
   chunk_compiler.compiled_chunks_ = compiled_chunks_;
 
   auto chunk = chunk_compiler.Compile(node->block_);
@@ -63,23 +72,13 @@ void Compiler::VisitFunDecl(FunDeclStatement* node) {
       .type = InstrType::RET_FN,
   });
 
-  int chunk_no = compiled_chunks_->size();
-  uint8_t const_no = chunk_.attached_vals.size();
-
-  chunk_.attached_vals.push_back(rt::PrimitiveValue{
-      .tag = rt::ValueTag::Int,
-      .as_int = chunk_no,
-  });
-
-  compiled_chunks_->push_back(chunk);
+  // Rewrite our chunk now that we have the executable
+  compiled_chunks_->at(saved_size) = chunk;
 
   // This allows for lookup of this symbol later at the callsite
   current_frame_->AddLocal(node->name_.GetName());
 
-  chunk_.instructions.push_back(vm::Instr{
-      .type = InstrType::PUSH_STACK,
-      .arg1 = const_no,  // push the constant of the compiled chunk
-  });
+  AddIntegerConsnant(saved_size);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -184,9 +183,12 @@ void Compiler::VisitAddressof(AddressofExpression* node) {
 
   // Now I have the address of operand_!
 
-  auto addr = node->operand_->GetAddress();
-
-  AddIntegerConsnant(addr);
+  if (node->operand_->IsDirect()) {
+    auto addr = node->operand_->GetAddress();
+    AddIntegerConsnant(addr);
+  } else {
+    FMT_ASSERT(false, "Unimplemented!");
+  }
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -243,8 +245,6 @@ void Compiler::VisitUnary(UnaryExpression*) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitIf(IfExpression* node) {
-  /////////
-
   node->condition_->Accept(this);
 
   auto jump_to_false_ip = chunk_.instructions.size();
@@ -253,7 +253,7 @@ void Compiler::VisitIf(IfExpression* node) {
       .type = InstrType::JUMP_IF_FALSE,
   });
 
-  /////////
+  // True branch
 
   node->true_branch_->Accept(this);
 
@@ -263,7 +263,7 @@ void Compiler::VisitIf(IfExpression* node) {
       .type = InstrType::JUMP,
   });
 
-  /////////
+  // False branch
 
   auto false_ip_start = chunk_.instructions.size();
 
@@ -394,6 +394,13 @@ void Compiler::VisitLiteral(LiteralExpression* lit) {
 
     case lex::TokenType::STRING:
       FMT_ASSERT(false, "Unimplemented!");
+
+    case lex::TokenType::UNIT:
+      chunk_.attached_vals.push_back(vm::rt::PrimitiveValue{
+          .tag = rt::ValueTag::Int,
+          .as_int = 1234,
+      });
+      break;
 
     case lex::TokenType::TRUE: {
       chunk_.attached_vals.push_back(vm::rt::PrimitiveValue{

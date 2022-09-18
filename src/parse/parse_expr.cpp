@@ -217,6 +217,7 @@ Expression* Parser::ParsePrimary() {
     case lex::TokenType::STRING:
     case lex::TokenType::FALSE:
     case lex::TokenType::TRUE:
+    case lex::TokenType::UNIT:
       result = new LiteralExpression{token};
       break;
 

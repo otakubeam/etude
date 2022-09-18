@@ -348,11 +348,6 @@ TEST_CASE("vm:codegen:struct:fn-arg:nested", "[vm:codegen]") {
   vm::codegen::Compiler c;
   auto res = c.CompileScript(expr);
 
-  // print_debug_info = true;
-  // for (auto r : *res) {
-  //   r.Print();
-  // }
-
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 4);
 }
 
@@ -375,11 +370,6 @@ TEST_CASE("vm:codegen:print", "[vm:codegen]") {
   vm::codegen::Compiler c;
   auto res = c.CompileScript(expr);
 
-  // print_debug_info = true;
-  // for (auto r : *res) {
-  //   r.Print();
-  // }
-
   CHECK_NOTHROW(vm::BytecodeInterpreter::InterpretStandalone(*res));
 }
 
@@ -390,10 +380,66 @@ TEST_CASE("vm:codegen:ptr", "[vm:codegen]") {
       " {                                         "
       "     var a = 5;                            "
       "     var ptrA = &a;                        "
-      "     var ptrB = unit;                      "
       "     *ptrA = 4;                            "
       "     a                                     "
       " }                                         ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+
+  types::check::TypeChecker tchk;
+  CHECK_NOTHROW(tchk.Eval(expr));
+
+  vm::codegen::Compiler c;
+  auto res = c.CompileScript(expr);
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 4);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:ptr:init", "[vm:codegen]") {
+  char stream[] =
+      " {                                               "
+      "   struct Tree {                                 "
+      "     left: *Tree,                                "
+      "     right: *Tree,                               "
+      "   };                                            "
+      "                                                 "
+      "   var tree = Tree:{unit, unit};                 "
+      " }                                               ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+
+  types::check::TypeChecker tchk;
+  CHECK_NOTHROW(tchk.Eval(expr));
+
+  vm::codegen::Compiler c;
+  auto res = c.CompileScript(expr);
+
+  CHECK_NOTHROW(vm::BytecodeInterpreter::InterpretStandalone(*res));
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:recursive", "[vm:codegen]") {
+  char stream[] =
+      " {                                             "
+      "    fun mul(a: Int, b: Int) Int {              "
+      "       if a == 1 {                             "
+      "          b                                    "
+      "       } else {                                "
+      "          b + mul(a-1, b)                      "
+      "       }                                       "
+      "    }                                          "
+      "                                               "
+      "    mul(3, 5)                                  "
+      " }                                             ";
 
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
@@ -411,7 +457,7 @@ TEST_CASE("vm:codegen:ptr", "[vm:codegen]") {
     r.Print();
   }
 
-  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 4);
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 15);
 }
 
 //////////////////////////////////////////////////////////////////////

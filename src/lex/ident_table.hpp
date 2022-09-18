@@ -33,6 +33,7 @@ class IdentTable {
     map_.insert({"false", TokenType::FALSE});
     map_.insert({"else", TokenType::ELSE});
     map_.insert({"true", TokenType::TRUE});
+    map_.insert({"unit", TokenType::UNIT});
     map_.insert({"type", TokenType::TYPE});
     map_.insert({"var", TokenType::VAR});
     map_.insert({"fun", TokenType::FUN});

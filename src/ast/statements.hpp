@@ -35,8 +35,6 @@ class ExprStatement : public Statement {
 
 class StructDeclStatement : public Statement {
  public:
-  ///////////////////////////////////////////////////////////////////////
-
   StructDeclStatement(lex::Token name, std::vector<lex::Token> field_names,
                       std::vector<types::Type*> field_types)
       : name_{name}, field_names_{field_names}, field_types_{field_types} {
@@ -48,28 +46,8 @@ class StructDeclStatement : public Statement {
 
   ///////////////////////////////////////////////////////////////////////
 
-  struct Member {
-    std::string name;
-    types::Type* type;
-  };
-
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitStructDecl(this);
-  }
-
-  ///////////////////////////////////////////////////////////////////////
-
-  // Todo: deprecate, remove
-  size_t OffsetOf(std::string name) const {
-    // Assumes offset in SBValue widths
-    for (size_t i = 0; i < field_names_.size(); i++) {
-      auto& t = field_names_[i];
-      if (t.GetName() == name) {
-        return i;
-      }
-    }
-    // In well typed programs should not happen
-    FMT_ASSERT(false, "No offset");
   }
 
   ///////////////////////////////////////////////////////////////////////

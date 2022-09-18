@@ -271,3 +271,39 @@ TEST_CASE("Typechecking correct nested", "[checker]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("checker:initialize-ptrs", "[checker]") {
+  std::stringstream source(  //
+      "                                                 "
+      "   struct Tree {                                 "
+      "     left: *Tree,                                "
+      "     right: *Tree,                               "
+      "   };                                            "
+      "                                                 "
+      "   var tree = Tree:{unit, unit};                 "
+      "                                                 ");
+  Parser p{lex::Lexer{source}};
+
+  types::check::TypeChecker tchk;
+  tchk.Eval(p.ParseStatement());
+  tchk.Eval(p.ParseStatement());
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("checker:no-final-expr", "[checker]") {
+  std::stringstream source(  //
+      "      fun sum(b: Bool) Bool {             "
+      "         if b { return true; } else       "
+      "              { return false; };          "
+      "      }                                   "
+      "                                          "
+      "      sum(true);                          ");
+  Parser p{lex::Lexer{source}};
+
+  types::check::TypeChecker tchk;
+  tchk.Eval(p.ParseStatement());
+  tchk.Eval(p.ParseStatement());
+}
+
+//////////////////////////////////////////////////////////////////////

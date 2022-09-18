@@ -20,16 +20,13 @@ void TypeChecker::VisitStatement(Statement*) {
 ////////////////////////////////////////////////////////////////////
 
 void TypeChecker::VisitDeref(DereferenceExpression* node) {
-  fmt::print("Before eval\n");
   auto ptr_type = Eval(node->operand_);
-  fmt::print("After eval\n");
 
   if (auto type = dynamic_cast<types::PointerType*>(ptr_type)) {
     // The type of *(expr : *T) is T
     node->type_ = type->Underlying();
     return_value = node->type_;
   } else {
-    fmt::print("here?\n");
     throw DereferenceError{};
   }
 }
@@ -90,7 +87,10 @@ void TypeChecker::VisitFunDecl(FunDeclStatement* fn_decl) {
     fn_return_expect = declared_type->GetReturnType();
 
     // 2. Do the check
-    if (fn_return_expect->DiffersFrom(Eval(fn_decl->block_))) {
+
+    auto inferred_ret = Eval(fn_decl->block_);
+    if (fn_return_expect->DiffersFrom(inferred_ret) &&
+        inferred_ret != &builtin_unit) {
       throw check::FnBlockError{};
     }
 
@@ -303,6 +303,10 @@ void TypeChecker::VisitLiteral(LiteralExpression* lit) {
 
     case lex::TokenType::STRING:
       return_value = &builtin_string;
+      break;
+
+    case lex::TokenType::UNIT:
+      return_value = &builtin_unit;
       break;
 
     case lex::TokenType::TRUE:

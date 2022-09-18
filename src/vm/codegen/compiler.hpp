@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vm/codegen/detail/function_symbol.hpp>
 #include <vm/codegen/detail/struct_symbol.hpp>
 #include <vm/codegen/frame_translator.hpp>
 #include <vm/chunk.hpp>
@@ -68,6 +69,9 @@ class Compiler : public Visitor {
   // Environment
   using StructEnv = Environment<detail::StructSymbol*>;
   StructEnv structs_ = StructEnv::MakeGlobal();
+
+  using FunctionsEnv = Environment<detail::FunctionSymbol>;
+  FunctionsEnv functions_ = FunctionsEnv::MakeGlobal();
 
   // StackEmulation
   FrameTranslator* current_frame_ = nullptr;

@@ -10,11 +10,16 @@ namespace vm::debug {
 class StackPrinter;
 }
 
+namespace vm::memory {
+class VmMemory;
+}
+
 namespace vm {
 
 class VmStack {
  public:
   friend class debug::StackPrinter;
+  friend class memory::VmMemory;
 
   void Push(rt::PrimitiveValue value) {
     stack_.at(sp_) = std::move(value);

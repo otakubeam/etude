@@ -11,6 +11,8 @@ enum class TokenType {
   STRING,
   IDENTIFIER,
 
+  UNIT,
+
   TRUE,
   FALSE,
 
@@ -67,6 +69,7 @@ enum class TokenType {
   code(NUMBER)              \
   code(STRING)              \
   code(IDENTIFIER)          \
+  code(UNIT)                \
   code(TRUE)                \
   code(FALSE)               \
   code(PLUS)                \
