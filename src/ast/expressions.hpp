@@ -23,7 +23,15 @@ class Expression : public TreeNode {
 // Identifier, Named entity
 class LvalueExpression : public Expression {
  public:
+  // TODO: use StorageLocation interface instead
+  // This will be useful for implementing different backends
   virtual int GetAddress() = 0;
+
+  virtual bool IsDirect() {
+    // True for compile-time expressions
+    // But not for pointers
+    return true;
+  }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -97,8 +105,6 @@ class DereferenceExpression : public LvalueExpression {
  public:
   DereferenceExpression(lex::Token star, Expression* operand)
       : star_{star}, operand_{operand} {
-    type_ =
-        dynamic_cast<types::PointerType*>(operand_->GetType())->Underlying();
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -106,11 +112,18 @@ class DereferenceExpression : public LvalueExpression {
   }
 
   virtual types::Type* GetType() override {
+    FMT_ASSERT(type_, "Typechecker fault!");
     return type_;
   };
 
   virtual int GetAddress() override {
-    return address_;
+    FMT_ASSERT(false,
+               "Cannot take the address of "
+               "pointer dereference at compile-time\n");
+  }
+
+  virtual bool IsDirect() override {
+    return false;
   }
 
   lex::Token star_;
@@ -128,7 +141,6 @@ class AddressofExpression : public Expression {
  public:
   AddressofExpression(lex::Token ampersand, LvalueExpression* operand)
       : ampersand_{ampersand}, operand_{operand} {
-    type_ = new types::PointerType{operand_->GetType()};
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -218,6 +230,10 @@ class FieldAccessExpression : public LvalueExpression {
     return type_;
   };
 
+  virtual bool IsDirect() override {
+    return struct_expression_->IsDirect();
+  }
+
   // This can be an Identifier or result of a function call
   // or result of indexing an array, or of a field access.
   LvalueExpression* struct_expression_;
@@ -229,6 +245,7 @@ class FieldAccessExpression : public LvalueExpression {
 
   lex::Token field_name_;
 
+  bool is_direct_ = true;
   int address_ = 0;
 };
 

@@ -30,10 +30,18 @@ void Compiler::VisitAssignment(AssignmentStatement* node) {
     emit_mem_fetch_ = true;
   }
 
-  chunk_.instructions.push_back(vm::Instr{
-      .type = InstrType::STORE_STACK,
-      .addr = (int16_t)node->target_->GetAddress(),
-  });
+  if (node->target_->IsDirect()) {
+    chunk_.instructions.push_back(vm::Instr{
+        .type = InstrType::STORE_STACK,
+        .addr = (int16_t)node->target_->GetAddress(),
+    });
+  } else {
+    // The address is on top of the stack
+    // The value is just below it
+    chunk_.instructions.push_back(vm::Instr{
+        .type = InstrType::STORE,
+    });
+  }
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -146,14 +154,39 @@ void Compiler::VisitExpression(Expression*) {
 
 ////////////////////////////////////////////////////////////////////
 
-void Compiler::VisitDeref(DereferenceExpression*) {
-  FMT_ASSERT(false, "Unimplemented!");
+void Compiler::VisitDeref(DereferenceExpression* node) {
+  auto prev_state = emit_mem_fetch_;
+
+  // Put operand's address on stack
+  emit_mem_fetch_ = true;
+
+  node->operand_->Accept(this);
+
+  emit_mem_fetch_ = prev_state;
+
+  // node->IsDirect() is false
+
+  if (emit_mem_fetch_) {
+    chunk_.instructions.push_back(vm::Instr{
+        .type = vm::InstrType::LOAD,
+    });
+  }
 }
 
 ////////////////////////////////////////////////////////////////////
 
-void Compiler::VisitAddressof(AddressofExpression*) {
-  FMT_ASSERT(false, "Unimplemented!");
+void Compiler::VisitAddressof(AddressofExpression* node) {
+  {
+    emit_mem_fetch_ = false;
+    node->operand_->Accept(this);
+    emit_mem_fetch_ = true;
+  }
+
+  // Now I have the address of operand_!
+
+  auto addr = node->operand_->GetAddress();
+
+  AddIntegerConsnant(addr);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -308,9 +341,37 @@ void Compiler::VisitFieldAccess(FieldAccessExpression* node) {
 
   auto offset = struct_symbol->SizeBefore(node->field_name_.GetName());
 
-  node->address_ = node->struct_expression_->GetAddress() + offset;
+  // Here we compile the address right into the instruction
 
-  MabyeEmitMemFetch(node->address_);
+  // str.a.b = 5;
+
+  // str.a.b;
+
+  // Everything is known at compile time
+
+  if (node->IsDirect()) {
+    node->address_ = node->struct_expression_->GetAddress() + offset;
+    MabyeEmitMemFetch(node->address_);
+    return;
+  }
+
+  // Here we keep the address on stack and only add the offset
+
+  // (*str.a).b = 5;
+
+  // `.b` is indirect because deref is indirect
+  // so we take this path and do not emit the `LOAD`
+
+  // (*str.a).b;
+
+  // here we emit the load
+
+  AddIntegerConsnant(offset);
+  chunk_.instructions.push_back(Instr{.type = InstrType::ADD});
+
+  if (emit_mem_fetch_) {
+    chunk_.instructions.push_back(Instr{.type = InstrType::LOAD});
+  }
 }
 
 ////////////////////////////////////////////////////////////////////

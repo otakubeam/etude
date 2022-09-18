@@ -27,6 +27,8 @@ class Parser {
 
   Expression* ParseExpression();
 
+  Expression* ParseDeref();
+  Expression* ParseAddressof();
   Expression* ParseComparison();
   Expression* ParseBinary();
   Expression* ParseUnary();

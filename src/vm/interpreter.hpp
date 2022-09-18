@@ -200,6 +200,23 @@ class BytecodeInterpreter {
         stack_.StoreAt(instruction->addr, value);
         break;
       }
+
+      case InstrType::LOAD: {
+        auto addr = stack_.Pop();
+        // TODO: this only works in main function
+        auto value = stack_.GetLocalVar(addr.as_int);
+        stack_.Push(value);
+        break;
+      }
+
+      case InstrType::STORE: {
+        auto addr = stack_.Pop();
+        auto value = stack_.Pop();
+        // TODO: this only works in main function
+        // Waiting for memory model
+        stack_.StoreAt(addr.as_int, value);
+        break;
+      }
     }
   }
 

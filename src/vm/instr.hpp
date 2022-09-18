@@ -29,6 +29,8 @@ enum class InstrType : u_int8_t {
   CMP_LESS,       // cmp_eq (pops 2 and pushes bool)
   STORE_STACK,    // store_stack $addr
                   // (pop value and store at offset $addr from fp)
+  LOAD,           // load (pop address from the stack)
+  STORE,          // store (pops address then pops value)
 };
 
 struct Instr {
@@ -102,8 +104,8 @@ inline std::string PrintInstrType(InstrType type) {
 }
 
 inline std::string PrintInstr(const Instr& inst) {
-  return fmt::format("{}, {} {} {}, addr: {}", PrintInstrType(inst.type), inst.arg1,
-                     inst.arg2, inst.arg3, inst.addr);
+  return fmt::format("{}, {} {} {}, addr: {}", PrintInstrType(inst.type),
+                     inst.arg1, inst.arg2, inst.arg3, inst.addr);
 }
 
 //////////////////////////////////////////////////////////////////////

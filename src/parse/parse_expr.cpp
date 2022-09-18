@@ -11,7 +11,44 @@ Expression* Parser::ParseExpression() {
     return block_expr;
   }
 
+  // Think about precedence wrt to * and &
+  // This is probably too low
+
+  if (auto deref_expr = ParseDeref()) {
+    return deref_expr;
+  }
+
+  if (auto addrof_expr = ParseAddressof()) {
+    return addrof_expr;
+  }
+
   return ParseComparison();
+}
+
+///////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseDeref() {
+  auto token = lexer_.Peek();
+
+  if (!Matches(lex::TokenType::STAR)) {
+    return nullptr;
+  }
+
+  auto ptr_expr = ParseExpression();
+  return new DereferenceExpression{token, ptr_expr};
+}
+
+///////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseAddressof() {
+  auto token = lexer_.Peek();
+
+  if (!Matches(lex::TokenType::ADDR)) {
+    return nullptr;
+  }
+
+  auto lvalue_expr = dynamic_cast<LvalueExpression*>(ParseExpression());
+  return new AddressofExpression{token, lvalue_expr};
 }
 
 ///////////////////////////////////////////////////////////////////

@@ -323,3 +323,24 @@ TEST_CASE("Struct creation", "[parser]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Parse deref ", "[parser]") {
+  std::stringstream source("* ptr");
+  // What about * ptr + 1?
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+  REQUIRE(typeid(*expr) == typeid(DereferenceExpression));
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Parse addrof", "[parser]") {
+  std::stringstream source("& someVar");
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+  REQUIRE(typeid(*expr) == typeid(AddressofExpression));
+}
+
+//////////////////////////////////////////////////////////////////////

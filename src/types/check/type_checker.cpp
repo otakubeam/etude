@@ -11,11 +11,35 @@ TypeChecker::TypeChecker() {
   global_type_store.Declare("print", new FnType({}));
 }
 
-TypeChecker::~TypeChecker() {
-}
+TypeChecker::~TypeChecker() = default;
 
 void TypeChecker::VisitStatement(Statement*) {
   FMT_ASSERT(false, "Visiting bare statement");
+}
+
+////////////////////////////////////////////////////////////////////
+
+void TypeChecker::VisitDeref(DereferenceExpression* node) {
+  fmt::print("Before eval\n");
+  auto ptr_type = Eval(node->operand_);
+  fmt::print("After eval\n");
+
+  if (auto type = dynamic_cast<types::PointerType*>(ptr_type)) {
+    // The type of *(expr : *T) is T
+    node->type_ = type->Underlying();
+    return_value = node->type_;
+  } else {
+    fmt::print("here?\n");
+    throw DereferenceError{};
+  }
+}
+
+////////////////////////////////////////////////////////////////////
+
+void TypeChecker::VisitAddressof(AddressofExpression* node) {
+  auto type = Eval(node->operand_);
+  node->type_ = new types::PointerType(type);
+  return_value = node->type_;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -26,18 +50,6 @@ void TypeChecker::VisitAssignment(AssignmentStatement* node) {
   if (type1->DiffersFrom(type2)) {
     throw "error";
   }
-}
-
-////////////////////////////////////////////////////////////////////
-
-void TypeChecker::VisitDeref(DereferenceExpression*) {
-  FMT_ASSERT(false, "Unimplemented!");
-}
-
-////////////////////////////////////////////////////////////////////
-
-void TypeChecker::VisitAddressof(AddressofExpression*) {
-  FMT_ASSERT(false, "Unimplemented!");
 }
 
 ////////////////////////////////////////////////////////////////////

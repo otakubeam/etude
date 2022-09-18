@@ -348,10 +348,10 @@ TEST_CASE("vm:codegen:struct:fn-arg:nested", "[vm:codegen]") {
   vm::codegen::Compiler c;
   auto res = c.CompileScript(expr);
 
-  print_debug_info = true;
-  for (auto r : *res) {
-    r.Print();
-  }
+  // print_debug_info = true;
+  // for (auto r : *res) {
+  //   r.Print();
+  // }
 
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 4);
 }
@@ -381,6 +381,37 @@ TEST_CASE("vm:codegen:print", "[vm:codegen]") {
   // }
 
   CHECK_NOTHROW(vm::BytecodeInterpreter::InterpretStandalone(*res));
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:ptr", "[vm:codegen]") {
+  char stream[] =
+      " {                                         "
+      "     var a = 5;                            "
+      "     var ptrA = &a;                        "
+      "     var ptrB = unit;                      "
+      "     *ptrA = 4;                            "
+      "     a                                     "
+      " }                                         ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+
+  types::check::TypeChecker tchk;
+  CHECK_NOTHROW(tchk.Eval(expr));
+
+  vm::codegen::Compiler c;
+  auto res = c.CompileScript(expr);
+
+  print_debug_info = true;
+  for (auto r : *res) {
+    r.Print();
+  }
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 4);
 }
 
 //////////////////////////////////////////////////////////////////////

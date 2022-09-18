@@ -95,4 +95,12 @@ struct ArithAddError : public TypeError {
 };
 
 //////////////////////////////////////////////////////////////////////
+
+struct DereferenceError : public TypeError {
+  DereferenceError() {
+    msg = fmt::format("Trying to dereference a non-pointer type");
+  }
+};
+
+//////////////////////////////////////////////////////////////////////
 };  // namespace types::check
