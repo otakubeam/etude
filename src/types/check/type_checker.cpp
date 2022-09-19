@@ -9,6 +9,8 @@ namespace types::check {
 TypeChecker::TypeChecker() {
   // Declare intrinsics
   global_type_store.Declare("print", new FnType({}));
+  global_type_store.Declare("assert", new FnType({}));
+  global_type_store.Declare("isNull", new FnType({}));
 }
 
 TypeChecker::~TypeChecker() = default;
@@ -223,20 +225,30 @@ void TypeChecker::VisitBlock(BlockExpression* block) {
 void TypeChecker::VisitFnCall(FnCallExpression* fn_call) {
   // The fact that the fucntion block returns the
   // declared type is checked on declaration place
-  Type* stored_type = env_->Get(fn_call->fn_name_.GetName()).value();
-  auto fn_type = dynamic_cast<FnType*>(stored_type);
 
   std::vector<Type*> args_types;
   for (auto arg : fn_call->arguments_) {
     args_types.push_back(Eval(arg));
   }
 
+  auto name = fn_call->fn_name_.GetName();
+
+  // Intrinsic: don't type-check
+
+  if (name == "print" || name == "isNull") {
+    return_value = &builtin_bool;
+    fn_call->is_native_call_ = true;
+    return;
+  }
+
+  // Normal function
+
+  Type* stored_type = env_->Get(name).value();
+  auto fn_type = dynamic_cast<FnType*>(stored_type);
+
   FnType inferred_type{std::move(args_types), fn_type->GetReturnType()};
 
-  if (fn_call->fn_name_.GetName() == "print") {
-    // Intrinsic: don't type-check
-    fn_call->is_native_call_ = true;
-  } else if (fn_type->DiffersFrom(&inferred_type)) {
+  if (fn_type->DiffersFrom(&inferred_type)) {
     throw check::FnInvokeError{fn_call->fn_name_.GetName(), "Unknown",
                                fn_call->fn_name_.tk_loc.Format()};
   }

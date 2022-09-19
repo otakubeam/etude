@@ -75,7 +75,11 @@ class BytecodeInterpreter {
         auto args_count = stack_.Pop();
         FMT_ASSERT(args_count.tag == rt::ValueTag::Int, "");
 
-        fn(args_count.as_int, &stack_.Top());
+        auto res = fn(args_count.as_int, &stack_.Top());
+
+        stack_.PopCount(args_count.as_int);
+
+        stack_.Push(res);
 
         break;
       }
@@ -204,7 +208,7 @@ class BytecodeInterpreter {
       case InstrType::LOAD: {
         auto addr = stack_.Pop();
         // TODO: this only works in main function
-        auto value = stack_.GetLocalVar(addr.as_int);
+        auto value = stack_.Bottom()[addr.as_int];
         stack_.Push(value);
         break;
       }
@@ -214,7 +218,7 @@ class BytecodeInterpreter {
         auto value = stack_.Pop();
         // TODO: this only works in main function
         // Waiting for memory model
-        stack_.StoreAt(addr.as_int, value);
+        stack_.Bottom()[addr.as_int] = value;
         break;
       }
     }

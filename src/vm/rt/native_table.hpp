@@ -21,6 +21,16 @@ inline PrimitiveValue print(size_t count, PrimitiveValue* data) {
   return PrimitiveValue{};
 }
 
+inline PrimitiveValue isnull(size_t count, PrimitiveValue* data) {
+  FMT_ASSERT(count == 1, "Wrong call for isNull");
+  FMT_ASSERT(data[0].tag == ValueTag::Int, "not a pointer for isNull");
+
+  return PrimitiveValue{
+      .tag = ValueTag::Bool,
+      .as_bool = (data[0].as_int == 1234),
+  };
+}
+
 inline PrimitiveValue assert(size_t count, PrimitiveValue* data) {
   FMT_ASSERT(count == 1, "Wrong call for assert");
   FMT_ASSERT(data[0].tag == ValueTag::Bool, "Non-bool condition");
@@ -45,10 +55,11 @@ class NativeTable {
   }
 
   static NativeTable SaneDefaults() {
-    return NativeTable{2,
+    return NativeTable{3,
                        {
                            detail::print,
                            detail::assert,
+                           detail::isnull,
                        }};
   }
 

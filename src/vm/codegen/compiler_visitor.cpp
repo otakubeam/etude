@@ -1,4 +1,5 @@
 #include <vm/codegen/compiler.hpp>
+#include <vm/rt/native_table.hpp>
 
 namespace vm::codegen {
 
@@ -61,7 +62,8 @@ void Compiler::VisitFunDecl(FunDeclStatement* node) {
 
   Compiler chunk_compiler;
 
-  chunk_compiler.structs_ = structs_;  // TODO: avoid copying
+  chunk_compiler.structs_ = structs_;      // TODO: avoid copying
+  chunk_compiler.functions_ = functions_;  // TODO: avoid copying
   chunk_compiler.current_frame_ = &builder;
   // For the case of nested fn declarations (TODO: unnecessary?)
   chunk_compiler.compiled_chunks_ = compiled_chunks_;
@@ -90,25 +92,37 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
   }
 
   if (node->is_native_call_) {
+    auto name = node->fn_name_.GetName();
+    auto offset = name == "print" ? 0 : 2;
+
     AddIntegerConsnant(node->arguments_.size());
+
     chunk_.instructions.push_back(vm::Instr{
         .type = vm::InstrType::NATIVE_CALL,
-        .arg1 = 0,  // print
+        .arg1 = (uint8_t)offset,
     });
+
     return;
   }
 
   auto mb_offset = current_frame_->Lookup(node->fn_name_.GetName());
 
-  int offset = mb_offset.value();
+  // Branch direct / indirect
+  if (mb_offset.has_value()) {
+    int offset = mb_offset.value();
+    MabyeEmitMemFetch(offset);
 
-  // TODO: branch direct / indirect
+    chunk_.instructions.push_back(vm::Instr{
+        .type = vm::InstrType::INDIRECT_CALL,
+    });
+  } else {
+    auto chunk_no = functions_.Get(node->fn_name_.GetName()).value().GetAddr();
 
-  MabyeEmitMemFetch(offset);
-
-  chunk_.instructions.push_back(vm::Instr{
-      .type = vm::InstrType::INDIRECT_CALL,
-  });
+    chunk_.instructions.push_back(vm::Instr{
+        .type = vm::InstrType::CALL_FN,
+        .arg1 = (uint8_t)chunk_no,
+    });
+  }
 
   chunk_.instructions.push_back(vm::Instr{
       .type = vm::InstrType::FIN_CALL,
@@ -125,8 +139,12 @@ void Compiler::VisitStructDecl(StructDeclStatement* node) {
 
 ////////////////////////////////////////////////////////////////////
 
-void Compiler::VisitReturn(ReturnStatement*) {
-  FMT_ASSERT(false, "Unimplemented!");
+void Compiler::VisitReturn(ReturnStatement* node) {
+  node->return_value_->Accept(this);
+
+  chunk_.instructions.push_back(vm::Instr{
+      .type = InstrType::RET_FN,
+  });
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -205,8 +223,9 @@ void Compiler::VisitComparison(ComparisonExpression* node) {
       break;
 
     case lex::TokenType::LT:
-      // a < b <=> b - a > 0
-      FMT_ASSERT(false, "Unimplemented!");
+      chunk_.instructions.push_back({vm::Instr{
+          .type = vm::InstrType::CMP_LESS,
+      }});
       break;
 
     default:

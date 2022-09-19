@@ -438,7 +438,7 @@ TEST_CASE("vm:codegen:recursive", "[vm:codegen]") {
       "       }                                       "
       "    }                                          "
       "                                               "
-      "    mul(3, 5)                                  "
+      "    mul(3, 5)                                "
       " }                                             ";
 
   std::stringstream source{stream};
@@ -452,12 +452,55 @@ TEST_CASE("vm:codegen:recursive", "[vm:codegen]") {
   vm::codegen::Compiler c;
   auto res = c.CompileScript(expr);
 
-  print_debug_info = true;
-  for (auto r : *res) {
-    r.Print();
-  }
-
   CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 15);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codegen:binsearch:function", "[vm:codegen]") {
+  char stream[] =
+      "{                                                  "
+      "   struct Tree {                                   "
+      "      left: *Tree,                                 "
+      "      right: *Tree,                                "
+      "      value: Int,                                  "
+      "   };                                              "
+      "                                                   "
+      "   fun binSearchInt(tree: *Tree, val: Int) Bool {  "
+      "       if isNull(tree) {                           "
+      "           return false;                           "
+      "       };                                          "
+      "                                                   "
+      "       var nodeValue = (*tree).value;              "
+      "                                                   "
+      "       if nodeValue == val {                       "
+      "          return true;                             "
+      "       };                                          "
+      "                                                   "
+      "       var subtree = if nodeValue < val {          "
+      "           (*tree).left                            "
+      "       } else {                                    "
+      "           (*tree).right                           "
+      "       };                                          "
+      "                                                   "
+      "       binSearchInt(subtree, val)                  "
+      "   }                                               "
+      "                                                   "
+      "   0                                               "
+      "}                                                  ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  auto expr = p.ParseExpression();
+
+  types::check::TypeChecker tchk;
+  CHECK_NOTHROW(tchk.Eval(expr));
+
+  vm::codegen::Compiler c;
+  auto res = c.CompileScript(expr);
+
+  CHECK(vm::BytecodeInterpreter::InterpretStandalone(*res) == 00);
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <vm/chunk.hpp>
-#include <vm/stack.hpp>
+#include <cstddef>
 
 namespace vm::memory {
 
@@ -10,10 +9,14 @@ struct MemAccess {
     HEAP,
     STACK,
     INSTRUCTIONS,
+    ABSOLUTE,
   };
 
   Type type;
-  size_t offset;
+
+  bool store = false;
+
+  size_t offset = 0;
 };
 
 }  // namespace vm::memory

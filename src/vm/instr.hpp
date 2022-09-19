@@ -104,13 +104,19 @@ inline std::string PrintInstrType(InstrType type) {
     case InstrType::STORE_STACK:
       return "store_stack";
 
+    case InstrType::CMP_EQ:
+      return "cmp_eq";
+
+    case InstrType::CMP_LESS:
+      return "cmp_less";
+
     default:
       return std::to_string(uint8_t(type));
   }
 }
 
 inline std::string PrintInstr(const Instr& inst) {
-  return fmt::format("{}, {} {} {}, addr: {}", PrintInstrType(inst.type),
+  return fmt::format("{}:\t {} {} {}\t addr: {}", PrintInstrType(inst.type),
                      inst.arg1, inst.arg2, inst.arg3, inst.addr);
 }
 

@@ -17,18 +17,23 @@ class VmMemory;
 namespace vm {
 
 class VmStack {
+ private:
+  // Invoked by VmMemory
+  VmStack(char* memory) : stack_area_{(rt::PrimitiveValue*)memory} {
+  }
+
  public:
   friend class debug::StackPrinter;
   friend class memory::VmMemory;
 
   void Push(rt::PrimitiveValue value) {
-    stack_.at(sp_) = std::move(value);
+    stack_area_[sp_] = std::move(value);
     sp_ += 1;
   }
 
   auto Pop() -> rt::PrimitiveValue {
     sp_ -= 1;
-    return stack_.at(sp_);
+    return stack_area_[sp_];
   }
 
   void PopCount(size_t count) {
@@ -40,17 +45,17 @@ class VmStack {
     sp_ = fp_;
 
     // Expect by ABI to be an integer offset
-    FMT_ASSERT(stack_.at(fp_).tag == rt::ValueTag::Int,
+    FMT_ASSERT(stack_area_[fp_].tag == rt::ValueTag::Int,
                "Expected an Int in fp slot");
 
     // Move the frame pointer
-    fp_ = stack_.at(fp_).as_int;
+    fp_ = stack_area_[fp_].as_int;
   }
 
   void PrepareCallframe() {
     // Save curent fp in sp
-    stack_.at(sp_) = rt::PrimitiveValue{.tag = rt::ValueTag::Int,  //
-                                        .as_int = (int)fp_};
+    stack_area_[sp_] = rt::PrimitiveValue{.tag = rt::ValueTag::Int,  //
+                                          .as_int = (int)fp_};
 
     // Move fp to sp
     fp_ = sp_;
@@ -76,16 +81,12 @@ class VmStack {
   }
 
   auto Top() -> rt::PrimitiveValue& {
-    return stack_.at(sp_ - 1);
-  }
-
-  auto Bottom() -> rt::PrimitiveValue* {
-    return &stack_.at(0);
+    return stack_area_[sp_ - 1];
   }
 
  private:
   auto GetAtFp(int offset) -> rt::PrimitiveValue& {
-    return stack_.at(fp_ + offset);
+    return stack_area_[fp_ + offset];
   }
 
  private:
@@ -93,7 +94,7 @@ class VmStack {
   size_t sp_ = 1;
   size_t fp_ = 0;
 
-  std::vector<rt::PrimitiveValue> stack_{65536};
+  rt::PrimitiveValue* stack_area_ = nullptr;
 };
 
 }  // namespace vm

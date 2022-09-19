@@ -204,7 +204,13 @@ Expression* Parser::ParsePrimary() {
 
   if (Matches(lex::TokenType::LEFT_BRACE)) {
     auto expr = ParseExpression();
+
     Consume(lex::TokenType::RIGHT_BRACE);
+
+    if (Matches(lex::TokenType::DOT)) {
+      return ParseFieldAccess(dynamic_cast<LvalueExpression*>(expr));
+    }
+
     return expr;
   }
 
