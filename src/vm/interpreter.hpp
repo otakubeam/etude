@@ -228,8 +228,10 @@ class BytecodeInterpreter {
     while (auto instr = NextInstruction()) {
       Interpret(instr);
 
-      fmt::print("[^] Instr: {}\n", PrintInstr(*instr));
-      stack_printer_.Print();
+      if (print_debug_info) {
+        fmt::print("[^] Instr: {}\n", PrintInstr(*instr));
+        stack_printer_.Print();
+      }
     }
 
     // Exit code
