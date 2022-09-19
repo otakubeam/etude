@@ -1,0 +1,159 @@
+ struct Tree {                                     
+    left: *Tree,                                   
+    right: *Tree,                                  
+    parent: *Tree,                                  
+                                                   
+    value: Int,                                    
+    isBlack: Bool,                                 
+ };                                                
+                                                   
+fun insertNewValue(tree: *Tree, node: *Tree) Unit {
+    var nodeValue = (*tree).value;                 
+                                                   
+    if nodeValue == val {                          
+       return;                                     
+    };                                             
+                                                   
+    var candidate = if nodeValue < val {           
+       &(*tree).left                              
+    } else {                                       
+       &(*tree).right                             
+    };                                             
+                                                   
+    if isNull(*candidate) {                        
+        *candidate = node;                        
+        (*node).parent = tree;                    
+        fixup(node);
+    } else {                                       
+        insertNewValue(*candidate, node);         
+    };                                             
+}                                                  
+
+fun isLeaf(node: *Tree) Bool {
+   var left = (*node).left;
+   var right = (*node).right;
+
+   if isNull(left) {
+      if isNull(right) {
+         return true;
+      };
+   };
+
+   false
+}
+
+fun fixup(node: *Tree) Unit {
+   var parent = (*node).parent;
+
+   if isNull(parent) {
+      (*node).isBlack = true;
+      return;
+   };
+
+   if sequentialTwoRed(node) {
+      var uncle = getUncle();
+      
+      if bothRed(uncle, parent) {
+         pushRednessUp(node);
+         var grandparent = (*parent).parent;
+         fixup(grandparent);
+         return;
+      };
+
+      if isLeftChild(parent) {
+         rotateRight(node);
+      } else {
+         rotateLeft(node); 
+      };
+
+      fixup(parent);
+   };
+}
+
+fun rotateRight(node: *Tree) Unit {
+    var me = node;
+    var parent = (*node).parent;
+    var grandparent = (*parent).parent;
+
+    (*grandparent).left = me;
+    (*parent).right = grandparent;
+}
+
+fun rotateLeft(node: *Tree) Unit {
+    var me = node;
+    var parent = (*node).parent;
+    var grandparent = (*parent).parent;
+
+    (*grandparent).right = me;
+    (*parent).left = grandparent;
+}
+
+fun pushRednessUp(node: *Tree) Unit {
+   var uncle = getUncle(node);
+   var parent = (*node).parent;
+
+   var grandparent = (*parent).parent;
+
+   (*grandparent).isBlack = false;
+
+   (*parent).isBlack = true;
+   (*uncle).isBlack = true;
+}
+
+fun sequentialTwoRed(node: *Tree) Bool {
+   if (*node).isBlack { 
+      return false;
+   };
+
+   var parent = (*node).parent;
+
+   if (*parent).isBlack { 
+      return false;
+   };
+
+   true
+}
+                                                   
+fun getUncle(node: *Tree) *Tree {
+   var parent = (*node).parent;
+
+   if isNull(parent) {
+       return unit;
+   };
+
+   var grandparent = (*parent).parent;
+
+   if (isLeftChild(parent)) {
+      (*grandparent).right
+   } else {
+      (*grandparent).left
+   }
+}
+
+# Assume non-null pointers \n
+fun bothRed(node1: *Tree, node2: *Tree) Bool {
+   if (*node1).isBlack {
+      retun false;
+   }
+
+   if (*node2).isBlack {
+      return false;
+   };
+
+   true
+}
+
+fun isLeftChild(node: *Tree) Bool {
+   if isNull((*node).parent) {
+       return false;
+   }
+
+   var parent = (*node).parent;
+   var parent_left = (*parent).left;
+
+   if parent_left == node {
+     return true;
+   }
+
+   false
+}
