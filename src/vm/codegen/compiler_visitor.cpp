@@ -205,7 +205,7 @@ void Compiler::VisitAddressof(AddressofExpression* node) {
     auto addr = node->operand_->GetAddress();
     AddIntegerConsnant(addr);
   } else {
-    FMT_ASSERT(false, "Unimplemented!");
+    // No-op
   }
 }
 

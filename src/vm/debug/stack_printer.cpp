@@ -28,7 +28,7 @@ std::string StackPrinter::Format() {
 
   fmt::format_to(std::back_inserter(buf), "\n");
 
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 24; i++) {
     if (i == (int)stack_.sp_) {
       fmt::format_to(std::back_inserter(buf), italic, "sp\t");
     } else if (i == (int)stack_.fp_) {
@@ -49,7 +49,7 @@ std::string StackPrinter::Format() {
 void StackPrinter::FormatHeader(fmt::memory_buffer& buf) {
   fmt::format_to(std::back_inserter(buf), bold, "[!] Stack:\n");
 
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 24; i++) {
     fmt::format_to(std::back_inserter(buf), bold, "{}\t", i);
   }
 
