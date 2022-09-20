@@ -1,0 +1,31 @@
+struct Tree {                                      
+   left: *Tree,                                    
+   right: *Tree,                                   
+                                                   
+   value: Int,                                     
+   isBlack: Bool,                                  
+};                                                 
+                                                   
+
+fun insertNewValue(tree: *Tree, node: *Tree) Unit { 
+    var nodeValue = (*tree).value;                  
+    var val = (*node).value;                  
+                                                    
+    if nodeValue == val {                           
+       return;                                      
+    };                                              
+                                                    
+    var candidate = if nodeValue < val {            
+        &(*tree).left                               
+    } else {                                        
+        &(*tree).right                              
+    };                                              
+                                                    
+    if isNull(*candidate) {                         
+         *candidate = node;                         
+    } else {                                        
+         insertNewValue(*candidate, node);          
+    };                                              
+}                                                   
+                                                    
+                                                    

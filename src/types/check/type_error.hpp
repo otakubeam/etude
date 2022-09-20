@@ -48,10 +48,20 @@ struct FieldAccessError : public TypeError {
 //////////////////////////////////////////////////////////////////////
 
 struct FnInvokeError : public TypeError {
+  FnInvokeError() = default;
+
   FnInvokeError(std::string fn_name, lex::Location loc_invoked) {
     message =
         fmt::format("Function {} and its invocation at {} do not correspond",
                     fn_name, loc_invoked.Format());
+  }
+
+  static FnInvokeError NotAFunction(lex::Location location,
+                                    std::string var_name) {
+    auto result = FnInvokeError{};
+    result.message = fmt::format("Variable '{}' used at {} is not a function",
+                                 var_name, location.Format());
+    return result;
   }
 };
 
@@ -135,9 +145,9 @@ struct AssignmentError : public TypeError {
 //////////////////////////////////////////////////////////////////////
 
 struct VarAccessError : public TypeError {
-  VarAccessError(lex::Location location) {
-    message = fmt::format("Access of an undefined variable at location {}",
-                          location.Format());
+  VarAccessError(lex::Location location, std::string name) {
+    message = fmt::format("Access of an undefined variable {} at location {}",
+                          name, location.Format());
   }
 };
 

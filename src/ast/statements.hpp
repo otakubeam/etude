@@ -61,7 +61,7 @@ class StructDeclStatement : public Statement {
 
   ///////////////////////////////////////////////////////////////////////
 
-  std::vector<types::StructType::Member> ZipMembers() {
+  auto ZipMembers() -> std::vector<types::StructType::Member> {
     std::vector<types::StructType::Member> result;
     for (size_t i = 0; i < field_names_.size(); i++) {
       result.push_back({

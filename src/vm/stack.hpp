@@ -93,7 +93,7 @@ class VmStack {
   size_t sp_ = 1;
   size_t fp_ = 0;
 
-  std::vector<rt::PrimitiveValue> stack_{65536};
+  std::vector<rt::PrimitiveValue> stack_{10000000};
 };
 
 }  // namespace vm

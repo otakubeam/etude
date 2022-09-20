@@ -28,7 +28,8 @@ std::string StackPrinter::Format() {
 
   fmt::format_to(std::back_inserter(buf), "\n");
 
-  for (int i = 0; i < 24; i++) {
+  int left = std::max(0, (int)stack_.sp_ - 15);
+  for (int i = left; i < left + 20; i++) {
     if (i == (int)stack_.sp_) {
       fmt::format_to(std::back_inserter(buf), italic, "sp\t");
     } else if (i == (int)stack_.fp_) {
@@ -49,7 +50,8 @@ std::string StackPrinter::Format() {
 void StackPrinter::FormatHeader(fmt::memory_buffer& buf) {
   fmt::format_to(std::back_inserter(buf), bold, "[!] Stack:\n");
 
-  for (int i = 0; i < 24; i++) {
+  int left = std::max(0, (int)stack_.sp_ - 15);
+  for (int i = left; i < left + 20; i++) {
     fmt::format_to(std::back_inserter(buf), bold, "{}\t", i);
   }
 
@@ -57,7 +59,8 @@ void StackPrinter::FormatHeader(fmt::memory_buffer& buf) {
 }
 
 void StackPrinter::FormatStackCells(fmt::memory_buffer& buf) {
-  for (int i = 0; i < 24; i++) {
+  int left = std::max(0, (int)stack_.sp_ - 15);
+  for (int i = left; i < left + 20; i++) {
     FormatOneCell(buf, i);
   }
 }

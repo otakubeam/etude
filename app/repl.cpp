@@ -93,30 +93,16 @@ int main(int argc, char** argv) {
   }
 
   auto chunks = compiler.GetChunks();
+
   for (auto ch : chunks) {
     ch.Print();
   }
 
   vm::BytecodeInterpreter interpreter{std::move(chunks)};
 
-  while (true) {
-    fmt::print("How many instructions to execute?\n");
-
-    size_t many = 0;
-    std::cin >> many;
-
-    if (many == 0) {
-      print_debug_info = !print_debug_info;
-    }
-
-    for (size_t i = 0; i < many; i++) {
-      if (auto instr = interpreter.NextInstruction()) {
-        fmt::print("[^] Instr: {}\n", PrintInstr(*instr));
-        interpreter.Interpret(instr);
-      } else {
-        fmt::print("This is the end\n");
-        return (0);
-      }
-    }
+  if (argv[2][0] == 'n') {
+    print_debug_info = false;
   }
+
+  interpreter.Interpret();
 }

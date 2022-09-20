@@ -127,8 +127,8 @@ class BytecodeInterpreter {
       case InstrType::JUMP_IF_FALSE: {
         auto val = stack_.Pop();
 
-        FMT_ASSERT(val.tag == rt::ValueTag::Bool,  //
-                   "Typechecker fault");
+        // FMT_ASSERT(val.tag == rt::ValueTag::Bool,  //
+        //            "Typechecker fault");
 
         if (!val.as_bool) {
           ip_ = ReadWord(*instruction);
@@ -193,11 +193,11 @@ class BytecodeInterpreter {
       }
 
       case InstrType::CMP_LESS: {
-        auto a = stack_.Pop();
-        auto b = stack_.Pop();
+        auto right = stack_.Pop();
+        auto left = stack_.Pop();
 
         // Can only compare integers, typechecker ensures
-        auto result = a.as_int < b.as_int;
+        auto result = left.as_int < right.as_int;
 
         stack_.Push({.tag = rt::ValueTag::Bool, .as_bool = result});
 

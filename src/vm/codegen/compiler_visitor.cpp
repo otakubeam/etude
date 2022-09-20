@@ -81,12 +81,13 @@ void Compiler::VisitFunDecl(FunDeclStatement* node) {
 
 void Compiler::VisitFnCall(FnCallExpression* node) {
   // Place in reverse order
+
   for (int i = node->arguments_.size() - 1; i >= 0; i -= 1) {
     node->arguments_[i]->Accept(this);
   }
 
   if (node->is_native_call_) {
-    auto name = node->fn_name_.GetName();
+    auto name = node->GetFunctionName();
     auto offset = name == "print" ? 0 : 2;
 
     AddIntegerConsnant(node->arguments_.size());
@@ -99,10 +100,9 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
     return;
   }
 
-  auto mb_offset = current_frame_->Lookup(node->fn_name_.GetName());
-
   // Branch direct / indirect
-  if (mb_offset.has_value()) {
+
+  if (auto mb_offset = current_frame_->Lookup(node->GetFunctionName())) {
     int offset = mb_offset.value();
     MabyeEmitMemFetch(offset);
 
@@ -110,13 +110,15 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
         .type = vm::InstrType::INDIRECT_CALL,
     });
   } else {
-    auto chunk_no = functions_.Get(node->fn_name_.GetName()).value().GetAddr();
+    auto chunk_no = functions_.Get(node->GetFunctionName()).value().GetAddr();
 
     chunk_.instructions.push_back(vm::Instr{
         .type = vm::InstrType::CALL_FN,
         .arg1 = (uint8_t)chunk_no,
     });
   }
+
+  // Don't forget to clean up the stack
 
   chunk_.instructions.push_back(vm::Instr{
       .type = vm::InstrType::FIN_CALL,
@@ -346,7 +348,7 @@ void Compiler::VisitFieldAccess(FieldAccessExpression* node) {
   // which might be differenct from implementation to implementation
   auto struct_symbol = structs_.Get(struct_type_name).value();
 
-  auto offset = struct_symbol->SizeBefore(node->field_name_.GetName());
+  auto offset = struct_symbol->SizeBefore(node->GetFieldName());
 
   // Here we compile the address right into the instruction
 

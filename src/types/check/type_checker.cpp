@@ -44,7 +44,7 @@ void TypeChecker::VisitAssignment(AssignmentStatement* node) {
   auto value_type = Eval(node->value_);
 
   if (value_type->DiffersFrom(target_type)) {
-    throw check::AssignmentError{node->GetLocation()};
+    throw AssignmentError{node->GetLocation()};
   }
 }
 
@@ -91,7 +91,7 @@ void TypeChecker::VisitFunDecl(FunDeclStatement* node) {
 
     if (fn_return_expect->DiffersFrom(inferred_return_type) &&
         inferred_return_type != &builtin_unit) {
-      throw check::FnBlockFinalError{node->GetLocation()};
+      throw FnBlockFinalError{node->GetLocation()};
     }
 
     // 3. Restore previous return expect
@@ -112,7 +112,7 @@ void TypeChecker::VisitReturn(ReturnStatement* node) {
   auto return_type = Eval(node->return_value_);
 
   if (fn_return_expect->DiffersFrom(return_type)) {
-    throw check::FnReturnStatementError{node->GetLocation()};
+    throw FnReturnStatementError{node->GetLocation()};
   }
 }
 
@@ -133,12 +133,12 @@ void TypeChecker::VisitExprStatement(ExprStatement* expr_stmt) {
 ////////////////////////////////////////////////////////////////////
 
 void TypeChecker::VisitComparison(ComparisonExpression* node) {
-  if (Eval(node->left_) != &builtin_int) {
-    throw check::ArithCmpError{node->GetLocation(), "left"};
+  if (!Eval(node->left_)) {
+    throw ArithCmpError{node->GetLocation(), "left"};
   }
 
-  if (Eval(node->right_) != &builtin_int) {
-    throw check::ArithCmpError{node->GetLocation(), "right"};
+  if (!Eval(node->right_)) {
+    throw ArithCmpError{node->GetLocation(), "right"};
   }
 
   return_value = &builtin_bool;
@@ -148,11 +148,11 @@ void TypeChecker::VisitComparison(ComparisonExpression* node) {
 
 void TypeChecker::VisitBinary(BinaryExpression* node) {
   if (Eval(node->left_) != &builtin_int) {
-    throw check::ArithAddError{node->GetLocation(), "left"};
+    throw ArithAddError{node->GetLocation(), "left"};
   }
 
   if (Eval(node->right_) != &builtin_int) {
-    throw check::ArithAddError{node->GetLocation(), "right"};
+    throw ArithAddError{node->GetLocation(), "right"};
   }
 
   return_value = &builtin_int;
@@ -188,14 +188,14 @@ void TypeChecker::VisitUnary(UnaryExpression* node) {
 
 void TypeChecker::VisitIf(IfExpression* if_expr) {
   if (builtin_bool.DiffersFrom(Eval(if_expr->condition_))) {
-    throw check::IfCondError{if_expr->GetLocation()};
+    throw IfCondError{if_expr->GetLocation()};
   }
 
   auto true_type = Eval(if_expr->true_branch_);
   auto false_type = if_expr->false_branch_ ? Eval(if_expr->false_branch_)  //
                                            : &builtin_unit;
   if (true_type->DiffersFrom(false_type)) {
-    throw check::IfArmsError{if_expr->GetLocation()};
+    throw IfArmsError{if_expr->GetLocation()};
   }
 
   return_value = true_type;
@@ -241,17 +241,19 @@ void TypeChecker::VisitFnCall(FnCallExpression* node) {
 
   // Normal function
 
-  // TODO: catch errors
-  Type* stored_type = variable_type_store_->Get(name).value();
-  auto fn_type = dynamic_cast<FnType*>(stored_type);
+  if (auto stored_type = variable_type_store_->Get(name)) {
+    if (auto fn_type = dynamic_cast<FnType*>(*stored_type)) {
+      FnType inferred_type{std::move(arg_types), fn_type->GetReturnType()};
 
-  FnType inferred_type{std::move(arg_types), fn_type->GetReturnType()};
-
-  if (fn_type->DiffersFrom(&inferred_type)) {
-    throw check::FnInvokeError{node->GetFunctionName(), node->GetLocation()};
+      if (fn_type->IsEqual(&inferred_type)) {
+        return_value = fn_type->GetReturnType();
+        return;
+      }
+      throw FnInvokeError{node->GetFunctionName(), node->GetLocation()};
+    }
+    // throw VarAccessError{node->GetLocation(), name};
   }
-
-  return_value = fn_type->GetReturnType();
+  throw VarAccessError{node->GetLocation(), name};
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -264,7 +266,7 @@ void TypeChecker::VisitStructConstruction(StructConstructionExpression* node) {
     auto field_passed_type = Eval(node->values_[i]);
 
     if (field_formal_type->DiffersFrom(field_passed_type)) {
-      throw check::StructInitializationError{node->GetLocation()};
+      throw StructInitializationError{node->GetLocation()};
     }
   }
 
@@ -299,8 +301,8 @@ void TypeChecker::VisitFieldAccess(FieldAccessExpression* node) {
     }
   }
 
-  throw check::FieldAccessError{node->GetLocation(), searching,
-                                struct_type->GetName()};
+  throw FieldAccessError{node->GetLocation(), searching,
+                         struct_type->GetName()};
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -338,7 +340,7 @@ void TypeChecker::VisitVarAccess(VarAccessExpression* node) {
     node->type_ = *type;
     return_value = *type;
   } else {
-    throw VarAccessError{node->GetLocation()};
+    throw VarAccessError{node->GetLocation(), node->GetName()};
   }
 }
 

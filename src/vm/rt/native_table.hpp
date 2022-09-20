@@ -31,6 +31,16 @@ inline PrimitiveValue isnull(size_t count, PrimitiveValue* data) {
   };
 }
 
+inline PrimitiveValue sameplace(size_t count, PrimitiveValue* data) {
+  FMT_ASSERT(count == 2, "Wrong call for samePlace");
+  FMT_ASSERT(data[0].tag == ValueTag::Int, "not a pointer for isNull");
+
+  return PrimitiveValue{
+      .tag = ValueTag::Bool,
+      .as_bool = (data[0].as_int == data[-1].as_int),
+  };
+}
+
 inline PrimitiveValue assert(size_t count, PrimitiveValue* data) {
   FMT_ASSERT(count == 1, "Wrong call for assert");
   FMT_ASSERT(data[0].tag == ValueTag::Bool, "Non-bool condition");
@@ -60,6 +70,7 @@ class NativeTable {
                            detail::print,
                            detail::assert,
                            detail::isnull,
+                           detail::sameplace,
                        }};
   }
 
