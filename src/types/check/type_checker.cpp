@@ -109,7 +109,9 @@ void TypeChecker::VisitReturn(ReturnStatement* node) {
     return;  // Program finishes
   }
 
-  if (fn_return_expect->DiffersFrom(Eval(node->return_value_))) {
+  auto return_type = Eval(node->return_value_);
+
+  if (fn_return_expect->DiffersFrom(return_type)) {
     throw check::FnReturnStatementError{node->GetLocation()};
   }
 }

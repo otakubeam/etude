@@ -124,20 +124,31 @@ auto Parser::ParseFormals() -> std::vector<FunDeclStatement::FormalParam> {
 
 ///////////////////////////////////////////////////////////////////
 
+Expression* SpawnUnitNode(lex::Location location) {
+  auto uint_token = lex::Token{
+      lex::TokenType::UNIT,
+      location,
+  };
+
+  return new LiteralExpression{uint_token};
+}
+
 ReturnStatement* Parser::ParseReturnStatement() {
   if (!Matches(lex::TokenType::RETURN)) {
     return nullptr;
   }
 
-  auto location_token = lexer_.GetPreviousToken();
+  auto return_token = lexer_.GetPreviousToken();
 
   Expression* ret_expr = nullptr;
   if (!Matches(lex::TokenType::SEMICOLUMN)) {
     ret_expr = ParseExpression();
     Consume(lex::TokenType::SEMICOLUMN);
+  } else {
+    ret_expr = SpawnUnitNode(return_token.location);
   }
 
-  return new ReturnStatement{location_token, ret_expr};
+  return new ReturnStatement{return_token, ret_expr};
 }
 
 ///////////////////////////////////////////////////////////////////

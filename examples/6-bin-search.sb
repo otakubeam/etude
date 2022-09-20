@@ -26,7 +26,7 @@ var tr3 = Tree:{unit, &tr4, 3};
 var tr2 = Tree:{&tr1, &tr3, 2};
 
 fun binSearchInt(tree: *Tree, val: Int) Bool {
-    if tree == unit {
+    if isNull(tree) {
         return false;
     };
 
@@ -44,10 +44,3 @@ fun binSearchInt(tree: *Tree, val: Int) Bool {
 
     binSearchInt(subtree, val)
 }
-
-# Would find the node
-assert(binSearchInt(&tr2, 4));
-
-# Would not find the node
-assert(!binSearchInt(&tr2, 100500));
-
