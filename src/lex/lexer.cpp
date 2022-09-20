@@ -2,11 +2,83 @@
 
 namespace lex {
 
+Lexer::Lexer(std::istream& source) : scanner_{source} {
+}
+
+////////////////////////////////////////////////////////////////////
+
+Token Lexer::GetNextToken() {
+  SkipWhitespace();
+
+  SkipComments();
+
+  if (auto op = MatchOperators()) {
+    return *op;
+  }
+
+  if (auto lit = MatchLiterls()) {
+    return *lit;
+  }
+
+  if (auto word = MatchWords()) {
+    return *word;
+  }
+
+  FMT_ASSERT(false, "\nCould not match any token\n");
+}
+
+////////////////////////////////////////////////////////////////////
+
+Token Lexer::GetPreviousToken() {
+  return prev_;
+}
+
+////////////////////////////////////////////////////////////////////
+
+void Lexer::Advance() {
+  prev_ = peek_;
+
+  if (!need_advance) {
+    need_advance = true;
+  } else {
+    peek_ = GetNextToken();
+    need_advance = false;
+  }
+}
+
+////////////////////////////////////////////////////////////////////
+
+bool Lexer::Matches(lex::TokenType type) {
+  if (Peek().type != type) {
+    return false;
+  }
+
+  Advance();
+  return true;
+}
+
+////////////////////////////////////////////////////////////////////
+
+Token Lexer::Peek() {
+  if (need_advance) {
+    Advance();
+  }
+  return peek_;
+}
+
+////////////////////////////////////////////////////////////////////
+
+bool IsWhitespace(char ch) {
+  return ch == ' ' || ch == '\n' || ch == '\t';
+}
+
 void Lexer::SkipWhitespace() {
   while (IsWhitespace(scanner_.CurrentSymbol())) {
     scanner_.MoveRight();
   }
 }
+
+////////////////////////////////////////////////////////////////////
 
 void Lexer::SkipComments() {
   while (scanner_.CurrentSymbol() == '#') {
@@ -25,6 +97,8 @@ std::optional<Token> Lexer::MatchOperators() {
 
   return std::nullopt;
 }
+
+////////////////////////////////////////////////////////////////////
 
 std::optional<TokenType> Lexer::MatchOperator() {
   switch (scanner_.CurrentSymbol()) {
@@ -87,6 +161,8 @@ std::optional<Token> Lexer::MatchLiterls() {
   return std::nullopt;
 }
 
+////////////////////////////////////////////////////////////////////
+
 std::optional<Token> Lexer::MatchNumericLiteral() {
   int result = 0, match_span = 0;
 
@@ -104,6 +180,8 @@ std::optional<Token> Lexer::MatchNumericLiteral() {
 
   return Token{TokenType::NUMBER, scanner_.GetLocation(), {result}};
 }
+
+////////////////////////////////////////////////////////////////////
 
 std::optional<Token> Lexer::MatchStringLiteral() {
   auto first_quote = [](char first) -> bool {

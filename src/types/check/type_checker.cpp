@@ -10,7 +10,7 @@ TypeChecker::TypeChecker() {
   // Declare intrinsics
   global_type_store.Declare("print", new FnType({}));
   global_type_store.Declare("assert", new FnType({}));
-  global_type_store.Declare("isNull", new FnType({}));
+  global_type_store.Declare("isNull", new FnType({}, &builtin_bool));
 }
 
 TypeChecker::~TypeChecker() = default;
@@ -25,7 +25,7 @@ void TypeChecker::VisitDeref(DereferenceExpression* node) {
     node->type_ = type->Underlying();
     return_value = node->type_;
   } else {
-    throw DereferenceError{};
+    throw DereferenceError{node->GetLocation()};
   }
 }
 
@@ -40,18 +40,19 @@ void TypeChecker::VisitAddressof(AddressofExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void TypeChecker::VisitAssignment(AssignmentStatement* node) {
-  auto type1 = Eval(node->value_);
-  auto type2 = Eval(node->target_);
-  if (type1->DiffersFrom(type2)) {
-    throw "error";
+  auto target_type = Eval(node->target_);
+  auto value_type = Eval(node->value_);
+
+  if (value_type->DiffersFrom(target_type)) {
+    throw check::AssignmentError{node->GetLocation()};
   }
 }
 
 ////////////////////////////////////////////////////////////////////
 
-void TypeChecker::VisitVarDecl(VarDeclStatement* var_decl) {
-  auto type = Eval(var_decl->value_);
-  variable_type_store_->Declare(var_decl->GetVarName(), type);
+void TypeChecker::VisitVarDecl(VarDeclStatement* node) {
+  auto type = Eval(node->value_);
+  variable_type_store_->Declare(node->GetVarName(), type);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -75,9 +76,8 @@ void TypeChecker::VisitFunDecl(FunDeclStatement* node) {
 
     // Declare all the parameters of a function
 
-    for (auto formatl_parameter : node->formals_) {
-      variable_type_store_->Declare(formatl_parameter.GetParameterName(),
-                    formatl_parameter.type);
+    for (auto formal : node->formals_) {
+      variable_type_store_->Declare(formal.GetParameterName(), formal.type);
     }
 
     // A little dance to handle nesting of functions:
@@ -87,10 +87,11 @@ void TypeChecker::VisitFunDecl(FunDeclStatement* node) {
 
     // 2. Do the check
 
-    auto inferred_ret = Eval(node->block_);
-    if (fn_return_expect->DiffersFrom(inferred_ret) &&
-        inferred_ret != &builtin_unit) {
-      throw check::FnBlockError{};
+    auto inferred_return_type = Eval(node->block_);
+
+    if (fn_return_expect->DiffersFrom(inferred_return_type) &&
+        inferred_return_type != &builtin_unit) {
+      throw check::FnBlockFinalError{node->GetLocation()};
     }
 
     // 3. Restore previous return expect
@@ -103,13 +104,13 @@ void TypeChecker::VisitFunDecl(FunDeclStatement* node) {
 
 ////////////////////////////////////////////////////////////////////
 
-void TypeChecker::VisitReturn(ReturnStatement* return_stmt) {
+void TypeChecker::VisitReturn(ReturnStatement* node) {
   if (!fn_return_expect) {
     return;  // Program finishes
   }
 
-  if (fn_return_expect->DiffersFrom(Eval(return_stmt->return_value_))) {
-    throw check::FnDeclarationError{};
+  if (fn_return_expect->DiffersFrom(Eval(node->return_value_))) {
+    throw check::FnReturnStatementError{node->GetLocation()};
   }
 }
 
@@ -129,13 +130,13 @@ void TypeChecker::VisitExprStatement(ExprStatement* expr_stmt) {
 
 ////////////////////////////////////////////////////////////////////
 
-void TypeChecker::VisitComparison(ComparisonExpression* cmp_expr) {
-  if (Eval(cmp_expr->left_) != &builtin_int) {
-    throw check::ArithCmpError{"left"};
+void TypeChecker::VisitComparison(ComparisonExpression* node) {
+  if (Eval(node->left_) != &builtin_int) {
+    throw check::ArithCmpError{node->GetLocation(), "left"};
   }
 
-  if (Eval(cmp_expr->right_) != &builtin_int) {
-    throw check::ArithCmpError{"right"};
+  if (Eval(node->right_) != &builtin_int) {
+    throw check::ArithCmpError{node->GetLocation(), "right"};
   }
 
   return_value = &builtin_bool;
@@ -143,13 +144,13 @@ void TypeChecker::VisitComparison(ComparisonExpression* cmp_expr) {
 
 ////////////////////////////////////////////////////////////////////
 
-void TypeChecker::VisitBinary(BinaryExpression* bin_expr) {
-  if (Eval(bin_expr->left_) != &builtin_int) {
-    throw check::ArithAddError{"left"};
+void TypeChecker::VisitBinary(BinaryExpression* node) {
+  if (Eval(node->left_) != &builtin_int) {
+    throw check::ArithAddError{node->GetLocation(), "left"};
   }
 
-  if (Eval(bin_expr->right_) != &builtin_int) {
-    throw check::ArithAddError{"right"};
+  if (Eval(node->right_) != &builtin_int) {
+    throw check::ArithAddError{node->GetLocation(), "right"};
   }
 
   return_value = &builtin_int;
@@ -157,43 +158,42 @@ void TypeChecker::VisitBinary(BinaryExpression* bin_expr) {
 
 ////////////////////////////////////////////////////////////////////
 
-void TypeChecker::VisitUnary(UnaryExpression* un_expr) {
-  auto operand_type = Eval(un_expr->operand_);
+void TypeChecker::VisitUnary(UnaryExpression* node) {
+  Type* expected_type = nullptr;
+  auto operand_type = Eval(node->operand_);
 
-  switch (un_expr->operator_.type) {
+  switch (node->operator_.type) {
     case lex::TokenType::NOT:
-      if (builtin_bool.DiffersFrom(operand_type)) {
-        throw check::TypeError{"Negating non-bool"};
-      }
-
-      return_value = &builtin_bool;
+      expected_type = &builtin_bool;
       break;
 
     case lex::TokenType::MINUS:
-      if (builtin_int.DiffersFrom(operand_type)) {
-        throw check::TypeError{"Negating non-int"};
-      }
-
-      return_value = &builtin_int;
+      expected_type = &builtin_int;
       break;
 
     default:
       FMT_ASSERT(false, "Unreachable");
   }
+
+  if (expected_type->DiffersFrom(operand_type)) {
+    throw ArithNegateError{node->GetLocation()};
+  }
+
+  return_value = expected_type;
 }
 
 ////////////////////////////////////////////////////////////////////
 
 void TypeChecker::VisitIf(IfExpression* if_expr) {
   if (builtin_bool.DiffersFrom(Eval(if_expr->condition_))) {
-    throw check::IfCondError{"<unknown-loc>"};
+    throw check::IfCondError{if_expr->GetLocation()};
   }
 
   auto true_type = Eval(if_expr->true_branch_);
   auto false_type = if_expr->false_branch_ ? Eval(if_expr->false_branch_)  //
                                            : &builtin_unit;
   if (true_type->DiffersFrom(false_type)) {
-    throw check::IfArmsError{"<unknown-loc>"};
+    throw check::IfArmsError{if_expr->GetLocation()};
   }
 
   return_value = true_type;
@@ -201,47 +201,52 @@ void TypeChecker::VisitIf(IfExpression* if_expr) {
 
 ////////////////////////////////////////////////////////////////////
 
-void TypeChecker::VisitBlock(BlockExpression* block) {
+void TypeChecker::VisitBlock(BlockExpression* node) {
   Environment<Type*>::ScopeGuard guard{&variable_type_store_};
-  for (auto stmt : block->stmts_) {
+
+  for (auto stmt : node->stmts_) {
     Eval(stmt);
   }
 
-  return_value = block->final_ ? Eval(block->final_)  //
-                               : &builtin_unit;
+  return_value = node->final_ ? Eval(node->final_)  //
+                              : &builtin_unit;
 }
 
 ////////////////////////////////////////////////////////////////////
 
-void TypeChecker::VisitFnCall(FnCallExpression* fn_call) {
+void TypeChecker::VisitFnCall(FnCallExpression* node) {
   // The fact that the fucntion block returns the
   // declared type is checked on declaration place
 
-  std::vector<Type*> args_types;
-  for (auto arg : fn_call->arguments_) {
-    args_types.push_back(Eval(arg));
+  std::vector<Type*> arg_types;
+  for (auto argument : node->arguments_) {
+    arg_types.push_back(Eval(argument));
   }
 
-  auto name = fn_call->fn_name_.GetName();
+  auto name = node->GetFunctionName();
 
   // Intrinsic: don't type-check
 
-  if (name == "print" || name == "isNull") {
-    return_value = &builtin_bool;
-    fn_call->is_native_call_ = true;
+  // TODO: it seems I need to pull the native_table here as well
+  // So the table must be generic over all backends
+  // But the concrete implementations need to be provided separately
+
+  if (name == "print" || name == "isNull" || name == "assert") {
+    return_value = name == "isNull" ? &builtin_bool : &builtin_unit;
+    node->is_native_call_ = true;
     return;
   }
 
   // Normal function
 
+  // TODO: catch errors
   Type* stored_type = variable_type_store_->Get(name).value();
   auto fn_type = dynamic_cast<FnType*>(stored_type);
 
-  FnType inferred_type{std::move(args_types), fn_type->GetReturnType()};
+  FnType inferred_type{std::move(arg_types), fn_type->GetReturnType()};
 
   if (fn_type->DiffersFrom(&inferred_type)) {
-    throw check::FnInvokeError{fn_call->fn_name_.GetName(), "Unknown",
-                               fn_call->fn_name_.location.Format()};
+    throw check::FnInvokeError{node->GetFunctionName(), node->GetLocation()};
   }
 
   return_value = fn_type->GetReturnType();
@@ -249,22 +254,20 @@ void TypeChecker::VisitFnCall(FnCallExpression* fn_call) {
 
 ////////////////////////////////////////////////////////////////////
 
-void TypeChecker::VisitStructConstruction(
-    StructConstructionExpression* s_cons) {
-  auto s_decl = struct_decls_.Get(s_cons->GetStructName()).value();
+void TypeChecker::VisitStructConstruction(StructConstructionExpression* node) {
+  auto struct_declaration = struct_decls_.Get(node->GetStructName()).value();
 
-  for (size_t i = 0; i < s_decl->field_names_.size(); i++) {
-    auto field_decl_type = s_decl->field_types_[i];
+  for (size_t i = 0; i < struct_declaration->field_names_.size(); i++) {
+    auto field_formal_type = struct_declaration->field_types_[i];
+    auto field_passed_type = Eval(node->values_[i]);
 
-    auto field_initializer_type = Eval(s_cons->values_[i]);
-
-    if (field_decl_type->DiffersFrom(field_initializer_type)) {
-      throw check::StructInitializationError{};
+    if (field_formal_type->DiffersFrom(field_passed_type)) {
+      throw check::StructInitializationError{node->GetLocation()};
     }
   }
 
-  return_value = s_decl->type_;
-  s_cons->type_ = return_value;
+  return_value = struct_declaration->type_;
+  node->type_ = return_value;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -272,34 +275,36 @@ void TypeChecker::VisitStructConstruction(
 void TypeChecker::VisitFieldAccess(FieldAccessExpression* node) {
   node->struct_expression_->Accept(this);
 
-  auto t = node->struct_expression_->GetType();
-  FMT_ASSERT(t, "FieldAccessExpression: Typechecker fault");
+  auto type = node->struct_expression_->GetType();
+  FMT_ASSERT(type, "FieldAccessExpression: Typechecker fault");
 
-  auto str_t = dynamic_cast<StructType*>(t);
+  auto struct_type = dynamic_cast<StructType*>(type);
 
-  auto searching = node->field_name_.GetName();
-
-  if (str_t == nullptr) {
-    throw FieldAccessError::NotAStruct("<some-expression> before " + searching);
+  if (struct_type == nullptr) {
+    throw FieldAccessError::NotAStruct(
+        node->GetLocation(),
+        "<some-expression> before " + node->GetFieldName());
   }
 
-  auto s_decl = struct_decls_.Get(str_t->GetName()).value();
+  auto struct_declaration = struct_decls_.Get(struct_type->GetName()).value();
+  auto searching = node->GetFieldName();
 
-  for (size_t i = 0; i < s_decl->field_names_.size(); i++) {
-    if (searching == s_decl->field_names_[i].GetName()) {
-      return_value = s_decl->field_types_[i];
+  for (size_t i = 0; i < struct_declaration->field_names_.size(); i++) {
+    if (searching == struct_declaration->field_names_[i].GetName()) {
+      return_value = struct_declaration->field_types_[i];
       node->type_ = return_value;
       return;
     }
   }
 
-  throw check::FieldAccessError{searching, node->GetFieldName()};
+  throw check::FieldAccessError{node->GetLocation(), searching,
+                                struct_type->GetName()};
 }
 
 ////////////////////////////////////////////////////////////////////
 
-void TypeChecker::VisitLiteral(LiteralExpression* lit) {
-  switch (lit->token_.type) {
+void TypeChecker::VisitLiteral(LiteralExpression* node) {
+  switch (node->token_.type) {
     case lex::TokenType::NUMBER:
       return_value = &builtin_int;
       break;
@@ -321,15 +326,18 @@ void TypeChecker::VisitLiteral(LiteralExpression* lit) {
       FMT_ASSERT(false, "Typechecking unknown literal");
   }
 
-  lit->type_ = return_value;
+  node->type_ = return_value;
 }
 
 ////////////////////////////////////////////////////////////////////
 
-void TypeChecker::VisitVarAccess(VarAccessExpression* ident) {
-  Type* t = variable_type_store_->Get(ident->GetName()).value();
-  ident->type_ = t;
-  return_value = t;
+void TypeChecker::VisitVarAccess(VarAccessExpression* node) {
+  if (auto type = variable_type_store_->Get(node->GetName())) {
+    node->type_ = *type;
+    return_value = *type;
+  } else {
+    throw VarAccessError{node->GetLocation()};
+  }
 }
 
 }  // namespace types::check

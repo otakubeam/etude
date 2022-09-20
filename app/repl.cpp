@@ -10,14 +10,14 @@
 #include <fmt/color.h>
 
 #include <fstream>
-#include <chrono>
-#include <thread>
+// #include <chrono>
+// #include <thread>
 
 bool print_debug_info = true;
 
 int main(int argc, char** argv) {
   if (argc == 1) {
-    fmt::print("help\n");
+    fmt::print("Please provide the file as the first argument\n");
     exit(0);
   }
 
@@ -33,6 +33,13 @@ int main(int argc, char** argv) {
 
   char stage = 0;
 
+  fmt::print(
+      "Specify the stage up to which run the driver:\n"
+      "p: Parse                                     \n"
+      "t: Typecheck                                 \n"
+      "c: Compile                                   \n"
+      "e: Execute                                   \n");
+
   std::cin >> stage;
 
   std::vector<Statement*> statements;
@@ -40,27 +47,33 @@ int main(int argc, char** argv) {
   try {
     while (true) {
       auto stmt = p.ParseStatement();
-      fmt::print("Good");
       statements.push_back(stmt);
     }
   } catch (parse::errors::ParseError& e) {
     fmt::print("Parse error: {}\n", e.what());
   }
 
+  fmt::print("Parse stage finished!\n");
+
   if (stage == 'p') {
     return 0;
   }
 
+  bool had_errors = false;
   types::check::TypeChecker tchk;
+
   try {
     for (auto stmt : statements) {
       tchk.Eval(stmt);
     }
   } catch (types::check::TypeError& type_error) {
-    fmt::print("Type error: {}\n", type_error.msg);
+    had_errors = true;
+    fmt::print("Type error: {}\n", type_error.what());
   }
 
-  if (stage == 't') {
+  fmt::print("Typecheck stage finished!\n");
+
+  if (stage == 't' || had_errors) {
     return 0;
   }
 
@@ -71,6 +84,8 @@ int main(int argc, char** argv) {
   for (auto stmt : statements) {
     auto exe = compiler.Compile(stmt);
   }
+
+  fmt::print("Compile stage finished!\n");
 
   if (stage == 'c') {
     // Maybe dump all code?

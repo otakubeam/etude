@@ -73,7 +73,7 @@ StructDeclStatement* Parser::ParseStructDeclStatement() {
   std::vector<types::Type*> types;
 
   while (Matches(lex::TokenType::IDENTIFIER)) {
-    fields.push_back(lexer_.PreviousToken());
+    fields.push_back(lexer_.GetPreviousToken());
     Consume(lex::TokenType::COLUMN);
 
     if (auto type = ParseType()) {
@@ -101,7 +101,7 @@ auto Parser::ParseFormals() -> std::vector<FunDeclStatement::FormalParam> {
   std::vector<FunDeclStatement::FormalParam> typed_formals;
 
   while (Matches(lex::TokenType::IDENTIFIER)) {
-    auto param_name = lexer_.PreviousToken();
+    auto param_name = lexer_.GetPreviousToken();
     Consume(lex::TokenType::COLUMN);
 
     if (auto type = ParseType()) {
@@ -129,7 +129,7 @@ ReturnStatement* Parser::ParseReturnStatement() {
     return nullptr;
   }
 
-  auto location_token = lexer_.PreviousToken();
+  auto location_token = lexer_.GetPreviousToken();
 
   Expression* ret_expr = nullptr;
   if (!Matches(lex::TokenType::SEMICOLUMN)) {
@@ -147,7 +147,7 @@ YieldStatement* Parser::ParseYieldStatement() {
     return nullptr;
   }
 
-  auto location_token = lexer_.PreviousToken();
+  auto location_token = lexer_.GetPreviousToken();
 
   Expression* yield_value = nullptr;
   if (!Matches(lex::TokenType::SEMICOLUMN)) {
@@ -168,7 +168,7 @@ VarDeclStatement* Parser::ParseVarDeclStatement() {
   // 1. Get a name to assign to
 
   Consume(lex::TokenType::IDENTIFIER);
-  auto lvalue = new VarAccessExpression{lexer_.PreviousToken()};
+  auto lvalue = new VarAccessExpression{lexer_.GetPreviousToken()};
 
   // 2. Get an expression to assign to
 
@@ -211,7 +211,7 @@ Statement* Parser::ParseExprStatement() {
 }
 
 AssignmentStatement* Parser::ParseAssignment(LvalueExpression* target) {
-  auto assignment_loc = lexer_.PreviousToken();
+  auto assignment_loc = lexer_.GetPreviousToken();
   auto value = ParseExpression();
   Consume(lex::TokenType::SEMICOLUMN);
   return new AssignmentStatement{assignment_loc, target, value};

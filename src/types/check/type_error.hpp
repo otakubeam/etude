@@ -1,5 +1,7 @@
 #pragma once
 
+#include <lex/location.hpp>
+
 #include <fmt/core.h>
 
 #include <string>
@@ -8,53 +10,63 @@ namespace types::check {
 
 //////////////////////////////////////////////////////////////////////
 
-struct TypeError {
-  std::string msg;
+struct TypeError : std::exception {
+  std::string message;
+
+  const char* what() const noexcept override {
+    return message.c_str();
+  }
 };
 
 //////////////////////////////////////////////////////////////////////
 
 struct StructInitializationError : public TypeError {
-  StructInitializationError() {
-    msg = fmt::format("Bad struct construction");
+  StructInitializationError(lex::Location location) {
+    message = fmt::format("Bad struct construction at location {}",
+                          location.Format());
   }
 };
 
 struct FieldAccessError : public TypeError {
   FieldAccessError() = default;
 
-  FieldAccessError(std::string field, std::string struct_var) {
-    msg = fmt::format("No such field {} in struct {}", field, struct_var);
+  FieldAccessError(lex::Location location, std::string field,
+                   std::string struct_var) {
+    message = fmt::format("No such field '{}' in struct {} at {}", field,
+                          struct_var, location.Format());
   }
 
-  static FieldAccessError NotAStruct(std::string var_name) {
-    auto fae = FieldAccessError{};
-    fae.msg = fmt::format("{} is not a struct", var_name);
-    return fae;
+  static FieldAccessError NotAStruct(lex::Location location,
+                                     std::string var_name) {
+    auto result = FieldAccessError{};
+    result.message = fmt::format("Variable '{}' used at {} is not a struct",
+                                 var_name, location.Format());
+    return result;
   }
 };
 
 //////////////////////////////////////////////////////////////////////
 
 struct FnInvokeError : public TypeError {
-  FnInvokeError(std::string fn_name, std::string /* loc_decl */,
-                std::string loc_invoked) {
-    msg = fmt::format(
-        "Function {} at {} and its invocation at {} do not correspond",  //
-        fn_name, "Unknown", loc_invoked);
+  FnInvokeError(std::string fn_name, lex::Location loc_invoked) {
+    message =
+        fmt::format("Function {} and its invocation at {} do not correspond",
+                    fn_name, loc_invoked.Format());
   }
 };
 
-struct FnDeclarationError : public TypeError {
-  FnDeclarationError() {
-    // TODO: location of `return value`
-    msg = fmt::format("Return type does not match the function declaration");
+struct FnReturnStatementError : public TypeError {
+  FnReturnStatementError(lex::Location location) {
+    message =
+        fmt::format("Return type at {} does not match the function declaration",
+                    location.Format());
   }
 };
 
-struct FnBlockError : public TypeError {
-  FnBlockError() {
-    msg = fmt::format("Function block evaluates to different type");
+struct FnBlockFinalError : public TypeError {
+  FnBlockFinalError(lex::Location location) {
+    message = fmt::format("Function block at {} evaluates to different type",
+                          location.Format());
   }
 };
 
@@ -63,44 +75,70 @@ struct FnBlockError : public TypeError {
 struct IfError : public TypeError {};
 
 struct IfCondError : public IfError {
-  IfCondError(std::string /* location */) {
-    msg = fmt::format("If expression at {} has non-bool condition",
-                      "Unknown"  //
-    );
+  IfCondError(lex::Location location) {
+    message = fmt::format("If expression at {} has non-bool condition",
+                          location.Format());
   }
 };
 
 struct IfArmsError : public IfError {
-  IfArmsError(std::string /* location */) {
-    msg = fmt::format("If expression at {} has arms of different types",
-                      "Unknown"  //
-    );
+  IfArmsError(lex::Location location) {
+    message = fmt::format("If expression at {} has arms of different types",
+                          location.Format());
   }
 };
 
 //////////////////////////////////////////////////////////////////////
 
 struct ArithCmpError : public TypeError {
-  ArithCmpError(std::string side) {
-    msg = fmt::format("Comparison expression at {} has non-int {} operand",
-                      "Unknown", side);
+  ArithCmpError(lex::Location location, std::string side) {
+    message =
+        fmt::format("Comparison expression at [{}] has non-int {} operand",
+                    location.Format(), side);
   }
 };
 
 struct ArithAddError : public TypeError {
-  ArithAddError(std::string side) {
-    msg = fmt::format("Binary expression at {} has non-int {} operand",
-                      "Unknown", side);
+  ArithAddError(lex::Location location, std::string side) {
+    message = fmt::format("Binary expression at [{}] has non-int {} operand",
+                          location.Format(), side);
+  }
+};
+
+struct ArithNegateError : public TypeError {
+  ArithNegateError(lex::Location location) {
+    message =
+        fmt::format("Incorrect negation at location {}", location.Format());
   }
 };
 
 //////////////////////////////////////////////////////////////////////
 
 struct DereferenceError : public TypeError {
-  DereferenceError() {
-    msg = fmt::format("Trying to dereference a non-pointer type");
+  DereferenceError(lex::Location location) {
+    message =
+        fmt::format("Trying to dereference a non-pointer type at location {}",
+                    location.Format());
   }
 };
 
 //////////////////////////////////////////////////////////////////////
+
+struct AssignmentError : public TypeError {
+  AssignmentError(lex::Location location) {
+    message =
+        fmt::format("Assignment at location {} has sides of different types",
+                    location.Format());
+  }
+};
+
+//////////////////////////////////////////////////////////////////////
+
+struct VarAccessError : public TypeError {
+  VarAccessError(lex::Location location) {
+    message = fmt::format("Access of an undefined variable at location {}",
+                          location.Format());
+  }
+};
+
 };  // namespace types::check

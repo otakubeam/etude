@@ -23,5 +23,5 @@ void Parser::Consume(lex::TokenType type) {
 }
 
 std::string Parser::FormatLocation() {
-  return lexer_.PreviousToken().location.Format();
+  return lexer_.GetPreviousToken().location.Format();
 }

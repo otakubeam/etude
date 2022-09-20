@@ -17,7 +17,8 @@ class Type {
 
   // To resolve the first type
   virtual bool IsEqual(Type* other) = 0;
-  virtual bool DiffersFrom(Type* other) {
+
+  bool DiffersFrom(Type* other) {
     return !IsEqual(other);
   }
 

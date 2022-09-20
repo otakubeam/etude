@@ -1,7 +1,6 @@
 #pragma once
 
 #include <lex/ident_table.hpp>
-#include <lex/lexer_aux.hpp>
 #include <lex/token.hpp>
 
 #include <fmt/format.h>
@@ -13,63 +12,17 @@ namespace lex {
 
 class Lexer {
  public:
-  Lexer(std::istream& source) : scanner_{source} {
-  }
+  Lexer(std::istream& source);
 
-  ////////////////////////////////////////////////////////////////////
+  Token GetNextToken();
 
-  Token GetNextToken() {
-    SkipWhitespace();
+  void Advance();
 
-    SkipComments();
+  Token Peek();
 
-    if (auto op = MatchOperators()) {
-      return *op;
-    }
+  Token GetPreviousToken();
 
-    if (auto lit = MatchLiterls()) {
-      return *lit;
-    }
-
-    if (auto word = MatchWords()) {
-      return *word;
-    }
-
-    FMT_ASSERT(false, "\nCould not match any token\n");
-  }
-
-  ////////////////////////////////////////////////////////////////////
-
-  void Advance() {
-    prev_ = peek_;
-
-    if (!need_advance) {
-      need_advance = true;
-    } else {
-      peek_ = GetNextToken();
-      need_advance = false;
-    }
-  }
-
-  bool Matches(lex::TokenType type) {
-    if (Peek().type != type) {
-      return false;
-    }
-
-    Advance();
-    return true;
-  }
-
-  Token Peek() {
-    if (need_advance) {
-      Advance();
-    }
-    return peek_;
-  }
-
-  Token PreviousToken() {
-    return prev_;
-  }
+  bool Matches(lex::TokenType type);
 
  private:
   void SkipWhitespace();

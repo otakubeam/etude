@@ -59,7 +59,7 @@ Expression* Parser::ParseIfExpression() {
     return nullptr;
   }
 
-  auto location_token = lexer_.PreviousToken();
+  auto location_token = lexer_.GetPreviousToken();
 
   auto condition = ParseExpression();
   auto true_branch = ParseBlockExpression();

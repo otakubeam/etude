@@ -16,9 +16,7 @@ struct Token {
       int                        //
       >;
 
-  Token(TokenType type,  //
-        Location start,  //
-        SemInfo sem_info = {})
+  Token(TokenType type, Location start, SemInfo sem_info = {})
       : type{type}, location{start}, sem_info{sem_info} {
   }
 
@@ -34,7 +32,7 @@ struct Token {
 
   Location location;
 
-  SemInfo sem_info = {};
+  SemInfo sem_info;
 };
 
 //////////////////////////////////////////////////////////////////////
