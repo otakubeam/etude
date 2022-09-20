@@ -15,10 +15,6 @@ TypeChecker::TypeChecker() {
 
 TypeChecker::~TypeChecker() = default;
 
-void TypeChecker::VisitStatement(Statement*) {
-  FMT_ASSERT(false, "Visiting bare statement");
-}
-
 ////////////////////////////////////////////////////////////////////
 
 void TypeChecker::VisitDeref(DereferenceExpression* node) {
@@ -55,32 +51,33 @@ void TypeChecker::VisitAssignment(AssignmentStatement* node) {
 
 void TypeChecker::VisitVarDecl(VarDeclStatement* var_decl) {
   auto type = Eval(var_decl->value_);
-  env_->Declare(var_decl->lvalue_->name_.GetName(), type);
+  variable_type_store_->Declare(var_decl->GetVarName(), type);
 }
 
 ////////////////////////////////////////////////////////////////////
 
 void TypeChecker::VisitStructDecl(StructDeclStatement* node) {
-  auto name = node->name_.GetName();
+  auto name = node->GetStructName();
   struct_decls_.Declare(name, node);
 }
 
 ////////////////////////////////////////////////////////////////////
 
-void TypeChecker::VisitFunDecl(FunDeclStatement* fn_decl) {
-  auto declared_type = fn_decl->type_;
+void TypeChecker::VisitFunDecl(FunDeclStatement* node) {
+  auto declared_type = node->type_;
 
   {
-    Environment<Type*>::ScopeGuard guard{&env_};
+    Environment<Type*>::ScopeGuard guard{&variable_type_store_};
 
     // Declare the function itself (to enable checking recursive fns)
 
-    env_->Declare(fn_decl->name_.GetName(), declared_type);
+    variable_type_store_->Declare(node->GetFunctionName(), declared_type);
 
     // Declare all the parameters of a function
 
-    for (auto fm : fn_decl->formals_) {
-      env_->Declare(fm.ident.GetName(), fm.type);
+    for (auto formatl_parameter : node->formals_) {
+      variable_type_store_->Declare(formatl_parameter.GetParameterName(),
+                    formatl_parameter.type);
     }
 
     // A little dance to handle nesting of functions:
@@ -90,7 +87,7 @@ void TypeChecker::VisitFunDecl(FunDeclStatement* fn_decl) {
 
     // 2. Do the check
 
-    auto inferred_ret = Eval(fn_decl->block_);
+    auto inferred_ret = Eval(node->block_);
     if (fn_return_expect->DiffersFrom(inferred_ret) &&
         inferred_ret != &builtin_unit) {
       throw check::FnBlockError{};
@@ -101,7 +98,7 @@ void TypeChecker::VisitFunDecl(FunDeclStatement* fn_decl) {
   }
 
   // If everything went good
-  env_->Declare(fn_decl->name_.GetName(), declared_type);
+  variable_type_store_->Declare(node->GetFunctionName(), declared_type);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -128,12 +125,6 @@ void TypeChecker::VisitYield(YieldStatement*) {
 void TypeChecker::VisitExprStatement(ExprStatement* expr_stmt) {
   Eval(expr_stmt->expr_);  // Type-check
   return_value = &builtin_unit;
-}
-
-////////////////////////////////////////////////////////////////////
-
-void TypeChecker::VisitExpression(Expression*) {
-  FMT_ASSERT(false, "Visiting bare expression");
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -211,7 +202,7 @@ void TypeChecker::VisitIf(IfExpression* if_expr) {
 ////////////////////////////////////////////////////////////////////
 
 void TypeChecker::VisitBlock(BlockExpression* block) {
-  Environment<Type*>::ScopeGuard guard{&env_};
+  Environment<Type*>::ScopeGuard guard{&variable_type_store_};
   for (auto stmt : block->stmts_) {
     Eval(stmt);
   }
@@ -243,14 +234,14 @@ void TypeChecker::VisitFnCall(FnCallExpression* fn_call) {
 
   // Normal function
 
-  Type* stored_type = env_->Get(name).value();
+  Type* stored_type = variable_type_store_->Get(name).value();
   auto fn_type = dynamic_cast<FnType*>(stored_type);
 
   FnType inferred_type{std::move(args_types), fn_type->GetReturnType()};
 
   if (fn_type->DiffersFrom(&inferred_type)) {
     throw check::FnInvokeError{fn_call->fn_name_.GetName(), "Unknown",
-                               fn_call->fn_name_.tk_loc.Format()};
+                               fn_call->fn_name_.location.Format()};
   }
 
   return_value = fn_type->GetReturnType();
@@ -260,7 +251,7 @@ void TypeChecker::VisitFnCall(FnCallExpression* fn_call) {
 
 void TypeChecker::VisitStructConstruction(
     StructConstructionExpression* s_cons) {
-  auto s_decl = struct_decls_.Get(s_cons->struct_name_.GetName()).value();
+  auto s_decl = struct_decls_.Get(s_cons->GetStructName()).value();
 
   for (size_t i = 0; i < s_decl->field_names_.size(); i++) {
     auto field_decl_type = s_decl->field_types_[i];
@@ -302,7 +293,7 @@ void TypeChecker::VisitFieldAccess(FieldAccessExpression* node) {
     }
   }
 
-  throw check::FieldAccessError{searching, node->struct_name_.GetName()};
+  throw check::FieldAccessError{searching, node->GetFieldName()};
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -336,7 +327,7 @@ void TypeChecker::VisitLiteral(LiteralExpression* lit) {
 ////////////////////////////////////////////////////////////////////
 
 void TypeChecker::VisitVarAccess(VarAccessExpression* ident) {
-  Type* t = env_->Get(ident->name_.GetName()).value();
+  Type* t = variable_type_store_->Get(ident->GetName()).value();
   ident->type_ = t;
   return_value = t;
 }

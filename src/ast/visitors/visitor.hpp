@@ -35,8 +35,6 @@ class Visitor {
 
   // Statements
 
-  virtual void VisitStatement(Statement* node) = 0;
-
   virtual void VisitYield(YieldStatement* node) = 0;
 
   virtual void VisitReturn(ReturnStatement* node) = 0;
@@ -52,8 +50,6 @@ class Visitor {
   virtual void VisitExprStatement(ExprStatement* node) = 0;
 
   // Expressions
-
-  virtual void VisitExpression(Expression* node) = 0;
 
   virtual void VisitComparison(ComparisonExpression* node) = 0;
 

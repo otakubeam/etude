@@ -41,6 +41,8 @@ class Lexer {
   ////////////////////////////////////////////////////////////////////
 
   void Advance() {
+    prev_ = peek_;
+
     if (!need_advance) {
       need_advance = true;
     } else {
@@ -49,7 +51,6 @@ class Lexer {
     }
   }
 
-  // For use in testing
   bool Matches(lex::TokenType type) {
     if (Peek().type != type) {
       return false;
@@ -64,6 +65,10 @@ class Lexer {
       Advance();
     }
     return peek_;
+  }
+
+  Token PreviousToken() {
+    return prev_;
   }
 
  private:
@@ -94,6 +99,10 @@ class Lexer {
   ////////////////////////////////////////////////////////////////////
 
  private:
+  // For easy access to locations
+  Token prev_{};
+
+  // Current token
   Token peek_{};
 
   Scanner scanner_;

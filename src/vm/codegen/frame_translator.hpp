@@ -26,7 +26,7 @@ class FrameTranslator {
   using StructEnv = Environment<detail::StructSymbol*>;
   FrameTranslator(FunDeclStatement* decl, StructEnv env) {
     for (int i = decl->formals_.size() - 1; i >= 0; i--) {
-      auto name = decl->formals_[i].ident.GetName();
+      auto name = decl->formals_[i].GetParameterName();
       auto type = decl->formals_[i].type;
 
       if (!type->IsStruct()) {

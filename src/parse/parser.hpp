@@ -1,15 +1,12 @@
 #pragma once
 
-#include <parse/parse_error.hpp>
-
 #include <ast/statements.hpp>
 
 #include <lex/lexer.hpp>
 
 class Parser {
  public:
-  Parser(lex::Lexer l) : lexer_{l} {
-  }
+  Parser(lex::Lexer l);
 
   ///////////////////////////////////////////////////////////////////
 
@@ -48,35 +45,13 @@ class Parser {
   ////////////////////////////////////////////////////////////////////
 
  private:
-  auto ParseFormals()  //
-      -> std::vector<FunDeclStatement::FormalParam>;
+  auto ParseFormals() -> std::vector<FunDeclStatement::FormalParam>;
+  auto ParseCSV() -> std::vector<Expression*>;
 
-  Expression* SwitchOnId();
+  bool Matches(lex::TokenType type);
+  void Consume(lex::TokenType type);
 
-  std::vector<Expression*> ParseCSV();
-
-  bool Matches(lex::TokenType type) {
-    if (lexer_.Peek().type != type) {
-      return false;
-    }
-
-    lexer_.Advance();
-    return true;
-  }
-
-  void Consume(lex::TokenType type) {
-    auto error_msg = fmt::format("\nCould not match type {}\n",  //
-                                 lex::FormatTokenType(type));
-    if (!Matches(type)) {
-      throw ParseError{error_msg.c_str()};
-    }
-  }
-
-  void AssertParsed(void* node, const char* error_msg) {
-    if (node == nullptr) {
-      throw ParseError{error_msg};
-    }
-  }
+  std::string FormatLocation();
 
  private:
   lex::Lexer lexer_;

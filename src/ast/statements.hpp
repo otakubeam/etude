@@ -28,6 +28,10 @@ class ExprStatement : public Statement {
     visitor->VisitExprStatement(this);
   }
 
+  virtual lex::Location GetLocation() override {
+    return expr_->GetLocation();
+  }
+
   Expression* expr_;
 };
 
@@ -38,16 +42,21 @@ class StructDeclStatement : public Statement {
   StructDeclStatement(lex::Token name, std::vector<lex::Token> field_names,
                       std::vector<types::Type*> field_types)
       : name_{name}, field_names_{field_names}, field_types_{field_types} {
-    type_ = new types::StructType{
-        name.GetName(),
-        ZipMembers(),
-    };
+    type_ = new types::StructType{name.GetName(), ZipMembers()};
   }
 
   ///////////////////////////////////////////////////////////////////////
 
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitStructDecl(this);
+  }
+
+  virtual lex::Location GetLocation() override {
+    return name_.location;
+  }
+
+  std::string GetStructName() {
+    return name_.GetName();
   }
 
   ///////////////////////////////////////////////////////////////////////
@@ -84,6 +93,14 @@ class VarDeclStatement : public Statement {
     visitor->VisitVarDecl(this);
   }
 
+  virtual lex::Location GetLocation() override {
+    return lvalue_->GetLocation();
+  }
+
+  std::string GetVarName() {
+    return lvalue_->GetName();
+  }
+
   VarAccessExpression* lvalue_;
   Expression* value_;
 };
@@ -95,27 +112,47 @@ class FunDeclStatement : public Statement {
   struct FormalParam {
     lex::Token ident;
     types::Type* type;
+
+    std::string GetParameterName() {
+      return ident.GetName();
+    }
   };
+
+  ///////////////////////////////////////////////////////////////////////
 
   FunDeclStatement(lex::Token name, types::Type* return_type,
                    std::vector<FormalParam> formals, BlockExpression* block)
       : name_{name}, formals_{std::move(formals)}, block_{block} {
-    InitFnType(return_type);
+    type_ = new types::FnType{GetArgumentTypes(), return_type};
   }
 
-  void InitFnType(types::Type* return_type) {
-    std::vector<types::Type*> just_arg_types;
+  ///////////////////////////////////////////////////////////////////////
+
+  auto GetArgumentTypes() -> std::vector<types::Type*> {
+    std::vector<types::Type*> result;
 
     for (auto fm : formals_) {
-      just_arg_types.push_back(fm.type);
+      result.push_back(fm.type);
     }
 
-    type_ = new types::FnType{std::move(just_arg_types), return_type};
+    return result;
   }
+
+  ///////////////////////////////////////////////////////////////////////
 
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitFunDecl(this);
   }
+
+  virtual lex::Location GetLocation() override {
+    return name_.location;
+  }
+
+  std::string GetFunctionName() {
+    return name_.GetName();
+  }
+
+  ///////////////////////////////////////////////////////////////////////
 
   lex::Token name_;
   types::FnType* type_ = nullptr;
@@ -128,13 +165,19 @@ class FunDeclStatement : public Statement {
 
 class ReturnStatement : public Statement {
  public:
-  ReturnStatement(Expression* return_value) : return_value_{return_value} {
+  ReturnStatement(lex::Token return_token, Expression* return_value)
+      : return_token_{return_token}, return_value_{return_value} {
   }
 
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitReturn(this);
   }
 
+  virtual lex::Location GetLocation() override {
+    return return_token_.location;
+  }
+
+  lex::Token return_token_;
   Expression* return_value_;
 };
 
@@ -142,13 +185,19 @@ class ReturnStatement : public Statement {
 
 class YieldStatement : public Statement {
  public:
-  YieldStatement(Expression* yield_value) : yield_value_{yield_value} {
+  YieldStatement(lex::Token yield_token, Expression* yield_value)
+      : yield_token_{yield_token}, yield_value_{yield_value} {
   }
 
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitYield(this);
   }
 
+  virtual lex::Location GetLocation() override {
+    return yield_token_.location;
+  }
+
+  lex::Token yield_token_;
   Expression* yield_value_;
 };
 
@@ -156,14 +205,22 @@ class YieldStatement : public Statement {
 
 class AssignmentStatement : public Statement {
  public:
-  AssignmentStatement(LvalueExpression* target, Expression* value)
-      : target_{target}, value_{value} {
+  AssignmentStatement(lex::Token assign, LvalueExpression* target,
+                      Expression* value)
+      : assign_{assign}, target_{target}, value_{value} {
   }
 
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitAssignment(this);
   }
 
+  virtual lex::Location GetLocation() override {
+    return assign_.location;
+  }
+
+  lex::Token assign_;
+
   LvalueExpression* target_;
+
   Expression* value_;
 };

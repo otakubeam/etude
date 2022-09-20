@@ -1,33 +1,34 @@
 #include <parse/parser.hpp>
+#include <parse/parse_error.hpp>
 
 ///////////////////////////////////////////////////////////////////
 
 Statement* Parser::ParseStatement() {
-  if (auto strcuct_decl = ParseStructDeclStatement()) {
-    return strcuct_decl;
+  if (auto struct_declaration = ParseStructDeclStatement()) {
+    return struct_declaration;
   }
 
-  if (auto var_decl = ParseVarDeclStatement()) {
-    return var_decl;
+  if (auto var_declaration = ParseVarDeclStatement()) {
+    return var_declaration;
   }
 
-  if (auto fun_decl = ParseFunDeclStatement()) {
-    return fun_decl;
+  if (auto fun_declaration = ParseFunDeclStatement()) {
+    return fun_declaration;
   }
 
-  if (auto ret_stmt = ParseReturnStatement()) {
-    return ret_stmt;
+  if (auto return_statement = ParseReturnStatement()) {
+    return return_statement;
   }
 
-  if (auto yield_stmt = ParseYieldStatement()) {
-    return yield_stmt;
+  if (auto yield_statement = ParseYieldStatement()) {
+    return yield_statement;
   }
 
-  if (auto expr_stmt = ParseExprStatement()) {
-    return expr_stmt;
+  if (auto expression_statement = ParseExprStatement()) {
+    return expression_statement;
   }
 
-  std::abort();
+  FMT_ASSERT(false, "Unreachable!");
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -37,18 +38,20 @@ FunDeclStatement* Parser::ParseFunDeclStatement() {
     return nullptr;
   }
 
-  auto fun_name = lexer_.Peek();
+  auto function_name = lexer_.Peek();
   Consume(lex::TokenType::IDENTIFIER);
 
   auto typed_formals = ParseFormals();
-  auto ret_type = ParseType();
+  auto return_type = ParseType();
 
   if (auto block = dynamic_cast<BlockExpression*>(ParseBlockExpression())) {
-    return new FunDeclStatement{fun_name, ret_type, std::move(typed_formals),
-                                block};
+    return new FunDeclStatement{function_name, return_type,
+                                std::move(typed_formals), block};
   }
 
-  throw "Could not parse block expression";
+  throw parse::errors::ParseTrueBlockError{
+      function_name.location.Format(),
+  };
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -62,26 +65,25 @@ StructDeclStatement* Parser::ParseStructDeclStatement() {
 
   auto struct_name = lexer_.Peek();
   Consume(lex::TokenType::IDENTIFIER);
-
   Consume(lex::TokenType::LEFT_CBRACE);
 
   // 2. Parse contents
 
-  auto field_name = lexer_.Peek();
   std::vector<lex::Token> fields;
   std::vector<types::Type*> types;
 
   while (Matches(lex::TokenType::IDENTIFIER)) {
-    fields.push_back(field_name);
+    fields.push_back(lexer_.PreviousToken());
     Consume(lex::TokenType::COLUMN);
 
-    auto t = ParseType();
-    AssertParsed(t, "Could not parse type in struct declaration");
-    types.push_back(t);
+    if (auto type = ParseType()) {
+      types.push_back(type);
+    } else {
+      throw parse::errors::ParseTypeError{FormatLocation()};
+    }
 
-    // Subtly different from Parse Formals
+    // Demand the trailing comma!
     Consume(lex::TokenType::COMMA);
-    field_name = lexer_.Peek();
   }
 
   Consume(lex::TokenType::RIGHT_CBRACE);
@@ -96,24 +98,24 @@ StructDeclStatement* Parser::ParseStructDeclStatement() {
 auto Parser::ParseFormals() -> std::vector<FunDeclStatement::FormalParam> {
   Consume(lex::TokenType::LEFT_BRACE);
 
-  auto param_ident = lexer_.Peek();
-
   std::vector<FunDeclStatement::FormalParam> typed_formals;
 
   while (Matches(lex::TokenType::IDENTIFIER)) {
+    auto param_name = lexer_.PreviousToken();
     Consume(lex::TokenType::COLUMN);
 
-    auto type = ParseType();
-
-    auto fp = FunDeclStatement::FormalParam{.ident = param_ident,  //
-                                            .type = type};
-    typed_formals.push_back(fp);
+    if (auto type = ParseType()) {
+      typed_formals.push_back(FunDeclStatement::FormalParam{
+          .ident = param_name,
+          .type = type,
+      });
+    } else {
+      throw parse::errors::ParseTypeError{FormatLocation()};
+    }
 
     if (!Matches(lex::TokenType::COMMA)) {
       break;
     }
-
-    param_ident = lexer_.Peek();
   }
 
   Consume(lex::TokenType::RIGHT_BRACE);
@@ -127,13 +129,15 @@ ReturnStatement* Parser::ParseReturnStatement() {
     return nullptr;
   }
 
+  auto location_token = lexer_.PreviousToken();
+
   Expression* ret_expr = nullptr;
   if (!Matches(lex::TokenType::SEMICOLUMN)) {
     ret_expr = ParseExpression();
     Consume(lex::TokenType::SEMICOLUMN);
   }
 
-  return new ReturnStatement{ret_expr};
+  return new ReturnStatement{location_token, ret_expr};
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -143,13 +147,15 @@ YieldStatement* Parser::ParseYieldStatement() {
     return nullptr;
   }
 
-  Expression* ret_expr = nullptr;
+  auto location_token = lexer_.PreviousToken();
+
+  Expression* yield_value = nullptr;
   if (!Matches(lex::TokenType::SEMICOLUMN)) {
-    ret_expr = ParseExpression();
+    yield_value = ParseExpression();
     Consume(lex::TokenType::SEMICOLUMN);
   }
 
-  return new YieldStatement{ret_expr};
+  return new YieldStatement{location_token, yield_value};
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -161,17 +167,14 @@ VarDeclStatement* Parser::ParseVarDeclStatement() {
 
   // 1. Get a name to assign to
 
-  auto token = lexer_.Peek();
-
   Consume(lex::TokenType::IDENTIFIER);
-  auto lvalue = new VarAccessExpression{std::move(token)};
+  auto lvalue = new VarAccessExpression{lexer_.PreviousToken()};
 
   // 2. Get an expression to assign to
 
   Consume(lex::TokenType::ASSIGN);
 
   auto value = ParseExpression();
-  AssertParsed(value, "Trying to assign a non-existent value");
 
   Consume(lex::TokenType::SEMICOLUMN);
 
@@ -184,11 +187,11 @@ Statement* Parser::ParseExprStatement() {
   auto expr = ParseExpression();
 
   if (Matches(lex::TokenType::ASSIGN)) {
-    auto target = dynamic_cast<LvalueExpression*>(expr);
-    if (!target) {
-      throw "Assigning to non-lvalue";
+    if (auto target = dynamic_cast<LvalueExpression*>(expr)) {
+      return ParseAssignment(target);
     }
-    return ParseAssignment(target);
+
+    throw parse::errors::ParseNonLvalueError{FormatLocation()};
   }
 
   try {
@@ -208,7 +211,8 @@ Statement* Parser::ParseExprStatement() {
 }
 
 AssignmentStatement* Parser::ParseAssignment(LvalueExpression* target) {
+  auto assignment_loc = lexer_.PreviousToken();
   auto value = ParseExpression();
   Consume(lex::TokenType::SEMICOLUMN);
-  return new AssignmentStatement{target, value};
+  return new AssignmentStatement{assignment_loc, target, value};
 }

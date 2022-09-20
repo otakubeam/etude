@@ -13,6 +13,11 @@ namespace vm {
 
 class BytecodeInterpreter {
  public:
+  BytecodeInterpreter(std::vector<ExecutableChunk> chunkz)
+      : chunks{std::move(chunkz)} {
+    current_chunk = chunks.size() - 1;
+  }
+
   void Interpret(const Instr* instruction) {
     switch (instruction->type) {
       case InstrType::PUSH_STACK: {
@@ -239,31 +244,28 @@ class BytecodeInterpreter {
   }
 
   static int InterpretStandalone(ExecutableChunk* chunk) {
-    BytecodeInterpreter a;
-    a.chunks = {*chunk};
+    BytecodeInterpreter a{{*chunk}};
     return a.Interpret();
   }
 
   static int InterpretStandalone(std::vector<ExecutableChunk> chunks) {
-    BytecodeInterpreter a;
-    a.chunks = std::move(chunks);
+    BytecodeInterpreter a{chunks};
 
     // Start executing from the last chunk
     FMT_ASSERT(a.chunks.size() >= 1, "");
-    a.current_chunk = a.chunks.size() - 1;
 
     return a.Interpret();
-  }
-
- private:
-  const ExecutableChunk* Current() const {
-    return &chunks[current_chunk];
   }
 
   auto NextInstruction() const -> const Instr* {
     return ip_ < Current()->instructions.size()
                ? &Current()->instructions[ip_++]
                : nullptr;
+  }
+
+ private:
+  const ExecutableChunk* Current() const {
+    return &chunks[current_chunk];
   }
 
  private:

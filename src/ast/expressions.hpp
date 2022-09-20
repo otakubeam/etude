@@ -51,6 +51,10 @@ class ComparisonExpression : public Expression {
     return nullptr;
   };
 
+  virtual lex::Location GetLocation() override {
+    return operator_.location;
+  }
+
   Expression* left_;
   lex::Token operator_;
   Expression* right_;
@@ -73,6 +77,10 @@ class BinaryExpression : public Expression {
     return nullptr;
   };
 
+  virtual lex::Location GetLocation() override {
+    return operator_.location;
+  }
+
   Expression* left_;
   lex::Token operator_;
   Expression* right_;
@@ -94,6 +102,10 @@ class UnaryExpression : public Expression {
     FMT_ASSERT(false, "Unreachable!");
     return nullptr;
   };
+
+  virtual lex::Location GetLocation() override {
+    return operator_.location;
+  }
 
   lex::Token operator_;
   Expression* operand_;
@@ -126,6 +138,10 @@ class DereferenceExpression : public LvalueExpression {
     return false;
   }
 
+  virtual lex::Location GetLocation() override {
+    return star_.location;
+  }
+
   lex::Token star_;
   // The pointer expression
   Expression* operand_;
@@ -151,7 +167,12 @@ class AddressofExpression : public Expression {
     return type_;
   };
 
+  virtual lex::Location GetLocation() override {
+    return ampersand_.location;
+  }
+
   lex::Token ampersand_;
+
   LvalueExpression* operand_;
 
   // Mabye embed and save allocation
@@ -175,7 +196,16 @@ class FnCallExpression : public Expression {
     return nullptr;
   };
 
+  std::string GetFunctionName() {
+    return fn_name_.GetName();
+  };
+
+  virtual lex::Location GetLocation() override {
+    return fn_name_.location;
+  }
+
   lex::Token fn_name_;
+
   std::vector<Expression*> arguments_;
 
   bool is_native_call_ = false;
@@ -200,7 +230,16 @@ class StructConstructionExpression : public Expression {
     return type_;
   };
 
+  std::string GetStructName() {
+    return struct_name_.GetName();
+  };
+
+  virtual lex::Location GetLocation() override {
+    return struct_name_.location;
+  }
+
   lex::Token struct_name_;
+
   std::vector<Expression*> values_;
 
   types::Type* type_ = nullptr;
@@ -210,11 +249,8 @@ class StructConstructionExpression : public Expression {
 
 class FieldAccessExpression : public LvalueExpression {
  public:
-  FieldAccessExpression(lex::Token struct_name, lex::Token field_name,
-                        LvalueExpression* lvalue)
-      : struct_expression_{lvalue},
-        struct_name_{struct_name},
-        field_name_{field_name} {
+  FieldAccessExpression(lex::Token field_name, LvalueExpression* lvalue)
+      : struct_expression_{lvalue}, field_name_{field_name} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -234,18 +270,24 @@ class FieldAccessExpression : public LvalueExpression {
     return struct_expression_->IsDirect();
   }
 
+  std::string GetFieldName() {
+    return field_name_.GetName();
+  }
+
+  virtual lex::Location GetLocation() override {
+    return field_name_.location;
+  }
+
   // This can be an Identifier or result of a function call
   // or result of indexing an array, or of a field access.
   LvalueExpression* struct_expression_;
 
   types::Type* type_ = nullptr;
 
-  // TODO: deprecate, remove
-  lex::Token struct_name_;
-
   lex::Token field_name_;
 
   bool is_direct_ = true;
+
   int address_ = 0;
 };
 
@@ -253,8 +295,9 @@ class FieldAccessExpression : public LvalueExpression {
 
 class BlockExpression : public Expression {
  public:
-  BlockExpression(std::vector<Statement*> stmts, Expression* final = nullptr)
-      : stmts_{stmts}, final_{final} {
+  BlockExpression(lex::Token curly_brace, std::vector<Statement*> stmts,
+                  Expression* final)
+      : curly_brace_{curly_brace}, stmts_{stmts}, final_{final} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -266,7 +309,14 @@ class BlockExpression : public Expression {
     return nullptr;
   };
 
+  virtual lex::Location GetLocation() override {
+    return curly_brace_.location;
+  }
+
+  lex::Token curly_brace_{};
+
   std::vector<Statement*> stmts_;
+
   Expression* final_;
 };
 
@@ -275,12 +325,12 @@ class BlockExpression : public Expression {
 class IfExpression : public Expression {
  public:
   IfExpression(Expression* condition, Expression* true_branch,
-               Expression* false_branch = nullptr)
+               Expression* false_branch)
       : condition_{condition},
         true_branch_{true_branch},
         false_branch_{false_branch} {
-    if (false_branch_ == nullptr) {
-      false_branch_ = new BlockExpression{{}};
+    if (!false_branch_) {
+      false_branch_ = new BlockExpression{{}, {}, nullptr};
     }
   }
 
@@ -292,6 +342,10 @@ class IfExpression : public Expression {
     FMT_ASSERT(false, "Unreachable!");
     return nullptr;
   };
+
+  virtual lex::Location GetLocation() override {
+    return condition_->GetLocation();
+  }
 
   Expression* condition_;
   Expression* true_branch_;
@@ -314,8 +368,13 @@ class LiteralExpression : public Expression {
     return nullptr;
   };
 
+  virtual lex::Location GetLocation() override {
+    return token_.location;
+  }
+
   types::Type* type_ = nullptr;
-  lex::Token token_{};
+
+  lex::Token token_;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -338,7 +397,15 @@ class VarAccessExpression : public LvalueExpression {
     return type_;
   };
 
-  lex::Token name_{};
+  std::string GetName() {
+    return name_.GetName();
+  }
+
+  virtual lex::Location GetLocation() override {
+    return name_.location;
+  }
+
+  lex::Token name_;
 
   types::Type* type_ = nullptr;
 

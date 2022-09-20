@@ -21,6 +21,7 @@ class Compiler : public Visitor {
   virtual ~Compiler();
 
   ExecutableChunk Compile(TreeNode*);
+  std::vector<ExecutableChunk> GetChunks();
   static std::vector<ExecutableChunk>* CompileScript(TreeNode*);
 
   ////////////////////////////////////////////////////////////////////
@@ -29,7 +30,7 @@ class Compiler : public Visitor {
     // TODO: implement
   };
 
-  virtual void VisitStatement(Statement* node) override;
+  // virtual void VisitStatement(Statement* node) override;
   virtual void VisitVarDecl(VarDeclStatement* node) override;
   virtual void VisitAssignment(AssignmentStatement* node) override;
   virtual void VisitFunDecl(FunDeclStatement* node) override;
@@ -38,7 +39,7 @@ class Compiler : public Visitor {
   virtual void VisitYield(YieldStatement*) override;
   virtual void VisitExprStatement(ExprStatement* node) override;
 
-  virtual void VisitExpression(Expression*) override;
+  // virtual void VisitExpression(Expression*) override;
   virtual void VisitDeref(DereferenceExpression* node) override;
   virtual void VisitAddressof(AddressofExpression* node) override;
   virtual void VisitIf(IfExpression* node) override;

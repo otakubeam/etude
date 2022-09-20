@@ -10,7 +10,6 @@ namespace lex {
 //////////////////////////////////////////////////////////////////////
 
 struct Token {
-  // TODO: remove bool from SemInfo
   using SemInfo = std::variant<  //
       std::monostate,            //
       std::string,               //
@@ -20,7 +19,7 @@ struct Token {
   Token(TokenType type,  //
         Location start,  //
         SemInfo sem_info = {})
-      : type{type}, tk_loc{start}, sem_info{sem_info} {
+      : type{type}, location{start}, sem_info{sem_info} {
   }
 
   Token() = default;
@@ -33,7 +32,7 @@ struct Token {
 
   TokenType type;
 
-  Location tk_loc;
+  Location location;
 
   SemInfo sem_info = {};
 };

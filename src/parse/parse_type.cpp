@@ -1,4 +1,5 @@
 #include <parse/parser.hpp>
+#include <parse/parse_error.hpp>
 
 #include <types/repr/pointer_type.hpp>
 #include <types/repr/struct_type.hpp>
@@ -9,6 +10,7 @@
 
 types::Type* Parser::ParseType() {
   types::Type* result = nullptr;
+
   switch (lexer_.Peek().type) {
     case lex::TokenType::TY_INT:
       result = &types::builtin_int;
@@ -26,9 +28,15 @@ types::Type* Parser::ParseType() {
       result = &types::builtin_unit;
       break;
 
-    case lex::TokenType::STAR:
+    case lex::TokenType::STAR: {
       lexer_.Advance();
-      return new types::PointerType{ParseType()};
+
+      if (auto type = ParseType()) {
+        return new types::PointerType{type};
+      }
+
+      throw parse::errors::ParseTypeError{FormatLocation()};
+    }
 
     // Syntax: (Int) Unit
     case lex::TokenType::LEFT_BRACE:

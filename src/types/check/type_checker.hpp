@@ -3,6 +3,7 @@
 #include <types/type.hpp>
 
 #include <ast/visitors/template_visitor.hpp>
+#include <ast/scope/environment.hpp>
 
 namespace types::check {
 
@@ -13,30 +14,26 @@ class TypeChecker : public ReturnVisitor<Type*> {
   TypeChecker();
   virtual ~TypeChecker();
 
-  virtual void VisitStatement(Statement*) override;
-
-  virtual void VisitAssignment(AssignmentStatement* node) override;
-  virtual void VisitVarDecl(VarDeclStatement* var_decl) override;
-  virtual void VisitStructDecl(StructDeclStatement* node) override;
-  virtual void VisitFunDecl(FunDeclStatement* fn_decl) override;
-  virtual void VisitReturn(ReturnStatement* return_stmt) override;
+  virtual void VisitAssignment(AssignmentStatement*) override;
+  virtual void VisitVarDecl(VarDeclStatement*) override;
+  virtual void VisitStructDecl(StructDeclStatement*) override;
+  virtual void VisitFunDecl(FunDeclStatement*) override;
+  virtual void VisitReturn(ReturnStatement*) override;
   virtual void VisitYield(YieldStatement*) override;
-  virtual void VisitExprStatement(ExprStatement* expr_stmt) override;
+  virtual void VisitExprStatement(ExprStatement*) override;
 
-  virtual void VisitExpression(Expression*) override;
-
-  virtual void VisitDeref(DereferenceExpression* node) override;
-  virtual void VisitAddressof(AddressofExpression* node) override;
-  virtual void VisitComparison(ComparisonExpression* cmp_expr) override;
-  virtual void VisitBinary(BinaryExpression* bin_expr) override;
-  virtual void VisitUnary(UnaryExpression* un_expr) override;
-  virtual void VisitIf(IfExpression* if_expr) override;
-  virtual void VisitBlock(BlockExpression* block) override;
-  virtual void VisitFnCall(FnCallExpression* fn_call) override;
+  virtual void VisitDeref(DereferenceExpression*) override;
+  virtual void VisitAddressof(AddressofExpression*) override;
+  virtual void VisitComparison(ComparisonExpression*) override;
+  virtual void VisitBinary(BinaryExpression*) override;
+  virtual void VisitUnary(UnaryExpression*) override;
+  virtual void VisitIf(IfExpression*) override;
+  virtual void VisitBlock(BlockExpression*) override;
+  virtual void VisitFnCall(FnCallExpression*) override;
   virtual void VisitStructConstruction(StructConstructionExpression*) override;
-  virtual void VisitFieldAccess(FieldAccessExpression* node) override;
-  virtual void VisitLiteral(LiteralExpression* lit) override;
-  virtual void VisitVarAccess(VarAccessExpression* ident) override;
+  virtual void VisitFieldAccess(FieldAccessExpression*) override;
+  virtual void VisitLiteral(LiteralExpression*) override;
+  virtual void VisitVarAccess(VarAccessExpression*) override;
 
  private:
   Type* fn_return_expect = nullptr;
@@ -46,7 +43,7 @@ class TypeChecker : public ReturnVisitor<Type*> {
   using TypeStore = Environment<Type*>;
   TypeStore global_type_store = TypeStore::MakeGlobal();
 
-  TypeStore* env_ = &global_type_store;
+  TypeStore* variable_type_store_ = &global_type_store;
 
   ////////////////////////////////////////////////////////////////////
 

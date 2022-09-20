@@ -2,7 +2,11 @@
 
 namespace vm::codegen {
 
-Compiler::Compiler() = default;
+Compiler::Compiler() {
+  current_frame_ = new FrameTranslator{};
+  compiled_chunks_ = new std::vector<vm::ExecutableChunk>;
+};
+
 Compiler::~Compiler() = default;
 
 ////////////////////////////////////////////////////////////////////
@@ -10,6 +14,11 @@ Compiler::~Compiler() = default;
 ExecutableChunk Compiler::Compile(TreeNode* node) {
   node->Accept(this);
   return chunk_;
+}
+
+std::vector<ExecutableChunk> Compiler::GetChunks() {
+  compiled_chunks_->push_back(chunk_);
+  return *compiled_chunks_;
 }
 
 ////////////////////////////////////////////////////////////////////

@@ -5,19 +5,13 @@ namespace vm::codegen {
 
 ////////////////////////////////////////////////////////////////////
 
-void Compiler::VisitStatement(Statement* /* node */) {
-  FMT_ASSERT(false, "Visiting bare statement");
-}
-
-////////////////////////////////////////////////////////////////////
-
 void Compiler::VisitVarDecl(VarDeclStatement* node) {
   // Generate code to place value on stack
   node->value_->Accept(this);
 
   // Infrom FrameTranslator about this location
-  auto name = node->lvalue_->name_;
-  current_frame_->AddLocal(name.GetName(), current_frame_->GetNextSize());
+  auto name = node->GetVarName();
+  current_frame_->AddLocal(name, current_frame_->GetNextSize());
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -54,7 +48,7 @@ void Compiler::VisitFunDecl(FunDeclStatement* node) {
 
   compiled_chunks_->push_back(ExecutableChunk{});
 
-  functions_.Declare(node->name_.GetName(), saved_size);
+  functions_.Declare(node->GetFunctionName(), saved_size);
 
   // Build frame
 
@@ -78,7 +72,7 @@ void Compiler::VisitFunDecl(FunDeclStatement* node) {
   compiled_chunks_->at(saved_size) = chunk;
 
   // This allows for lookup of this symbol later at the callsite
-  current_frame_->AddLocal(node->name_.GetName());
+  current_frame_->AddLocal(node->GetFunctionName());
 
   AddIntegerConsnant(saved_size);
 }
@@ -133,7 +127,7 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitStructDecl(StructDeclStatement* node) {
-  structs_.Declare(node->name_.GetName(),
+  structs_.Declare(node->GetStructName(),
                    new detail::StructSymbol{node, structs_});
 }
 
@@ -161,12 +155,6 @@ void Compiler::VisitExprStatement(ExprStatement* node) {
   chunk_.instructions.push_back(vm::Instr{
       .type = InstrType::POP_STACK,
   });
-}
-
-////////////////////////////////////////////////////////////////////
-
-void Compiler::VisitExpression(Expression*) {
-  FMT_ASSERT(false, "Unreachable!");
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -308,8 +296,8 @@ void Compiler::VisitIf(IfExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitBlock(BlockExpression* node) {
-  for (auto& st : node->stmts_) {
-    st->Accept(this);
+  for (auto& statement : node->stmts_) {
+    statement->Accept(this);
   }
 
   if (node->final_) {
@@ -323,7 +311,7 @@ void Compiler::VisitBlock(BlockExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitStructConstruction(StructConstructionExpression* node) {
-  auto fetch = structs_.Get(node->struct_name_.GetName());
+  auto fetch = structs_.Get(node->GetStructName());
   auto str_size = fetch.value()->Size();
 
   // Generate code for placing all initializers on stack
@@ -447,7 +435,7 @@ void Compiler::VisitLiteral(LiteralExpression* lit) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitVarAccess(VarAccessExpression* node) {
-  auto name = node->name_.GetName();
+  auto name = node->GetName();
   int offset = LookupVarAddress(name);
 
   node->address_ = offset;

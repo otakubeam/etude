@@ -1,4 +1,5 @@
 #include <parse/parser.hpp>
+#include <parse/parse_error.hpp>
 
 ////////////////////////////////////////////////////////////////////
 
@@ -58,9 +59,16 @@ Expression* Parser::ParseIfExpression() {
     return nullptr;
   }
 
+  auto location_token = lexer_.PreviousToken();
+
   auto condition = ParseExpression();
   auto true_branch = ParseBlockExpression();
-  AssertParsed(true_branch, "Could not parse true block");
+
+  if (!condition || !true_branch) {
+    throw parse::errors::ParseTrueBlockError{
+        location_token.location.Format(),
+    };
+  }
 
   Expression* false_branch = nullptr;
   if (Matches(lex::TokenType::ELSE)) {
@@ -73,6 +81,8 @@ Expression* Parser::ParseIfExpression() {
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseBlockExpression() {
+  auto location_token = lexer_.Peek();
+
   if (!Matches(lex::TokenType::LEFT_CBRACE)) {
     return nullptr;
   }
@@ -91,45 +101,42 @@ Expression* Parser::ParseBlockExpression() {
     }
   }
 
-  return new BlockExpression{std::move(stmts), final_expr};
+  return new BlockExpression{location_token, std::move(stmts), final_expr};
 }
 
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseComparison() {
-  Expression* fst = ParseBinary();
+  Expression* first = ParseBinary();
 
   auto token = lexer_.Peek();
-  if (Matches(lex::TokenType::LT) ||  //
-      Matches(lex::TokenType::EQUALS)) {
-    auto snd = ParseBinary();
-    fst = new ComparisonExpression(fst, token, snd);
+  if (Matches(lex::TokenType::LT) || Matches(lex::TokenType::EQUALS)) {
+    auto second = ParseBinary();
+    first = new ComparisonExpression(first, token, second);
   }
 
-  return fst;
+  return first;
 }
 
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseBinary() {
-  Expression* fst = ParseUnary();
+  Expression* first = ParseUnary();
 
   auto token = lexer_.Peek();
-  while (Matches(lex::TokenType::PLUS) ||  //
-         Matches(lex::TokenType::MINUS)) {
-    auto snd = ParseUnary();
-    fst = new BinaryExpression(fst, token, snd);
+  while (Matches(lex::TokenType::PLUS) || Matches(lex::TokenType::MINUS)) {
+    auto second = ParseUnary();
+    first = new BinaryExpression(first, token, second);
   }
 
-  return fst;
+  return first;
 }
 
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseUnary() {
   auto token = lexer_.Peek();
-  if (Matches(lex::TokenType::MINUS) ||  //
-      Matches(lex::TokenType::NOT)) {
+  if (Matches(lex::TokenType::MINUS) || Matches(lex::TokenType::NOT)) {
     auto expr = ParsePrimary();
     return new UnaryExpression{token, expr};
   }
@@ -143,7 +150,7 @@ Expression* Parser::ParseFieldAccess(LvalueExpression* expr) {
   do {
     auto field_name = lexer_.Peek();
     Consume(lex::TokenType::IDENTIFIER);
-    expr = new FieldAccessExpression(lex::Token{}, field_name, expr);
+    expr = new FieldAccessExpression(field_name, expr);
   } while (Matches(lex::TokenType::DOT));
 
   return expr;
@@ -198,8 +205,6 @@ Expression* Parser::ParseConstructionExpression(lex::Token id) {
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParsePrimary() {
-  Expression* result = nullptr;
-
   // Try parsing grouping first
 
   if (Matches(lex::TokenType::LEFT_BRACE)) {
@@ -224,8 +229,8 @@ Expression* Parser::ParsePrimary() {
     case lex::TokenType::FALSE:
     case lex::TokenType::TRUE:
     case lex::TokenType::UNIT:
-      result = new LiteralExpression{token};
-      break;
+      lexer_.Advance();
+      return new LiteralExpression{token};
 
     case lex::TokenType::IDENTIFIER: {
       Consume(lex::TokenType::IDENTIFIER);
@@ -245,14 +250,13 @@ Expression* Parser::ParsePrimary() {
       return new VarAccessExpression{token};
     }
 
-    default:
-      throw ParseError{"Could not match primary expression\n"};
+    default: {
+      auto location = token.location.Format();
+      throw parse::errors::ParsePrimaryError{location};
+    }
   }
 
-  // Advance for all the base cases and return
-
-  lexer_.Advance();
-  return result;
+  FMT_ASSERT(false, "Unreachable!");
 }
 
 ////////////////////////////////////////////////////////////////////
