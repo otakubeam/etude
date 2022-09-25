@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vm/chunk.hpp>
-
 #include <ast/scope/environment.hpp>
 #include <ast/statements.hpp>
 

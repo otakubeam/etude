@@ -55,7 +55,7 @@ void Compiler::AddIntegerConsnant(int value) {
       .as_int = value,
   });
 
-  chunk_.instructions.push_back(vm::Instr{
+  chunk_.instructions.push_back(vm::FatInstr{
       .type = InstrType::PUSH_STACK,
       .arg1 = const_no,
   });
@@ -69,12 +69,12 @@ void Compiler::MabyeEmitMemFetch(int offset) {
   }
 
   if (offset > 0) {
-    chunk_.instructions.push_back(vm::Instr{
+    chunk_.instructions.push_back(vm::FatInstr{
         .type = vm::InstrType::GET_LOCAL,
         .arg1 = (uint8_t)offset,
     });
   } else {
-    chunk_.instructions.push_back(vm::Instr{
+    chunk_.instructions.push_back(vm::FatInstr{
         .type = vm::InstrType::GET_ARG,
         .arg1 = (uint8_t)(-offset),
     });

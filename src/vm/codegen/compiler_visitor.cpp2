@@ -7,10 +7,20 @@ namespace vm::codegen {
 
 void Compiler::VisitVarDecl(VarDeclStatement* node) {
   // Generate code to place value on stack
+
   node->value_->Accept(this);
 
-  // Infrom FrameTranslator about this location
   auto name = node->GetVarName();
+
+  // Emit debug info
+
+  chunk_.instructions.back().debug_info = debug::DebugInfo{
+      .location = node->GetLocation(),
+      .dbg_instr = debug::DebuggerInstr{.var_name = name},
+  };
+
+  // Infrom FrameTranslator about this location
+
   current_frame_->AddLocal(name, current_frame_->GetNextSize());
 }
 
@@ -25,15 +35,17 @@ void Compiler::VisitAssignment(AssignmentStatement* node) {
     emit_mem_fetch_ = true;
   }
 
+  // TODO: struct assignment?
+
   if (node->target_->IsDirect()) {
-    chunk_.instructions.push_back(vm::Instr{
-        .type = InstrType::STORE_STACK,
-        .addr = (int16_t)node->target_->GetAddress(),
+    chunk_.instructions.push_back(vm::FatInstr{
+        // .type = InstrType::STORE_STACK,
+        // .addr = (int16_t)node->target_->GetAddress(),
     });
   } else {
     // The address is on top of the stack
     // The value is just below it
-    chunk_.instructions.push_back(vm::Instr{
+    chunk_.instructions.push_back(vm::FatInstr{
         .type = InstrType::STORE,
     });
   }
@@ -64,7 +76,7 @@ void Compiler::VisitFunDecl(FunDeclStatement* node) {
 
   auto chunk = chunk_compiler.Compile(node->block_);
 
-  chunk.instructions.push_back(vm::Instr{
+  chunk.instructions.push_back(vm::FatInstr{
       .type = InstrType::RET_FN,
   });
 
@@ -88,13 +100,13 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
 
   if (node->is_native_call_) {
     auto name = node->GetFunctionName();
-    auto offset = name == "print" ? 0 : 2;
+    auto table_offset = name == "print" ? 0 : 2;
 
     AddIntegerConsnant(node->arguments_.size());
 
-    chunk_.instructions.push_back(vm::Instr{
+    chunk_.instructions.push_back(vm::FatInstr{
         .type = vm::InstrType::NATIVE_CALL,
-        .arg1 = (uint8_t)offset,
+        .arg1 = (uint8_t)table_offset,
     });
 
     return;
@@ -106,21 +118,28 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
     int offset = mb_offset.value();
     MabyeEmitMemFetch(offset);
 
-    chunk_.instructions.push_back(vm::Instr{
+    chunk_.instructions.push_back(vm::FatInstr{
         .type = vm::InstrType::INDIRECT_CALL,
     });
   } else {
     auto chunk_no = functions_.Get(node->GetFunctionName()).value().GetAddr();
 
-    chunk_.instructions.push_back(vm::Instr{
-        .type = vm::InstrType::CALL_FN,
-        .arg1 = (uint8_t)chunk_no,
+    chunk_.instructions.push_back(vm::FatInstr{
+        .type = vm::InstrType::CALL_FN, .arg1 = (uint8_t)chunk_no,
+        // .debug_info =
+        //     debug::DebugInfo{
+        //         .location = node->GetLocation(),
+        //         .dbg_instr =
+        //             debug::DebuggerInstr{
+        //                 .var_name = node->GetFunctionName(),
+        //             },
+        // },
     });
   }
 
   // Don't forget to clean up the stack
 
-  chunk_.instructions.push_back(vm::Instr{
+  chunk_.instructions.push_back(vm::FatInstr{
       .type = vm::InstrType::FIN_CALL,
       .arg1 = (uint8_t)node->arguments_.size(),
   });
@@ -138,7 +157,7 @@ void Compiler::VisitStructDecl(StructDeclStatement* node) {
 void Compiler::VisitReturn(ReturnStatement* node) {
   node->return_value_->Accept(this);
 
-  chunk_.instructions.push_back(vm::Instr{
+  chunk_.instructions.push_back(vm::FatInstr{
       .type = InstrType::RET_FN,
   });
 }
@@ -154,7 +173,7 @@ void Compiler::VisitYield(YieldStatement*) {
 void Compiler::VisitExprStatement(ExprStatement* node) {
   node->expr_->Accept(this);
 
-  chunk_.instructions.push_back(vm::Instr{
+  chunk_.instructions.push_back(vm::FatInstr{
       .type = InstrType::POP_STACK,
   });
 }
@@ -174,7 +193,7 @@ void Compiler::VisitDeref(DereferenceExpression* node) {
   // node->IsDirect() is false
 
   if (emit_mem_fetch_) {
-    chunk_.instructions.push_back(vm::Instr{
+    chunk_.instructions.push_back(vm::FatInstr{
         .type = vm::InstrType::LOAD,
     });
   }
@@ -207,13 +226,13 @@ void Compiler::VisitComparison(ComparisonExpression* node) {
 
   switch (node->operator_.type) {
     case lex::TokenType::EQUALS:
-      chunk_.instructions.push_back({vm::Instr{
+      chunk_.instructions.push_back({vm::FatInstr{
           .type = vm::InstrType::CMP_EQ,
       }});
       break;
 
     case lex::TokenType::LT:
-      chunk_.instructions.push_back({vm::Instr{
+      chunk_.instructions.push_back({vm::FatInstr{
           .type = vm::InstrType::CMP_LESS,
       }});
       break;
@@ -231,13 +250,13 @@ void Compiler::VisitBinary(BinaryExpression* node) {
 
   switch (node->operator_.type) {
     case lex::TokenType::PLUS:
-      chunk_.instructions.push_back(vm::Instr{
+      chunk_.instructions.push_back(vm::FatInstr{
           .type = InstrType::ADD,
       });
       break;
 
     case lex::TokenType::MINUS:
-      chunk_.instructions.push_back(vm::Instr{
+      chunk_.instructions.push_back(vm::FatInstr{
           .type = InstrType::SUBTRACT,
       });
       break;
@@ -258,7 +277,7 @@ void Compiler::VisitIf(IfExpression* node) {
 
   auto jump_to_false_ip = chunk_.instructions.size();
 
-  chunk_.instructions.push_back(vm::Instr{
+  chunk_.instructions.push_back(vm::FatInstr{
       .type = InstrType::JUMP_IF_FALSE,
   });
 
@@ -268,7 +287,7 @@ void Compiler::VisitIf(IfExpression* node) {
 
   auto jump_to_end_ip = chunk_.instructions.size();
 
-  chunk_.instructions.push_back(vm::Instr{
+  chunk_.instructions.push_back(vm::FatInstr{
       .type = InstrType::JUMP,
   });
 
@@ -281,14 +300,14 @@ void Compiler::VisitIf(IfExpression* node) {
   auto false_ip_end = chunk_.instructions.size();
 
   // Backpatch JUMP_IF_FALSE
-  chunk_.instructions.at(jump_to_false_ip) = vm::Instr{
+  chunk_.instructions.at(jump_to_false_ip) = vm::FatInstr{
       .type = InstrType::JUMP_IF_FALSE,
       .arg2 = (uint8_t)(false_ip_start >> 8),
       .arg3 = (uint8_t)(false_ip_start),
   };
 
   // Backpatch JUMP
-  chunk_.instructions.at(jump_to_end_ip) = vm::Instr{
+  chunk_.instructions.at(jump_to_end_ip) = vm::FatInstr{
       .type = InstrType::JUMP,
       .arg2 = (uint8_t)(false_ip_end >> 8),
       .arg3 = (uint8_t)(false_ip_end),
@@ -307,6 +326,7 @@ void Compiler::VisitBlock(BlockExpression* node) {
     return;
   }
 
+  // Why not just pop the last instr?
   AddIntegerConsnant(999 /* mark */);
 }
 
@@ -376,17 +396,17 @@ void Compiler::VisitFieldAccess(FieldAccessExpression* node) {
   // here we emit the load
 
   AddIntegerConsnant(offset);
-  chunk_.instructions.push_back(Instr{.type = InstrType::ADD});
+  chunk_.instructions.push_back(FatInstr{.type = InstrType::ADD});
 
   if (emit_mem_fetch_) {
-    chunk_.instructions.push_back(Instr{.type = InstrType::LOAD});
+    chunk_.instructions.push_back(FatInstr{.type = InstrType::LOAD});
   }
 }
 
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitLiteral(LiteralExpression* lit) {
-  chunk_.instructions.push_back(vm::Instr{
+  chunk_.instructions.push_back(vm::FatInstr{
       .type = InstrType::PUSH_STACK,
       .arg1 = (uint8_t)chunk_.attached_vals.size(),
   });

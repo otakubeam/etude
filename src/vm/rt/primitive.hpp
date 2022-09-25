@@ -15,7 +15,29 @@ namespace vm::rt {
 enum class ValueTag {
   Int,
   Bool,
+  Unit,
   Char,
+
+  HeapRef,
+  StackRef,
+  InstrRef,
+  StaticRef,
+};
+
+//////////////////////////////////////////////////////////////////////
+
+struct InstrReference {
+  uint16_t chunk_no = 0;
+  uint16_t instr_no = 0;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+struct Reference {
+  union {
+    uint32_t to_data;
+    InstrReference to_instr;
+  };
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -26,12 +48,9 @@ struct PrimitiveValue {
     int as_int;
     bool as_bool;
     char as_char;
+    Reference as_ref;
   };
 };
-
-//////////////////////////////////////////////////////////////////////
-
-PrimitiveValue FromSemInfo(lex::Token::SemInfo sem_info);
 
 //////////////////////////////////////////////////////////////////////
 

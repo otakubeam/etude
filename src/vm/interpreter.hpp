@@ -1,11 +1,8 @@
 #pragma once
 
-#include <vm/debug/stack_printer.hpp>
+#include <vm/memory/vm_memory.hpp>
 
-#include <vm/rt/native_table.hpp>
-
-#include <vm/stack.hpp>
-#include <vm/chunk.hpp>
+#include <vm/instr_type.hpp>
 
 #include <optional>
 
@@ -13,276 +10,82 @@ namespace vm {
 
 class BytecodeInterpreter {
  public:
-  BytecodeInterpreter(std::vector<ExecutableChunk> chunkz)
-      : chunks{std::move(chunkz)} {
-    current_chunk = chunks.size() - 1;
+  void Load(ElfFile executable) {
+    ip_.chunk_no = executable.FindMain().value();
+
+    memory_.Load(std::move(executable));
   }
 
-  void Interpret(const Instr* instruction) {
-    switch (instruction->type) {
-      case InstrType::PUSH_STACK: {
-        size_t index = ReadByte(*instruction);
-        stack_.Push(Current()->attached_vals[index]);
-        break;
+  void RunFor(size_t count) {
+    uint8_t step = 0;
+    for (size_t i = 0; i < count; i++) {
+      auto instr = GetNextInstruction(step);
+      step = DecodeExecute(instr);
+    }
+  }
+
+ private:
+  auto GetNextInstruction(uint8_t step) -> uint8_t* {
+    ip_.instr_no += step;
+
+    return memory_.AccessMemory(memory::MemAccess{
+        .mem_ref = {.to_instr = ip_},
+        .type = rt::ValueTag::InstrRef,
+    });
+  }
+
+  // The logic about decoding should be right here
+  uint8_t DecodeExecute(uint8_t* instr) {
+    switch (DecodeType(instr++)) {
+      case InstrType::PUSH_VALUE: {
+        // Later: call this decode value or something
+        auto value = (rt::PrimitiveValue*)instr;
+        instr += sizeof(rt::PrimitiveValue);
+
+        fmt::print("Tag: {}, value: {}\n", (uint8_t)value->tag, value->as_int);
+
+        memory_.GetStack().Push(*value);
+        return 1 + sizeof(rt::PrimitiveValue);
       }
 
-      case InstrType::POP_STACK: {
-        stack_.Pop();
+      case InstrType::PUSH_FALSE:;
+      case InstrType::PUSH_TRUE:;
+      case InstrType::ADD: {
+        auto a = memory_.GetStack().Pop().as_int;
+        auto b = memory_.GetStack().Pop().as_int;
+        memory_.GetStack().Push(rt::PrimitiveValue{
+            .tag = rt::ValueTag::Int,
+            .as_int = a + b,
+        });
+        // Print it
+        memory_.GetStack();
         break;
       }
+      case InstrType::CALL_FN:;
+      case InstrType::POP_STACK:;
 
       case InstrType::RET_FN: {
-        // Obtain the return value
-        eax = stack_.Pop();
-
-        stack_.Ret();
-
-        // Restore chunk
-        current_chunk = stack_.Pop().as_int;
-
-        // Restore ip
-        ip_ = stack_.Pop().as_int;
-
-        // Then the caller must clean up
-
-        break;
+        // TODO: what if we are at the top level?
       }
 
-      case InstrType::CALL_FN: {
-        // Note: Args have been placed
-
-        // Push IP onto the stack
-        stack_.Push(rt::PrimitiveValue{
-            .tag = rt::ValueTag::Int,
-            .as_int = (int)ip_,
-        });
-
-        // Push chunk number onto the stack
-        stack_.Push(rt::PrimitiveValue{
-            .tag = rt::ValueTag::Int,
-            .as_int = (int)current_chunk,
-        });
-
-        // Create a new call frame
-        stack_.PrepareCallframe();
-
-        // Jmp into the function
-        current_chunk = ReadByte(*instruction);
-        ip_ = ReadWord(*instruction);
-
+      case InstrType::CMP_EQ:;
+      case InstrType::CMP_LESS:;
+      case InstrType::INDIRECT_CALL:;
+      case InstrType::NATIVE_CALL:;
+      default:
         break;
-      }
-
-      case InstrType::NATIVE_CALL: {
-        auto offset = instruction->arg1;
-        auto fn = native_table_.Get(offset);
-
-        auto args_count = stack_.Pop();
-        FMT_ASSERT(args_count.tag == rt::ValueTag::Int, "");
-
-        auto res = fn(args_count.as_int, &stack_.Top());
-
-        stack_.PopCount(args_count.as_int);
-
-        stack_.Push(res);
-
-        break;
-      }
-
-      case InstrType::INDIRECT_CALL: {
-        // Note: Args have been placed
-
-        // Get the chunk to jump to
-        auto chunk_no = stack_.Pop();
-
-        // Push IP onto the stack
-        stack_.Push(rt::PrimitiveValue{
-            .tag = rt::ValueTag::Int,
-            .as_int = (int)ip_,
-        });
-
-        // Push chunk number onto the stack
-        stack_.Push(rt::PrimitiveValue{
-            .tag = rt::ValueTag::Int,
-            .as_int = (int)current_chunk,
-        });
-
-        // Create a new call frame
-        stack_.PrepareCallframe();
-
-        // Jmp into the function
-        FMT_ASSERT(chunk_no.tag == vm::rt::ValueTag::Int,
-                   "Chunk no. should be int\n");
-        current_chunk = chunk_no.as_int;
-        ip_ = 0;
-
-        break;
-      }
-
-      case InstrType::JUMP: {
-        ip_ = ReadWord(*instruction);
-        break;
-      }
-
-      case InstrType::JUMP_IF_FALSE: {
-        auto val = stack_.Pop();
-
-        // FMT_ASSERT(val.tag == rt::ValueTag::Bool,  //
-        //            "Typechecker fault");
-
-        if (!val.as_bool) {
-          ip_ = ReadWord(*instruction);
-        }
-
-        break;
-      }
-
-      case InstrType::ADD: {
-        auto rhs = stack_.Pop();
-        auto lhs = stack_.Pop();
-        stack_.Push({
-            .tag = rt::ValueTag::Int,
-            .as_int = lhs.as_int + rhs.as_int,
-        });
-        break;
-      }
-
-      case InstrType::SUBTRACT: {
-        auto rhs = stack_.Pop();
-        auto lhs = stack_.Pop();
-        stack_.Push({
-            .tag = rt::ValueTag::Int,
-            .as_int = lhs.as_int - rhs.as_int,
-        });
-        break;
-      }
-
-      case InstrType::GET_ARG: {
-        size_t offset = ReadByte(*instruction);
-        auto arg = stack_.GetFnArg(offset);
-        stack_.Push(arg);
-        break;
-      }
-
-      case InstrType::GET_LOCAL: {
-        size_t offset = ReadByte(*instruction);
-        auto arg = stack_.GetLocalVar(offset);
-        stack_.Push(arg);
-        break;
-      }
-
-      case InstrType::FIN_CALL: {
-        size_t count = ReadByte(*instruction);
-        stack_.PopCount(count);
-
-        // Safety: the value must be present in eax after the call
-        stack_.Push(eax.value());
-
-        break;
-      }
-
-      case InstrType::CMP_EQ: {
-        auto a = stack_.Pop();
-        auto b = stack_.Pop();
-
-        auto result = (a.tag == b.tag) && (a.as_int == b.as_int);
-
-        stack_.Push({.tag = rt::ValueTag::Bool, .as_bool = result});
-
-        break;
-      }
-
-      case InstrType::CMP_LESS: {
-        auto right = stack_.Pop();
-        auto left = stack_.Pop();
-
-        // Can only compare integers, typechecker ensures
-        auto result = left.as_int < right.as_int;
-
-        stack_.Push({.tag = rt::ValueTag::Bool, .as_bool = result});
-
-        break;
-      }
-
-      case InstrType::STORE_STACK: {
-        auto value = stack_.Pop();
-        stack_.StoreAt(instruction->addr, value);
-        break;
-      }
-
-      case InstrType::LOAD: {
-        auto addr = stack_.Pop();
-        // TODO: this only works in main function
-        auto value = stack_.Bottom()[addr.as_int];
-        stack_.Push(value);
-        break;
-      }
-
-      case InstrType::STORE: {
-        auto addr = stack_.Pop();
-        auto value = stack_.Pop();
-        // TODO: this only works in main function
-        // Waiting for memory model
-        stack_.Bottom()[addr.as_int] = value;
-        break;
-      }
     }
+    return 1;
   }
 
-  int Interpret() {
-    while (auto instr = NextInstruction()) {
-      Interpret(instr);
-
-      if (print_debug_info) {
-        fmt::print("[^] Instr: {}\n", PrintInstr(*instr));
-        stack_printer_.Print();
-      }
-    }
-
-    // Exit code
-    return stack_.Pop().as_int;
-  }
-
-  static int InterpretStandalone(ExecutableChunk* chunk) {
-    BytecodeInterpreter a{{*chunk}};
-    return a.Interpret();
-  }
-
-  static int InterpretStandalone(std::vector<ExecutableChunk> chunks) {
-    BytecodeInterpreter a{chunks};
-
-    // Start executing from the last chunk
-    FMT_ASSERT(a.chunks.size() >= 1, "");
-
-    return a.Interpret();
-  }
-
-  auto NextInstruction() const -> const Instr* {
-    return ip_ < Current()->instructions.size()
-               ? &Current()->instructions[ip_++]
-               : nullptr;
+  auto DecodeType(uint8_t* instr) -> InstrType {
+    return static_cast<InstrType>(*instr);
   }
 
  private:
-  const ExecutableChunk* Current() const {
-    return &chunks[current_chunk];
-  }
+  vm::rt::InstrReference ip_;
 
- private:
-  // Instruction pointer
-  mutable size_t ip_ = 0;
-
-  vm::VmStack stack_;
-  debug::StackPrinter stack_printer_{stack_};
-
-  using Retval = std::optional<rt::PrimitiveValue>;
-  // Return value (makes life easier)
-  Retval eax;
-
-  size_t current_chunk = 0;
-  std::vector<ExecutableChunk> chunks;
-
-  rt::NativeTable native_table_{rt::NativeTable::SaneDefaults()};
+  vm::memory::VmMemory memory_{4096, 1024};
 };
 
 }  // namespace vm

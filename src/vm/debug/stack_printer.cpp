@@ -16,10 +16,6 @@ void StackPrinter::Print() {
 ////////////////////////////////////////////////////////////////////
 
 std::string StackPrinter::Format() {
-  if (!print_debug_info) {
-    return "";
-  }
-
   fmt::memory_buffer buf;
 
   FormatHeader(buf);
@@ -68,7 +64,7 @@ void StackPrinter::FormatStackCells(fmt::memory_buffer& buf) {
 ////////////////////////////////////////////////////////////////////
 
 void StackPrinter::FormatOneCell(fmt::memory_buffer& buf, size_t index) {
-  auto& cell = stack_.stack_.at(index);
+  auto& cell = stack_.stack_area_[index];
   auto& an = annotations_.at(index);
 
   if (index >= stack_.sp_) {

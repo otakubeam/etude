@@ -19,7 +19,7 @@ namespace vm {
 class VmStack {
  private:
   // Invoked by VmMemory
-  VmStack(char* memory) : stack_area_{(rt::PrimitiveValue*)memory} {
+  VmStack(uint8_t* memory) : stack_area_{(rt::PrimitiveValue*)memory} {
   }
 
  public:
@@ -44,18 +44,20 @@ class VmStack {
     // Move the stack pointer
     sp_ = fp_;
 
-    // Expect by ABI to be an integer offset
-    FMT_ASSERT(stack_area_[fp_].tag == rt::ValueTag::Int,
-               "Expected an Int in fp slot");
+    // Expect by ABI to be a StackRef
+    FMT_ASSERT(stack_area_[fp_].tag == rt::ValueTag::StackRef,
+               "Expected an StackRef in fp slot");
 
     // Move the frame pointer
-    fp_ = stack_area_[fp_].as_int;
+    fp_ = stack_area_[fp_].as_ref.to_data;
   }
 
   void PrepareCallframe() {
     // Save curent fp in sp
-    stack_area_[sp_] = rt::PrimitiveValue{.tag = rt::ValueTag::Int,  //
-                                          .as_int = (int)fp_};
+    stack_area_[sp_] = rt::PrimitiveValue{
+        .tag = rt::ValueTag::StackRef,
+        .as_ref = rt::Reference{.to_data = (uint32_t)fp_},
+    };
 
     // Move fp to sp
     fp_ = sp_;
@@ -76,8 +78,8 @@ class VmStack {
     GetAtFp(offset) = value;
   }
 
-  int GetSavedIp() {
-    return GetAtFp(-1).as_int;
+  auto GetSavedIp() -> rt::InstrReference {
+    return GetAtFp(-1).as_ref.to_instr;
   }
 
   auto Top() -> rt::PrimitiveValue& {

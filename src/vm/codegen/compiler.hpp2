@@ -57,8 +57,8 @@ class Compiler : public Visitor {
   // Belongs to ExecutableChunk, move it!
   void AddIntegerConsnant(int value);
 
-  int LookupVarAddress(std::string name);
   void MabyeEmitMemFetch(int offset);
+  int LookupVarAddress(std::string name);
 
  private:
   ExecutableChunk chunk_;

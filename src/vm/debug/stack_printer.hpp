@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vm/stack.hpp>
-#include <vm/instr.hpp>
+#include <vm/instr_type.hpp>
+#include <vm/stack_v2.hpp>
 
 #include <fmt/color.h>
 
@@ -15,6 +15,7 @@ class StackPrinter {
 
   struct AnnotatedSlot {
     fmt::text_style style = fg(fmt::color::black);
+    std::string name;
   };
 
   void Print();
@@ -24,6 +25,16 @@ class StackPrinter {
   void FormatHeader(fmt::memory_buffer& buf);
   void FormatStackCells(fmt::memory_buffer& buf);
   void FormatOneCell(fmt::memory_buffer& buf, size_t index);
+
+ private:
+  // void GetValueFromAddress(size_t addr) {
+  //   auto value = stack_.stack_area_[addr];
+  //   switch (value.tag) {
+  //     case rt::ValueTag::Bool:;
+  //     case rt::ValueTag::Int:;
+  //     case rt::ValueTag::Char:;
+  //   }
+  // }
 
  private:
   const static auto italic{fmt::emphasis::italic};
