@@ -42,7 +42,7 @@ class InstrTranslator {
       case InstrType::CALL_FN:
         backpatch_queue_.push_back(RelocationEntry{
             .name = instr.fn_name,
-            .text_section_no = 0,  // changes after merge
+            .text_section_no = 0,
             .offset_to_patch = length_,
         });
         EmitInstrReference(rt::InstrReference{});
@@ -107,8 +107,8 @@ class InstrTranslator {
  private:
   std::string fn_name;
 
-  uint8_t* bytecode_ = new uint8_t[65536];
-  size_t length_ = 0;
+  uint8_t* bytecode_ = new uint8_t[65536]();
+  uint16_t length_ = 0;
 
   std::vector<debug::DebugInfo> DIEs_;
 

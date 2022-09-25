@@ -25,7 +25,7 @@ struct SymtabEntry {
   // So, I need a entries of several types
 
   // Where it is defined
-  size_t text_section_no;
+  uint16_t text_section_no;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -33,8 +33,8 @@ struct SymtabEntry {
 struct RelocationEntry {
   std::string name;
 
-  size_t text_section_no;
-  size_t offset_to_patch;
+  uint16_t text_section_no;
+  uint16_t offset_to_patch;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -47,13 +47,65 @@ struct ElfFile {
 
   std::vector<debug::DebugInfo> DIEs;
 
-  std::optional<size_t> FindMain() {
+  std::optional<rt::InstrReference> FindEntryPoint() {
     for (auto& symbol : symtab_section) {
       if (symbol.name == "main") {
-        return symbol.text_section_no;
+        return rt::InstrReference{
+            .chunk_no = symbol.text_section_no,
+            .instr_no = 0,
+        };
       }
     }
     return std::nullopt;
+  }
+
+  void operator+=(ElfFile&& other) {
+    MergeText(other.text_sections);
+
+    MergeSymtab(other.symtab_section);
+
+    LocateAll();
+  }
+
+  void LocateAll() {
+    for (auto reloc : relocations) {
+      for (auto symbol : symtab_section) {
+        if (reloc.name == symbol.name) {
+          Patch(reloc, symbol);
+          DropRelocationEntry(reloc);
+        }
+      }
+    }
+  }
+
+  void DropRelocationEntry(RelocationEntry& reloc) {
+    reloc = std::move(relocations.back());
+    relocations.pop_back();
+  }
+
+  void Patch(RelocationEntry reloc, SymtabEntry symbol) {
+    auto patch = rt::InstrReference{.chunk_no = symbol.text_section_no};
+    memcpy(GetOffsetToPatch(reloc), &patch, sizeof(rt::InstrReference));
+  }
+
+  auto GetOffsetToPatch(RelocationEntry reloc) -> uint8_t* {
+    auto fn_entry = text_sections.at(reloc.text_section_no);
+    return &fn_entry.text[reloc.offset_to_patch];
+  }
+
+  void MergeText(std::vector<TextSection> sections) {
+    for (auto section : sections) {
+      text_sections.push_back(section);
+    }
+  }
+
+  void MergeSymtab(std::vector<SymtabEntry> entries) {
+    auto initial_size = symtab_section.size();
+
+    for (auto entry : entries) {
+      entry.text_section_no += initial_size;
+      symtab_section.push_back(entry);
+    }
   }
 };
 
