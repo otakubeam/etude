@@ -25,14 +25,14 @@ class VmMemory {
   }
 
   auto AccessMemory(MemAccess descriptor) -> uint8_t* {
-    switch (descriptor.type) {
+    switch (descriptor.reference.tag) {
       case rt::ValueTag::StackRef: {
-        auto addr = descriptor.mem_ref.to_data;
+        auto addr = descriptor.reference.as_ref.to_data;
         return (uint8_t*)&stack_.stack_area_[addr];
       }
 
       case rt::ValueTag::InstrRef: {
-        auto addr = descriptor.mem_ref.to_instr;
+        auto addr = descriptor.reference.as_ref.to_instr;
         auto chunk = program_text_->GetTextSection(addr.chunk_no);
         FMT_ASSERT(chunk.length >= addr.instr_no, "");
         return &chunk.text[addr.instr_no];

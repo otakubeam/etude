@@ -22,7 +22,7 @@ class InstrTranslator {
     return ElfFile{
         TextSection{.text = bytecode_, .length = length_},
         SymtabEntry{.name = fn_name},
-        std::move(backpatch_queue_),
+        std::move(relocations_),
         std::move(DIEs_),
     };
   }
@@ -34,11 +34,12 @@ class InstrTranslator {
 
     switch (instr.type) {
       case InstrType::CALL_FN:
-        backpatch_queue_.push_back(RelocationEntry{
+        relocations_.push_back(RelocationEntry{
             .name = instr.fn_name,
             .text_section_no = 0,
             .offset_to_patch = length_,
         });
+        // Mark it
         EmitInstrReference({.chunk_no = 0xffff, .instr_no = 0xffff});
         break;
 
@@ -106,7 +107,7 @@ class InstrTranslator {
 
   std::vector<debug::DebugInfo> DIEs_;
 
-  std::vector<RelocationEntry> backpatch_queue_;
+  std::vector<RelocationEntry> relocations_;
 };
 
 }  // namespace vm

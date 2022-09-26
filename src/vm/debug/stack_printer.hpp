@@ -27,16 +27,6 @@ class StackPrinter {
   void FormatOneCell(fmt::memory_buffer& buf, size_t index);
 
  private:
-  // void GetValueFromAddress(size_t addr) {
-  //   auto value = stack_.stack_area_[addr];
-  //   switch (value.tag) {
-  //     case rt::ValueTag::Bool:;
-  //     case rt::ValueTag::Int:;
-  //     case rt::ValueTag::Char:;
-  //   }
-  // }
-
- private:
   const static auto italic{fmt::emphasis::italic};
   const static auto bold{fmt::emphasis::bold};
 

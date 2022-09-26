@@ -14,6 +14,12 @@ struct Decoder {
     return static_cast<InstrType>(DecodeByte(instr));
   }
 
+  static auto DecodeOffset(uint8_t*& instr) -> int16_t {
+    auto value = (int16_t*)instr;
+    instr += sizeof(int16_t);
+    return *value;
+  }
+
   static auto DecodeValue(uint8_t*& instr) -> rt::PrimitiveValue* {
     auto value = (rt::PrimitiveValue*)instr;
     instr += sizeof(rt::PrimitiveValue);

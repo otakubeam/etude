@@ -9,12 +9,12 @@ namespace vm::debug {
 // Should I also make a readelf?
 class Disassembler {
  public:
-  static void Disassemble(ElfFile& file) {
-    for (auto symbol : file.symtab_section) {
+  void Disassemble(ElfFile& file) {
+    for (auto symbol : file.symtab_sections_) {
       fmt::print("Disasm of <{}>, text section number {} in file {}\n\n",
                  symbol.name, symbol.text_section_no, (void*)&file);
 
-      Disassemble(file.text_sections[symbol.text_section_no]);
+      Disassemble(file.text_sections_[symbol.text_section_no]);
 
       // End line
       fmt::print("\n");
@@ -23,31 +23,13 @@ class Disassembler {
     PrintRelocations(file);
   }
 
-  static void PrintRelocations(ElfFile& file) {
-    fmt::print("Relocation entries of this file:\n");
-
-    for (auto reloc : file.relocations) {
-      fmt::print("\tname: {} at offset {} of section {}\n", reloc.name,
-                 reloc.offset_to_patch, reloc.text_section_no);
-    }
-
-    fmt::print("\n");
-  }
-
-  static void Disassemble(TextSection text) {
-    auto instr = text.text;
-    auto text_end = text.text + text.length;
-    while (instr < text_end) {
-      Decode(instr);
-    }
-  }
-
-  static void Decode(uint8_t*& instr) {
+  void Decode(uint8_t*& instr) {
     auto type_bytes = FormatNBytes(1, instr);
 
     auto type = Decoder::DecodeType(instr);
 
-    fmt::print("\t{:<12}\t {}", FormatInstrType(type), type_bytes);
+    fmt::print("\t{:>3}:\t{:<12}\t {}", offset, FormatInstrType(type),
+               type_bytes);
 
     switch (type) {
       case InstrType::PUSH_VALUE: {
@@ -99,13 +81,37 @@ class Disassembler {
     }
   }
 
-  static std::string FormatNBytes(size_t n, uint8_t* instr) {
+ private:
+  void Disassemble(TextSection text) {
+    auto instr = text.text;
+    auto text_end = text.text + text.length;
+    while (instr < text_end) {
+      offset = instr - text.text;
+      Decode(instr);
+    }
+  }
+
+  void PrintRelocations(ElfFile& file) {
+    fmt::print("Relocation entries of this file:\n");
+
+    for (auto reloc : file.relocations_) {
+      fmt::print("\tsymbol {} at offset {} of section {}\n", reloc.name,
+                 reloc.offset_to_patch, reloc.text_section_no);
+    }
+
+    fmt::print("\n");
+  }
+
+  // template <size_t n>
+  std::string FormatNBytes(size_t n, uint8_t* instr) {
     if (n == 0) {
       return "";
     }
-
     return fmt::format("{:02x} ", *instr) + FormatNBytes(n - 1, instr + 1);
   }
+
+ private:
+  uint16_t offset = 0;
 };
 
 }  // namespace vm::debug

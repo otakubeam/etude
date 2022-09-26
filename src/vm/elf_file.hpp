@@ -56,7 +56,7 @@ class ElfFile {
   void operator+=(ElfFile&& other);
 
   auto GetTextSection(uint16_t no) -> TextSection {
-    return text_sections.at(no);
+    return text_sections_.at(no);
   }
 
  private:
@@ -75,15 +75,15 @@ class ElfFile {
   void MergeRelocations(std::vector<RelocationEntry> entries);
 
  private:
-  std::vector<TextSection> text_sections;
+  std::vector<TextSection> text_sections_;
   // TODO: std::vector<DataSection> data_sections;
 
   // Symbol information
-  std::vector<SymtabEntry> symtab_section;
-  std::vector<RelocationEntry> relocations;
+  std::vector<SymtabEntry> symtab_sections_;
+  std::vector<RelocationEntry> relocations_;
 
   // Debugging information
-  std::vector<debug::DebugInfo> DIEs;
+  std::vector<debug::DebugInfo> DIEs_;
 };
 
 //////////////////////////////////////////////////////////////////////

@@ -9,8 +9,7 @@ namespace vm::memory {
 // Token to access memory
 
 struct MemAccess {
-  rt::Reference mem_ref;
-  rt::ValueTag type;
+  rt::PrimitiveValue reference;
   bool store = false;
 };
 

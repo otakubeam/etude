@@ -23,7 +23,8 @@ TEST_CASE("vm: retval", "[vm]") {
   });
   auto elf_f = std::move(assembler_f).Finalize();
 
-  vm::debug::Disassembler::Disassemble(elf_f);
+  vm::debug::Disassembler disasm;
+  disasm.Disassemble(elf_f);
 
   ////////////////////////////////////////////////////////////////////
 
@@ -41,7 +42,7 @@ TEST_CASE("vm: retval", "[vm]") {
   });
   auto elf = std::move(assembler).Finalize();
 
-  vm::debug::Disassembler::Disassemble(elf);
+  disasm.Disassemble(elf);
 
   ////////////////////////////////////////////////////////////////////
 
@@ -49,7 +50,7 @@ TEST_CASE("vm: retval", "[vm]") {
 
   elf += std::move(elf_f);
 
-  vm::debug::Disassembler::Disassemble(elf);
+  disasm.Disassemble(elf);
 
   vm::BytecodeInterpreter interpreter;
 
