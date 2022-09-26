@@ -33,7 +33,7 @@ class VmMemory {
 
       case rt::ValueTag::InstrRef: {
         auto addr = descriptor.mem_ref.to_instr;
-        auto& chunk = program_text_.text_sections.at(addr.chunk_no);
+        auto chunk = program_text_->GetTextSection(addr.chunk_no);
         FMT_ASSERT(chunk.length >= addr.instr_no, "");
         return &chunk.text[addr.instr_no];
       }
@@ -58,7 +58,7 @@ class VmMemory {
   VmStack stack_;
   debug::StackPrinter stack_printer_{stack_};
 
-  ElfFile program_text_;
+  std::optional<ElfFile> program_text_;
 };
 
 }  // namespace vm::memory

@@ -20,16 +20,10 @@ class InstrTranslator {
 
   ElfFile Finalize() && {
     return ElfFile{
-        .text_sections = {TextSection{
-            .text = bytecode_,
-            .length = length_,
-        }},
-        .symtab_section = {SymtabEntry{
-            .name = fn_name,
-            .text_section_no = 0,
-        }},
-        .relocations = std::move(backpatch_queue_),
-        .DIEs = std::move(DIEs_),
+        TextSection{.text = bytecode_, .length = length_},
+        SymtabEntry{.name = fn_name},
+        std::move(backpatch_queue_),
+        std::move(DIEs_),
     };
   }
 

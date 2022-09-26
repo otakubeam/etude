@@ -2,6 +2,8 @@
 
 #include <vm/elf_file.hpp>
 
+#include <vm/decoder.hpp>
+
 namespace vm::debug {
 
 // Should I also make a readelf?
@@ -43,14 +45,14 @@ class Disassembler {
   static void Decode(uint8_t*& instr) {
     auto type_bytes = FormatNBytes(1, instr);
 
-    auto type = DecodeType(instr);
+    auto type = Decoder::DecodeType(instr);
 
     fmt::print("\t{:<12}\t {}", FormatInstrType(type), type_bytes);
 
     switch (type) {
       case InstrType::PUSH_VALUE: {
         auto val_bytes = FormatNBytes(sizeof(rt::PrimitiveValue), instr);
-        auto value = DecodeValue(instr);
+        auto value = Decoder::DecodeValue(instr);
 
         fmt::print("{:<20} {}\n", val_bytes, FormatPrimitiveValue(*value));
 
@@ -59,7 +61,7 @@ class Disassembler {
 
       case InstrType::CALL_FN: {
         auto instr_bytes = FormatNBytes(sizeof(rt::InstrReference), instr);
-        auto ref = DecodeReference(instr);
+        auto ref = Decoder::DecodeReference(instr);
 
         fmt::print("{:<20} {}\n", instr_bytes, FormatInstrRef(*ref));
 
@@ -69,10 +71,20 @@ class Disassembler {
       case InstrType::NATIVE_CALL:
       case InstrType::FIN_CALL: {
         auto instr_bytes = FormatNBytes(1, instr);
+
         fmt::print("{:<20} {}\n", instr_bytes, uint8_t(*instr));
+
         instr += 1;
         break;
       }
+
+      case InstrType::JUMP:
+      case InstrType::JUMP_IF_FALSE:
+      case InstrType::GET_ARG:
+      case InstrType::GET_LOCAL:
+      case InstrType::LOAD:
+      case InstrType::STORE:
+        FMT_ASSERT(false, "Unreachable!");
 
       case InstrType::ADD:
       case InstrType::SUBTRACT:
@@ -84,28 +96,8 @@ class Disassembler {
       case InstrType::RET_FN:
       case InstrType::POP_STACK:
         fmt::print("\n");
-        break;
-
-      default:
-        FMT_ASSERT(false, "Unreachable!");
     }
   }
-
-  static auto DecodeType(uint8_t*& instr) -> InstrType {
-    return static_cast<InstrType>(*(instr++));
-  }
-
-  static auto DecodeValue(uint8_t*& instr) -> rt::PrimitiveValue* {
-    auto value = (rt::PrimitiveValue*)instr;
-    instr += sizeof(rt::PrimitiveValue);
-    return value;
-  };
-
-  static auto DecodeReference(uint8_t*& instr) -> rt::InstrReference* {
-    auto value = (rt::InstrReference*)instr;
-    instr += sizeof(rt::InstrReference);
-    return value;
-  };
 
   static std::string FormatNBytes(size_t n, uint8_t* instr) {
     if (n == 0) {

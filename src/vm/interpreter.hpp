@@ -4,6 +4,8 @@
 
 #include <vm/instr_type.hpp>
 
+#include <vm/decoder.hpp>
+
 #include <optional>
 
 namespace vm {
@@ -33,11 +35,10 @@ class BytecodeInterpreter {
     });
   }
 
-  // The logic about decoding should be right here
   uint8_t DecodeExecute(uint8_t* instr) {
-    switch (DecodeType(instr)) {
+    switch (Decoder::DecodeType(instr)) {
       case InstrType::PUSH_VALUE: {
-        auto value = DecodeValue(instr);
+        auto value = Decoder::DecodeValue(instr);
         memory_.GetStack().Push(*value);
         return 1 + sizeof(rt::PrimitiveValue);
       }
@@ -53,9 +54,6 @@ class BytecodeInterpreter {
       }
 
       case InstrType::CALL_FN: {
-        // Point to the next instruction
-        ip_.instr_no += 1 + sizeof(rt::InstrReference);
-
         // Save ip
         memory_.GetStack().Push(rt::PrimitiveValue{
             .tag = rt::ValueTag::InstrRef,
@@ -66,7 +64,7 @@ class BytecodeInterpreter {
         memory_.GetStack().PrepareCallframe();
 
         // Jump to the new function
-        auto ref = DecodeReference(instr);
+        auto ref = Decoder::DecodeReference(instr);
         ip_ = *ref;
 
         // The next step is 0 (so we start with the first instr)
@@ -74,8 +72,6 @@ class BytecodeInterpreter {
       }
 
       case InstrType::RET_FN: {
-        fmt::print("Returning from the function\n");
-
         rax_ = memory_.GetStack().Pop();
 
         memory_.GetStack().Ret();
@@ -86,18 +82,16 @@ class BytecodeInterpreter {
 
         ip_ = saved_ip.as_ref.to_instr;
 
-        fmt::print("Current ip is {}\n", rt::FormatInstrRef(ip_));
-
         // Start from the saved next instruction
-        return 0;
+        return 1 + sizeof(rt::InstrReference);
       }
 
       case InstrType::FIN_CALL: {
-        auto count = DecodeByte(instr);
+        auto count = Decoder::DecodeByte(instr);
 
         memory_.GetStack().PopCount(count);
 
-        // Safety: the value must be present in eax after the call
+        // Safety: the value must be present in rax after the call
         memory_.GetStack().Push(std::move(rax_));
 
         return 2;
@@ -114,26 +108,6 @@ class BytecodeInterpreter {
     }
     FMT_ASSERT(false, "Unreachable!");
   }
-
-  auto DecodeType(uint8_t*& instr) -> InstrType {
-    return static_cast<InstrType>(*instr++);
-  }
-
-  auto DecodeByte(uint8_t*& instr) -> uint8_t {
-    return *instr++;
-  }
-
-  auto DecodeValue(uint8_t*& instr) -> rt::PrimitiveValue* {
-    auto value = (rt::PrimitiveValue*)instr;
-    instr += sizeof(rt::PrimitiveValue);
-    return value;
-  };
-
-  auto DecodeReference(uint8_t*& instr) -> rt::InstrReference* {
-    auto value = (rt::InstrReference*)instr;
-    instr += sizeof(rt::InstrReference);
-    return value;
-  };
 
  private:
   vm::rt::InstrReference ip_;

@@ -78,10 +78,6 @@ class VmStack {
     GetAtFp(offset) = value;
   }
 
-  auto GetSavedIp() -> rt::InstrReference {
-    return GetAtFp(-1).as_ref.to_instr;
-  }
-
   auto Top() -> rt::PrimitiveValue& {
     return stack_area_[sp_ - 1];
   }

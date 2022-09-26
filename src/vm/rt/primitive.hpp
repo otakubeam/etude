@@ -52,7 +52,8 @@ static_assert(sizeof(Reference) == 4);
 
 //////////////////////////////////////////////////////////////////////
 
-// #pragma pack(1)
+#pragma pack(push, 1)
+
 struct PrimitiveValue {
   ValueTag tag;
   union {
@@ -62,11 +63,10 @@ struct PrimitiveValue {
     Reference as_ref;
   };
 };
-// #pragma pack(0)
 
-// static_assert(sizeof(PrimitiveValue) == 5);
+#pragma pack(pop)
 
-//////////////////////////////////////////////////////////////////////
+static_assert(sizeof(PrimitiveValue) == 5);
 
 std::string FormatPrimitiveValue(PrimitiveValue value);
 
