@@ -49,12 +49,12 @@ class BytecodeInterpreter {
             .tag = rt::ValueTag::Int,
             .as_int = a + b,
         });
-        break;
+        return 1;
       }
 
       case InstrType::CALL_FN: {
         // Point to the next instruction
-        ip_.instr_no += 1 + sizeof(rt::PrimitiveValue);
+        ip_.instr_no += 1 + sizeof(rt::InstrReference);
 
         // Save ip
         memory_.GetStack().Push(rt::PrimitiveValue{
@@ -74,10 +74,33 @@ class BytecodeInterpreter {
       }
 
       case InstrType::RET_FN: {
-        // TODO: what if we are at the top level?
+        fmt::print("Returning from the function\n");
+
+        rax_ = memory_.GetStack().Pop();
+
         memory_.GetStack().Ret();
-        // TODO: return value
-        break;
+
+        auto saved_ip = memory_.GetStack().Pop();
+        FMT_ASSERT(saved_ip.tag == rt::ValueTag::InstrRef,
+                   "Found garbage instead of saved ip\n");
+
+        ip_ = saved_ip.as_ref.to_instr;
+
+        fmt::print("Current ip is {}\n", rt::FormatInstrRef(ip_));
+
+        // Start from the saved next instruction
+        return 0;
+      }
+
+      case InstrType::FIN_CALL: {
+        auto count = DecodeByte(instr);
+
+        memory_.GetStack().PopCount(count);
+
+        // Safety: the value must be present in eax after the call
+        memory_.GetStack().Push(std::move(rax_));
+
+        return 2;
       }
 
       case InstrType::PUSH_FALSE:;
@@ -89,11 +112,15 @@ class BytecodeInterpreter {
       case InstrType::POP_STACK:;
       default:;
     }
-    std::abort();
+    FMT_ASSERT(false, "Unreachable!");
   }
 
   auto DecodeType(uint8_t*& instr) -> InstrType {
     return static_cast<InstrType>(*instr++);
+  }
+
+  auto DecodeByte(uint8_t*& instr) -> uint8_t {
+    return *instr++;
   }
 
   auto DecodeValue(uint8_t*& instr) -> rt::PrimitiveValue* {
@@ -110,6 +137,9 @@ class BytecodeInterpreter {
 
  private:
   vm::rt::InstrReference ip_;
+
+  // Return register
+  vm::rt::PrimitiveValue rax_{};
 
   vm::memory::VmMemory memory_{4096, 1024};
 };

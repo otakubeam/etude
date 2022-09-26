@@ -24,7 +24,7 @@ std::string StackPrinter::Format() {
 
   fmt::format_to(std::back_inserter(buf), "\n");
 
-  int left = std::max(0, (int)stack_.sp_ - 15);
+  int left = std::max(0, (int)stack_.fp_ - 5);
   for (int i = left; i < left + 20; i++) {
     if (i == (int)stack_.sp_) {
       fmt::format_to(std::back_inserter(buf), italic, "sp\t");
@@ -46,7 +46,7 @@ std::string StackPrinter::Format() {
 void StackPrinter::FormatHeader(fmt::memory_buffer& buf) {
   fmt::format_to(std::back_inserter(buf), bold, "[!] Stack:\n");
 
-  int left = std::max(0, (int)stack_.sp_ - 15);
+  int left = std::max(0, (int)stack_.fp_ - 5);
   for (int i = left; i < left + 20; i++) {
     fmt::format_to(std::back_inserter(buf), bold, "{}\t", i);
   }
@@ -55,7 +55,7 @@ void StackPrinter::FormatHeader(fmt::memory_buffer& buf) {
 }
 
 void StackPrinter::FormatStackCells(fmt::memory_buffer& buf) {
-  int left = std::max(0, (int)stack_.sp_ - 15);
+  int left = std::max(0, (int)stack_.fp_ - 5);
   for (int i = left; i < left + 20; i++) {
     FormatOneCell(buf, i);
   }
@@ -75,11 +75,33 @@ void StackPrinter::FormatOneCell(fmt::memory_buffer& buf, size_t index) {
     an.style = fg(fmt::color::light_green);
   }
 
-  if (index + 1 == stack_.fp_ || index + 2 == stack_.fp_) {
+  if (index + 1 == stack_.fp_) {
     an.style = fg(red) | bold;
   }
 
-  fmt::format_to(std::back_inserter(buf), an.style, "{}\t", cell.as_int);
+  switch (cell.tag) {
+    case rt::ValueTag::Int:
+    case rt::ValueTag::Bool:
+    case rt::ValueTag::Unit:
+    case rt::ValueTag::Char:
+      fmt::format_to(std::back_inserter(buf), an.style, "{}\t", cell.as_int);
+      break;
+
+    case rt::ValueTag::InstrRef:
+      fmt::format_to(std::back_inserter(buf), an.style, "{}\t",
+                     rt::FormatInstrRef(cell.as_ref.to_instr));
+      break;
+
+    case rt::ValueTag::StackRef:
+      fmt::format_to(std::back_inserter(buf), an.style, "s{}\t",
+                     (cell.as_ref.to_data));
+      break;
+
+    default:
+      break;
+  }
+
+  // fmt::format_to(std::back_inserter(buf), an.style, "{}\t", cell.as_int);
 
   if (index == stack_.sp_) {
     an.style = fg(fmt::color::golden_rod);

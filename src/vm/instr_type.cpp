@@ -4,8 +4,11 @@
 
 namespace vm {
 
-std::string PrintInstrType(InstrType type) {
+std::string FormatInstrType(InstrType type) {
   switch (type) {
+    case InstrType::PUSH_VALUE:
+      return "push_value";
+
     case InstrType::CALL_FN:
       return "call_fn";
 

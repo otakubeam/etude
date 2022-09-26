@@ -52,7 +52,6 @@ struct ElfFile {
       if (symbol.name == "main") {
         return rt::InstrReference{
             .chunk_no = symbol.text_section_no,
-            .instr_no = 0,
         };
       }
     }
@@ -64,15 +63,22 @@ struct ElfFile {
 
     MergeSymtab(other.symtab_section);
 
+    MergeRelocations(other.relocations);
+
     LocateAll();
   }
 
   void LocateAll() {
-    for (auto reloc : relocations) {
-      for (auto symbol : symtab_section) {
+    for (auto& reloc : relocations) {
+      for (size_t i = 0; i < symtab_section.size(); i++) {
+        auto& symbol = symtab_section.at(i);
+
         if (reloc.name == symbol.name) {
           Patch(reloc, symbol);
+
           DropRelocationEntry(reloc);
+
+          i = 0;  // reset searching for symbols
         }
       }
     }
@@ -105,6 +111,15 @@ struct ElfFile {
     for (auto entry : entries) {
       entry.text_section_no += initial_size;
       symtab_section.push_back(entry);
+    }
+  }
+
+  void MergeRelocations(std::vector<RelocationEntry> entries) {
+    auto initial_size = relocations.size();
+
+    for (auto entry : entries) {
+      entry.text_section_no += initial_size;
+      relocations.push_back(entry);
     }
   }
 };

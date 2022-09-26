@@ -45,7 +45,7 @@ class InstrTranslator {
             .text_section_no = 0,
             .offset_to_patch = length_,
         });
-        EmitInstrReference(rt::InstrReference{});
+        EmitInstrReference({.chunk_no = 0xffff, .instr_no = 0xffff});
         break;
 
       case InstrType::PUSH_VALUE:
