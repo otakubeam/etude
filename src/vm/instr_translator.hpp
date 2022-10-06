@@ -48,30 +48,36 @@ class InstrTranslator {
         break;
 
       case InstrType::JUMP_IF_FALSE:
+      case InstrType::ADD_ADDR:
+      case InstrType::GET_AT_FP:
       case InstrType::JUMP:
         EmitHalf(instr.offset);
         break;
 
       case InstrType::NATIVE_CALL:
       case InstrType::FIN_CALL:
-      case InstrType::GET_ARG:
-      case InstrType::GET_LOCAL:
+      case InstrType::STORE:
         Emit(instr.arg);
         break;
 
       case InstrType::INDIRECT_CALL:
       case InstrType::LOAD:
-      case InstrType::STORE:
       case InstrType::CMP_EQ:
       case InstrType::CMP_LESS:
       case InstrType::RET_FN:
       case InstrType::POP_STACK:
       case InstrType::ADD:
+      case InstrType::PUSH_FP:
       case InstrType::SUBTRACT:
       case InstrType::PUSH_TRUE:
-      case InstrType::PUSH_FALSE:;
+      case InstrType::PUSH_FALSE:
+      case InstrType::PUSH_UNIT:;
         // No-op
     }
+  }
+
+  size_t Count() {
+    return DIEs_.size();
   }
 
  private:

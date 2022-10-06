@@ -21,17 +21,20 @@ std::string FormatInstrType(InstrType type) {
     case InstrType::POP_STACK:
       return "pop";
 
-    case InstrType::GET_ARG:
-      return "get_arg";
+    case InstrType::PUSH_FP:
+      return "push_fp";
 
-    case InstrType::GET_LOCAL:
-      return "get_local";
+    case InstrType::ADD_ADDR:
+      return "add_addr";
 
     case InstrType::LOAD:
       return "load";
 
     case InstrType::STORE:
       return "store";
+
+    case InstrType::GET_AT_FP:
+      return "get_at_fp";
 
     case InstrType::JUMP:
       return "jump";

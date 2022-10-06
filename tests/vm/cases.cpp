@@ -1,4 +1,5 @@
 #include <vm/debug/disassember.hpp>
+#include <vm/debug/debugger.hpp>
 
 #include <vm/instr_translator.hpp>
 
@@ -9,7 +10,7 @@
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("vm: retval", "[vm]") {
+TEST_CASE("vm: link", "[vm]") {
   ////////////////////////////////////////////////////////////////////
 
   vm::InstrTranslator assembler_f{"f"};
@@ -52,11 +53,13 @@ TEST_CASE("vm: retval", "[vm]") {
 
   disasm.Disassemble(elf);
 
-  vm::BytecodeInterpreter interpreter;
+  vm::debug::Debugger debugger;
 
-  interpreter.Load(std::move(elf));
+  debugger.Load(std::move(elf));
 
-  interpreter.RunFor(16);
+  for (auto i = 0; i < 16; i++) {
+    debugger.Step();
+  }
 }
 
 //////////////////////////////////////////////////////////////////////

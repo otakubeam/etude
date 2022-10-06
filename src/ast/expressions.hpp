@@ -278,8 +278,8 @@ class FieldAccessExpression : public LvalueExpression {
     return field_name_.location;
   }
 
-  // This can be an Identifier or result of a function call
-  // or result of indexing an array, or of a field access.
+  // This can be an Identifier or or result of 
+  // indexing an array, or of a field access.
   LvalueExpression* struct_expression_;
 
   types::Type* type_ = nullptr;

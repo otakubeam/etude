@@ -10,17 +10,13 @@ void BytecodeInterpreter::Load(ElfFile executable) {
 }
 
 void BytecodeInterpreter::RunFor(size_t count) {
-  uint8_t step = 0;
   for (size_t i = 0; i < count; i++) {
-    auto instr = GetNextInstruction(step);
-    step = DecodeExecute(instr);
-    // debug::Disassembler::Decode(instr);
+    auto instr = GetNextInstruction();
+    ip_.instr_no += DecodeExecute(instr);
   }
 }
 
-auto BytecodeInterpreter::GetNextInstruction(uint8_t step) -> uint8_t* {
-  ip_.instr_no += step;
-
+auto BytecodeInterpreter::GetNextInstruction() -> uint8_t* {
   // MakeInstrAccess(ip_);
   return memory_.AccessMemory(memory::MemAccess{
       .reference =
@@ -38,7 +34,8 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
   switch (Decoder::DecodeType(instr)) {
     case InstrType::PUSH_VALUE: {
       auto value = Decoder::DecodeValue(instr);
-      memory_.GetStack().Push(*value);
+      stack_.Push(*value);
+
       return 1 + sizeof(rt::PrimitiveValue);
     }
 
@@ -46,13 +43,13 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       ip_.instr_no += 1 + sizeof(rt::InstrReference);
 
       // Save ip
-      memory_.GetStack().Push(rt::PrimitiveValue{
+      stack_.Push(rt::PrimitiveValue{
           .tag = rt::ValueTag::InstrRef,
           .as_ref = rt::Reference{.to_instr = ip_},
       });
 
       // Save old fp, move fp and sp
-      memory_.GetStack().PrepareCallframe();
+      stack_.PrepareCallframe();
 
       // Jump to the new function
       auto ref = Decoder::DecodeReference(instr);
@@ -63,14 +60,14 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     }
 
     case InstrType::LOAD: {
-      auto addr = memory_.GetStack().Pop();
+      auto addr = stack_.Pop();
 
       switch (addr.tag) {
         case rt::ValueTag::HeapRef:
         case rt::ValueTag::StaticRef:
         case rt::ValueTag::StackRef: {
           auto loc = memory_.AccessMemory({.reference = addr, .store = false});
-          memory_.GetStack().Push(*(rt::PrimitiveValue*)loc);
+          stack_.Push(*(rt::PrimitiveValue*)loc);
           break;
         }
         case rt::ValueTag::InstrRef:
@@ -83,8 +80,8 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     }
 
     case InstrType::STORE: {
-      auto addr = memory_.GetStack().Pop();
-      auto value = memory_.GetStack().Pop();
+      auto addr = stack_.Pop();
+      auto value = stack_.Pop();
 
       switch (addr.tag) {
         case rt::ValueTag::HeapRef:
@@ -107,15 +104,15 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       ip_.instr_no += 1;
 
       // Save ip
-      memory_.GetStack().Push(rt::PrimitiveValue{
+      stack_.Push(rt::PrimitiveValue{
           .tag = rt::ValueTag::InstrRef,
           .as_ref = rt::Reference{.to_instr = ip_},
       });
 
       // Save old fp, move fp and sp
-      memory_.GetStack().PrepareCallframe();
+      stack_.PrepareCallframe();
 
-      auto mem_ref = memory_.GetStack().Pop();
+      auto mem_ref = stack_.Pop();
       FMT_ASSERT(mem_ref.tag == rt::ValueTag::InstrRef,
                  "Calling to nonexecutable memory");
 
@@ -132,11 +129,11 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     }
 
     case InstrType::RET_FN: {
-      rax_ = memory_.GetStack().Pop();
+      rax_ = stack_.Pop();
 
-      memory_.GetStack().Ret();
+      stack_.Ret();
 
-      auto saved_ip = memory_.GetStack().Pop();
+      auto saved_ip = stack_.Pop();
       FMT_ASSERT(saved_ip.tag == rt::ValueTag::InstrRef,
                  "Found garbage instead of saved ip\n");
 
@@ -149,19 +146,19 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     case InstrType::FIN_CALL: {
       auto count = Decoder::DecodeByte(instr);
 
-      memory_.GetStack().PopCount(count);
+      stack_.PopCount(count);
 
       // Safety: the value must be present in rax after the call
-      memory_.GetStack().Push(std::move(rax_));
+      stack_.Push(std::move(rax_));
 
       return 2;
     }
 
     case InstrType::ADD: {
-      auto a = memory_.GetStack().Pop().as_int;
-      auto b = memory_.GetStack().Pop().as_int;
+      auto a = stack_.Pop().as_int;
+      auto b = stack_.Pop().as_int;
 
-      memory_.GetStack().Push(rt::PrimitiveValue{
+      stack_.Push(rt::PrimitiveValue{
           .tag = rt::ValueTag::Int,
           .as_int = a + b,
       });
@@ -170,10 +167,10 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     }
 
     case InstrType::SUBTRACT: {
-      auto rhs = memory_.GetStack().Pop().as_int;
-      auto lhs = memory_.GetStack().Pop().as_int;
+      auto rhs = stack_.Pop().as_int;
+      auto lhs = stack_.Pop().as_int;
 
-      memory_.GetStack().Push(rt::PrimitiveValue{
+      stack_.Push(rt::PrimitiveValue{
           .tag = rt::ValueTag::Int,
           .as_int = lhs - rhs,
       });
@@ -182,10 +179,10 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     }
 
     case InstrType::CMP_EQ: {
-      auto a = memory_.GetStack().Pop();
-      auto b = memory_.GetStack().Pop();
+      auto a = stack_.Pop();
+      auto b = stack_.Pop();
 
-      memory_.GetStack().Push(rt::PrimitiveValue{
+      stack_.Push(rt::PrimitiveValue{
           .tag = rt::ValueTag::Bool,
           .as_bool = a.tag == b.tag && a.as_int == b.as_int,
       });
@@ -194,10 +191,10 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     }
 
     case InstrType::CMP_LESS: {
-      auto a = memory_.GetStack().Pop();
-      auto b = memory_.GetStack().Pop();
+      auto a = stack_.Pop();
+      auto b = stack_.Pop();
 
-      memory_.GetStack().Push(rt::PrimitiveValue{
+      stack_.Push(rt::PrimitiveValue{
           .tag = rt::ValueTag::Bool,
           .as_bool = a.tag == b.tag && a.as_int < b.as_int,
       });
@@ -205,20 +202,34 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       return 1;
     }
 
-    case InstrType::PUSH_FALSE: {
-      memory_.GetStack().Push({.tag = rt::ValueTag::Bool, .as_bool = false});
+    case InstrType::PUSH_FALSE:
+      stack_.Push({.tag = rt::ValueTag::Bool, .as_bool = false});
       return 1;
+
+    case InstrType::PUSH_TRUE:
+      stack_.Push({.tag = rt::ValueTag::Bool, .as_bool = true});
+      return 1;
+
+    case InstrType::PUSH_UNIT:
+      stack_.Push({.tag = rt::ValueTag::Unit, .as_char = '\0'});
+      return 1;
+
+    case InstrType::PUSH_FP:
+      stack_.Push({.tag = rt::ValueTag::StackRef,
+                   .as_ref = {.to_data = stack_.GetFp()}});
+      return 1;
+
+    case InstrType::ADD_ADDR: {
+      auto addition = Decoder::DecodeOffset(instr);
+      stack_.Top().as_ref.to_data += addition;
+      FMT_ASSERT(stack_.Top().tag == rt::ValueTag::StackRef,
+                 "Can only add offset to addresses");
+      return 3;
     }
 
-    case InstrType::PUSH_TRUE: {
-      memory_.GetStack().Push({.tag = rt::ValueTag::Bool, .as_bool = true});
+    case InstrType::POP_STACK:
+      stack_.Pop();
       return 1;
-    }
-
-    case InstrType::POP_STACK: {
-      memory_.GetStack().Pop();
-      return 1;
-    }
 
     case InstrType::JUMP: {
       auto jump_offset = Decoder::DecodeOffset(instr);
@@ -238,9 +249,11 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       return 0;
     }
 
-    case InstrType::GET_ARG:
-    case InstrType::GET_LOCAL:
-      FMT_ASSERT(false, "Unimplemented!");
+    case InstrType::GET_AT_FP: {
+      auto offset = Decoder::DecodeOffset(instr);
+      stack_.GetAtFp(offset);
+      return 3;
+    }
   }
 
   FMT_ASSERT(false, "Unreachable!");

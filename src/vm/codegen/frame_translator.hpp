@@ -6,6 +6,7 @@
 #include <ast/statements.hpp>
 
 #include <optional>
+#include <utility>
 #include <vector>
 
 namespace vm::codegen {
@@ -56,7 +57,7 @@ class FrameTranslator {
   // Returns offset from the fp
   // (positive if in the current frame)
   // (nagative if from the past frames)
-  std::optional<int> Lookup(std::string name) {
+  std::optional<int> LookupOffset(std::string name) {
     // Check args
     for (size_t i = 0; i < fp_; i++) {
       auto& stack_name = layout_.at(i).name;
@@ -73,6 +74,15 @@ class FrameTranslator {
       }
     }
 
+    return std::nullopt;
+  }
+
+  std::optional<size_t> LookupSize(std::string name) {
+    for (size_t i = 0; i < layout_.size(); i++) {
+      if (layout_.at(i).name == name) {
+        return layout_.at(i).size;
+      }
+    }
     return std::nullopt;
   }
 

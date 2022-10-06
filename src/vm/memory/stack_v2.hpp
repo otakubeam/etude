@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vm/memory/vm_memory.hpp>
+
 #include <vm/rt/primitive.hpp>
 
 #include <cstdlib>
@@ -11,20 +13,15 @@ class StackPrinter;
 }
 
 namespace vm::memory {
-class VmMemory;
-}
-
-namespace vm {
 
 class VmStack {
- private:
-  // Invoked by VmMemory
-  VmStack(uint8_t* memory) : stack_area_{(rt::PrimitiveValue*)memory} {
-  }
-
  public:
   friend class debug::StackPrinter;
-  friend class memory::VmMemory;
+
+  VmStack(VmMemory& memory)
+      : memory_{memory},
+        stack_area_{(rt::PrimitiveValue*)memory.GetStackArea()} {
+  }
 
   void Push(rt::PrimitiveValue value) {
     stack_area_[sp_] = std::move(value);
@@ -66,16 +63,16 @@ class VmStack {
     sp_ += 1;
   }
 
-  auto GetFnArg(size_t count) -> rt::PrimitiveValue {
-    return GetAtFp(-count);
+  void StoreAtFp(int16_t offset, const rt::PrimitiveValue& value) {
+    stack_area_[fp_ + offset] = value;
   }
 
-  auto GetLocalVar(size_t count) -> rt::PrimitiveValue {
-    return GetAtFp(count);
+  auto GetAtFp(int offset) {
+    return Push(stack_area_[fp_ + offset]);
   }
 
-  void StoreAt(int16_t offset, rt::PrimitiveValue value) {
-    GetAtFp(offset) = value;
+  uint32_t GetFp() const {
+    return fp_;
   }
 
   auto Top() -> rt::PrimitiveValue& {
@@ -83,16 +80,14 @@ class VmStack {
   }
 
  private:
-  auto GetAtFp(int offset) -> rt::PrimitiveValue& {
-    return stack_area_[fp_ + offset];
-  }
-
- private:
   // Stack pointer, frame pointer
   size_t sp_ = 1;
   size_t fp_ = 0;
 
+  // TODO: log all the accesses
+  VmMemory& memory_;
+
   rt::PrimitiveValue* stack_area_ = nullptr;
 };
 
-}  // namespace vm
+}  // namespace vm::memory

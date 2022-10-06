@@ -101,7 +101,9 @@ class VarDeclStatement : public Statement {
     return lvalue_->GetName();
   }
 
+  // Specific type for GetName method
   VarAccessExpression* lvalue_;
+
   Expression* value_;
 };
 

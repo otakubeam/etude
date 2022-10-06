@@ -14,6 +14,9 @@ enum class InstrType : u_int8_t {
   PUSH_VALUE,     // push $rt::Value
   PUSH_TRUE,      // push_true
   PUSH_FALSE,     // push_false
+  PUSH_UNIT,      // push_unit
+  PUSH_FP,        // push_fp (pushes the addr of fp on top of the stack)
+  ADD_ADDR,       // add_addr $1 (add some small field offset to the addr)
   POP_STACK,      // pop
   RET_FN,         // ret
   CALL_FN,        // call $rt::InstrReference
@@ -23,16 +26,14 @@ enum class InstrType : u_int8_t {
                   // (clean up $1 args from the stack and push eax)
   JUMP,           // jump $addr ($addr = relative displacement within a chunk)
   JUMP_IF_FALSE,  // jump_if_false $addr (relative displacement)
+  GET_AT_FP,      // get_at_fp $addr (signed displacement)
   ADD,            // add (pops 2 and pushes result)
   SUBTRACT,       // subtract (pops 2 and pushes result)
   CMP_EQ,         // cmp_eq (pops 2 and pushes bool)
   CMP_LESS,       // cmp_eq (pops 2 and pushes bool)
-  GET_ARG,        // get_arg $1
-                  // (get value at offset -3 - $1 from the current fp)
-  GET_LOCAL,      // get_local $1
-                  // (get value at offset $1 from the current fp)
   LOAD,           // load (pop address from the stack)
-  STORE,          // store (pops address then pops value)
+  STORE,          // store $1
+                  // (pops address then pops value which is $1 words long)
 };
 
 //////////////////////////////////////////////////////////////////////

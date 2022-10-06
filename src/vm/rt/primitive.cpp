@@ -29,37 +29,40 @@ std::string FormatInstrRef(InstrReference instr_ref) {
   return fmt::format("[{} {}]", instr_ref.chunk_no, instr_ref.instr_no);
 }
 
-std::string FormatPrimitiveValue(PrimitiveValue value) {
-  auto result = fmt::format("Value [tag:{}, ", FormatValueTag(value.tag));
-
+std::string FormatValue(PrimitiveValue value) {
   switch (value.tag) {
-    case ValueTag::Int:
-      result.append(fmt::format("value {}]", value.as_int));
-      return result;
-    case ValueTag::Bool:
-      result.append(fmt::format("value {}]", value.as_bool));
-      return result;
     case ValueTag::Unit:
-      result.append(fmt::format("value unit({})]", value.as_int));
-      return result;
+      return fmt::format("{}", value.as_int);
+
+    case ValueTag::Int:
+      return fmt::format("{}", value.as_int);
+
+    case ValueTag::Bool:
+      return fmt::format("{}", value.as_bool);
+
     case ValueTag::Char:
-      result.append(fmt::format("value char({})]", value.as_char));
-      return result;
+      return fmt::format("{}", value.as_char);
+
+    case ValueTag::InstrRef:
+      return FormatInstrRef(value.as_ref.to_instr);
+
+    case ValueTag::StackRef:
+      return fmt::format("{}", value.as_ref.to_data);
+
     case ValueTag::HeapRef:
       return "HeapRef";
-    case ValueTag::StackRef:
-      result.append(fmt::format("value ({})]", value.as_ref.to_data));
-      return result;
-    case ValueTag::InstrRef:
-      result.append(fmt::format("value ({}, {})]",
-                                value.as_ref.to_instr.chunk_no,
-                                value.as_ref.to_instr.instr_no));
-      return result;
+
     case ValueTag::StaticRef:
       return "StaticRef";
+
     default:
       FMT_ASSERT(false, "Unreachable!");
   }
+}
+
+std::string FormatPrimitiveValue(PrimitiveValue value) {
+  return fmt::format("Value [tag:{}, value:{}]", FormatValueTag(value.tag),
+                     FormatValue(value));
 }
 
 }  // namespace vm::rt
