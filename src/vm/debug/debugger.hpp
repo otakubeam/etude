@@ -20,6 +20,7 @@ class Debugger : public BytecodeInterpreter {
       return false;
     }
 
+    fmt::print("{}\n\n", printer_.ToDot());
     printer_.Print();
     return true;
   }

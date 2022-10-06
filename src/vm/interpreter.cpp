@@ -139,8 +139,14 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     case InstrType::NATIVE_CALL: {
       auto native_no = Decoder::DecodeByte(instr);
       (void)native_no;
-      // TODO: make a call into the NativeTable
-      FMT_ASSERT(false, "Unimplemented!");
+
+      auto ptr = stack_.Pop();
+      stack_.Push({
+          .tag = rt::ValueTag::Bool,
+          .as_bool = ptr.tag == rt::ValueTag::Unit,
+      });
+
+      return 2;
     }
 
     case InstrType::RET_FN: {

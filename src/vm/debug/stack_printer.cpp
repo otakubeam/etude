@@ -31,6 +31,53 @@ std::string StackPrinter::Format() {
   return fmt::to_string(buf);
 }
 
+std::string DotCell(rt::PrimitiveValue cell) {
+  switch (cell.tag) {
+    case rt::ValueTag::Int:
+      return fmt::format("{}", cell.as_int);
+    case rt::ValueTag::Bool:
+      return fmt::format("{}", cell.as_bool);
+    case rt::ValueTag::Char:
+      return fmt::format("{}", cell.as_char);
+    case rt::ValueTag::Unit:
+      return fmt::format("unit");
+    case rt::ValueTag::InstrRef:
+      return rt::FormatInstrRef(cell.as_ref.to_instr);
+    case rt::ValueTag::StackRef:
+      return fmt::format("s{}", (cell.as_ref.to_data));
+    default:
+      return "<unsupported>";
+  }
+}
+
+std::string StackPrinter::ToDot() {
+  fmt::memory_buffer buf;
+
+  std::string strucure;
+  for (size_t i = 0; i < 32; i++) {
+    strucure += fmt::format("<s{}> {} |", i, DotCell(stack_.stack_area_[i]));
+  }
+
+  fmt::format_to(std::back_inserter(buf),
+                 "digraph G {{ rankdir=LR; "
+                 "node [shape=record,width=.1,height=.1];"
+                 "sp; fp; "
+                 "stack [label = \" {} \"];\n",
+                 strucure);
+
+  fmt::format_to(std::back_inserter(buf), "sp -> stack:s{};\n", stack_.sp_);
+  fmt::format_to(std::back_inserter(buf), "fp -> stack:s{};\n", stack_.fp_);
+
+  for (size_t i = 0; i < stack_.sp_; i++) {
+    if (stack_.stack_area_[i].tag == rt::ValueTag::StackRef) {
+      fmt::format_to(std::back_inserter(buf), "stack:s{} -> stack:s{};\n", i,
+                     stack_.stack_area_[i].as_ref.to_data);
+    }
+  }
+
+  return fmt::to_string(buf);
+}
+
 ////////////////////////////////////////////////////////////////////
 
 void StackPrinter::FormatHeader(fmt::memory_buffer& buf) {

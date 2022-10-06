@@ -1,3 +1,5 @@
+#include <types/check/type_checker.hpp>
+
 #include <vm/codegen/compiler.hpp>
 
 #include <vm/debug/disassember.hpp>
@@ -161,45 +163,54 @@ TEST_CASE("vm:codgen:struct:nested", "[vm:codgen]") {
   vm::debug::Debugger debugger;
   debugger.Load(std::move(elf));
 
-  CHECK(debugger.RunToTheEnd().as_bool == true);
+  CHECK(debugger.StepToTheEnd().as_bool == true);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("vm:codgen:struct:tree", "[vm:codgen]") {
   char stream[] =
-      "                                                  "
-      "   struct Tree {                                   "
-      "      left: *Tree,                                 "
-      "      right: *Tree,                                "
-      "      value: Int,                                  "
-      "   };                                              "
-      "                                                   "
-      "   fun binSearchInt(tree: *Tree, val: Int) Bool {  "
-      "       if isNull(tree) {                           "
-      "           return false;                           "
-      "       };                                          "
-      "                                                   "
-      "       var nodeValue = (*tree).value;              "
-      "                                                   "
-      "       if nodeValue == val {                       "
-      "          return true;                             "
-      "       };                                          "
-      "                                                   "
-      "       var subtree = if nodeValue < val {          "
-      "           (*tree).left                            "
-      "       } else {                                    "
-      "           (*tree).right                           "
-      "       };                                          "
-      "                                                   "
-      "       binSearchInt(subtree, val)                  "
-      "   }                                               "
-      "                                                   "
-      "  fun main() Bool {                                "
-      "     var tree = Tree:{unit, unit, 3};              "
-      "     var treePtr = &tree;                          "
-      "     binSearchInt(treePtr, 3)                      "
-      "  }                                                ";
+      "  struct Tree {                                        "
+      "     left: *Tree,                                      "
+      "     right: *Tree,                                     "
+      "     value: Int,                                       "
+      "  };                                                   "
+      "                                                       "
+      "  fun insertNewValue(tree: *Tree, node: *Tree) Bool {  "
+      "      var nodeValue = (*node).value;                   "
+      "      var treeValue = (*tree).value;                   "
+      "                                                       "
+      "      if treeValue == nodeValue {                      "
+      "         return false;                                 "
+      "      };                                               "
+      "                                                       "
+      "      var candidate = if nodeValue < treeValue {       "
+      "         &(*tree).left                                 "
+      "      } else {                                         "
+      "         &(*tree).right                                "
+      "      };                                               "
+      "                                                       "
+      "      if isNull(*candidate) {                          "
+      "         *candidate = node;                            "
+      "         true                                          "
+      "      } else {                                         "
+      "         insertNewValue(*candidate, node)              "
+      "      }                                                "
+      "  }                                                    "
+      "                                                       "
+      "  fun main() Bool {                                    "
+      "     var tr1 = Tree:{unit, unit, 1};                   "
+      "     var tr5 = Tree:{unit, unit, 5};                   "
+      "     insertNewValue(&tr1, &tr5)                        "
+      //"     var tr4 = Tree:{unit, unit, 4};                   "
+      //"     var tr3 = Tree:{unit, unit, 3};                   "
+      //"     var tr2 = Tree:{unit, unit, 2};                   "
+      "                                                       "
+      // "     insertNewValue(&tr1, &tr3);                       "
+      // "     insertNewValue(&tr1, &tr2);                       "
+      // "     insertNewValue(&tr1, &tr4);                       "
+      // "     insertNewValue(&tr1, &tr4)                       "
+      "  }                                                    ";
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
 
@@ -224,5 +235,5 @@ TEST_CASE("vm:codgen:struct:tree", "[vm:codgen]") {
   vm::debug::Debugger debugger;
   debugger.Load(std::move(elf));
 
-  CHECK(debugger.StepToTheEnd().as_bool == true);
+  CHECK(debugger.StepToTheEnd().as_bool == false);
 }

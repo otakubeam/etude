@@ -7,8 +7,6 @@
 #include <vm/instr_translator.hpp>
 #include <vm/elf_file.hpp>
 
-#include <types/check/type_checker.hpp>
-
 #include <ast/visitors/template_visitor.hpp>
 #include <ast/scope/environment.hpp>
 
@@ -65,10 +63,7 @@ class Compiler : public Visitor {
     if (auto lit = dynamic_cast<VarAccessExpression*>(expr)) {
       auto name = lit->GetName();
       int16_t offset = LookupVarAddress(name);
-
-      // TODO: simple case of variable store or load
-      lit->address_ = offset;
-
+      fmt::print("{}\n", name);
       generation.push_back(FatInstr{
           .type = InstrType::PUSH_FP,
       });
@@ -78,9 +73,11 @@ class Compiler : public Visitor {
       });
     } else if (auto deref = dynamic_cast<DereferenceExpression*>(expr)) {
       deref->operand_->Accept(this);
-
+      // TODO: do I need this?
       if (!lvalue_context) {
-        generation.push_back(FatInstr{.type = InstrType::LOAD});
+        generation.push_back(FatInstr{
+            .type = InstrType::LOAD,
+        });
       }
     } else if (auto field_access = dynamic_cast<FieldAccessExpression*>(expr)) {
       GenAddress(field_access->struct_expression_, true);
@@ -89,9 +86,6 @@ class Compiler : public Visitor {
           .offset = GetFieldOffset(field_access),
       });
     }
-
-    // Well, this one actually uses what I write here
-    // dynamic_cast<AddressofExpression*>(expr)
 
     return &generation;
   }
@@ -126,14 +120,9 @@ class Compiler : public Visitor {
  private:
   std::optional<InstrTranslator> translator_;
 
-  bool emit_mem_fetch_ = true;
-
   // Environment
   using StructEnv = Environment<detail::StructSymbol*>;
   StructEnv structs_ = StructEnv::MakeGlobal();
-
-  using FunctionsEnv = Environment<detail::FunctionSymbol>;
-  FunctionsEnv functions_ = FunctionsEnv::MakeGlobal();
 
   // StackEmulation
   FrameTranslator* current_frame_ = nullptr;

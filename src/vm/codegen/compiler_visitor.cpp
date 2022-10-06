@@ -60,6 +60,14 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
     node->arguments_[i]->Accept(this);
   }
 
+  if (node->GetFunctionName() == "isNull") {
+    TranslateInstruction({
+        .type = vm::InstrType::NATIVE_CALL,
+        .arg = 0,
+    });
+    return;
+  }
+
   // Branch direct / indirect
 
   if (auto mb_offset = current_frame_->LookupOffset(node->GetFunctionName())) {

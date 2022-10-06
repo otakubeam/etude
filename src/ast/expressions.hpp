@@ -47,8 +47,7 @@ class ComparisonExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    FMT_ASSERT(false, "Unreachable!");
-    return nullptr;
+    return &types::builtin_bool;
   };
 
   virtual lex::Location GetLocation() override {
@@ -73,8 +72,7 @@ class BinaryExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    FMT_ASSERT(false, "Unreachable!");
-    return nullptr;
+    return &types::builtin_int;
   };
 
   virtual lex::Location GetLocation() override {
@@ -99,8 +97,7 @@ class UnaryExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    FMT_ASSERT(false, "Unreachable!");
-    return nullptr;
+    return operand_->GetType();
   };
 
   virtual lex::Location GetLocation() override {
@@ -192,8 +189,8 @@ class FnCallExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    FMT_ASSERT(false, "Unreachable!");
-    return nullptr;
+    FMT_ASSERT(expression_type, "Typechecking fault");
+    return expression_type;
   };
 
   std::string GetFunctionName() {
@@ -209,6 +206,8 @@ class FnCallExpression : public Expression {
   std::vector<Expression*> arguments_;
 
   bool is_native_call_ = false;
+
+  types::Type* expression_type = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -278,7 +277,7 @@ class FieldAccessExpression : public LvalueExpression {
     return field_name_.location;
   }
 
-  // This can be an Identifier or or result of 
+  // This can be an Identifier or or result of
   // indexing an array, or of a field access.
   LvalueExpression* struct_expression_;
 
@@ -305,8 +304,7 @@ class BlockExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    FMT_ASSERT(false, "Unreachable!");
-    return nullptr;
+    return final_->GetType();
   };
 
   virtual lex::Location GetLocation() override {
@@ -339,8 +337,7 @@ class IfExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    FMT_ASSERT(false, "Unreachable!");
-    return nullptr;
+    return true_branch_->GetType();
   };
 
   virtual lex::Location GetLocation() override {
@@ -364,8 +361,7 @@ class LiteralExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    FMT_ASSERT(false, "Unreachable!");
-    return nullptr;
+    return type_;
   };
 
   virtual lex::Location GetLocation() override {

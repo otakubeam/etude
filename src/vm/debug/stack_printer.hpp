@@ -19,8 +19,10 @@ class StackPrinter {
     std::string name;
   };
 
+
   void Print();
   std::string Format();
+  std::string ToDot();
 
  private:
   void FormatHeader(fmt::memory_buffer& buf);
