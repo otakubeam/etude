@@ -23,7 +23,13 @@ void Compiler::VisitVarDecl(VarDeclStatement* node) {
 
 void Compiler::VisitAssignment(AssignmentStatement* node) {
   node->value_->Accept(this);
-  GenAddress(node->target_, true);
+  auto instrs = GenAddress(node->target_, true);
+
+  for (auto instr : *instrs) {
+    TranslateInstruction(instr);
+  }
+
+  instrs->clear();
 
   auto size = GetTypeSize(node->target_);
   TranslateInstruction({
@@ -253,37 +259,18 @@ void Compiler::VisitStructConstruction(StructConstructionExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitFieldAccess(FieldAccessExpression* node) {
-  // XXX: This is wrong, no?
-  node->struct_expression_->Accept(this);
+  auto instrs = GenAddress(node, false);
 
-  auto offset = GetFieldOffset(node);
-
-  // Here we compile the address right into the instruction
-
-  // str.a.b = 5;
-
-  // str.a.b;
-
-  // Everything is known at compile time
-
-  if (node->IsDirect()) {
-    node->address_ = node->struct_expression_->GetAddress() + offset;
-    EmitMemFetch(node->address_);
-    return;
+  for (auto instr : *instrs) {
+    TranslateInstruction(instr);
   }
 
-  // Here we keep the address on stack and only add the offset
+  TranslateInstruction({
+      .type = InstrType::LOAD,
+      .arg = GetTypeSize(node),
+  });
 
-  // (*str.a).b = 5;
-
-  // `.b` is indirect because deref is indirect
-  // so we take this path and do not emit the `LOAD`
-
-  // (*str.a).b;
-
-  // here we emit the load
-
-  GenAddress(node, false);
+  instrs->clear();
 }
 
 ////////////////////////////////////////////////////////////////////
