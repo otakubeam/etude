@@ -15,7 +15,7 @@ void Disassembler::Disassemble(ElfFile& file) {
     fmt::print("\n");
   }
 
-  FormatRelocations(file);
+  fmt::print("{}", FormatRelocations(file));
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -53,36 +53,33 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
   std::string bytes, pretty_print;
 
   switch (type) {
-    case InstrType::PUSH_VALUE: {
+    case InstrType::PUSH_VALUE:
       bytes = FormatNBytes(sizeof(rt::PrimitiveValue), instr);
       pretty_print = rt::FormatPrimitiveValue(*Decoder::DecodeValue(instr));
       break;
-    }
 
-    case InstrType::CALL_FN: {
+    case InstrType::CALL_FN:
       bytes = FormatNBytes(sizeof(rt::InstrReference), instr);
       pretty_print = rt::FormatInstrRef(*Decoder::DecodeReference(instr));
       break;
-    }
 
     case InstrType::NATIVE_CALL:
     case InstrType::STORE:
-    case InstrType::FIN_CALL: {
+    case InstrType::FIN_CALL:
       bytes = FormatNBytes(1, instr);
       pretty_print = fmt::format("{}", *(instr));
       instr += 1;
       break;
-    }
 
     case InstrType::JUMP_IF_FALSE:
     case InstrType::ADD_ADDR:
     case InstrType::GET_AT_FP:
-    case InstrType::JUMP: {
+    case InstrType::JUMP:
       bytes = FormatNBytes(2, instr);
-      pretty_print = fmt::format("{}", (int16_t)*instr);
+      pretty_print = fmt::format("{}", *((int16_t*)instr));
       instr += 2;
       break;
-    }
+
 
     case InstrType::LOAD:
     case InstrType::INDIRECT_CALL:
@@ -91,6 +88,8 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
     case InstrType::CMP_EQ:
     case InstrType::CMP_LESS:
     case InstrType::PUSH_TRUE:
+    case InstrType::PUSH_UNIT:
+    case InstrType::PUSH_FP:
     case InstrType::PUSH_FALSE:
     case InstrType::RET_FN:
     case InstrType::POP_STACK:
@@ -113,7 +112,7 @@ std::string Disassembler::FormatRelocations(ElfFile& file) {
 
   for (auto reloc : file.relocations_) {
     result +=
-        fmt::format("\tsymbol {} at offset {} of section {}\n",  //
+        fmt::format("\tsymbol <{}> at offset {} of section {}\n",  //
                     reloc.name, reloc.offset_to_patch, reloc.text_section_no);
   }
 

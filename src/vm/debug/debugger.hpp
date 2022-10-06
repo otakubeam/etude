@@ -24,7 +24,7 @@ class Debugger : public BytecodeInterpreter {
     return true;
   }
 
-  rt::PrimitiveValue StepToEnd() {
+  rt::PrimitiveValue StepToTheEnd() {
     while (Step())
       ;
     return return_.value();

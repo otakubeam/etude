@@ -44,8 +44,6 @@ class FrameTranslator {
         .depth = 0,
     });
 
-    PushAnonValue();
-
     fp_ = layout_.size();
 
     layout_.emplace_back(Slot{

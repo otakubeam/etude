@@ -24,8 +24,8 @@ TEST_CASE("vm: link", "[vm]") {
   });
   auto elf_f = std::move(assembler_f).Finalize();
 
-  vm::debug::Disassembler disasm;
-  disasm.Disassemble(elf_f);
+  // vm::debug::Disassembler disasm;
+  // disasm.Disassemble(elf_f);
 
   ////////////////////////////////////////////////////////////////////
 
@@ -43,22 +43,22 @@ TEST_CASE("vm: link", "[vm]") {
   });
   auto elf = std::move(assembler).Finalize();
 
-  disasm.Disassemble(elf);
+  //disasm.Disassemble(elf);
 
   ////////////////////////////////////////////////////////////////////
 
-  fmt::print("\n\nNow let's link these files!\n\n");
+  // fmt::print("\n\nNow let's link these files!\n\n");
 
   elf += std::move(elf_f);
 
-  disasm.Disassemble(elf);
+  // disasm.Disassemble(elf);
 
   vm::debug::Debugger debugger;
 
   debugger.Load(std::move(elf));
 
   for (auto i = 0; i < 16; i++) {
-    debugger.Step();
+    debugger.RunFor(1);
   }
 }
 

@@ -80,6 +80,19 @@ class InstrTranslator {
     return DIEs_.size();
   }
 
+  struct Label {
+    size_t instr_start = 0;
+  };
+
+  Label GetLabel() {
+    return Label{length_};
+  }
+
+  void BackpatchLabel(Label l) {
+    auto offset = length_ - l.instr_start;
+    memcpy(&bytecode_[l.instr_start] + 1, &offset, 2);
+  }
+
  private:
   void Emit(uint8_t byte) {
     bytecode_[length_] = byte;

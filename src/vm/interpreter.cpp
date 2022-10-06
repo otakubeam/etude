@@ -255,11 +255,11 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     }
 
     case InstrType::JUMP_IF_FALSE: {
-      auto condition = Decoder::DecodeValue(instr);
+      auto condition = stack_.Pop();
       auto jump_offset = Decoder::DecodeOffset(instr);
 
-      if (condition) {
-        return 1 + sizeof(rt::PrimitiveValue) + sizeof(int16_t);
+      if (condition.as_bool) {
+        return 1 + sizeof(int16_t);
       }
 
       ip_.instr_no += jump_offset;

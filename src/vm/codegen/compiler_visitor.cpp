@@ -45,7 +45,32 @@ void Compiler::VisitFunDecl(FunDeclStatement* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitFnCall(FnCallExpression* node) {
-  FMT_ASSERT(false, "Unimplemented!");
+  // Place arguments in reverse order
+
+  for (int i = node->arguments_.size() - 1; i >= 0; i -= 1) {
+    node->arguments_[i]->Accept(this);
+  }
+
+  // Branch direct / indirect
+
+  if (auto mb_offset = current_frame_->LookupOffset(node->GetFunctionName())) {
+    EmitMemFetch(*mb_offset);
+    translator_->TranslateInstruction({
+        .type = vm::InstrType::INDIRECT_CALL,
+    });
+  } else {
+    translator_->TranslateInstruction({
+        .type = vm::InstrType::CALL_FN,
+        .fn_name = node->GetFunctionName(),
+    });
+  }
+
+  // Don't forget to clean up the stack
+
+  translator_->TranslateInstruction({
+      .type = vm::InstrType::FIN_CALL,
+      .arg = (uint8_t)node->arguments_.size(),
+  });
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -113,25 +138,25 @@ void Compiler::VisitAddressof(AddressofExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitComparison(ComparisonExpression* node) {
-  // node->left_->Accept(this);
-  // node->right_->Accept(this);
-  //
-  // switch (node->operator_.type) {
-  //   case lex::TokenType::EQUALS:
-  //     chunk_.instructions.push_back({vm::FatInstr{
-  //         .type = vm::InstrType::CMP_EQ,
-  //     }});
-  //     break;
-  //
-  //   case lex::TokenType::LT:
-  //     chunk_.instructions.push_back({vm::FatInstr{
-  //         .type = vm::InstrType::CMP_LESS,
-  //     }});
-  //     break;
-  //
-  //   default:
-  //     FMT_ASSERT(false, "Unreachable!");
-  // }
+  InstrType type;
+
+  node->left_->Accept(this);
+  node->right_->Accept(this);
+
+  switch (node->operator_.type) {
+    case lex::TokenType::EQUALS:
+      type = vm::InstrType::CMP_EQ;
+      break;
+
+    case lex::TokenType::LT:
+      type = vm::InstrType::CMP_LESS;
+      break;
+
+    default:
+      FMT_ASSERT(false, "Unreachable!");
+  }
+
+  TranslateInstruction(FatInstr{.type = type});
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -165,45 +190,27 @@ void Compiler::VisitUnary(UnaryExpression*) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitIf(IfExpression* node) {
-  // node->condition_->Accept(this);
-  //
-  // auto jump_to_false_ip = translator_.Count();
-  //
-  // chunk_.instructions.push_back(vm::FatInstr{
-  //     .type = InstrType::JUMP_IF_FALSE,
-  // });
-  //
-  // // True branch
-  //
-  // node->true_branch_->Accept(this);
-  //
-  // auto jump_to_end_ip = chunk_.instructions.size();
-  //
-  // chunk_.instructions.push_back(vm::FatInstr{
-  //     .type = InstrType::JUMP,
-  // });
-  //
-  // // False branch
-  //
-  // auto false_ip_start = chunk_.instructions.size();
-  //
-  // node->false_branch_->Accept(this);
-  //
-  // auto false_ip_end = chunk_.instructions.size();
-  //
-  // // Backpatch JUMP_IF_FALSE
-  // chunk_.instructions.at(jump_to_false_ip) = vm::FatInstr{
-  //     .type = InstrType::JUMP_IF_FALSE,
-  //     .arg2 = (uint8_t)(false_ip_start >> 8),
-  //     .arg3 = (uint8_t)(false_ip_start),
-  // };
-  //
-  // // Backpatch JUMP
-  // chunk_.instructions.at(jump_to_end_ip) = vm::FatInstr{
-  //     .type = InstrType::JUMP,
-  //     .arg2 = (uint8_t)(false_ip_end >> 8),
-  //     .arg3 = (uint8_t)(false_ip_end),
-  // };
+  node->condition_->Accept(this);
+
+  auto backpatch_to_false = translator_->GetLabel();
+
+  translator_->TranslateInstruction({.type = InstrType::JUMP_IF_FALSE});
+
+  // True branch
+
+  node->true_branch_->Accept(this);
+
+  auto backpatch_to_end = translator_->GetLabel();
+
+  translator_->TranslateInstruction({.type = InstrType::JUMP});
+
+  // False branch
+
+  translator_->BackpatchLabel(backpatch_to_false);
+
+  node->false_branch_->Accept(this);
+
+  translator_->BackpatchLabel(backpatch_to_end);
 }
 
 ////////////////////////////////////////////////////////////////////

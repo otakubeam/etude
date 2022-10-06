@@ -27,11 +27,11 @@ auto ElfFile::FindEntryPoint() -> std::optional<rt::InstrReference> {
 //////////////////////////////////////////////////////////////////////
 
 void ElfFile::operator+=(ElfFile&& other) {
-  MergeText(other.text_sections_);
-
   MergeSymtab(other.symtab_sections_);
 
   MergeRelocations(other.relocations_);
+
+  MergeText(other.text_sections_);
 
   LocateAll();
 }
@@ -39,8 +39,8 @@ void ElfFile::operator+=(ElfFile&& other) {
 //////////////////////////////////////////////////////////////////////
 
 void ElfFile::LocateAll() {
-  for (auto& reloc : relocations_) {
-    for (size_t i = 0; i < symtab_sections_.size(); i++) {
+  for (size_t i = 0; i < symtab_sections_.size(); i++) {
+    for (auto& reloc : relocations_) {
       auto& symbol = symtab_sections_.at(i);
 
       if (reloc.name == symbol.name) {
@@ -48,7 +48,8 @@ void ElfFile::LocateAll() {
 
         DropRelocationEntry(reloc);
 
-        i = 0;  // reset searching for symbols
+        i = -1;  // reset searching for symbols
+        break;
       }
     }
   }
@@ -82,7 +83,7 @@ void ElfFile::MergeText(std::vector<TextSection> sections) {
 //////////////////////////////////////////////////////////////////////
 
 void ElfFile::MergeSymtab(std::vector<SymtabEntry> entries) {
-  auto initial_size = symtab_sections_.size();
+  auto initial_size = text_sections_.size();
 
   for (auto entry : entries) {
     entry.text_section_no += initial_size;
@@ -93,7 +94,7 @@ void ElfFile::MergeSymtab(std::vector<SymtabEntry> entries) {
 //////////////////////////////////////////////////////////////////////
 
 void ElfFile::MergeRelocations(std::vector<RelocationEntry> entries) {
-  auto initial_size = relocations_.size();
+  auto initial_size = text_sections_.size();
 
   for (auto entry : entries) {
     entry.text_section_no += initial_size;

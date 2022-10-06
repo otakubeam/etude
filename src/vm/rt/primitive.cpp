@@ -55,7 +55,6 @@ std::string FormatValue(PrimitiveValue value) {
     case ValueTag::StaticRef:
       return "StaticRef";
 
-    default:
       FMT_ASSERT(false, "Unreachable!");
   }
 }
