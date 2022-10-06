@@ -9,25 +9,29 @@ void BytecodeInterpreter::Load(ElfFile executable) {
   memory_.Load(std::move(executable));
 }
 
+rt::PrimitiveValue BytecodeInterpreter::RunToTheEnd() {
+  try {
+    RunFor(100500);
+  } catch (rt::PrimitiveValue return_value) {
+    return return_value;
+  }
+  FMT_ASSERT(false, "Unreachable!");
+}
+
 void BytecodeInterpreter::RunFor(size_t count) {
   for (size_t i = 0; i < count; i++) {
-    auto instr = GetNextInstruction();
-    ip_.instr_no += DecodeExecute(instr);
+    if (auto instr = GetNextInstruction()) {
+      ip_.instr_no += DecodeExecute(instr);
+    }
   }
 }
 
 auto BytecodeInterpreter::GetNextInstruction() -> uint8_t* {
   // MakeInstrAccess(ip_);
-  return memory_.AccessMemory(memory::MemAccess{
-      .reference =
-          {
-              .tag = rt::ValueTag::InstrRef,
-              .as_ref =
-                  rt::Reference{
-                      .to_instr = ip_,
-                  },
-          },
-  });
+  return memory_.AccessMemory({.reference = {
+                                   .tag = rt::ValueTag::InstrRef,
+                                   .as_ref = {.to_instr = ip_},
+                               }});
 }
 
 uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
@@ -40,12 +44,13 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     }
 
     case InstrType::CALL_FN: {
+      // Remember to move the ip the next time we get to this function
       ip_.instr_no += 1 + sizeof(rt::InstrReference);
 
       // Save ip
       stack_.Push(rt::PrimitiveValue{
           .tag = rt::ValueTag::InstrRef,
-          .as_ref = rt::Reference{.to_instr = ip_},
+          .as_ref = {.to_instr = ip_},
       });
 
       // Save old fp, move fp and sp
@@ -66,8 +71,10 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
         case rt::ValueTag::HeapRef:
         case rt::ValueTag::StaticRef:
         case rt::ValueTag::StackRef: {
-          auto loc = memory_.AccessMemory({.reference = addr, .store = false});
-          stack_.Push(*(rt::PrimitiveValue*)loc);
+          auto src = memory_.AccessMemory({.reference = addr, .store = false});
+          stack_.Push(*(rt::PrimitiveValue*)src);
+          // memcpy(&stack_.Top() + 1, src, sizeof(rt::PrimitiveValue) *
+          // store_words);
           break;
         }
         case rt::ValueTag::InstrRef:
@@ -81,23 +88,31 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
 
     case InstrType::STORE: {
       auto addr = stack_.Pop();
-      auto value = stack_.Pop();
+      auto store_words = Decoder::DecodeByte(instr);
 
       switch (addr.tag) {
-        case rt::ValueTag::HeapRef:
-        case rt::ValueTag::StaticRef:
         case rt::ValueTag::StackRef: {
-          auto loc = memory_.AccessMemory({.reference = addr, .store = true});
-          memcpy(loc, &value, sizeof(value));
+          auto dst = memory_.AccessMemory({.reference = addr, .store = true});
+          //
+          // Due to semantics of Top (pointing to the first *real* element)
+          // neeed to subtract 1 here
+          //
+          auto src_zone_start = &stack_.Top() - (store_words - 1);
+          memcpy(dst, src_zone_start, sizeof(rt::PrimitiveValue) * store_words);
+
+          stack_.PopCount(store_words);
           break;
         }
+
+        case rt::ValueTag::HeapRef:
+        case rt::ValueTag::StaticRef:
         case rt::ValueTag::InstrRef:
           FMT_ASSERT(false, "Not a value\n");
         default:
           FMT_ASSERT(false, "Not a reference\n");
       }
 
-      return 1;
+      return 2;
     }
 
     case InstrType::INDIRECT_CALL: {
@@ -106,7 +121,7 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       // Save ip
       stack_.Push(rt::PrimitiveValue{
           .tag = rt::ValueTag::InstrRef,
-          .as_ref = rt::Reference{.to_instr = ip_},
+          .as_ref = {.to_instr = ip_},
       });
 
       // Save old fp, move fp and sp
@@ -131,7 +146,9 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     case InstrType::RET_FN: {
       rax_ = stack_.Pop();
 
-      stack_.Ret();
+      if (!stack_.Ret()) {
+        throw rax_;  // ~sys_exit
+      }
 
       auto saved_ip = stack_.Pop();
       FMT_ASSERT(saved_ip.tag == rt::ValueTag::InstrRef,

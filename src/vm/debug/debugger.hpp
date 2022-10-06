@@ -9,17 +9,30 @@ namespace vm::debug {
 
 class Debugger : public BytecodeInterpreter {
  public:
-  void Step() {
+  bool Step() {
     auto instr = GetNextInstruction();
     fmt::print("Current instruction {}: {}", rt::FormatInstrRef(ip_),
                Disassembler::FormatInstruction(instr));
+    try {
+      RunFor(1);
+    } catch (rt::PrimitiveValue ret) {
+      return_ = ret;
+      return false;
+    }
 
-    RunFor(1);
-    printer.Print();
+    printer_.Print();
+    return true;
+  }
+
+  rt::PrimitiveValue StepToEnd() {
+    while (Step())
+      ;
+    return return_.value();
   }
 
  private:
-  StackPrinter printer{stack_};
+  StackPrinter printer_{stack_};
+  std::optional<rt::PrimitiveValue> return_;
 };
 
 }  // namespace vm::debug

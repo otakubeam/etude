@@ -20,7 +20,7 @@ TEST_CASE("vm:codgen:simple", "[vm:codgen]") {
       "      var a = 5;       "
       "      var b = &a;      "
       "      *b = 6;          "
-      "      *b               "
+      "      a                "
       "   }                   ";
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
@@ -38,9 +38,7 @@ TEST_CASE("vm:codgen:simple", "[vm:codgen]") {
   vm::debug::Debugger debugger;
   debugger.Load(std::move(elf));
 
-  for (auto i = 0; i < 16; i++) {
-    debugger.Step();
-  }
+  CHECK(debugger.StepToEnd().as_int == 6);
 }
 
 //////////////////////////////////////////////////////////////////////

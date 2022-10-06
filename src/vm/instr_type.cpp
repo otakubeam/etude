@@ -6,6 +6,18 @@ namespace vm {
 
 std::string FormatInstrType(InstrType type) {
   switch (type) {
+    case InstrType::PUSH_TRUE:
+      return "push_true";
+
+    case InstrType::PUSH_FALSE:
+      return "push_false";
+
+    case InstrType::PUSH_UNIT:
+      return "push_unit";
+
+    case InstrType::SUBTRACT:
+      return "subtract";
+
     case InstrType::PUSH_VALUE:
       return "push_value";
 

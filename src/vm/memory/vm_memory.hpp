@@ -25,8 +25,11 @@ class VmMemory {
       case rt::ValueTag::InstrRef: {
         auto addr = descriptor.reference.as_ref.to_instr;
         auto chunk = program_text_->GetTextSection(addr.chunk_no);
-        FMT_ASSERT(chunk.length >= addr.instr_no, "");
-        return &chunk.text[addr.instr_no];
+
+        if (addr.instr_no < chunk.length) {
+          return &chunk.text[addr.instr_no];
+        }
+        return nullptr;
       }
 
       case rt::ValueTag::HeapRef:

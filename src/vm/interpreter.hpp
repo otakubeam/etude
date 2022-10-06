@@ -23,6 +23,8 @@ class BytecodeInterpreter {
 
   void RunFor(size_t count);
 
+  rt::PrimitiveValue RunToTheEnd();
+
  private:
   uint8_t DecodeExecute(uint8_t* instr);
 

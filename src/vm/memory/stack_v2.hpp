@@ -21,6 +21,11 @@ class VmStack {
   VmStack(VmMemory& memory)
       : memory_{memory},
         stack_area_{(rt::PrimitiveValue*)memory.GetStackArea()} {
+    // Set the first fp to do nothing
+    stack_area_[0] = {
+        .tag = rt::ValueTag::StackRef,
+        .as_ref = {.to_data = 0},
+    };
   }
 
   void Push(rt::PrimitiveValue value) {
@@ -37,7 +42,7 @@ class VmStack {
     sp_ -= count;
   }
 
-  void Ret() {
+  bool Ret() {
     // Move the stack pointer
     sp_ = fp_;
 
@@ -47,6 +52,8 @@ class VmStack {
 
     // Move the frame pointer
     fp_ = stack_area_[fp_].as_ref.to_data;
+
+    return sp_ != 0;
   }
 
   void PrepareCallframe() {
