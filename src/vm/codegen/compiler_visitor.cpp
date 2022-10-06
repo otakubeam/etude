@@ -8,15 +8,16 @@ namespace vm::codegen {
 void Compiler::VisitVarDecl(VarDeclStatement* node) {
   // Generate code to place value on stack
 
+  //
   // TODO: set a flag that I am building this value
-
+  //
   node->value_->Accept(this);
 
   // Infrom FrameTranslator about this location
 
   auto name = node->GetVarName();
-
-  current_frame_->AddLocal(name, current_frame_->GetNextSize());
+  auto size = GetTypeSize(node->value_);
+  current_frame_->AddLocal(name, size);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -31,16 +32,18 @@ void Compiler::VisitAssignment(AssignmentStatement* node) {
 
   instrs->clear();
 
-  auto size = GetTypeSize(node->target_);
   TranslateInstruction({
       .type = InstrType::STORE,
-      .arg = size,
+      .arg = GetTypeSize(node->target_),
   });
 }
 
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitFunDecl(FunDeclStatement* node) {
+  //
+  // Craft initial stack layout (parameters, registers)
+  //
   current_frame_ = new FrameTranslator{node, structs_};
 
   node->block_->Accept(this);
@@ -61,11 +64,11 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
 
   if (auto mb_offset = current_frame_->LookupOffset(node->GetFunctionName())) {
     EmitMemFetch(*mb_offset);
-    translator_->TranslateInstruction({
+    TranslateInstruction({
         .type = vm::InstrType::INDIRECT_CALL,
     });
   } else {
-    translator_->TranslateInstruction({
+    TranslateInstruction({
         .type = vm::InstrType::CALL_FN,
         .fn_name = node->GetFunctionName(),
     });
@@ -73,7 +76,7 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
 
   // Don't forget to clean up the stack
 
-  translator_->TranslateInstruction({
+  TranslateInstruction({
       .type = vm::InstrType::FIN_CALL,
       .arg = (uint8_t)node->arguments_.size(),
   });
@@ -92,9 +95,8 @@ void Compiler::VisitReturn(ReturnStatement* node) {
   // current_debug_location.push(node.GetLocation());
   node->return_value_->Accept(this);
 
-  TranslateInstruction(FatInstr{
+  TranslateInstruction({
       .type = InstrType::RET_FN,
-      // .debug_info = {.location = current_debug_location.top()},
   });
 }
 
@@ -200,7 +202,7 @@ void Compiler::VisitIf(IfExpression* node) {
 
   auto backpatch_to_false = translator_->GetLabel();
 
-  translator_->TranslateInstruction({.type = InstrType::JUMP_IF_FALSE});
+  TranslateInstruction({.type = InstrType::JUMP_IF_FALSE});
 
   // True branch
 
@@ -208,7 +210,7 @@ void Compiler::VisitIf(IfExpression* node) {
 
   auto backpatch_to_end = translator_->GetLabel();
 
-  translator_->TranslateInstruction({.type = InstrType::JUMP});
+  TranslateInstruction({.type = InstrType::JUMP});
 
   // False branch
 
@@ -246,13 +248,6 @@ void Compiler::VisitStructConstruction(StructConstructionExpression* node) {
     v->Accept(this);
   }
 
-  //
-  // XXX: this doesn't work when I construct a structure
-  // and then create some different varibale
-  //
-  // f(Str:{1,2,3});
-  // var t = 123;         <<<-------- t will be the size of Str
-  //
   current_frame_->SetNextPushSize(str_size);
 }
 
@@ -300,6 +295,8 @@ void Compiler::VisitLiteral(LiteralExpression* lit) {
     default:
       FMT_ASSERT(false, "Unreachable!");
   }
+
+  current_frame_->SetNextPushSize(1);
 }
 
 ////////////////////////////////////////////////////////////////////
