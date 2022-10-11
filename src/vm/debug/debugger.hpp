@@ -5,6 +5,8 @@
 
 #include <vm/interpreter.hpp>
 
+#include <fstream>
+
 namespace vm::debug {
 
 class Debugger : public BytecodeInterpreter {
@@ -20,8 +22,11 @@ class Debugger : public BytecodeInterpreter {
       return false;
     }
 
-    fmt::print("{}\n\n", printer_.ToDot());
     printer_.Print();
+
+    static std::ofstream stream{ "dots/raw" };
+    stream << printer_.ToDot();
+
     return true;
   }
 

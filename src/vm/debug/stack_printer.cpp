@@ -75,6 +75,8 @@ std::string StackPrinter::ToDot() {
     }
   }
 
+  fmt::format_to(std::back_inserter(buf), "}}\n");
+
   return fmt::to_string(buf);
 }
 

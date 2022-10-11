@@ -129,7 +129,13 @@ void Compiler::VisitExprStatement(ExprStatement* node) {
 void Compiler::VisitDeref(DereferenceExpression* node) {
   // This is a path for rvalue conversion
   // Those who want lvalue (only '=`?) should just call GenAddress directly
-  GenAddress(node->operand_, false);
+  auto instrs = GenAddress(node, true);
+
+  for (auto instr : *instrs) {
+    TranslateInstruction(instr);
+  }
+
+  instrs->clear();
 
   auto size = GetTypeSize(node->operand_);
   TranslateInstruction({
@@ -142,7 +148,8 @@ void Compiler::VisitDeref(DereferenceExpression* node) {
 
 void Compiler::VisitAddressof(AddressofExpression* node) {
   // Vector instrs contains the recipe for calculating the address
-  auto instrs = GenAddress(node->operand_, false);
+  // TODO: assert that operand is not a deref expression
+  auto instrs = GenAddress(node->operand_, true);
 
   for (auto instr : *instrs) {
     TranslateInstruction(instr);
