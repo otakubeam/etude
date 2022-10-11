@@ -53,24 +53,46 @@ std::string DotCell(rt::PrimitiveValue cell) {
 std::string StackPrinter::ToDot() {
   fmt::memory_buffer buf;
 
+  // Update color information
+
+  for (auto it : stack_.memory_.FlushAccessLog()) {
+    switch (it.reference.tag) {
+      case rt::ValueTag::StackRef:
+        annotations_[it.reference.as_ref.to_data].dot_color = 9;
+        continue;
+      case rt::ValueTag::InstrRef:
+        break;
+      default:
+        FMT_ASSERT(false, "Unimplemented!");
+    }
+  }
+
+  for (auto& it : annotations_) {
+    it.dot_color = it.dot_color == 1 ? 1 : it.dot_color - 1;
+  }
+
+  // Format cell contents
+
   std::string strucure;
   for (size_t i = 0; i < 32; i++) {
-    strucure += fmt::format("<s{}> {} |", i, DotCell(stack_.stack_area_[i]));
+    strucure += fmt::format("<tr><td bgcolor='{}' port='{}'> {} </td></tr>\n",
+                            annotations_[i].dot_color, i,
+                            DotCell(stack_.stack_area_[i]));
   }
 
   fmt::format_to(std::back_inserter(buf),
                  "digraph G {{ rankdir=LR; "
-                 "node [shape=record,width=.1,height=.1];"
+                 "node[shape=none,colorscheme=ylorrd9];"
                  "sp; fp; "
-                 "stack [label = \" {} \"];\n",
+                 "stack [label = <<table>\n {} </table>>];\n",
                  strucure);
 
-  fmt::format_to(std::back_inserter(buf), "sp -> stack:s{};\n", stack_.sp_);
-  fmt::format_to(std::back_inserter(buf), "fp -> stack:s{};\n", stack_.fp_);
+  fmt::format_to(std::back_inserter(buf), "sp -> stack:{};\n", stack_.sp_);
+  fmt::format_to(std::back_inserter(buf), "fp -> stack:{};\n", stack_.fp_);
 
-  for (size_t i = 0; i < stack_.sp_; i++) {
+  for (size_t i = 1; i < stack_.sp_; i++) {
     if (stack_.stack_area_[i].tag == rt::ValueTag::StackRef) {
-      fmt::format_to(std::back_inserter(buf), "stack:s{} -> stack:s{};\n", i,
+      fmt::format_to(std::back_inserter(buf), "stack:{} -> stack:{};\n", i,
                      stack_.stack_area_[i].as_ref.to_data);
     }
   }

@@ -4,6 +4,8 @@
 
 #include <vm/elf_file.hpp>
 
+#include <utility>
+
 namespace vm::memory {
 
 class VmMemory {
@@ -21,6 +23,8 @@ class VmMemory {
   }
 
   auto AccessMemory(MemAccess descriptor) -> uint8_t* {
+    access_log_.push_back(descriptor);
+
     switch (descriptor.reference.tag) {
       case rt::ValueTag::InstrRef: {
         auto addr = descriptor.reference.as_ref.to_instr;
@@ -42,6 +46,10 @@ class VmMemory {
       default:
         FMT_ASSERT(false, "Unreachable!");
     }
+  }
+
+  auto FlushAccessLog() -> std::vector<MemAccess> {
+    return std::exchange(access_log_, {});
   }
 
   // I want to see it an undicriminated array of bytes

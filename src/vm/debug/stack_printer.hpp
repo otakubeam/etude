@@ -16,9 +16,10 @@ class StackPrinter {
 
   struct AnnotatedSlot {
     fmt::text_style style = fg(fmt::color::black);
+    std::size_t dot_color = 1;
     std::string name;
+    std::string type;
   };
-
 
   void Print();
   std::string Format();
@@ -45,7 +46,7 @@ class StackPrinter {
 
  private:
   const memory::VmStack& stack_;
-  std::vector<AnnotatedSlot> annotations_{65536};
+  std::vector<AnnotatedSlot> annotations_{1024};
 };
 
 }  // namespace vm::debug

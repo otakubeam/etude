@@ -29,12 +29,14 @@ class VmStack {
   }
 
   void Push(rt::PrimitiveValue value) {
+    memory_.AccessMemory(MakeMemoryAccess(sp_, true));
     stack_area_[sp_] = std::move(value);
     sp_ += 1;
   }
 
   auto Pop() -> rt::PrimitiveValue {
     sp_ -= 1;
+    memory_.AccessMemory(MakeMemoryAccess(sp_, false));
     return stack_area_[sp_];
   }
 
@@ -71,10 +73,12 @@ class VmStack {
   }
 
   void StoreAtFp(int16_t offset, const rt::PrimitiveValue& value) {
+    memory_.AccessMemory(MakeMemoryAccess(fp_ + offset, true));
     stack_area_[fp_ + offset] = value;
   }
 
   auto GetAtFp(int offset) {
+    memory_.AccessMemory(MakeMemoryAccess(fp_ + offset, false));
     return Push(stack_area_[fp_ + offset]);
   }
 
@@ -83,7 +87,20 @@ class VmStack {
   }
 
   auto Top() -> rt::PrimitiveValue& {
+    memory_.AccessMemory(MakeMemoryAccess(sp_ - 1, true));
     return stack_area_[sp_ - 1];
+  }
+
+ private:
+  MemAccess MakeMemoryAccess(uint32_t data, bool is_store) {
+    return MemAccess{
+        .reference =
+            {
+                .tag = rt::ValueTag::StackRef,
+                .as_ref = {.to_data = data},
+            },
+        .store = is_store,
+    };
   }
 
  private:
