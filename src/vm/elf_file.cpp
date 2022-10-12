@@ -4,7 +4,7 @@ namespace vm {
 
 ElfFile::ElfFile(TextSection text, SymtabEntry symtab_sections,
                  std::vector<RelocationEntry> relocations,
-                 std::vector<debug::DebugInfo> DIEs)
+                 std::map<uint16_t, debug::DebugInfo> DIEs)
     : text_sections_{std::move(text)},
       symtab_sections_{{symtab_sections}},
       relocations_{std::move(relocations)},
@@ -32,6 +32,8 @@ void ElfFile::operator+=(ElfFile&& other) {
   MergeRelocations(other.relocations_);
 
   MergeText(other.text_sections_);
+
+  MergeDIEs(std::move(other.DIEs_));
 
   LocateAll();
 }
@@ -77,6 +79,14 @@ auto ElfFile::GetOffsetToPatch(RelocationEntry reloc) -> uint8_t* {
 void ElfFile::MergeText(std::vector<TextSection> sections) {
   for (auto section : sections) {
     text_sections_.push_back(section);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void ElfFile::MergeDIEs(std::vector<SectionDIE> DIEs) {
+  for (auto&& die : DIEs) {
+    DIEs_.push_back(std::move(die));
   }
 }
 

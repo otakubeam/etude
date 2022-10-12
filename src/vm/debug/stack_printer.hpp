@@ -25,6 +25,11 @@ class StackPrinter {
   std::string Format();
   std::string ToDot();
 
+  void AnnotateSlot(DebuggerInstr instr) {
+    annotations_.at(stack_.sp_).name = instr.var_name;
+    annotations_.at(stack_.sp_).type = instr.type_name;
+  }
+
  private:
   void FormatHeader(fmt::memory_buffer& buf);
   void FormatStackCells(fmt::memory_buffer& buf);

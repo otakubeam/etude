@@ -12,6 +12,12 @@ namespace vm::debug {
 class Debugger : public BytecodeInterpreter {
  public:
   bool Step() {
+    if (auto instr = memory_.program_text_->DIEs_.at(ip_.chunk_no)
+                         .at(ip_.instr_no)
+                         .dbg_instr) {
+      printer_.AnnotateSlot(*instr);
+    }
+
     auto instr = GetNextInstruction();
     fmt::print("Current instruction {}: {}", rt::FormatInstrRef(ip_),
                Disassembler::FormatInstruction(instr));
@@ -24,7 +30,7 @@ class Debugger : public BytecodeInterpreter {
 
     printer_.Print();
 
-    static std::ofstream stream{ "dots/raw" };
+    static std::ofstream stream{"dots/raw"};
     stream << printer_.ToDot();
 
     return true;

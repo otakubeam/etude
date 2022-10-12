@@ -7,6 +7,7 @@
 #include <lex/location.hpp>
 
 #include <vector>
+#include <map>
 
 namespace vm {
 
@@ -28,9 +29,10 @@ class InstrTranslator {
   }
 
   void TranslateInstruction(const codegen::FatInstr& instr) {
-    EmitType(instr.type);
+    DIEs_.insert({length_, instr.debug_info});
+    LastDie().executable_location = length_;
 
-    DIEs_.push_back(instr.debug_info);
+    EmitType(instr.type);
 
     switch (instr.type) {
       case InstrType::CALL_FN:
@@ -93,6 +95,10 @@ class InstrTranslator {
     memcpy(&bytecode_[l.instr_start] + 1, &offset, 2);
   }
 
+  debug::DebugInfo& LastDie() {
+    return DIEs_.rbegin()->second;
+  }
+
  private:
   void Emit(uint8_t byte) {
     bytecode_[length_] = byte;
@@ -124,7 +130,7 @@ class InstrTranslator {
   uint8_t* bytecode_ = new uint8_t[65536]();
   uint16_t length_ = 0;
 
-  std::vector<debug::DebugInfo> DIEs_;
+  std::map<uint16_t, debug::DebugInfo> DIEs_;
 
   std::vector<RelocationEntry> relocations_;
 };

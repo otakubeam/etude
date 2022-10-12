@@ -11,6 +11,11 @@ void Disassembler::Disassemble(ElfFile& file) {
 
     Disassemble(file.text_sections_[symbol.text_section_no]);
 
+    fmt::print("[!] Debugging information:\n");
+    for (auto& [a, b] : file.DIEs_.at(symbol.text_section_no)) {
+      fmt::print("\t {}:\t {}\n", a, b.Format());
+    }
+
     // End line
     fmt::print("\n");
   }
@@ -79,7 +84,6 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
       pretty_print = fmt::format("{}", *((int16_t*)instr));
       instr += 2;
       break;
-
 
     case InstrType::LOAD:
     case InstrType::INDIRECT_CALL:

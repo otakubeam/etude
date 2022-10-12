@@ -6,9 +6,15 @@
 
 #include <utility>
 
+namespace vm::debug {
+class Debugger;
+}
+
 namespace vm::memory {
 
 class VmMemory {
+  friend vm::debug::Debugger;
+
  public:
   VmMemory(size_t overall_size, size_t stack_size)
       : memory_{new uint8_t[overall_size]()}, stack_size_{stack_size} {

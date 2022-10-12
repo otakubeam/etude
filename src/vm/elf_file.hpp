@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <map>
 
 namespace vm {
 
@@ -41,15 +42,17 @@ struct RelocationEntry {
 
 namespace debug {
 class Disassembler;
-}
+class Debugger;
+}  // namespace debug
 
 class ElfFile {
  public:
   friend class debug::Disassembler;
+  friend class debug::Debugger;
 
   ElfFile(TextSection text, SymtabEntry symtab_section,
           std::vector<RelocationEntry> relocation,
-          std::vector<debug::DebugInfo> DIEz);
+          std::map<uint16_t, debug::DebugInfo> DIEz);
 
   auto FindEntryPoint() -> std::optional<rt::InstrReference>;
 
@@ -68,6 +71,9 @@ class ElfFile {
 
   auto GetOffsetToPatch(RelocationEntry reloc) -> uint8_t*;
 
+  using SectionDIE = std::map<uint16_t, debug::DebugInfo>;
+  void MergeDIEs(std::vector<SectionDIE> DIEs);
+
   void MergeText(std::vector<TextSection> sections);
 
   void MergeSymtab(std::vector<SymtabEntry> entries);
@@ -83,7 +89,7 @@ class ElfFile {
   std::vector<RelocationEntry> relocations_;
 
   // Debugging information
-  std::vector<debug::DebugInfo> DIEs_;
+  std::vector<SectionDIE> DIEs_;
 };
 
 //////////////////////////////////////////////////////////////////////

@@ -8,10 +8,24 @@ namespace vm::codegen {
 void Compiler::VisitVarDecl(VarDeclStatement* node) {
   // Generate code to place value on stack
 
-  //
-  // TODO: set a flag that I am building this value
-  //
   node->value_->Accept(this);
+
+  //
+  // Set a flag that I am building this value
+  //
+  // This should make sp_ display this information
+  //
+
+  debug::DebugInfo debug_info{
+      .location = node->GetLocation(),
+      .dbg_instr = {debug::DebuggerInstr{.var_name = node->GetVarName()}}};
+
+  if (GetTypeSize(node->value_) > 1) {
+    debug_info.dbg_instr->type_name =
+        dynamic_cast<types::StructType*>(node->value_->GetType())->GetName();
+  }
+
+  translator_->LastDie() = std::move(debug_info);
 
   // Infrom FrameTranslator about this location
 
@@ -54,8 +68,9 @@ void Compiler::VisitFunDecl(FunDeclStatement* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitFnCall(FnCallExpression* node) {
+  //
   // Place arguments in reverse order
-
+  //
   for (int i = node->arguments_.size() - 1; i >= 0; i -= 1) {
     node->arguments_[i]->Accept(this);
   }

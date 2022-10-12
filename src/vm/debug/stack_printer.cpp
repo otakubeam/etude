@@ -74,17 +74,19 @@ std::string StackPrinter::ToDot() {
   // Format cell contents
 
   std::string strucure;
-  for (size_t i = 0; i < 32; i++) {
-    strucure += fmt::format("<tr><td bgcolor='{}' port='{}'> {} </td></tr>\n",
-                            annotations_[i].dot_color, i,
-                            DotCell(stack_.stack_area_[i]));
+  for (size_t i = 0; i < 42; i++) {
+    strucure += fmt::format(
+        "<tr><td bgcolor='{}' port='{}'> {} </td></tr>\n",
+        annotations_[i].dot_color, i,
+        fmt::format("{}:{:^3} = {}", annotations_.at(i).name,
+                    annotations_.at(i).type, DotCell(stack_.stack_area_[i])));
   }
 
   fmt::format_to(std::back_inserter(buf),
                  "digraph G {{ rankdir=LR; "
-                 "node[shape=none,colorscheme=ylorrd9];"
+                 "node[fontname=\"Noto\",shape=none,colorscheme=ylorrd9];"
                  "sp; fp; "
-                 "stack [label = <<table>\n {} </table>>];\n",
+                 "stack [label = <<table>\n {:^20} </table>>];\n",
                  strucure);
 
   fmt::format_to(std::back_inserter(buf), "sp -> stack:{};\n", stack_.sp_);
