@@ -51,8 +51,8 @@ class FnType : public Type {
     return return_type_;
   }
 
-  virtual bool IsFnType() override {
-    return true;
+  std::string Format() override {
+    return fmt::format("(...) -> {}", return_type_->Format());
   }
 
  private:

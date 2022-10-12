@@ -154,6 +154,10 @@ class AddressofExpression : public Expression {
  public:
   AddressofExpression(lex::Token ampersand, LvalueExpression* operand)
       : ampersand_{ampersand}, operand_{operand} {
+    // Transform &*unit -> unit (it works like that in C)
+    if (auto op = dynamic_cast<DereferenceExpression*>(operand_)) {
+      operand_ = op->operand_;
+    }
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -170,7 +174,7 @@ class AddressofExpression : public Expression {
 
   lex::Token ampersand_;
 
-  LvalueExpression* operand_;
+  /*Lvalue*/ Expression* operand_;
 
   // Mabye embed and save allocation
   types::PointerType* type_ = nullptr;

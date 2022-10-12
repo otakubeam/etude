@@ -81,6 +81,10 @@ class StructType : public Type {
     return true;
   }
 
+  std::string Format() override {
+    return struct_name_;
+  }
+
  private:
   std::string struct_name_;
   std::vector<Member> members_;

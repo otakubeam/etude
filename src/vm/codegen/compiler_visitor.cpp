@@ -18,13 +18,9 @@ void Compiler::VisitVarDecl(VarDeclStatement* node) {
 
   debug::DebugInfo debug_info{
       .location = node->GetLocation(),
-      .dbg_instr = {debug::DebuggerInstr{.var_name = node->GetVarName()}}};
-
-  if (GetTypeSize(node->value_) > 1) {
-    debug_info.dbg_instr->type_name =
-        dynamic_cast<types::StructType*>(node->value_->GetType())->GetName();
-  }
-
+      .dbg_instr = {debug::DebuggerInstr{
+          .var_name = node->GetVarName(),
+          .type_name = node->value_->GetType()->Format()}}};
   translator_->LastDie() = std::move(debug_info);
 
   // Infrom FrameTranslator about this location
@@ -115,7 +111,6 @@ void Compiler::VisitStructDecl(StructDeclStatement* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitReturn(ReturnStatement* node) {
-  // current_debug_location.push(node.GetLocation());
   node->return_value_->Accept(this);
 
   TranslateInstruction({
@@ -335,9 +330,6 @@ void Compiler::VisitVarAccess(VarAccessExpression* node) {
   auto name = node->GetName();
   int offset = LookupVarAddress(name);
   size_t size = current_frame_->LookupSize(name).value();
-
-  // TODO: maybe remove entirely
-  node->address_ = offset;
 
   for (size_t i = 0; i < size; i++) {
     EmitMemFetch(offset + i);

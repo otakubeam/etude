@@ -23,10 +23,6 @@ class BuiltinType : public Type {
     return other == this;
   }
 
-  bool IsBuiltin() override {
-    return true;
-  }
-
   bool IsEqual(PointerType*) override {
     // Allow initializing pointers with unit
     return this == &builtin_unit;
@@ -38,6 +34,18 @@ class BuiltinType : public Type {
 
   bool IsEqual(FnType*) override {
     return false;
+  }
+
+  std::string Format() override {
+    if (this == &builtin_int) {
+      return "Int";
+    } else if (this == &builtin_unit) {
+      return "Unit";
+    } else if (this == &builtin_bool) {
+      return "Bool";
+    }
+
+    return "<Primtitive>";
   }
 };
 

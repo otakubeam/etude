@@ -42,6 +42,10 @@ class PointerType : public Type {
     return underlying_;
   }
 
+  std::string Format() override {
+    return "*" + underlying_->Format();
+  }
+
  private:
   // Perhaps should not work with functions?
   // They are already pointers, after all

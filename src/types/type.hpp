@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 namespace types {
 
@@ -28,15 +29,9 @@ class Type {
   virtual bool IsEqual(StructType* other) = 0;
   virtual bool IsEqual(FnType* other) = 0;
 
-  virtual bool IsBuiltin() {
-    return false;
-  }
+  virtual std::string Format() = 0;
 
   virtual bool IsStruct() {
-    return false;
-  }
-
-  virtual bool IsFnType() {
     return false;
   }
 };
