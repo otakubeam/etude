@@ -6,11 +6,12 @@
 
 namespace types::check {
 
+static std::unordered_map<std::string, FnType*> intrinsics;
+
 TypeChecker::TypeChecker() {
   // Declare intrinsics
-  global_type_store.Declare("print", new FnType({}));
-  global_type_store.Declare("assert", new FnType({}));
-  global_type_store.Declare("isNull", new FnType({}, &builtin_bool));
+  intrinsics.emplace("print", new FnType{});
+  intrinsics.emplace("assert", new FnType{});
 }
 
 TypeChecker::~TypeChecker() = default;
@@ -229,13 +230,8 @@ void TypeChecker::VisitFnCall(FnCallExpression* node) {
 
   // Intrinsic: don't type-check
 
-  // TODO: it seems I need to pull the native_table here as well
-  // So the table must be generic over all backends
-  // But the concrete implementations need to be provided separately
-
-  if (name == "print" || name == "isNull" || name == "assert") {
-    return_value = name == "isNull" ? &builtin_bool : &builtin_unit;
-    node->is_native_call_ = true;
+  if (intrinsics.contains(name)) {
+    return_value = intrinsics[name]->GetReturnType();
     return;
   }
 

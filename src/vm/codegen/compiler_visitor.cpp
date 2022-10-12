@@ -69,6 +69,12 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
   //
   for (int i = node->arguments_.size() - 1; i >= 0; i -= 1) {
     node->arguments_[i]->Accept(this);
+
+    // Emit debug information (for now only the type)
+
+    translator_->LastDie() = {
+        .location = node->GetLocation(),
+        .dbg_instr = {{.type_name = node->arguments_[i]->GetType()->Format()}}};
   }
 
   if (node->GetFunctionName() == "isNull") {
@@ -271,6 +277,9 @@ void Compiler::VisitStructConstruction(StructConstructionExpression* node) {
   // Generate code for placing all initializers on stack
   for (auto v : node->values_) {
     v->Accept(this);
+    translator_->LastDie() = {
+        .location = node->GetLocation(),
+        .dbg_instr = {{.type_name = v->GetType()->Format()}}};
   }
 
   current_frame_->SetNextPushSize(str_size);

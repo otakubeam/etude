@@ -10,7 +10,9 @@ namespace types {
 
 class FnType : public Type {
  public:
-  FnType(std::vector<Type*> arg_types, Type* return_type = &builtin_unit)
+  FnType() = default;
+
+  FnType(std::vector<Type*> arg_types, Type* return_type)
       : arg_types_{arg_types}, return_type_{return_type} {
     FMT_ASSERT(return_type_, "Nullptr return type");
   }
@@ -57,7 +59,7 @@ class FnType : public Type {
 
  private:
   std::vector<Type*> arg_types_;
-  Type* return_type_ = nullptr;
+  Type* return_type_ = &builtin_unit;
 };
 
 }  // namespace types
