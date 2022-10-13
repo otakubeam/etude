@@ -98,6 +98,7 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       auto store_words = Decoder::DecodeByte(instr);
 
       switch (addr.tag) {
+        case rt::ValueTag::HeapRef:
         case rt::ValueTag::StackRef: {
           auto dst = memory_.AccessMemory({.reference = addr, .store = true});
           //
@@ -111,7 +112,6 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
           break;
         }
 
-        case rt::ValueTag::HeapRef:
         case rt::ValueTag::StaticRef:
         case rt::ValueTag::InstrRef:
           FMT_ASSERT(false, "Not a value\n");
@@ -283,6 +283,14 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       auto offset = Decoder::DecodeOffset(instr);
       stack_.GetAtFp(offset);
       return 3;
+    }
+
+    case InstrType::ALLOC: {
+      auto words_count = stack_.Pop();
+      FMT_ASSERT(words_count.tag == rt::ValueTag::Int,
+                 "Alloc shall take an Int");
+      stack_.Push(memory_.AllocateMemory(words_count.as_int));
+      return 1;
     }
   }
 

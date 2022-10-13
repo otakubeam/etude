@@ -34,6 +34,7 @@ enum class InstrType : u_int8_t {
   LOAD,           // load (pop address from the stack)
   STORE,          // store $1
                   // (pops address then pops value which is $1 words long)
+  ALLOC,          // (pops the number of words to allocate)
 };
 
 //////////////////////////////////////////////////////////////////////

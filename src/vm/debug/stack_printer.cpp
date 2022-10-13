@@ -45,6 +45,8 @@ std::string DotCell(rt::PrimitiveValue cell) {
       return rt::FormatInstrRef(cell.as_ref.to_instr);
     case rt::ValueTag::StackRef:
       return fmt::format("s{}", (cell.as_ref.to_data));
+    case rt::ValueTag::HeapRef:
+      return fmt::format("h{}", (cell.as_ref.to_data));
     default:
       return "<unsupported>";
   }
@@ -62,8 +64,17 @@ std::string StackPrinter::ToDot() {
         annotations_[it.reference.as_ref.to_data].dot_color_name =
             it.store ? "ylorrd9" : "ylgn7";
         continue;
+
+      case rt::ValueTag::HeapRef:
+        heap_annotations_[it.reference.as_ref.to_data].dot_color =
+            it.store ? 9 : 7;
+        heap_annotations_[it.reference.as_ref.to_data].dot_color_name =
+            it.store ? "ylorrd9" : "ylgn7";
+        continue;
+
       case rt::ValueTag::InstrRef:
-        break;
+        continue;
+
       default:
         FMT_ASSERT(false, "Unimplemented!");
     }
@@ -97,9 +108,22 @@ std::string StackPrinter::ToDot() {
   fmt::format_to(std::back_inserter(buf), "fp -> stack:{};\n", stack_.fp_);
 
   for (size_t i = 1; i < stack_.sp_; i++) {
-    if (stack_.stack_area_[i].tag == rt::ValueTag::StackRef) {
-      fmt::format_to(std::back_inserter(buf), "stack:{} -> stack:{};\n", i,
-                     stack_.stack_area_[i].as_ref.to_data);
+    switch (stack_.stack_area_[i].tag) {
+      case rt::ValueTag::StackRef:
+        fmt::format_to(std::back_inserter(buf), "stack:{} -> stack:{};\n", i,
+                       stack_.stack_area_[i].as_ref.to_data);
+        break;
+
+      case rt::ValueTag::HeapRef: {
+        auto [loc, _] =
+            *stack_.memory_.LookupSize(stack_.stack_area_[i].as_ref.to_data);
+        fmt::format_to(std::back_inserter(buf), "stack:{} -> heap_{}:{};\n", i,
+                       loc, stack_.stack_area_[i].as_ref.to_data);
+        break;
+      }
+
+      default:
+        continue;
     }
   }
 

@@ -108,7 +108,6 @@ class VmStack {
   size_t sp_ = 1;
   size_t fp_ = 0;
 
-  // TODO: log all the accesses
   VmMemory& memory_;
 
   rt::PrimitiveValue* stack_area_ = nullptr;

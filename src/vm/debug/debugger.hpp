@@ -21,6 +21,10 @@ class Debugger : public BytecodeInterpreter {
     auto instr = GetNextInstruction();
     fmt::print("Current instruction {}: {}", rt::FormatInstrRef(ip_),
                Disassembler::FormatInstruction(instr));
+
+    static std::ofstream stream{"dots/raw"};
+    stream << ToDot();
+
     try {
       RunFor(1);
     } catch (rt::PrimitiveValue ret) {
@@ -30,17 +34,51 @@ class Debugger : public BytecodeInterpreter {
 
     printer_.Print();
 
-    static std::ofstream stream{"dots/raw"};
-    stream << ToDot();
-
     return true;
   }
 
   std::string ToDot() {
     return fmt::format(
-        "digraph G {{ {}\n inst [label=\"{:<80}\"]; \n inst -> sp; \n }} "
+        "digraph G {{ {}\n inst [label=\"{:<80}\"]; \n inst -> sp; \n {} }} "
         "\n",  //
-        printer_.ToDot(), FormatCurrentInstruction());
+        printer_.ToDot(), FormatCurrentInstruction(), FormatHeapPtrs());
+  }
+
+  auto GetHeapPtrs() {
+    std::vector<uint32_t> heap_ptrs;
+    rt::PrimitiveValue* it = (rt::PrimitiveValue*)memory_.GetStackArea();
+
+    fmt::print("Want to get heap ptrs");
+
+    for (size_t i = 0; &it[i] <= &stack_.Top(); i++) {
+      fmt::print("Tag[{}]: {}\n", i, (uint8_t)it[i].tag);
+      if (it[i].tag == rt::ValueTag::HeapRef) {
+        heap_ptrs.push_back(i);
+      }
+    }
+
+    return heap_ptrs;
+  }
+
+  std::string FormatHeapPtrs() {
+    fmt::memory_buffer buf;
+
+    auto heap_ptrs = GetHeapPtrs();
+
+    for (auto ptr : heap_ptrs) {
+      auto [loc, size] = *memory_.LookupSize(ptr);
+
+      std::string structure = "";
+      for (size_t i = 0; i < size; i++) {
+        structure += fmt::format("<td port='{}'>{}</td> ", loc + i, 123);
+      }
+
+      fmt::format_to(std::back_inserter(buf),
+                     "heap_{} [label=<<table>\n <tr>{} </tr></table>>] \n", loc,
+                     structure);
+    }
+
+    return fmt::to_string(buf);
   }
 
   std::string FormatCurrentInstruction() {

@@ -43,12 +43,16 @@ class VmMemory {
       }
 
       case rt::ValueTag::HeapRef:
-      case rt::ValueTag::StaticRef:
-        FMT_ASSERT(false, "Unimplemented!");
+        return (uint8_t*)(descriptor.reference.as_ref.to_data +
+                          (rt::PrimitiveValue*)(memory_));
 
       case rt::ValueTag::StackRef:
         return (uint8_t*)(descriptor.reference.as_ref.to_data +
                           (rt::PrimitiveValue*)GetStackArea());
+
+      case rt::ValueTag::StaticRef:
+        FMT_ASSERT(false, "Unimplemented!");
+
       default:
         FMT_ASSERT(false, "Unreachable!");
     }
@@ -61,10 +65,19 @@ class VmMemory {
   auto AllocateMemory(uint32_t how_much) {
     uint32_t mark = allocated_;
     allocated_ += how_much;
+    allocation_sizes_.emplace(mark, how_much);
     return rt::PrimitiveValue{
         .tag = rt::ValueTag::HeapRef,
         .as_ref = {.to_data = mark},
     };
+  }
+
+  auto LookupSize(uint32_t mark) {
+    for (auto [a, b] : allocation_sizes_) {
+      fmt::print("{}:{}\n", a, b);
+    }
+    auto it = allocation_sizes_.upper_bound(mark);
+    return --it;
   }
 
   // I want to see it an undicriminated array of bytes
@@ -73,6 +86,9 @@ class VmMemory {
  private:
   uint8_t* memory_;
   uint32_t allocated_ = 0;
+
+  // What else do I want to know about an allocation?
+  std::map<uint32_t, uint32_t> allocation_sizes_;
 
   size_t stack_size_ = 0;
 

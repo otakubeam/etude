@@ -43,7 +43,7 @@ TEST_CASE("vm: link", "[vm]") {
   });
   auto elf = std::move(assembler).Finalize();
 
-  //disasm.Disassemble(elf);
+  // disasm.Disassemble(elf);
 
   ////////////////////////////////////////////////////////////////////
 
@@ -63,3 +63,36 @@ TEST_CASE("vm: link", "[vm]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:heap", "[vm]") {
+  vm::InstrTranslator assembler{"main"};
+
+  vm::debug::Disassembler disasm;
+  vm::debug::Debugger debugger;
+
+  ////////////////////////////////////////////////////////////////////
+
+  assembler.TranslateInstruction(vm::codegen::FatInstr::MakePushInt(100));
+  assembler.TranslateInstruction(vm::codegen::FatInstr::MakePushInt(500));
+  assembler.TranslateInstruction(vm::codegen::FatInstr::MakePushInt(2));
+  assembler.TranslateInstruction(vm::codegen::FatInstr{
+      .type = vm::InstrType::ALLOC,
+  });
+  assembler.TranslateInstruction(vm::codegen::FatInstr{
+      .type = vm::InstrType::STORE,
+      .arg = 2,
+  });
+  assembler.TranslateInstruction(vm::codegen::FatInstr{
+      .type = vm::InstrType::RET_FN,
+  });
+
+  ////////////////////////////////////////////////////////////////////
+
+  auto elf = std::move(assembler).Finalize();
+  disasm.Disassemble(elf);
+
+  debugger.Load(std::move(elf));
+  debugger.StepToTheEnd();
+
+  ////////////////////////////////////////////////////////////////////
+}

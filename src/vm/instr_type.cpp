@@ -69,6 +69,9 @@ std::string FormatInstrType(InstrType type) {
     case InstrType::CMP_LESS:
       return "cmp_less";
 
+    case InstrType::ALLOC:
+      return "alloc";
+
     default:
       return std::to_string(uint8_t(type));
   }

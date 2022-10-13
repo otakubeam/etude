@@ -53,6 +53,7 @@ class StackPrinter {
  private:
   const memory::VmStack& stack_;
   std::vector<AnnotatedSlot> annotations_{1024};
+  std::vector<AnnotatedSlot> heap_annotations_{1024};
 };
 
 }  // namespace vm::debug

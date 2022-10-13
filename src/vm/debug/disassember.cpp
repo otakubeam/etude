@@ -96,6 +96,7 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
     case InstrType::PUSH_FP:
     case InstrType::PUSH_FALSE:
     case InstrType::RET_FN:
+    case InstrType::ALLOC:
     case InstrType::POP_STACK:
       return "";
   }

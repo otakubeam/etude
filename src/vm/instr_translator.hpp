@@ -72,9 +72,13 @@ class InstrTranslator {
       case InstrType::PUSH_FP:
       case InstrType::SUBTRACT:
       case InstrType::PUSH_TRUE:
+      case InstrType::ALLOC:
       case InstrType::PUSH_FALSE:
       case InstrType::PUSH_UNIT:;
-        // No-op
+        break;  // no-op
+
+      default:
+        FMT_ASSERT(false, "Unreachable!");
     }
   }
 
