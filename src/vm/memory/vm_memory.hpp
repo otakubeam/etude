@@ -58,11 +58,21 @@ class VmMemory {
     return std::exchange(access_log_, {});
   }
 
+  auto AllocateMemory(uint32_t how_much) {
+    uint32_t mark = allocated_;
+    allocated_ += how_much;
+    return rt::PrimitiveValue{
+        .tag = rt::ValueTag::HeapRef,
+        .as_ref = {.to_data = mark},
+    };
+  }
+
   // I want to see it an undicriminated array of bytes
   // But I also want it to have some structure
 
  private:
   uint8_t* memory_;
+  uint32_t allocated_ = 0;
 
   size_t stack_size_ = 0;
 

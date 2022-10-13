@@ -48,7 +48,7 @@ void Disassembler::Disassemble(TextSection text) {
 
   while (instr < text_end) {
     offset = instr - text.text;
-    fmt::print("{}{}", FormatOffset(), FormatInstruction(instr));
+    fmt::print("{}{}\n", FormatOffset(), FormatInstruction(instr));
   }
 }
 
@@ -70,6 +70,7 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
 
     case InstrType::NATIVE_CALL:
     case InstrType::STORE:
+    case InstrType::LOAD:
     case InstrType::FIN_CALL:
       bytes = FormatNBytes(1, instr);
       pretty_print = fmt::format("{}", *(instr));
@@ -85,7 +86,6 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
       instr += 2;
       break;
 
-    case InstrType::LOAD:
     case InstrType::INDIRECT_CALL:
     case InstrType::ADD:
     case InstrType::SUBTRACT:
@@ -97,10 +97,10 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
     case InstrType::PUSH_FALSE:
     case InstrType::RET_FN:
     case InstrType::POP_STACK:
-      return "\n";
+      return "";
   }
 
-  return fmt::format("{:<20} {}\n", bytes, pretty_print);
+  return fmt::format("{:<20} {}", bytes, pretty_print);
 }
 
 ////////////////////////////////////////////////////////////////////

@@ -58,7 +58,9 @@ std::string StackPrinter::ToDot() {
   for (auto it : stack_.memory_.FlushAccessLog()) {
     switch (it.reference.tag) {
       case rt::ValueTag::StackRef:
-        annotations_[it.reference.as_ref.to_data].dot_color = 9;
+        annotations_[it.reference.as_ref.to_data].dot_color = it.store ? 9 : 7;
+        annotations_[it.reference.as_ref.to_data].dot_color_name =
+            it.store ? "ylorrd9" : "ylgn7";
         continue;
       case rt::ValueTag::InstrRef:
         break;
@@ -78,15 +80,15 @@ std::string StackPrinter::ToDot() {
   std::string strucure;
   for (size_t i = 0; i < 42; i++) {
     strucure += fmt::format(
-        "<tr><td bgcolor='{}' port='{}' align='LEFT'>{}</td></tr>\n",
-        annotations_[i].dot_color, i,
+        "<tr><td bgcolor='/{}/{}' port='{}' align='LEFT'>{}</td></tr>\n",
+        annotations_[i].dot_color_name, annotations_[i].dot_color, i,
         fmt::format("{:>12} : {:<8} = {:>8}", annotations_.at(i).name,
                     annotations_.at(i).type, DotCell(stack_.stack_area_[i])));
   }
 
   fmt::format_to(std::back_inserter(buf),
-                 "digraph G {{ rankdir=LR; "
-                 "node[fontname=\"mono\",shape=none,colorscheme=ylorrd9];"
+                 "rankdir=LR; "
+                 "node[fontname=\"mono\",shape=none];"
                  "sp; fp; "
                  "stack [label = <<table>\n {} </table>>];\n",
                  strucure);
@@ -101,7 +103,7 @@ std::string StackPrinter::ToDot() {
     }
   }
 
-  fmt::format_to(std::back_inserter(buf), "}}\n");
+  fmt::format_to(std::back_inserter(buf), "\n");
 
   return fmt::to_string(buf);
 }

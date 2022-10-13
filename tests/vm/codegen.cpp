@@ -132,11 +132,13 @@ TEST_CASE("vm:codgen:struct:nested", "[vm:codgen]") {
       "     ismodified: Bool,                             "
       "  };                                               "
       "                                                   "
-      "  fun main() Bool {                                "
+      "  fun main() Inner {                               "
       "     var instance = Str:{4, Inner:{0,1}, false};   "
       "     instance.inner.fieldTwo = 123;                "
       "     instance.ismodified  = true;                  "
-      "     instance.ismodified                           "
+      "     var ptr = &instance.inner;                    "
+      "     instance.inner = *ptr;                        "
+      "     instance.inner                                "
       "  }                                                "
       "                                                   ";
   std::stringstream source{stream};

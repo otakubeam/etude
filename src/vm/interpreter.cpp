@@ -67,16 +67,21 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     }
 
     case InstrType::LOAD: {
+      auto load_words = Decoder::DecodeByte(instr);
       auto addr = stack_.Pop();
 
       switch (addr.tag) {
         case rt::ValueTag::HeapRef:
         case rt::ValueTag::StaticRef:
         case rt::ValueTag::StackRef: {
-          auto src = memory_.AccessMemory({.reference = addr, .store = false});
-          stack_.Push(*(rt::PrimitiveValue*)src);
-          // memcpy(&stack_.Top() + 1, src, sizeof(rt::PrimitiveValue) *
-          // store_words);
+          for (int i = 0; i < load_words; i++) {
+            auto src = memory_.AccessMemory({
+                .reference = {.tag = addr.tag,
+                              .as_ref = {addr.as_ref.to_data + i}},
+                .store = false,
+            });
+            stack_.Push(*(rt::PrimitiveValue*)src);
+          }
           break;
         }
         case rt::ValueTag::InstrRef:
@@ -85,7 +90,7 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
           FMT_ASSERT(false, "Not a reference\n");
       }
 
-      return 1;
+      return 2;
     }
 
     case InstrType::STORE: {
@@ -263,6 +268,7 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
 
     case InstrType::JUMP_IF_FALSE: {
       auto condition = stack_.Pop();
+      FMT_ASSERT(condition.tag == rt::ValueTag::Bool, "Non-bool cond");
       auto jump_offset = Decoder::DecodeOffset(instr);
 
       if (condition.as_bool) {

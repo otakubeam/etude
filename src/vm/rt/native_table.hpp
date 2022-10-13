@@ -31,7 +31,7 @@ static std::unordered_map<std::string, Intrinsic> intrinsics_table{
     {"isNull", Intrinsic::IS_NULL},
 };
 
-static detail::IntrinsicType intrinsics_impl[8]{
+inline detail::IntrinsicType intrinsics_impl[8]{
     detail::print,
     detail::assert,
     detail::isNull,

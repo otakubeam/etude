@@ -17,6 +17,7 @@ class StackPrinter {
   struct AnnotatedSlot {
     fmt::text_style style = fg(fmt::color::black);
     std::size_t dot_color = 1;
+    std::string dot_color_name = "ylorrd9";
     std::string name;
     std::string type;
   };

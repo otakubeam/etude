@@ -59,11 +59,11 @@ class InstrTranslator {
       case InstrType::NATIVE_CALL:
       case InstrType::FIN_CALL:
       case InstrType::STORE:
+      case InstrType::LOAD:
         Emit(instr.arg);
         break;
 
       case InstrType::INDIRECT_CALL:
-      case InstrType::LOAD:
       case InstrType::CMP_EQ:
       case InstrType::CMP_LESS:
       case InstrType::RET_FN:

@@ -31,9 +31,22 @@ class Debugger : public BytecodeInterpreter {
     printer_.Print();
 
     static std::ofstream stream{"dots/raw"};
-    stream << printer_.ToDot();
+    stream << ToDot();
 
     return true;
+  }
+
+  std::string ToDot() {
+    return fmt::format(
+        "digraph G {{ {}\n inst [label=\"{:<80}\"]; \n inst -> sp; \n }} "
+        "\n",  //
+        printer_.ToDot(), FormatCurrentInstruction());
+  }
+
+  std::string FormatCurrentInstruction() {
+    auto instr = GetNextInstruction();
+    return fmt::format("{}: {}", rt::FormatInstrRef(ip_),
+                       Disassembler::FormatInstruction(instr));
   }
 
   rt::PrimitiveValue StepToTheEnd() {

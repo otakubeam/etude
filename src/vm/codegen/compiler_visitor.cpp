@@ -155,10 +155,9 @@ void Compiler::VisitDeref(DereferenceExpression* node) {
 
   instrs->clear();
 
-  auto size = GetTypeSize(node->operand_);
   TranslateInstruction({
       .type = InstrType::LOAD,
-      .arg = size,
+      .arg = GetTypeSize(node),
   });
 }
 
