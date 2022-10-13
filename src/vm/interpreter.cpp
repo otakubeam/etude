@@ -2,6 +2,8 @@
 
 #include <vm/debug/disassember.hpp>
 
+#include <vm/rt/native_table.hpp>
+
 namespace vm {
 
 void BytecodeInterpreter::Load(ElfFile executable) {
@@ -138,14 +140,13 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
 
     case InstrType::NATIVE_CALL: {
       auto native_no = Decoder::DecodeByte(instr);
-      (void)native_no;
+      auto num = stack_.Pop();
 
-      auto ptr = stack_.Pop();
-      stack_.Push({
-          .tag = rt::ValueTag::Bool,
-          .as_bool = ptr.tag == rt::ValueTag::Unit,
-      });
+      // Call the function!
 
+      rt::intrinsics_impl[native_no](num.as_int, &stack_.Top());
+
+      stack_.PopCount(num.as_int);
       return 2;
     }
 

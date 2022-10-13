@@ -77,11 +77,13 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
         .dbg_instr = {{.type_name = node->arguments_[i]->GetType()->Format()}}};
   }
 
-  if (node->GetFunctionName() == "isNull") {
+  if (rt::intrinsics_table.contains(node->GetFunctionName())) {
+    TranslateInstruction(FatInstr::MakePushInt(node->arguments_.size()));
     TranslateInstruction({
         .type = vm::InstrType::NATIVE_CALL,
-        .arg = 0,
+        .arg = (uint8_t)rt::intrinsics_table[node->GetFunctionName()],
     });
+
     return;
   }
 

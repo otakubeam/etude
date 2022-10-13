@@ -12,6 +12,8 @@ TypeChecker::TypeChecker() {
   // Declare intrinsics
   intrinsics.emplace("print", new FnType{});
   intrinsics.emplace("assert", new FnType{});
+  intrinsics.emplace(
+      "isNull", new FnType{{/*it takes any pointer type*/}, &builtin_bool});
 }
 
 TypeChecker::~TypeChecker() = default;
