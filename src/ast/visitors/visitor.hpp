@@ -9,6 +9,7 @@ class UnaryExpression;
 class DereferenceExpression;
 class AddressofExpression;
 class IfExpression;
+class NewExpression;
 class BlockExpression;
 class FnCallExpression;
 class StructConstructionExpression;
@@ -62,6 +63,8 @@ class Visitor {
   virtual void VisitAddressof(AddressofExpression* node) = 0;
 
   virtual void VisitIf(IfExpression* node) = 0;
+
+  virtual void VisitNew(NewExpression* node) = 0;
 
   virtual void VisitBlock(BlockExpression* node) = 0;
 

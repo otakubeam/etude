@@ -34,6 +34,7 @@ enum class TokenType {
 
   ADDR,
   STAR,
+  NEW,
 
   FUN,
   DOT,

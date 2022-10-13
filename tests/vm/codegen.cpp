@@ -200,18 +200,29 @@ TEST_CASE("vm:codgen:struct:tree", "[vm:codgen]") {
       "      }                                                "
       "  }                                                    "
       "                                                       "
+      "  fun initTree(tr: *Tree, val: Int) Unit {             "
+      "     (*tr).left = unit;                                "
+      "     (*tr).right = unit;                               "
+      "     (*tr).value = val;                                "
+      "  }                                                    "
+      "                                                       "
       "  fun main() Bool {                                    "
       "     var tr1 = Tree:{unit, unit, 1};                   "
-      "     var tr5 = Tree:{unit, unit, 5};                   "
-      "     insertNewValue(&tr1, &tr5);                       "
-      "     var tr4 = Tree:{unit, unit, 4};                   "
-      "     var tr3 = Tree:{unit, unit, 3};                   "
-      "     var tr2 = Tree:{unit, unit, 2};                   "
-      "                                                       "
-      "     insertNewValue(&tr1, &tr3);                       "
-      "     insertNewValue(&tr1, &tr2);                       "
-      "     insertNewValue(&tr1, &tr4);                       "
-      "     insertNewValue(&tr1, &tr4)                       "
+      "     var tr5 = new Tree;                               "
+      "     initTree(tr5, 5);                                 "
+      "     insertNewValue(&tr1, tr5);                        "
+
+      "     tr5 = new Tree;                               "
+      "     initTree(tr5, 4);                                 "
+      "     insertNewValue(&tr1, tr5);                        "
+
+      "     tr5 = new Tree;                               "
+      "     initTree(tr5, 3);                                 "
+      "     insertNewValue(&tr1, tr5);                        "
+
+      "     tr5 = new Tree;                               "
+      "     initTree(tr5, 2);                                 "
+      "     insertNewValue(&tr1, tr5);                        "
       "  }                                                    ";
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
@@ -232,10 +243,14 @@ TEST_CASE("vm:codgen:struct:tree", "[vm:codgen]") {
   tchk.Eval(stmt3);
   elf += compiler.Compile(stmt3);
 
+  auto stmt4 = p.ParseStatement();
+  tchk.Eval(stmt4);
+  elf += compiler.Compile(stmt4);
+
   d.Disassemble(elf);
 
   vm::debug::Debugger debugger;
   debugger.Load(std::move(elf));
 
-  CHECK(debugger.StepToTheEnd().as_bool == false);
+  CHECK(debugger.StepToTheEnd().as_bool == true);
 }

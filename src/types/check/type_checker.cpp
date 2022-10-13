@@ -206,6 +206,12 @@ void TypeChecker::VisitIf(IfExpression* if_expr) {
 
 ////////////////////////////////////////////////////////////////////
 
+void TypeChecker::VisitNew(NewExpression* node) {
+  return_value = node->GetType();
+}
+
+////////////////////////////////////////////////////////////////////
+
 void TypeChecker::VisitBlock(BlockExpression* node) {
   Environment<Type*>::ScopeGuard guard{&variable_type_store_};
 

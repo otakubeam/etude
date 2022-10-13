@@ -47,16 +47,13 @@ std::string FormatValue(PrimitiveValue value) {
       return FormatInstrRef(value.as_ref.to_instr);
 
     case ValueTag::StackRef:
-      return fmt::format("{}", value.as_ref.to_data);
-
     case ValueTag::HeapRef:
-      return "HeapRef";
+      return fmt::format("{}", value.as_ref.to_data);
 
     case ValueTag::StaticRef:
       return "StaticRef";
-
-      FMT_ASSERT(false, "Unreachable!");
   }
+  FMT_ASSERT(false, "Unreachable!");
 }
 
 std::string FormatPrimitiveValue(PrimitiveValue value) {

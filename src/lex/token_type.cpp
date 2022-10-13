@@ -26,6 +26,7 @@ namespace lex {
   code(NOT)                 \
   code(ADDR)                \
   code(STAR)                \
+  code(NEW)                 \
   code(FUN)                 \
   code(DOT)                 \
   code(COMMA)               \

@@ -68,6 +68,7 @@ struct PrimitiveValue {
 
 static_assert(sizeof(PrimitiveValue) == 5);
 
+std::string FormatValue(PrimitiveValue value);
 std::string FormatPrimitiveValue(PrimitiveValue value);
 
 //////////////////////////////////////////////////////////////////////

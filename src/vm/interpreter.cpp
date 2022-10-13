@@ -151,7 +151,9 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
 
       rt::intrinsics_impl[native_no](num.as_int, &stack_.Top());
 
-      stack_.PopCount(num.as_int);
+      auto res = stack_.Pop();
+      stack_.PopCount(num.as_int - 1);
+      stack_.Push(res);
       return 2;
     }
 
@@ -251,7 +253,7 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     case InstrType::ADD_ADDR: {
       auto addition = Decoder::DecodeOffset(instr);
       stack_.Top().as_ref.to_data += addition;
-      FMT_ASSERT(stack_.Top().tag == rt::ValueTag::StackRef,
+      FMT_ASSERT((uint8_t)stack_.Top().tag >= 4,
                  "Can only add offset to addresses");
       return 3;
     }

@@ -23,6 +23,10 @@ Expression* Parser::ParseExpression() {
     return addrof_expr;
   }
 
+  if (auto new_expr = ParseNewExpression()) {
+    return new_expr;
+  }
+
   return ParseComparison();
 }
 
@@ -76,6 +80,18 @@ Expression* Parser::ParseIfExpression() {
   }
 
   return new IfExpression(condition, true_branch, false_branch);
+}
+
+////////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseNewExpression() {
+  if (!Matches(lex::TokenType::NEW)) {
+    return nullptr;
+  }
+
+  auto new_tok = lexer_.GetPreviousToken();
+
+  return new NewExpression{new_tok, ParseType()};
 }
 
 ////////////////////////////////////////////////////////////////////

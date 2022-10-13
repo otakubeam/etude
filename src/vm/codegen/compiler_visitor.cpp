@@ -26,7 +26,7 @@ void Compiler::VisitVarDecl(VarDeclStatement* node) {
   // Infrom FrameTranslator about this location
 
   auto name = node->GetVarName();
-  auto size = GetTypeSize(node->value_);
+  auto size = GetValueSize(node->value_);
   current_frame_->AddLocal(name, size);
 }
 
@@ -44,7 +44,7 @@ void Compiler::VisitAssignment(AssignmentStatement* node) {
 
   TranslateInstruction({
       .type = InstrType::STORE,
-      .arg = GetTypeSize(node->target_),
+      .arg = GetValueSize(node->target_),
   });
 }
 
@@ -157,7 +157,7 @@ void Compiler::VisitDeref(DereferenceExpression* node) {
 
   TranslateInstruction({
       .type = InstrType::LOAD,
-      .arg = GetTypeSize(node),
+      .arg = GetValueSize(node),
   });
 }
 
@@ -255,6 +255,15 @@ void Compiler::VisitIf(IfExpression* node) {
 
 ////////////////////////////////////////////////////////////////////
 
+void Compiler::VisitNew(NewExpression* node) {
+  TranslateInstruction(FatInstr::MakePushInt(GetTypeSize(node->underlying_)));
+  TranslateInstruction({
+      .type = InstrType::ALLOC,
+  });
+}
+
+////////////////////////////////////////////////////////////////////
+
 void Compiler::VisitBlock(BlockExpression* node) {
   for (auto& statement : node->stmts_) {
     statement->Accept(this);
@@ -297,7 +306,7 @@ void Compiler::VisitFieldAccess(FieldAccessExpression* node) {
 
   TranslateInstruction({
       .type = InstrType::LOAD,
-      .arg = GetTypeSize(node),
+      .arg = GetValueSize(node),
   });
 
   instrs->clear();

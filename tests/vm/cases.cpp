@@ -72,15 +72,23 @@ TEST_CASE("vm:heap", "[vm]") {
 
   ////////////////////////////////////////////////////////////////////
 
-  assembler.TranslateInstruction(vm::codegen::FatInstr::MakePushInt(100));
-  assembler.TranslateInstruction(vm::codegen::FatInstr::MakePushInt(500));
   assembler.TranslateInstruction(vm::codegen::FatInstr::MakePushInt(2));
   assembler.TranslateInstruction(vm::codegen::FatInstr{
       .type = vm::InstrType::ALLOC,
   });
+  assembler.TranslateInstruction(vm::codegen::FatInstr::MakePushInt(100));
+  assembler.TranslateInstruction(vm::codegen::FatInstr::MakePushInt(500));
+  assembler.TranslateInstruction(vm::codegen::FatInstr{
+      .type = vm::InstrType::GET_AT_FP,
+      .offset = 1,
+  });
   assembler.TranslateInstruction(vm::codegen::FatInstr{
       .type = vm::InstrType::STORE,
       .arg = 2,
+  });
+  assembler.TranslateInstruction(vm::codegen::FatInstr::MakePushInt(3));
+  assembler.TranslateInstruction(vm::codegen::FatInstr{
+      .type = vm::InstrType::ALLOC,
   });
   assembler.TranslateInstruction(vm::codegen::FatInstr{
       .type = vm::InstrType::RET_FN,

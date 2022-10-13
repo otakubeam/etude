@@ -355,6 +355,43 @@ class IfExpression : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
+class NewExpression : public LvalueExpression {
+ public:
+  NewExpression(lex::Token new_token, types::Type* type)
+      : new_token_{new_token}, underlying_{type} {
+    // if (auto kek = dynamic_cast<types::ArrayType*>(type) {
+    //     type = kek.underlying_;
+    // }
+    type_ = new types::PointerType{type};
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitNew(this);
+  }
+
+  virtual types::Type* GetType() override {
+    return type_;
+  };
+
+  virtual lex::Location GetLocation() override {
+    return new_token_.location;
+  }
+
+  virtual int GetAddress() override {
+    FMT_ASSERT(false, "Not known at compile time address");
+  }
+
+  virtual bool IsDirect() override {
+    return false;
+  }
+
+  lex::Token new_token_{};
+  types::Type* underlying_ = nullptr;
+  types::Type* type_ = nullptr;
+};
+
+//////////////////////////////////////////////////////////////////////
+
 class LiteralExpression : public Expression {
  public:
   LiteralExpression(lex::Token token) : token_{token} {

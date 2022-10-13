@@ -48,10 +48,7 @@ class Debugger : public BytecodeInterpreter {
     std::vector<uint32_t> heap_ptrs;
     rt::PrimitiveValue* it = (rt::PrimitiveValue*)memory_.GetStackArea();
 
-    fmt::print("Want to get heap ptrs");
-
     for (size_t i = 0; &it[i] <= &stack_.Top(); i++) {
-      fmt::print("Tag[{}]: {}\n", i, (uint8_t)it[i].tag);
       if (it[i].tag == rt::ValueTag::HeapRef) {
         heap_ptrs.push_back(i);
       }
@@ -70,7 +67,9 @@ class Debugger : public BytecodeInterpreter {
 
       std::string structure = "";
       for (size_t i = 0; i < size; i++) {
-        structure += fmt::format("<td port='{}'>{}</td> ", loc + i, 123);
+        auto value = ((rt::PrimitiveValue*)memory_.memory_)[loc + i];
+        structure += fmt::format("<td port='{}'>{}</td> ", loc + i,
+                                 rt::FormatValue(value));
       }
 
       fmt::format_to(std::back_inserter(buf),

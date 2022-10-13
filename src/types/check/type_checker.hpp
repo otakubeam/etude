@@ -28,6 +28,7 @@ class TypeChecker : public ReturnVisitor<Type*> {
   virtual void VisitBinary(BinaryExpression*) override;
   virtual void VisitUnary(UnaryExpression*) override;
   virtual void VisitIf(IfExpression*) override;
+  virtual void VisitNew(NewExpression*) override;
   virtual void VisitBlock(BlockExpression*) override;
   virtual void VisitFnCall(FnCallExpression*) override;
   virtual void VisitStructConstruction(StructConstructionExpression*) override;

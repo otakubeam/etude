@@ -39,6 +39,7 @@ class Compiler : public Visitor {
   virtual void VisitDeref(DereferenceExpression* node) override;
   virtual void VisitAddressof(AddressofExpression* node) override;
   virtual void VisitIf(IfExpression* node) override;
+  virtual void VisitNew(NewExpression* node) override;
   virtual void VisitBlock(BlockExpression* node) override;
   virtual void VisitComparison(ComparisonExpression* node) override;
   virtual void VisitBinary(BinaryExpression* node) override;
@@ -106,8 +107,12 @@ class Compiler : public Visitor {
     return offset;
   }
 
-  uint8_t GetTypeSize(Expression* expr) {
-    if (auto struct_type = dynamic_cast<types::StructType*>(expr->GetType())) {
+  uint8_t GetValueSize(Expression* expr) {
+    return GetTypeSize(expr->GetType());
+  }
+
+  uint8_t GetTypeSize(types::Type* type) {
+    if (auto struct_type = dynamic_cast<types::StructType*>(type)) {
       return structs_.Get(struct_type->GetName()).value()->Size();
     }
     return 1;
