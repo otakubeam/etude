@@ -19,7 +19,7 @@ class Debugger : public BytecodeInterpreter {
     }
 
     auto instr = GetNextInstruction();
-    fmt::print("Current instruction {}: {}", rt::FormatInstrRef(ip_),
+    fmt::print("Current instruction {}: {}\n", rt::FormatInstrRef(ip_),
                Disassembler::FormatInstruction(instr));
 
     static std::ofstream stream{"dots/raw"};
@@ -40,19 +40,21 @@ class Debugger : public BytecodeInterpreter {
   std::string ToDot() {
     return fmt::format(
         "digraph G {{ {}\n inst [label=\"{:<80}\"]; \n inst -> sp; \n {} }} "
-        "\n",  //
+        "\n",
         printer_.ToDot(), FormatCurrentInstruction(), FormatHeapPtrs());
   }
 
   auto GetHeapPtrs() {
-    std::vector<uint32_t> heap_ptrs;
+    std::vector<uint32_t> heap_ptrs{0};
     rt::PrimitiveValue* it = (rt::PrimitiveValue*)memory_.GetStackArea();
 
     for (size_t i = 0; &it[i] <= &stack_.Top(); i++) {
-      if (it[i].tag == rt::ValueTag::HeapRef) {
-        heap_ptrs.push_back(i);
+      if (it[i].tag == rt::ValueTag::HeapRef && heap_ptrs.back() != i) {
+        heap_ptrs.push_back(it[i].as_ref.to_data);
       }
     }
+
+    heap_ptrs.erase(heap_ptrs.begin());
 
     return heap_ptrs;
   }

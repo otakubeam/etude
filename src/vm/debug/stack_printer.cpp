@@ -215,6 +215,10 @@ void StackPrinter::FormatOneCell(fmt::memory_buffer& buf, size_t index) {
       fmt::format_to(std::back_inserter(buf), an.style, "s{}\t",
                      (cell.as_ref.to_data));
       break;
+    case rt::ValueTag::HeapRef:
+      fmt::format_to(std::back_inserter(buf), an.style, "h{}\t",
+                     (cell.as_ref.to_data));
+      break;
     default:
       break;
   }

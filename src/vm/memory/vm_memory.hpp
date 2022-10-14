@@ -73,10 +73,11 @@ class VmMemory {
   }
 
   auto LookupSize(uint32_t mark) {
-    for (auto [a, b] : allocation_sizes_) {
-      fmt::print("{}:{}\n", a, b);
+    if (allocation_sizes_.contains(mark)) {
+      return allocation_sizes_.find(mark);
     }
-    auto it = allocation_sizes_.upper_bound(mark);
+
+    auto it = allocation_sizes_.lower_bound(mark);
     return --it;
   }
 

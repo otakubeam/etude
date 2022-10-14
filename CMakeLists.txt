@@ -9,7 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_compile_options(-Wall -Wextra -fno-omit-frame-pointer)
+add_compile_options(-Wall -Wextra -fno-omit-frame-pointer -fsanitize=undefined)
 
 # add_compile_options(-fsanitize=address)
 # add_link_options(-fsanitize=address)
