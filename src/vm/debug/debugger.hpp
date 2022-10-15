@@ -9,94 +9,44 @@
 
 namespace vm::debug {
 
+////////////////////////////////////////////////////////////////////
+
 class Debugger : public BytecodeInterpreter {
  public:
-  bool Step() {
-    if (auto instr = memory_.program_text_->DIEs_.at(ip_.chunk_no)
-                         .at(ip_.instr_no)
-                         .dbg_instr) {
-      printer_.AnnotateSlot(*instr);
-    }
+  bool Step();
 
-    auto instr = GetNextInstruction();
-    fmt::print("Current instruction {}: {}\n", rt::FormatInstrRef(ip_),
-               Disassembler::FormatInstruction(instr));
+  rt::PrimitiveValue StepToTheEnd();
 
-    static std::ofstream stream{"dots/raw"};
-    stream << ToDot();
+ private:
+  std::string ToDot();
 
-    try {
-      RunFor(1);
-    } catch (rt::PrimitiveValue ret) {
-      return_ = ret;
-      return false;
-    }
+  std::string FormatCurrentInstruction();
 
-    printer_.Print();
+  //////////////////////////////////////////////////////////////////
 
-    return true;
-  }
+  struct HeapPrinter {
+    std::string FormatHeapPtrs();
 
-  std::string ToDot() {
-    return fmt::format(
-        "digraph G {{ {}\n inst [label=\"{:<80}\"]; \n inst -> sp; \n {} }} "
-        "\n",
-        printer_.ToDot(), FormatCurrentInstruction(), FormatHeapPtrs());
-  }
+    void FormatStrucutre(auto ptr);
 
-  auto GetHeapPtrs() {
-    std::vector<uint32_t> heap_ptrs{0};
-    rt::PrimitiveValue* it = (rt::PrimitiveValue*)memory_.GetStackArea();
+    void FormatSourceNode(auto loc, auto i);
 
-    for (size_t i = 0; &it[i] <= &stack_.Top(); i++) {
-      if (it[i].tag == rt::ValueTag::HeapRef && heap_ptrs.back() != i) {
-        heap_ptrs.push_back(it[i].as_ref.to_data);
-      }
-    }
+    void FormatDestinationNode(const auto& value);
 
-    heap_ptrs.erase(heap_ptrs.begin());
+    Debugger& this_debugger;
+    fmt::memory_buffer buf{};
+  };
 
-    return heap_ptrs;
-  }
+  auto GetHeapPtrs() -> std::vector<uint32_t>;
 
-  std::string FormatHeapPtrs() {
-    fmt::memory_buffer buf;
-
-    auto heap_ptrs = GetHeapPtrs();
-
-    for (auto ptr : heap_ptrs) {
-      auto [loc, size] = *memory_.LookupSize(ptr);
-
-      std::string structure = "";
-      for (size_t i = 0; i < size; i++) {
-        auto value = ((rt::PrimitiveValue*)memory_.memory_)[loc + i];
-        structure += fmt::format("<td port='{}'>{}</td> ", loc + i,
-                                 rt::FormatValue(value));
-      }
-
-      fmt::format_to(std::back_inserter(buf),
-                     "heap_{} [label=<<table>\n <tr>{} </tr></table>>] \n", loc,
-                     structure);
-    }
-
-    return fmt::to_string(buf);
-  }
-
-  std::string FormatCurrentInstruction() {
-    auto instr = GetNextInstruction();
-    return fmt::format("{}: {}", rt::FormatInstrRef(ip_),
-                       Disassembler::FormatInstruction(instr));
-  }
-
-  rt::PrimitiveValue StepToTheEnd() {
-    while (Step())
-      ;
-    return return_.value();
-  }
+  //////////////////////////////////////////////////////////////////
 
  private:
   StackPrinter printer_{stack_};
+
   std::optional<rt::PrimitiveValue> return_;
 };
+
+////////////////////////////////////////////////////////////////////
 
 }  // namespace vm::debug

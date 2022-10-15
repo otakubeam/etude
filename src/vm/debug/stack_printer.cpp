@@ -98,8 +98,6 @@ std::string StackPrinter::ToDot() {
   }
 
   fmt::format_to(std::back_inserter(buf),
-                 "rankdir=LR; "
-                 "node[fontname=\"mono\",shape=none];"
                  "sp; fp; "
                  "stack [label = <<table>\n {} </table>>];\n",
                  strucure);
