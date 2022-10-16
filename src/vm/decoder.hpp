@@ -20,8 +20,9 @@ struct Decoder {
     return *value;
   }
 
-  static auto DecodeValue(uint8_t*& instr) -> rt::PrimitiveValue* {
-    auto value = (rt::PrimitiveValue*)instr;
+  static auto DecodeValue(uint8_t*& instr) -> rt::PrimitiveValue {
+    rt::PrimitiveValue value{};
+    memcpy(&value, instr, sizeof(rt::PrimitiveValue));
     instr += sizeof(rt::PrimitiveValue);
     return value;
   };

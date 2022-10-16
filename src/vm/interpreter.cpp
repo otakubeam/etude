@@ -40,7 +40,7 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
   switch (Decoder::DecodeType(instr)) {
     case InstrType::PUSH_VALUE: {
       auto value = Decoder::DecodeValue(instr);
-      stack_.Push(*value);
+      stack_.Push(value);
 
       return 1 + sizeof(rt::PrimitiveValue);
     }

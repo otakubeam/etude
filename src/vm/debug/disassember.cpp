@@ -60,7 +60,7 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
   switch (type) {
     case InstrType::PUSH_VALUE:
       bytes = FormatNBytes(sizeof(rt::PrimitiveValue), instr);
-      pretty_print = rt::FormatPrimitiveValue(*Decoder::DecodeValue(instr));
+      pretty_print = rt::FormatPrimitiveValue(Decoder::DecodeValue(instr));
       break;
 
     case InstrType::CALL_FN:
