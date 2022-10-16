@@ -12,17 +12,6 @@ Expression* Parser::ParseExpression() {
     return block_expr;
   }
 
-  // Think about precedence wrt to * and &
-  // This is probably too low
-
-  if (auto deref_expr = ParseDeref()) {
-    return deref_expr;
-  }
-
-  if (auto addrof_expr = ParseAddressof()) {
-    return addrof_expr;
-  }
-
   if (auto new_expr = ParseNewExpression()) {
     return new_expr;
   }
@@ -158,6 +147,15 @@ Expression* Parser::ParseBinary() {
 
 Expression* Parser::ParseUnary() {
   auto token = lexer_.Peek();
+
+  if (auto deref_expr = ParseDeref()) {
+    return deref_expr;
+  }
+
+  if (auto addrof_expr = ParseAddressof()) {
+    return addrof_expr;
+  }
+
   if (Matches(lex::TokenType::MINUS) || Matches(lex::TokenType::NOT)) {
     auto expr = ParsePrimary();
     return new UnaryExpression{token, expr};
