@@ -23,6 +23,8 @@ namespace lex {
   code(RIGHT_BRACE)         \
   code(LEFT_CBRACE)         \
   code(RIGHT_CBRACE)        \
+  code(LEFT_SBRACE)         \
+  code(RIGHT_SBRACE)        \
   code(NOT)                 \
   code(ADDR)                \
   code(STAR)                \

@@ -150,13 +150,30 @@ void TypeChecker::VisitComparison(ComparisonExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void TypeChecker::VisitBinary(BinaryExpression* node) {
-  if (Eval(node->left_) != &builtin_int) {
-    throw ArithAddError{node->GetLocation(), "left"};
+  auto left_t = Eval(node->left_);
+  auto right_t = Eval(node->right_);
+
+  if (right_t == &builtin_int && left_t == right_t) {
+    return_value = &builtin_int;
+    return;
   }
 
-  if (Eval(node->right_) != &builtin_int) {
-    throw ArithAddError{node->GetLocation(), "right"};
+  if (auto ptr = dynamic_cast<PointerType*>(left_t)) {
+    if (right_t != &builtin_int) {
+      throw ArithAddError{node->GetLocation(), "right"};
+    }
+
+    node->is_pointer_arithmetic_ = true;
+    return_value = ptr;
+    return;
   }
+
+  throw ArithAddError{node->GetLocation(), "left"};
+
+  // TODO: if the error is caught I might
+  // actually return some conformant value
+  // to proceed with typechecking and find more mistakes
+  // But I would have to drop exceptions, no?
 
   return_value = &builtin_int;
 }
@@ -251,6 +268,7 @@ void TypeChecker::VisitFnCall(FnCallExpression* node) {
 
       if (fn_type->IsEqual(&inferred_type)) {
         return_value = fn_type->GetReturnType();
+        node->expression_type = return_value;
         return;
       }
       throw FnInvokeError{node->GetFunctionName(), node->GetLocation()};

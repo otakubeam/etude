@@ -186,25 +186,49 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
     }
 
     case InstrType::ADD: {
-      auto a = stack_.Pop().as_int;
-      auto b = stack_.Pop().as_int;
+      auto top = stack_.Pop();
+      auto top_minus = stack_.Pop();
 
-      stack_.Push(rt::PrimitiveValue{
-          .tag = rt::ValueTag::Int,
-          .as_int = a + b,
-      });
+      switch (top_minus.tag) {
+        case rt::ValueTag::Int:;
+          top_minus.as_int += top.as_int;
+          stack_.Push(top_minus);
+          break;
+
+        case rt::ValueTag::HeapRef:
+        case rt::ValueTag::StackRef:
+        case rt::ValueTag::StaticRef:
+          top_minus.as_ref.to_data += top.as_int;
+          stack_.Push(top_minus);
+          break;
+
+        default:
+          FMT_ASSERT(false, "Unreachable!");
+      }
 
       return 1;
     }
 
     case InstrType::SUBTRACT: {
-      auto rhs = stack_.Pop().as_int;
-      auto lhs = stack_.Pop().as_int;
+      auto top = stack_.Pop();
+      auto top_minus = stack_.Pop();
 
-      stack_.Push(rt::PrimitiveValue{
-          .tag = rt::ValueTag::Int,
-          .as_int = lhs - rhs,
-      });
+      switch (top_minus.tag) {
+        case rt::ValueTag::Int:;
+          top_minus.as_int -= top.as_int;
+          stack_.Push(top_minus);
+          break;
+
+        case rt::ValueTag::HeapRef:
+        case rt::ValueTag::StackRef:
+        case rt::ValueTag::StaticRef:
+          top_minus.as_ref.to_data -= top.as_int;
+          stack_.Push(top_minus);
+          break;
+
+        default:
+          FMT_ASSERT(false, "Unreachable!");
+      }
 
       return 1;
     }

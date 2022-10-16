@@ -30,6 +30,10 @@ enum class TokenType {
   LEFT_CBRACE,
   RIGHT_CBRACE,
 
+  // SQUARE
+  LEFT_SBRACE,
+  RIGHT_SBRACE,
+
   NOT,
 
   ADDR,

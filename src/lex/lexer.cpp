@@ -132,6 +132,10 @@ std::optional<TokenType> Lexer::MatchOperator() {
       return TokenType::LEFT_CBRACE;
     case '}':
       return TokenType::RIGHT_CBRACE;
+    case '[':
+      return TokenType::LEFT_SBRACE;
+    case ']':
+      return TokenType::RIGHT_SBRACE;
     case ';':
       return TokenType::SEMICOLUMN;
     case ':':

@@ -91,7 +91,13 @@ Expression* Parser::ParseNewExpression() {
 
   auto new_tok = lexer_.GetPreviousToken();
 
-  return new NewExpression{new_tok, ParseType()};
+  if (!Matches(lex::TokenType::LEFT_SBRACE)) {
+    return new NewExpression{new_tok, nullptr, ParseType()};
+  }
+
+  auto size = ParseExpression();
+  Consume(lex::TokenType::RIGHT_SBRACE);
+  return new NewExpression{new_tok, size, ParseType()};
 }
 
 ////////////////////////////////////////////////////////////////////

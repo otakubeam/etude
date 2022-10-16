@@ -46,7 +46,7 @@ std::string Debugger::ToDot() {
 
   return fmt::format(
       "digraph G {{                          \n"
-      "graph [concentrate=true]; rankdir=LR; \n"
+      "rankdir=LR;                           \n"
       "node[fontname=\"mono\",shape=none];   \n"
       "{}                                    \n"
       "inst [label=\"{:<80}\"];              \n"
@@ -94,8 +94,10 @@ void Debugger::HeapPrinter::FormatStrucutre(auto ptr) {
     const auto heap_mem = this_debugger.memory_.memory_;
     const auto value = ((rt::PrimitiveValue*)heap_mem)[loc + i];
 
-    FormatSourceNode(loc, i);
-    FormatDestinationNode(value);
+    if (value.tag >= rt::ValueTag::HeapRef) {
+      FormatSourceNode(loc, i);
+      FormatDestinationNode(value);
+    }
 
     fmt::format_to(std::back_inserter(struct_buf), "<td port='{}'>{}</td>",
                    loc + i, rt::FormatValue(value));

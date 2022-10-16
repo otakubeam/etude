@@ -82,6 +82,8 @@ class BinaryExpression : public Expression {
   Expression* left_;
   lex::Token operator_;
   Expression* right_;
+
+  bool is_pointer_arithmetic_ = false;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -357,12 +359,12 @@ class IfExpression : public Expression {
 
 class NewExpression : public LvalueExpression {
  public:
-  NewExpression(lex::Token new_token, types::Type* type)
-      : new_token_{new_token}, underlying_{type} {
-    // if (auto kek = dynamic_cast<types::ArrayType*>(type) {
-    //     type = kek.underlying_;
-    // }
-    type_ = new types::PointerType{type};
+  NewExpression(lex::Token new_token, Expression* allocation_size,
+                types::Type* underlying)
+      : new_token_{new_token},
+        allocation_size_{allocation_size},
+        underlying_{underlying},
+        type_{new types::PointerType{underlying_}} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -386,7 +388,11 @@ class NewExpression : public LvalueExpression {
   }
 
   lex::Token new_token_{};
+
+  Expression* allocation_size_ = nullptr;
+
   types::Type* underlying_ = nullptr;
+
   types::Type* type_ = nullptr;
 };
 

@@ -256,10 +256,13 @@ void Compiler::VisitIf(IfExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitNew(NewExpression* node) {
-  TranslateInstruction(FatInstr::MakePushInt(GetTypeSize(node->underlying_)));
-  TranslateInstruction({
-      .type = InstrType::ALLOC,
-  });
+  if (auto dyn_size = node->allocation_size_) {
+    dyn_size->Accept(this);
+  } else {
+    TranslateInstruction(FatInstr::MakePushInt(GetTypeSize(node->underlying_)));
+  }
+
+  TranslateInstruction({.type = InstrType::ALLOC});
 }
 
 ////////////////////////////////////////////////////////////////////

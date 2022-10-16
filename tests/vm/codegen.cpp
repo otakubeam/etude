@@ -200,30 +200,22 @@ TEST_CASE("vm:codgen:struct:tree", "[vm:codgen]") {
       "      }                                                "
       "  }                                                    "
       "                                                       "
-      "  fun initTree(tr: *Tree, val: Int) Unit {             "
-      "     (*tr).left = unit;                                "
-      "     (*tr).right = unit;                               "
-      "     (*tr).value = val;                                "
+      "  fun consTree(val: Int) *Tree {                       "
+      "     var tree = new Tree;                              "
+      "     (*tree).left = unit;                              "
+      "     (*tree).right = unit;                             "
+      "     (*tree).value = val;                              "
+      "     tree                                              "
       "  }                                                    "
       "                                                       "
       "  fun main() Bool {                                    "
-      "     var tr1 = Tree:{unit, unit, 1};                   "
-      "     var tr5 = new Tree;                               "
-      "     initTree(tr5, 5);                                 "
-      "     insertNewValue(&tr1, tr5);                        "
-
-      "     tr5 = new Tree;                               "
-      "     initTree(tr5, 4);                                 "
-      "     insertNewValue(&tr1, tr5);                        "
-
-      "     tr5 = new Tree;                               "
-      "     initTree(tr5, 3);                                 "
-      "     insertNewValue(&tr1, tr5);                        "
-
-      "     tr5 = new Tree;                               "
-      "     initTree(tr5, 2);                                 "
-      "     insertNewValue(&tr1, tr5);                        "
+      "     var tr1 = consTree(1);                            "
+      "     insertNewValue(tr1, consTree(5));                 "
+      "     insertNewValue(tr1, consTree(4));                 "
+      "     insertNewValue(tr1, consTree(3));                 "
+      "     insertNewValue(tr1, consTree(2))                  "
       "  }                                                    ";
+
   std::stringstream source{stream};
   Parser p{lex::Lexer{source}};
 
@@ -249,8 +241,91 @@ TEST_CASE("vm:codgen:struct:tree", "[vm:codgen]") {
 
   d.Disassemble(elf);
 
+  vm::BytecodeInterpreter debugger;
+  debugger.Load(std::move(elf));
+
+  CHECK(debugger.RunToTheEnd().as_bool == true);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codgen:array", "[vm:codgen]") {
+  char stream[] =
+      "  fun main() Unit {                                    "
+      "     var vec = new [10] Int;                           "
+      "     *(vec + 3) = 5;                                   "
+      "  }                                                    ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  types::check::TypeChecker tchk;
+  vm::codegen::Compiler compiler;
+  vm::debug::Disassembler d;
+
+  auto stmt1 = p.ParseStatement();
+  tchk.Eval(stmt1);
+  auto elf = compiler.Compile(stmt1);
+
+  d.Disassemble(elf);
+
   vm::debug::Debugger debugger;
   debugger.Load(std::move(elf));
 
-  CHECK(debugger.StepToTheEnd().as_bool == true);
+  CHECK(debugger.StepToTheEnd().as_int == 0);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codgen:array:dynsize", "[vm:codgen]") {
+  char stream[] =
+      "  fun iterateVec(                        "
+      "    vec: *Int,                           "
+      "    size: Int,                           "
+      "  ) Unit {                               "
+      "    if size == 0 {                       "
+      "      return;                            "
+      "    };                                   "
+      "                                         "
+      "    *vec = (*vec) + 1;                   "
+      "                                         "
+      "    return iterateVec(vec + 1, size - 1);"
+      "  }                                      "
+      "                                         "
+      "  fun makeInt() Int { 8 }                "
+      "                                         "
+      "  fun main() Unit {                      "
+      "     var vec = new [makeInt()] Int;      "
+      "                                         "
+      "     *(vec + 3) = 5;                     "
+      "     *(vec + 1) = 3;                     "
+      "                                         "
+      "     iterateVec(vec, makeInt());         "
+      "  }                                      ";
+
+  std::stringstream source{stream};
+  Parser p{lex::Lexer{source}};
+
+  types::check::TypeChecker tchk;
+  vm::codegen::Compiler compiler;
+  vm::debug::Disassembler d;
+
+  auto stmt1 = p.ParseStatement();
+  tchk.Eval(stmt1);
+  auto elf = compiler.Compile(stmt1);
+
+  stmt1 = p.ParseStatement();
+  tchk.Eval(stmt1);
+  elf += compiler.Compile(stmt1);
+
+  stmt1 = p.ParseStatement();
+  tchk.Eval(stmt1);
+  elf += compiler.Compile(stmt1);
+
+  d.Disassemble(elf);
+
+  vm::debug::Debugger debugger;
+  debugger.Load(std::move(elf));
+
+  CHECK(debugger.StepToTheEnd().as_int == 0);
 }
