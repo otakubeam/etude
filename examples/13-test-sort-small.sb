@@ -1,0 +1,42 @@
+fun swap(a: *Int, b: *Int) Unit {
+  var temp = *a;
+  *a = *b;
+  *b = temp;
+}
+
+fun sortTwo(vec: *Int) Unit {
+  if (*vec) < *(vec + 1) {
+  } else {
+    swap(vec, vec+1);
+  };
+}
+
+fun sortThree(vec: *Int) Unit {
+  sortTwo(vec);
+  sortTwo(vec + 1);
+  sortTwo(vec);
+}
+
+# size < 4
+fun sortSmall(vec: *Int, size: Int) Unit {
+  if size == 3 {
+    sortThree(vec);
+    return;
+  };
+
+  if size == 2 {
+    sortTwo(vec);
+  };
+}
+
+fun main() Unit {
+  var v1 = new [3] Int;
+  *(v1 + 0) = 4;
+  *(v1 + 1) = 3;
+  *(v1 + 2) = 2;
+  sortSmall(v1, 3);
+  
+  assert(*(v1 + 0) == 2);
+  assert(*(v1 + 1) == 3);
+  assert(*(v1 + 2) == 4);
+}
