@@ -1,0 +1,59 @@
+struct Tree {                                      
+   tag: Int,
+   # Number   -> 1
+   # Plus     -> 2
+   # Minus    -> 3
+   # Multiply -> 4
+
+   literal: LiteralTree,
+   addititon: AdditionTree,
+   multiplication: MultiplicationTree,
+};                                                 
+
+struct MultiplicationTree {
+  left: *Tree,
+  right: *Tree,
+
+  value: Int,
+};
+
+struct AdditionTree {
+  left: *Tree,
+  right: *Tree,
+
+  value: Int,
+};
+
+struct LiteralTree {
+  value: Int,
+};
+
+fun parse(src: String) *Tree {
+  unit
+}
+
+struct TokenVec {
+  size: Int,
+  tokens: *Token,
+};
+
+fun at(vec: *TokenVec, pos: Int) *Token {
+  if vec.size > pos {
+    return unit;
+  };
+
+  vec.tokens + pos
+}
+
+fun parseNumber(tokens: *Token) *Tree {
+  match (tokens[0]) {
+    case 1:
+    case 2:
+    case 3:
+  }
+}
+                                                   
+fun main() Unit {
+  var tree = parse("1 + 2 * 3");
+  exec(&tree);
+}

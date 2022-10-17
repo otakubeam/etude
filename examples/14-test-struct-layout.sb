@@ -1,0 +1,25 @@
+struct A {
+  f1: Int,
+  f2: Int,
+};
+
+struct AB {
+  s1: A,
+  f2: Int,
+};
+
+fun main() Unit {
+  var v1 = new [1] AB;
+
+  (*v1).s1.f1 = 8;
+  (*v1).s1.f2 = 321;
+  (*v1).f2    = 123;
+
+  assert(*(&(*v1).s1.f1 + 0) == 8);
+  assert(*(&(*v1).s1.f1 + 1) == 321);
+  assert(*(&(*v1).s1.f1 + 2) == 123);
+
+  assert((*v1).s1.f1 == 8  );
+  assert((*v1).s1.f2 == 321);
+  assert((*v1).f2    == 123);
+}
