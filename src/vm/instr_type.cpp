@@ -69,6 +69,15 @@ std::string FormatInstrType(InstrType type) {
     case InstrType::CMP_LESS:
       return "cmp_less";
 
+    case InstrType::CMP_GE:
+      return "cmp_ge";
+
+    case InstrType::CMP_GREATER:
+      return "cmp_greater";
+
+    case InstrType::CMP_LE:
+      return "cmp_le";
+
     case InstrType::ALLOC:
       return "alloc";
 

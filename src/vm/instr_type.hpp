@@ -30,7 +30,10 @@ enum class InstrType : u_int8_t {
   ADD,            // add (pops 2 and pushes result)
   SUBTRACT,       // subtract (pops 2 and pushes result)
   CMP_EQ,         // cmp_eq (pops 2 and pushes bool)
-  CMP_LESS,       // cmp_eq (pops 2 and pushes bool)
+  CMP_LESS,       // cmp_less (pops 2 and pushes bool)
+  CMP_GE,         // cmp_ge (pops 2 and pushes bool)
+  CMP_GREATER,    // cmp_greater (pops 2 and pushes bool)
+  CMP_LE,         // cmp_le (pops 2 and pushes bool)
   LOAD,           // load (pop address from the stack)
   STORE,          // store $1
                   // (pops address then pops value which is $1 words long)

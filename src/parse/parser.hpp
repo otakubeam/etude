@@ -50,6 +50,7 @@ class Parser {
   auto ParseCSV() -> std::vector<Expression*>;
 
   bool Matches(lex::TokenType type);
+  bool MatchesComparisonSign(lex::TokenType type);
   void Consume(lex::TokenType type);
 
   std::string FormatLocation();

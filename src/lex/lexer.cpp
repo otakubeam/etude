@@ -102,15 +102,29 @@ std::optional<Token> Lexer::MatchOperators() {
 
 std::optional<TokenType> Lexer::MatchOperator() {
   switch (scanner_.CurrentSymbol()) {
-      // TODO: make less special
-    case '=': {
+    case '=':
       if (scanner_.PeekNextSymbol() == '=') {
         scanner_.MoveRight();
         return TokenType::EQUALS;
       } else {
         return TokenType::ASSIGN;
       }
-    }
+
+    case '<':
+      if (scanner_.PeekNextSymbol() == '=') {
+        scanner_.MoveRight();
+        return TokenType::LE;
+      } else {
+        return TokenType::LT;
+      }
+
+    case '>':
+      if (scanner_.PeekNextSymbol() == '=') {
+        scanner_.MoveRight();
+        return TokenType::GE;
+      } else {
+        return TokenType::GT;
+      }
 
     case '+':
       return TokenType::PLUS;
@@ -122,8 +136,6 @@ std::optional<TokenType> Lexer::MatchOperator() {
       return TokenType::ADDR;
     case '!':
       return TokenType::NOT;
-    case '<':
-      return TokenType::LT;
     case '(':
       return TokenType::LEFT_BRACE;
     case ')':

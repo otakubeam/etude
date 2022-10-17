@@ -65,7 +65,7 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
 
     case InstrType::CALL_FN:
       bytes = FormatNBytes(sizeof(rt::InstrReference), instr);
-      pretty_print = rt::FormatInstrRef(*Decoder::DecodeReference(instr));
+      pretty_print = rt::FormatInstrRef(Decoder::DecodeReference(instr));
       break;
 
     case InstrType::NATIVE_CALL:
@@ -73,8 +73,7 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
     case InstrType::LOAD:
     case InstrType::FIN_CALL:
       bytes = FormatNBytes(1, instr);
-      pretty_print = fmt::format("{}", *(instr));
-      instr += 1;
+      pretty_print = fmt::format("{}", Decoder::DecodeByte(instr));
       break;
 
     case InstrType::JUMP_IF_FALSE:
@@ -82,8 +81,7 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
     case InstrType::GET_AT_FP:
     case InstrType::JUMP:
       bytes = FormatNBytes(2, instr);
-      pretty_print = fmt::format("{}", *((int16_t*)instr));
-      instr += 2;
+      pretty_print = fmt::format("{}", Decoder::DecodeOffset(instr));
       break;
 
     case InstrType::INDIRECT_CALL:
@@ -91,6 +89,9 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
     case InstrType::SUBTRACT:
     case InstrType::CMP_EQ:
     case InstrType::CMP_LESS:
+    case InstrType::CMP_GE:
+    case InstrType::CMP_GREATER:
+    case InstrType::CMP_LE:
     case InstrType::PUSH_TRUE:
     case InstrType::PUSH_UNIT:
     case InstrType::PUSH_FP:

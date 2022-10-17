@@ -15,9 +15,10 @@ struct Decoder {
   }
 
   static auto DecodeOffset(uint8_t*& instr) -> int16_t {
-    auto value = (int16_t*)instr;
+    int16_t value{};
+    memcpy(&value, instr, sizeof(int16_t));
     instr += sizeof(int16_t);
-    return *value;
+    return value;
   }
 
   static auto DecodeValue(uint8_t*& instr) -> rt::PrimitiveValue {
@@ -27,8 +28,9 @@ struct Decoder {
     return value;
   };
 
-  static auto DecodeReference(uint8_t*& instr) -> rt::InstrReference* {
-    auto value = (rt::InstrReference*)instr;
+  static auto DecodeReference(uint8_t*& instr) -> rt::InstrReference {
+    rt::InstrReference value{};
+    memcpy(&value, instr, sizeof(rt::InstrReference));
     instr += sizeof(rt::InstrReference);
     return value;
   };

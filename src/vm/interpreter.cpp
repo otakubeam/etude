@@ -59,8 +59,7 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       stack_.PrepareCallframe();
 
       // Jump to the new function
-      auto ref = Decoder::DecodeReference(instr);
-      ip_ = *ref;
+      ip_ = Decoder::DecodeReference(instr);
 
       // The next step is 0 (so we start with the first instr)
       return 0;
@@ -168,7 +167,9 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       FMT_ASSERT(saved_ip.tag == rt::ValueTag::InstrRef,
                  "Found garbage instead of saved ip\n");
 
-      ip_ = saved_ip.as_ref.to_instr;
+      // Logically, this: ip_ = saved_ip.as_ref.to_instr;
+      // Use memcpy to not cause UB on misaligned data
+      memcpy(&ip_, &saved_ip.as_ref.to_instr, sizeof(ip_));
 
       // Start from the saved next instruction
       return 0;
@@ -245,13 +246,51 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       return 1;
     }
 
+      // lhs < rhs
     case InstrType::CMP_LESS: {
-      auto a = stack_.Pop();
-      auto b = stack_.Pop();
+      auto rhs = stack_.Pop();
+      auto lhs = stack_.Pop();
 
       stack_.Push(rt::PrimitiveValue{
           .tag = rt::ValueTag::Bool,
-          .as_bool = a.tag == b.tag && a.as_int < b.as_int,
+          .as_bool = rhs.tag == lhs.tag && lhs.as_int < rhs.as_int,
+      });
+
+      return 1;
+    }
+
+      // lhs >= rhs
+    case InstrType::CMP_GE: {
+      auto rhs = stack_.Pop();
+      auto lhs = stack_.Pop();
+
+      stack_.Push(rt::PrimitiveValue{
+          .tag = rt::ValueTag::Bool,
+          .as_bool = rhs.tag == lhs.tag && lhs.as_int >= rhs.as_int,
+      });
+
+      return 1;
+    }
+
+    case InstrType::CMP_GREATER: {
+      auto rhs = stack_.Pop();
+      auto lhs = stack_.Pop();
+
+      stack_.Push(rt::PrimitiveValue{
+          .tag = rt::ValueTag::Bool,
+          .as_bool = rhs.tag == lhs.tag && lhs.as_int > rhs.as_int,
+      });
+
+      return 1;
+    }
+
+    case InstrType::CMP_LE: {
+      auto rhs = stack_.Pop();
+      auto lhs = stack_.Pop();
+
+      stack_.Push(rt::PrimitiveValue{
+          .tag = rt::ValueTag::Bool,
+          .as_bool = rhs.tag == lhs.tag && lhs.as_int <= rhs.as_int,
       });
 
       return 1;

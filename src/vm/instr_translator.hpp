@@ -65,7 +65,10 @@ class InstrTranslator {
 
       case InstrType::INDIRECT_CALL:
       case InstrType::CMP_EQ:
+      case InstrType::CMP_GREATER:
       case InstrType::CMP_LESS:
+      case InstrType::CMP_GE:
+      case InstrType::CMP_LE:
       case InstrType::RET_FN:
       case InstrType::POP_STACK:
       case InstrType::ADD:

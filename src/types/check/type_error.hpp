@@ -125,10 +125,11 @@ struct ArithNegateError : public TypeError {
 //////////////////////////////////////////////////////////////////////
 
 struct DereferenceError : public TypeError {
-  DereferenceError(lex::Location location) {
-    message =
-        fmt::format("Trying to dereference a non-pointer type at location {}",
-                    location.Format());
+  DereferenceError(lex::Location location, std::string type) {
+    message = fmt::format(
+        "Trying to dereference a non-pointer type at location {}\n"
+        "Note: the type is {}",
+        location.Format(), type);
   }
 };
 

@@ -28,7 +28,7 @@ Expression* Parser::ParseDeref() {
     return nullptr;
   }
 
-  auto ptr_expr = ParseExpression();
+  auto ptr_expr = ParsePrimary();
   return new DereferenceExpression{token, ptr_expr};
 }
 
@@ -41,7 +41,7 @@ Expression* Parser::ParseAddressof() {
     return nullptr;
   }
 
-  auto lvalue_expr = dynamic_cast<LvalueExpression*>(ParseExpression());
+  auto lvalue_expr = dynamic_cast<LvalueExpression*>(ParsePrimary());
   return new AddressofExpression{token, lvalue_expr};
 }
 
@@ -121,7 +121,12 @@ Expression* Parser::ParseComparison() {
   Expression* first = ParseBinary();
 
   auto token = lexer_.Peek();
-  if (Matches(lex::TokenType::LT) || Matches(lex::TokenType::EQUALS)) {
+
+  if (MatchesComparisonSign(token.type)) {
+    auto second = ParseBinary();
+    first = new ComparisonExpression(first, token, second);
+  } else if (Matches(lex::TokenType::EQUALS)) {
+    // TODO: move out to separate function
     auto second = ParseBinary();
     first = new ComparisonExpression(first, token, second);
   }

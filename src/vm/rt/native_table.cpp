@@ -41,6 +41,7 @@ PrimitiveValue isNull(size_t count, PrimitiveValue* stack_top) {
 
   return PrimitiveValue{};
 }
+
 }  // namespace detail
 
 }  // namespace vm::rt

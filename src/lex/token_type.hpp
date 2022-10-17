@@ -21,7 +21,11 @@ enum class TokenType {
 
   ASSIGN,
   EQUALS,
+
   LT,
+  LE,
+  GT,
+  GE,
 
   LEFT_BRACE,
   RIGHT_BRACE,

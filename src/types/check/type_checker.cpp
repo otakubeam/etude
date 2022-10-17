@@ -28,7 +28,7 @@ void TypeChecker::VisitDeref(DereferenceExpression* node) {
     node->type_ = type->Underlying();
     return_value = node->type_;
   } else {
-    throw DereferenceError{node->GetLocation()};
+    throw DereferenceError{node->GetLocation(), ptr_type->Format()};
   }
 }
 

@@ -79,10 +79,10 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
 
   if (rt::intrinsics_table.contains(node->GetFunctionName())) {
     TranslateInstruction(FatInstr::MakePushInt(node->arguments_.size()));
-    TranslateInstruction({
-        .type = vm::InstrType::NATIVE_CALL,
-        .arg = (uint8_t)rt::intrinsics_table[node->GetFunctionName()],
-    });
+    TranslateInstruction(
+        {.type = vm::InstrType::NATIVE_CALL,
+         .arg = (uint8_t)rt::intrinsics_table[node->GetFunctionName()],
+         .debug_info = {.location = node->GetLocation()}});
 
     return;
   }
@@ -190,6 +190,18 @@ void Compiler::VisitComparison(ComparisonExpression* node) {
 
     case lex::TokenType::LT:
       type = vm::InstrType::CMP_LESS;
+      break;
+
+    case lex::TokenType::GE:
+      type = vm::InstrType::CMP_GE;
+      break;
+
+    case lex::TokenType::LE:
+      type = vm::InstrType::CMP_LE;
+      break;
+
+    case lex::TokenType::GT:
+      type = vm::InstrType::CMP_GREATER;
       break;
 
     default:
