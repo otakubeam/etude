@@ -11,9 +11,24 @@
 
 #include <fstream>
 
+void RunPhony(vm::ElfFile& elf) {
+  vm::debug::Disassembler d;
+  d.Disassemble(elf);
+
+  vm::debug::Debugger debugger;
+  debugger.Load(elf);
+  debugger.StepToTheEnd();
+}
+
+void RunSilent(vm::ElfFile& elf) {
+  vm::BytecodeInterpreter interpreter;
+  interpreter.Load(elf);
+  interpreter.RunToTheEnd();
+}
+
 int main(int argc, char** argv) {
   if (argc == 1) {
-    fmt::print("Please provide the file as the first argument\n");
+    fmt::print("Please provide a file as the first argument\n");
     exit(0);
   }
 
@@ -27,17 +42,6 @@ int main(int argc, char** argv) {
 
   Parser p{lex::Lexer{stream}};
 
-  char stage = 'e';
-
-  // fmt::print(
-  //     "Specify the stage up to which run the driver:\n"
-  //     "p: Parse                                     \n"
-  //     "t: Typecheck                                 \n"
-  //     "c: Compile                                   \n"
-  //     "e: Execute                                   \n");
-
-  // std::cin >> stage;
-
   std::vector<Statement*> statements;
 
   try {
@@ -46,16 +50,9 @@ int main(int argc, char** argv) {
       statements.push_back(stmt);
     }
   } catch (parse::errors::ParseError& e) {
-    fmt::print("Parse error: {}\n", e.what());
+    fmt::print(stderr, "Parse error: {}\n", e.what());
   }
 
-  fmt::print("Parse stage finished!\n");
-
-  if (stage == 'p') {
-    return 0;
-  }
-
-  bool had_errors = false;
   types::check::TypeChecker tchk;
 
   try {
@@ -63,14 +60,7 @@ int main(int argc, char** argv) {
       tchk.Eval(stmt);
     }
   } catch (types::check::TypeError& type_error) {
-    had_errors = true;
     fmt::print("Type error: {}\n", type_error.what());
-  }
-
-  fmt::print("Typecheck stage finished!\n");
-
-  if (stage == 't' || had_errors) {
-    return 0;
   }
 
   vm::codegen::Compiler compiler;
@@ -82,19 +72,9 @@ int main(int argc, char** argv) {
     elf += compiler.Compile(stmt);
   }
 
-  fmt::print("Compile stage finished!\n");
-
-  if (stage == 'c') {
-    // Maybe dump all code?
-    return 0;
+  if (argc >= 3 && !strcmp(argv[2], "--debug")) {
+    RunPhony(elf);
+  } else {
+    RunSilent(elf);
   }
-
-  vm::debug::Debugger interpreter;
-
-  vm::debug::Disassembler d;
-  d.Disassemble(elf);
-
-  interpreter.Load(elf);
-
-  interpreter.StepToTheEnd();
 }

@@ -25,9 +25,10 @@ bool Debugger::Step() {
     return_ = ret;
     return false;
   } catch (...) {
-    fmt::print("Died here: {}\n", memory_.program_text_->DIEs_.at(ip_.chunk_no)
-                                      .at(ip_.instr_no)
-                                      .location.Format());
+    fmt::print(stderr, "\nDied here: {}\n",
+               memory_.program_text_->DIEs_.at(ip_.chunk_no)
+                   .at(ip_.instr_no)
+                   .location.Format());
     FMT_ASSERT(false, "Assertion failed!\n");
   }
 
