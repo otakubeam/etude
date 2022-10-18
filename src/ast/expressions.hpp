@@ -72,7 +72,8 @@ class BinaryExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    return &types::builtin_int;
+    FMT_ASSERT(type_, "Type is not set");
+    return type_;
   };
 
   virtual lex::Location GetLocation() override {
@@ -82,6 +83,8 @@ class BinaryExpression : public Expression {
   Expression* left_;
   lex::Token operator_;
   Expression* right_;
+
+  types::Type* type_ = nullptr;
 
   bool is_pointer_arithmetic_ = false;
 };
@@ -212,6 +215,7 @@ class FnCallExpression : public Expression {
   std::vector<Expression*> arguments_;
 
   bool is_native_call_ = false;
+  bool is_tail_call_ = false;
 
   types::Type* expression_type = nullptr;
 };

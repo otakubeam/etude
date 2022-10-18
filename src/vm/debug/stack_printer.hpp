@@ -27,8 +27,8 @@ class StackPrinter {
   std::string ToDot();
 
   void AnnotateSlot(DebuggerInstr instr) {
-    annotations_.at(stack_.sp_).name = instr.var_name;
-    annotations_.at(stack_.sp_).type = instr.type_name;
+    annotations_.at(stack_.sp_ - 1).name = instr.var_name;
+    annotations_.at(stack_.sp_ - 1).type = instr.type_name;
   }
 
  private:

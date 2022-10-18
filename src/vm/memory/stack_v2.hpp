@@ -58,6 +58,11 @@ class VmStack {
     return sp_ != 0;
   }
 
+  void TailRet() {
+    // Move the stack pointer
+    sp_ = fp_ + 1;
+  }
+
   void PrepareCallframe() {
     // Save curent fp in sp
     stack_area_[sp_] = rt::PrimitiveValue{

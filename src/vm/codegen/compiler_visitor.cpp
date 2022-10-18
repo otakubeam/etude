@@ -64,11 +64,16 @@ void Compiler::VisitFunDecl(FunDeclStatement* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitFnCall(FnCallExpression* node) {
+  uint8_t size = 0;
   //
   // Place arguments in reverse order
   //
   for (int i = node->arguments_.size() - 1; i >= 0; i -= 1) {
     node->arguments_[i]->Accept(this);
+
+    // For TailCallElmination
+
+    size += GetValueSize(node->arguments_[i]);
 
     // Emit debug information (for now only the type)
 
@@ -93,6 +98,11 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
     EmitMemFetch(*mb_offset);
     TranslateInstruction({
         .type = vm::InstrType::INDIRECT_CALL,
+    });
+  } else if (node->is_tail_call_) {
+    TranslateInstruction({
+        .type = vm::InstrType::TAIL_CALL,
+        .arg = size,
     });
   } else {
     TranslateInstruction({
@@ -119,6 +129,12 @@ void Compiler::VisitStructDecl(StructDeclStatement* node) {
 ////////////////////////////////////////////////////////////////////
 
 void Compiler::VisitReturn(ReturnStatement* node) {
+  if (auto fn_call = dynamic_cast<FnCallExpression*>(node->return_value_)) {
+    if (fn_call->GetFunctionName() == translator_->GetFunctionName()) {
+      fn_call->is_tail_call_ = true;
+    }
+  }
+
   node->return_value_->Accept(this);
 
   TranslateInstruction({
@@ -219,9 +235,23 @@ void Compiler::VisitBinary(BinaryExpression* node) {
   node->left_->Accept(this);
   node->right_->Accept(this);
 
+  if (node->is_pointer_arithmetic_) {
+    auto ptr_type = node->left_->GetType();
+    auto underlying = dynamic_cast<types::PointerType*>(ptr_type)->Underlying();
+    auto multiplier = GetTypeSize(underlying);
+    if (multiplier != 1) {
+      TranslateInstruction(FatInstr::MakePushInt(multiplier));
+      TranslateInstruction(FatInstr{.type = InstrType::MUL});
+    }
+  }
+
   switch (node->operator_.type) {
     case lex::TokenType::PLUS:
       type = InstrType::ADD;
+      break;
+
+    case lex::TokenType::STAR:
+      type = InstrType::MUL;
       break;
 
     case lex::TokenType::MINUS:

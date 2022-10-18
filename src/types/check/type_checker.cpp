@@ -155,16 +155,24 @@ void TypeChecker::VisitBinary(BinaryExpression* node) {
 
   if (right_t == &builtin_int && left_t == right_t) {
     return_value = &builtin_int;
+    node->type_ = return_value;
     return;
   }
 
   if (auto ptr = dynamic_cast<PointerType*>(left_t)) {
+    if (node->operator_.type != lex::TokenType::PLUS &&
+        node->operator_.type != lex::TokenType::MINUS) {
+      throw ArithAddError{node->GetLocation(),
+                          lex::FormatTokenType(node->operator_.type)};
+    }
+
     if (right_t != &builtin_int) {
       throw ArithAddError{node->GetLocation(), "right"};
     }
 
     node->is_pointer_arithmetic_ = true;
     return_value = ptr;
+    node->type_ = ptr;
     return;
   }
 

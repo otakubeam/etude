@@ -69,6 +69,7 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
       break;
 
     case InstrType::NATIVE_CALL:
+    case InstrType::TAIL_CALL:
     case InstrType::STORE:
     case InstrType::LOAD:
     case InstrType::FIN_CALL:
@@ -86,6 +87,7 @@ std::string Disassembler::FormatArguments(InstrType type, uint8_t*& instr) {
 
     case InstrType::INDIRECT_CALL:
     case InstrType::ADD:
+    case InstrType::MUL:
     case InstrType::SUBTRACT:
     case InstrType::CMP_EQ:
     case InstrType::CMP_LESS:

@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
       tchk.Eval(stmt);
     }
   } catch (types::check::TypeError& type_error) {
-    fmt::print("Type error: {}\n", type_error.what());
+    fmt::print(stderr, "Type error: {}\n", type_error.what());
   }
 
   vm::codegen::Compiler compiler;

@@ -109,9 +109,20 @@ struct ArithCmpError : public TypeError {
 };
 
 struct ArithAddError : public TypeError {
+  ArithAddError() = default;
+
   ArithAddError(lex::Location location, std::string side) {
     message = fmt::format("Binary expression at [{}] has non-int {} operand",
                           location.Format(), side);
+  }
+
+  static ArithAddError PointerAirhmetic(lex::Location location,
+                                        std::string operator_) {
+    ArithAddError error{};
+    error.message = fmt::format(
+        "Pointer arithmetic expression at [{}] has unsupported operator {}",
+        location.Format(), operator_);
+    return error;
   }
 };
 

@@ -8,6 +8,6 @@ fun takingFunction(f: (Bool) Int ) Int {
    f(true)
 }
 
-var result = takingFunction(takingBool);
-
-return result;
+fun main() Unit {
+   takingFunction(takingBool);
+}

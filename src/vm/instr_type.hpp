@@ -20,6 +20,7 @@ enum class InstrType : u_int8_t {
   POP_STACK,      // pop
   RET_FN,         // ret
   CALL_FN,        // call $rt::InstrReference
+  TAIL_CALL,      // jumps to the start of the funtion
   INDIRECT_CALL,  // inirect_call (pops $rt::Referece from stack)
   NATIVE_CALL,    // native_call $1 ($1 = offset in the table)
   FIN_CALL,       // fin_call $1
@@ -28,6 +29,7 @@ enum class InstrType : u_int8_t {
   JUMP_IF_FALSE,  // jump_if_false $addr (relative displacement)
   GET_AT_FP,      // get_at_fp $addr (signed displacement)
   ADD,            // add (pops 2 and pushes result)
+  MUL,            // mul (pops 2 and pushes result)
   SUBTRACT,       // subtract (pops 2 and pushes result)
   CMP_EQ,         // cmp_eq (pops 2 and pushes bool)
   CMP_LESS,       // cmp_less (pops 2 and pushes bool)

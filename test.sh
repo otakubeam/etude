@@ -20,7 +20,7 @@ bold() {
 runtest() {
   local _testname=$1
   # https://stackoverflow.com/questions/34964332
-  $(timeout 0.3 ./examples/repl $_testname &> /dev/null)
+  $(timeout 0.5 ./examples/repl $_testname &> /dev/null)
 }
 
 collect_debug_artifacts() {

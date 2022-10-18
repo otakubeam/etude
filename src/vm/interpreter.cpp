@@ -142,6 +142,30 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       return 0;
     }
 
+    case InstrType::TAIL_CALL: {
+      auto store_words = Decoder::DecodeByte(instr);
+
+      ip_.instr_no = 0;
+
+      auto dst = memory_.AccessMemory({
+          .reference =
+              {
+                  .tag = rt::ValueTag::StackRef,
+                  // -1 for return address
+                  .as_ref = {.to_data = stack_.GetFp() - 1 - store_words},
+              },
+          .store = true,
+      });
+
+      auto src_zone_start = &stack_.Top() - (store_words - 1);
+
+      memcpy(dst, src_zone_start, sizeof(rt::PrimitiveValue) * store_words);
+
+      stack_.TailRet();
+
+      return 0;
+    }
+
     case InstrType::NATIVE_CALL: {
       auto native_no = Decoder::DecodeByte(instr);
       auto num = stack_.Pop();
@@ -208,6 +232,21 @@ uint8_t BytecodeInterpreter::DecodeExecute(uint8_t* instr) {
       }
 
       return 1;
+    }
+
+    case InstrType::MUL: {
+      auto top = stack_.Pop();
+      auto top_minus = stack_.Pop();
+
+      switch (top_minus.tag) {
+        case rt::ValueTag::Int:;
+          top_minus.as_int *= top.as_int;
+          stack_.Push(top_minus);
+          return 1;
+
+        default:
+          FMT_ASSERT(false, "Unreachable!");
+      }
     }
 
     case InstrType::SUBTRACT: {

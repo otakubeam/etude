@@ -57,8 +57,14 @@ std::string FormatInstrType(InstrType type) {
     case InstrType::INDIRECT_CALL:
       return "indirect_call";
 
+    case InstrType::TAIL_CALL:
+      return "tail_call";
+
     case InstrType::ADD:
       return "add";
+
+    case InstrType::MUL:
+      return "mul";
 
     case InstrType::FIN_CALL:
       return "fin_call";

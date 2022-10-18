@@ -57,6 +57,7 @@ class InstrTranslator {
         break;
 
       case InstrType::NATIVE_CALL:
+      case InstrType::TAIL_CALL:
       case InstrType::FIN_CALL:
       case InstrType::STORE:
       case InstrType::LOAD:
@@ -72,6 +73,7 @@ class InstrTranslator {
       case InstrType::RET_FN:
       case InstrType::POP_STACK:
       case InstrType::ADD:
+      case InstrType::MUL:
       case InstrType::PUSH_FP:
       case InstrType::SUBTRACT:
       case InstrType::PUSH_TRUE:
@@ -104,6 +106,10 @@ class InstrTranslator {
 
   debug::DebugInfo& LastDie() {
     return DIEs_.rbegin()->second;
+  }
+
+  std::string GetFunctionName() {
+    return fn_name;
   }
 
  private:
