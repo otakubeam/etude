@@ -10,7 +10,7 @@ fun memcpy(dst: *Int, src: *Int, cnt: Int) Unit {
   };
 
   *dst = *src;
-  memcpy(dst + 1, src + 1, cnt - 1);
+  return memcpy(dst + 1, src + 1, cnt - 1);
 }
 
 fun replicate(dst: *Int, val: Int, cnt: Int) Unit {
@@ -19,7 +19,7 @@ fun replicate(dst: *Int, val: Int, cnt: Int) Unit {
   };
 
   *dst = val;
-  replicate(dst + 1, val, cnt - 1);
+  return replicate(dst + 1, val, cnt - 1);
 }
 
 fun makeVecInt(initVal: Int, size: Int) *VecInt {
@@ -57,10 +57,11 @@ fun populate(v: *VecInt, cur: Int, left: Int) Unit {
     return;
   };
   append(v, cur);
-  populate(v, cur+1, left-1);
+  return populate(v, cur+1, left-1);
 }
 
 fun at(v: *VecInt, i: Int) Int {
+  assert((*v).size > i);
   *((*v).data + i)
 }
 
@@ -72,5 +73,6 @@ fun main() Unit {
   assert(at(t1, 1) == 2);
   assert(at(t1, 2) == 3);
   assert(at(t1, 3) == 4);
+  assert(at(t1, 4) == 5);
   assert(at(t1, 4) == 5);
 }

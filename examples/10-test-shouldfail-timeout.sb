@@ -11,5 +11,5 @@ fun fib(n: Int) Int {
 }
 
 fun main() Unit {
-  fib(50);
+  fib(20);
 }
