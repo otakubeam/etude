@@ -13,11 +13,14 @@ class IdentTable {
     Populate();
   }
 
-  TokenType LookupOrInsert(const std::string& lexeme) {
+  // Use-of-string-view-for-map-lookup
+  // https://stackoverflow.com/questions/35525777
+
+  TokenType LookupWord(const std::string_view lexeme) {
     if (!map_.contains(lexeme)) {
-      map_.insert({lexeme, TokenType::IDENTIFIER});
+      return TokenType::IDENTIFIER;
     }
-    return map_[lexeme];
+    return map_.find(lexeme)->second;
   }
 
  private:
@@ -43,7 +46,10 @@ class IdentTable {
   }
 
  private:
-  std::map<std::string, TokenType> map_;
+  // What-are-transparent-comparators
+  // https://stackoverflow.com/questions/20317413
+
+  std::map<std::string, TokenType, std::less<>> map_;
 };
 
 }  // namespace lex

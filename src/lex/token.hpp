@@ -12,7 +12,7 @@ namespace lex {
 struct Token {
   using SemInfo = std::variant<  //
       std::monostate,            //
-      std::string,               //
+      std::string_view,          //
       int                        //
       >;
 
@@ -22,10 +22,10 @@ struct Token {
 
   Token() = default;
 
-  std::string GetName() const {
+  std::string_view GetName() const {
     FMT_ASSERT(type == TokenType::IDENTIFIER,
                "Requesting the name of non-identifier");
-    return std::get<std::string>(sem_info);
+    return std::get<std::string_view>(sem_info);
   }
 
   TokenType type;

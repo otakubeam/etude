@@ -199,12 +199,12 @@ std::optional<Token> Lexer::MatchNumericLiteral() {
 
 ////////////////////////////////////////////////////////////////////
 
-std::optional<Token> Lexer::MatchStringLiteral() {
-  auto first_quote = [](char first) -> bool {
-    return first == '\"';
-  };
+auto NotQuote(char first) -> bool {
+  return first == '\"';
+}
 
-  if (!first_quote(scanner_.CurrentSymbol())) {
+std::optional<Token> Lexer::MatchStringLiteral() {
+  if (NotQuote(scanner_.CurrentSymbol())) {
     return std::nullopt;
   }
 
@@ -213,11 +213,7 @@ std::optional<Token> Lexer::MatchStringLiteral() {
   // Consume commencing "
   scanner_.MoveRight();
 
-  std::string lit;
-  while (scanner_.CurrentSymbol() != '\"') {
-    lit.push_back(scanner_.CurrentSymbol());
-    scanner_.MoveRight();
-  }
+  auto lit = scanner_.ViewWhile<decltype(NotQuote)>();
 
   // Consume enclosing "
   scanner_.MoveRight();
@@ -228,8 +224,8 @@ std::optional<Token> Lexer::MatchStringLiteral() {
 ////////////////////////////////////////////////////////////////////
 
 std::optional<Token> Lexer::MatchWords() {
-  auto word = BufferWord();
-  auto type = table_.LookupOrInsert(word);
+  auto word = scanner_.ViewWhile<decltype(isalnum)>();
+  auto type = table_.LookupWord(word);
 
   if (type == TokenType::IDENTIFIER) {
     return Token{type, scanner_.GetLocation(), {word}};
@@ -238,17 +234,6 @@ std::optional<Token> Lexer::MatchWords() {
   // So it must be a keyword with the
   // exact type encoded direcly in `type`
   return Token{type, scanner_.GetLocation()};
-}
-
-std::string Lexer::BufferWord() {
-  std::string result;
-
-  while (isalnum(scanner_.CurrentSymbol())) {
-    result.push_back(scanner_.CurrentSymbol());
-    scanner_.MoveRight();
-  }
-
-  return result;
 }
 
 }  // namespace lex
