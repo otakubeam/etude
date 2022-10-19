@@ -5,6 +5,8 @@
 #include <string>
 #include <map>
 
+#include <fmt/core.h>
+
 namespace lex {
 
 class IdentTable {

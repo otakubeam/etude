@@ -200,7 +200,7 @@ std::optional<Token> Lexer::MatchNumericLiteral() {
 ////////////////////////////////////////////////////////////////////
 
 auto NotQuote(char first) -> bool {
-  return first == '\"';
+  return first != '\"';
 }
 
 std::optional<Token> Lexer::MatchStringLiteral() {
@@ -213,7 +213,7 @@ std::optional<Token> Lexer::MatchStringLiteral() {
   // Consume commencing "
   scanner_.MoveRight();
 
-  auto lit = scanner_.ViewWhile<decltype(NotQuote)>();
+  auto lit = scanner_.ViewWhile<NotQuote>();
 
   // Consume enclosing "
   scanner_.MoveRight();
@@ -223,8 +223,15 @@ std::optional<Token> Lexer::MatchStringLiteral() {
 
 ////////////////////////////////////////////////////////////////////
 
+auto WordPart(char ch) -> bool {
+  return isalnum(ch) || ch == '_';
+}
+
 std::optional<Token> Lexer::MatchWords() {
-  auto word = scanner_.ViewWhile<decltype(isalnum)>();
+  auto word = scanner_.ViewWhile<WordPart>();
+
+  FMT_ASSERT(word.size(), "Not even a word");
+
   auto type = table_.LookupWord(word);
 
   if (type == TokenType::IDENTIFIER) {

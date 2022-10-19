@@ -5,11 +5,12 @@
 
 #include <fmt/core.h>
 
+#include <string_view>
 #include <filesystem>
 #include <iostream>
 #include <istream>
 #include <vector>
-#include <string_view>
+#include <span>
 
 namespace lex {
 
@@ -34,7 +35,7 @@ class Scanner {
 
         // Push the previous line to the vector
         lines_.push_back(std::string_view{
-            lines_.back().end(),              // starting from the last line
+            PreviousLineEnd(),                // starting from the last line
             std::string_view{buffer_}.end(),  // to the end of the buffer
         });
 
@@ -43,7 +44,6 @@ class Scanner {
         break;
 
       case EOF:
-        // FMT_ASSERT(false, "\nReached EOF\n");
         break;
 
       default:
@@ -53,25 +53,23 @@ class Scanner {
     FetchNextSymbol();
   }
 
-  template <typename F>
+  template <auto F>
   std::string_view ViewWhile() {
-    auto start_pos = buffer_.begin() + buffer_.size() - 1;
-    auto count = 0;
+    auto start_pos = buffer_.end() - 1;
 
     // For example:
     //   1. while not " char
     //   2. while alphanumeric
 
     while (F(CurrentSymbol())) {
-      count += 1;
       MoveRight();
     }
 
-    return std::string_view(start_pos, start_pos + count);
+    return std::string_view(start_pos, buffer_.end() - 1);
   }
 
   void MoveNextLine() {
-    while (CurrentSymbol() != '\n') {
+    while (CurrentSymbol() != '\n' && !source_.eof()) {
       MoveRight();
     }
 
@@ -91,15 +89,23 @@ class Scanner {
     return location_;
   }
 
+  std::span<std::string_view> GetLines() {
+    return lines_;
+  }
+
  private:
   void FetchNextSymbol() {
-    symbol_ = source_.get();
-
-    if (symbol_ & std::istream::eofbit) {
+    if (source_.eof()) {
       return;
     }
 
+    symbol_ = source_.get();
+
     buffer_.push_back(symbol_);
+  }
+
+  auto PreviousLineEnd() -> const char* {
+    return lines_.empty() ? buffer_.begin().base() : lines_.back().end();
   }
 
  private:

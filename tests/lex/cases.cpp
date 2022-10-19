@@ -14,6 +14,7 @@ TEST_CASE("Lexer: Just works", "[lex]") {
   CHECK(l.Matches(lex::TokenType::NUMBER));
   CHECK(l.Matches(lex::TokenType::PLUS));
   CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -27,13 +28,14 @@ TEST_CASE("Braces", "[lex]") {
   CHECK(l.Matches(lex::TokenType::LEFT_BRACE));
   CHECK(l.Matches(lex::TokenType::NUMBER));
   CHECK(l.Matches(lex::TokenType::RIGHT_BRACE));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 ///////////////////////////////////////////////////////////////////
 
 TEST_CASE("Keywords", "[lex]") {
   std::stringstream source(
-      "var fun for if else "
+      "var \nfun \nfor\n if\n else "
       "return yield true false");
   lex::Lexer l{source};
   CHECK(l.Matches(lex::TokenType::VAR));
@@ -45,6 +47,7 @@ TEST_CASE("Keywords", "[lex]") {
   CHECK(l.Matches(lex::TokenType::YIELD));
   CHECK(l.Matches(lex::TokenType::TRUE));
   CHECK(l.Matches(lex::TokenType::FALSE));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -55,6 +58,7 @@ TEST_CASE("Consequent", "[lex]") {
 
   CHECK(l.Matches(lex::TokenType::NOT));
   CHECK(l.Matches(lex::TokenType::TRUE));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -69,6 +73,7 @@ TEST_CASE("Comments", "[lex]") {
 
   // parses to just `1`
   CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -82,6 +87,7 @@ TEST_CASE("Statement", "[lex]") {
   CHECK(l.Matches(lex::TokenType::ASSIGN));
   CHECK(l.Matches(lex::TokenType::NUMBER));
   CHECK(l.Matches(lex::TokenType::SEMICOLUMN));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -91,6 +97,7 @@ TEST_CASE("String literal", "[lex]") {
   lex::Lexer l{source};
 
   CHECK(l.Matches(lex::TokenType::STRING));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -106,6 +113,7 @@ TEST_CASE("Funtion declaration args", "[lex]") {
   CHECK(l.Matches(lex::TokenType::COMMA));
   CHECK(l.Matches(lex::TokenType::IDENTIFIER));
   CHECK(l.Matches(lex::TokenType::RIGHT_BRACE));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -116,6 +124,7 @@ TEST_CASE("Curly", "[lex]") {
 
   CHECK(l.Matches(lex::TokenType::LEFT_CBRACE));
   CHECK(l.Matches(lex::TokenType::RIGHT_CBRACE));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -127,6 +136,7 @@ TEST_CASE("Assign vs Equals", "[lex]") {
   CHECK(l.Matches(lex::TokenType::EQUALS));
   CHECK(l.Matches(lex::TokenType::ASSIGN));
   CHECK(l.Matches(lex::TokenType::EQUALS));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -141,6 +151,7 @@ TEST_CASE("Lex types", "[lex]") {
   CHECK(l.Matches(lex::TokenType::TY_BOOL));
   CHECK(l.Matches(lex::TokenType::TY_STRING));
   CHECK(l.Matches(lex::TokenType::TY_UNIT));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 //////////////////////////////////////////////////////////////////////
