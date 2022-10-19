@@ -19,8 +19,8 @@ namespace lex {
   code(ASSIGN)              \
   code(EQUALS)              \
   code(LT)                  \
-  code(LEFT_BRACE)          \
-  code(RIGHT_BRACE)         \
+  code(LEFT_PAREN)          \
+  code(RIGHT_PAREN)         \
   code(LEFT_CBRACE)         \
   code(RIGHT_CBRACE)        \
   code(LEFT_SBRACE)         \
@@ -42,11 +42,10 @@ namespace lex {
   code(IF)                  \
   code(ELSE)                \
   code(FOR)                 \
-  code(COLUMN)              \
-  code(SEMICOLUMN)          \
+  code(COLON)              \
+  code(SEMICOLON)          \
   code(RETURN)              \
   code(YIELD)               \
-  code(TOKEN_EOL)           \
   code(TOKEN_EOF)
 // clang-format on
 

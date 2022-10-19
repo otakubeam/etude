@@ -25,9 +25,9 @@ TEST_CASE("Braces", "[lex]") {
 
   CHECK(l.Matches(lex::TokenType::NUMBER));
   CHECK(l.Matches(lex::TokenType::PLUS));
-  CHECK(l.Matches(lex::TokenType::LEFT_BRACE));
+  CHECK(l.Matches(lex::TokenType::LEFT_PAREN));
   CHECK(l.Matches(lex::TokenType::NUMBER));
-  CHECK(l.Matches(lex::TokenType::RIGHT_BRACE));
+  CHECK(l.Matches(lex::TokenType::RIGHT_PAREN));
   CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
@@ -66,8 +66,8 @@ TEST_CASE("Consequent", "[lex]") {
 TEST_CASE("Comments", "[lex]") {
   std::stringstream source(
       "# Comment if var a = 1; \n"
-      "# One more comment \n"
-      "1 # Token then comment \n"  // <--- Token
+      "# One more comment      \n"
+      "1 # Token then comment  \n"  // <--- Token
       "# Comment with no newline");
   lex::Lexer l{source};
 
@@ -86,7 +86,7 @@ TEST_CASE("Statement", "[lex]") {
   CHECK(l.Matches(lex::TokenType::IDENTIFIER));
   CHECK(l.Matches(lex::TokenType::ASSIGN));
   CHECK(l.Matches(lex::TokenType::NUMBER));
-  CHECK(l.Matches(lex::TokenType::SEMICOLUMN));
+  CHECK(l.Matches(lex::TokenType::SEMICOLON));
   CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
@@ -102,17 +102,27 @@ TEST_CASE("String literal", "[lex]") {
 
 //////////////////////////////////////////////////////////////////////
 
+TEST_CASE("Empty string literal", "[lex]") {
+  std::stringstream source("\"\"");
+  lex::Lexer l{source};
+
+  CHECK(l.Matches(lex::TokenType::STRING));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
+}
+
+//////////////////////////////////////////////////////////////////////
+
 TEST_CASE("Funtion declaration args", "[lex]") {
   std::stringstream source("(a1, a2)");
   //                        -----     -------------  -------------
   //                        name          args       expr-statement
   lex::Lexer l{source};
 
-  CHECK(l.Matches(lex::TokenType::LEFT_BRACE));
+  CHECK(l.Matches(lex::TokenType::LEFT_PAREN));
   CHECK(l.Matches(lex::TokenType::IDENTIFIER));
   CHECK(l.Matches(lex::TokenType::COMMA));
   CHECK(l.Matches(lex::TokenType::IDENTIFIER));
-  CHECK(l.Matches(lex::TokenType::RIGHT_BRACE));
+  CHECK(l.Matches(lex::TokenType::RIGHT_PAREN));
   CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
@@ -130,27 +140,33 @@ TEST_CASE("Curly", "[lex]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Assign vs Equals", "[lex]") {
-  std::stringstream source("== = ==");
+  std::stringstream source("== = == <= >= > <");
   lex::Lexer l{source};
 
   CHECK(l.Matches(lex::TokenType::EQUALS));
   CHECK(l.Matches(lex::TokenType::ASSIGN));
   CHECK(l.Matches(lex::TokenType::EQUALS));
+  CHECK(l.Matches(lex::TokenType::LE));
+  CHECK(l.Matches(lex::TokenType::GE));
+  CHECK(l.Matches(lex::TokenType::GT));
+  CHECK(l.Matches(lex::TokenType::LT));
   CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("Lex types", "[lex]") {
-  std::stringstream source(": Int Bool String Unit");
+  std::stringstream source(": Int Bool String Unit:;");
   lex::Lexer l{source};
 
-  CHECK(l.Matches(lex::TokenType::COLUMN));
+  CHECK(l.Matches(lex::TokenType::COLON));
 
   CHECK(l.Matches(lex::TokenType::TY_INT));
   CHECK(l.Matches(lex::TokenType::TY_BOOL));
   CHECK(l.Matches(lex::TokenType::TY_STRING));
   CHECK(l.Matches(lex::TokenType::TY_UNIT));
+  CHECK(l.Matches(lex::TokenType::COLON));
+  CHECK(l.Matches(lex::TokenType::SEMICOLON));
   CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 

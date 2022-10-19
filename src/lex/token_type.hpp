@@ -21,14 +21,13 @@ enum class TokenType {
 
   ASSIGN,
   EQUALS,
-
   LT,
   LE,
   GT,
   GE,
 
-  LEFT_BRACE,
-  RIGHT_BRACE,
+  LEFT_PAREN,
+  RIGHT_PAREN,
 
   // CURLY
   LEFT_CBRACE,
@@ -61,13 +60,11 @@ enum class TokenType {
   ELSE,
   FOR,
 
-  COLUMN,
-  SEMICOLUMN,
+  COLON,
+  SEMICOLON,
   RETURN,
   YIELD,
 
-  // These only change the location info of the lexer
-  TOKEN_EOL,
   TOKEN_EOF,
 };
 

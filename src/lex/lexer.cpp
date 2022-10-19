@@ -137,9 +137,9 @@ std::optional<TokenType> Lexer::MatchOperator() {
     case '!':
       return TokenType::NOT;
     case '(':
-      return TokenType::LEFT_BRACE;
+      return TokenType::LEFT_PAREN;
     case ')':
-      return TokenType::RIGHT_BRACE;
+      return TokenType::RIGHT_PAREN;
     case '{':
       return TokenType::LEFT_CBRACE;
     case '}':
@@ -149,9 +149,9 @@ std::optional<TokenType> Lexer::MatchOperator() {
     case ']':
       return TokenType::RIGHT_SBRACE;
     case ';':
-      return TokenType::SEMICOLUMN;
+      return TokenType::SEMICOLON;
     case ':':
-      return TokenType::COLUMN;
+      return TokenType::COLON;
     case ',':
       return TokenType::COMMA;
     case '.':

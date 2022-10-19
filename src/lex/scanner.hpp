@@ -96,6 +96,7 @@ class Scanner {
  private:
   void FetchNextSymbol() {
     if (source_.eof()) {
+      symbol_ = EOF;
       return;
     }
 
