@@ -1,0 +1,93 @@
+######################################################################
+
+of Int -> *_ -> Int
+fun cycle i last = {
+    if i == 0 { return *last; };
+
+    *last = *last + 1;
+    return cycle(i - 1, last);
+} -> Int;
+
+######################################################################
+
+of Node 
+static rb_leaf = {1, 2, 3};
+
+of Int 
+static inc_counter = 0;
+
+######################################################################
+
+fun min_or_max flavor =
+    of Int -> Int -> Bool
+    fun _ a b = if flavor {
+        a < b
+    } else {
+        a > b
+    } -> Bool;
+
+######################################################################
+
+of Type -> Type
+type Vec T = struct {
+   & size: Int
+   & data: *T
+   & ast: union {
+       | AstLiteral
+       | AstAddition
+       | AstMultiplication
+     }
+   # etc...
+};
+
+######################################################################
+
+of Type -> Type
+type VariantRecord T = union {
+   | Exception
+   | String T
+   | (Int, Bool)
+};
+
+######################################################################
+
+of VariantRecord -> _
+fun use_pattern_matching arg = match arg {
+    s of String:
+        return s.size;
+
+    of (Int, true):
+        return arg.0;
+
+    e of Exception:
+        std::abort();
+} -> Int;
+
+######################################################################
+
+of *Unit -> Int
+fun convert_from memory = {
+    memory ~> *String -> size
+} -> Int;
+
+######################################################################
+
+of (Int -> Int) -> Int
+fun run func = {
+    # idk!
+    # memory ~> *VirtClass -> MakeSound(arg);
+    # object.fileld ~> Int
+    func(123)
+} -> Int;
+
+######################################################################
+
+fun main _ _ = {
+    var v = (new Int) ~> *Unit;
+    *v ~> *Int = 123 ~> Int;
+    var result = cycle(4005, v) ~> Int;
+    assert(*v == 4005);
+    assert(*v == result);
+} -> Unit;
+
+######################################################################

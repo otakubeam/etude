@@ -29,7 +29,7 @@ class Type {
   virtual bool IsEqual(StructType* other) = 0;
   virtual bool IsEqual(FnType* other) = 0;
 
-  virtual std::string Format() = 0;
+  virtual std::string_view Format() = 0;
 
   virtual bool IsStruct() {
     return false;

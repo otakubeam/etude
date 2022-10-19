@@ -55,7 +55,7 @@ class StructDeclStatement : public Statement {
     return name_.location;
   }
 
-  std::string GetStructName() {
+  std::string_view GetStructName() {
     return name_.GetName();
   }
 
@@ -97,7 +97,7 @@ class VarDeclStatement : public Statement {
     return lvalue_->GetLocation();
   }
 
-  std::string GetVarName() {
+  std::string_view GetVarName() {
     return lvalue_->GetName();
   }
 
@@ -115,7 +115,7 @@ class FunDeclStatement : public Statement {
     lex::Token ident;
     types::Type* type;
 
-    std::string GetParameterName() {
+    std::string_view GetParameterName() {
       return ident.GetName();
     }
   };
@@ -150,7 +150,7 @@ class FunDeclStatement : public Statement {
     return name_.location;
   }
 
-  std::string GetFunctionName() {
+  std::string_view GetFunctionName() {
     return name_.GetName();
   }
 

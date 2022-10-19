@@ -53,13 +53,29 @@ class FnType : public Type {
     return return_type_;
   }
 
-  std::string Format() override {
-    return fmt::format("(...) -> {}", return_type_->Format());
+  std::string_view Format() override {
+    if (format_view_.empty()) {
+      InitFormatView();
+    }
+    return format_view_;
+  }
+
+ private:
+  void InitFormatView() {
+    for (auto arg : arg_types_) {
+      auto inserter = std::back_inserter(format_view_);
+      fmt::format_to(inserter, "{} -> ", arg->Format());
+    }
+    auto inserter = std::back_inserter(format_view_);
+    fmt::format_to(inserter, "{}", return_type_->Format());
   }
 
  private:
   std::vector<Type*> arg_types_;
+
   Type* return_type_ = &builtin_unit;
+
+  std::string format_view_{};
 };
 
 }  // namespace types

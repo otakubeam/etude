@@ -126,10 +126,16 @@ std::optional<TokenType> Lexer::MatchOperator() {
         return TokenType::GT;
       }
 
+    case '-':
+      if (scanner_.PeekNextSymbol() == '>') {
+        scanner_.MoveRight();
+        return TokenType::ARROW;
+      } else {
+        return TokenType::MINUS;
+      }
+
     case '+':
       return TokenType::PLUS;
-    case '-':
-      return TokenType::MINUS;
     case '*':
       return TokenType::STAR;
     case '&':

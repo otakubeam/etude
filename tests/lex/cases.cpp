@@ -68,7 +68,7 @@ TEST_CASE("Comments", "[lex]") {
       "# Comment if var a = 1; \n"
       "# One more comment      \n"
       "1 # Token then comment  \n"  // <--- Token
-      "# Comment with no newline");
+      "# Comment with no newline\n");
   lex::Lexer l{source};
 
   // parses to just `1`

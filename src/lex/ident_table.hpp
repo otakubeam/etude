@@ -45,6 +45,7 @@ class IdentTable {
     map_.insert({"fun", TokenType::FUN});
     map_.insert({"for", TokenType::FOR});
     map_.insert({"if", TokenType::IF});
+    map_.insert({"if", TokenType::OF});
   }
 
  private:

@@ -74,7 +74,7 @@ StructDeclStatement* Parser::ParseStructDeclStatement() {
 
   while (Matches(lex::TokenType::IDENTIFIER)) {
     fields.push_back(lexer_.GetPreviousToken());
-    Consume(lex::TokenType::COLUMN);
+    Consume(lex::TokenType::COLON);
 
     if (auto type = ParseType()) {
       types.push_back(type);
@@ -87,7 +87,7 @@ StructDeclStatement* Parser::ParseStructDeclStatement() {
   }
 
   Consume(lex::TokenType::RIGHT_CBRACE);
-  Consume(lex::TokenType::SEMICOLUMN);
+  Consume(lex::TokenType::SEMICOLON);
 
   return new StructDeclStatement{struct_name, std::move(fields),
                                  std::move(types)};
@@ -96,13 +96,13 @@ StructDeclStatement* Parser::ParseStructDeclStatement() {
 ///////////////////////////////////////////////////////////////////
 
 auto Parser::ParseFormals() -> std::vector<FunDeclStatement::FormalParam> {
-  Consume(lex::TokenType::LEFT_BRACE);
+  Consume(lex::TokenType::LEFT_PAREN);
 
   std::vector<FunDeclStatement::FormalParam> typed_formals;
 
   while (Matches(lex::TokenType::IDENTIFIER)) {
     auto param_name = lexer_.GetPreviousToken();
-    Consume(lex::TokenType::COLUMN);
+    Consume(lex::TokenType::COLON);
 
     if (auto type = ParseType()) {
       typed_formals.push_back(FunDeclStatement::FormalParam{
@@ -118,7 +118,7 @@ auto Parser::ParseFormals() -> std::vector<FunDeclStatement::FormalParam> {
     }
   }
 
-  Consume(lex::TokenType::RIGHT_BRACE);
+  Consume(lex::TokenType::RIGHT_PAREN);
   return typed_formals;
 }
 
@@ -141,9 +141,9 @@ ReturnStatement* Parser::ParseReturnStatement() {
   auto return_token = lexer_.GetPreviousToken();
 
   Expression* ret_expr = nullptr;
-  if (!Matches(lex::TokenType::SEMICOLUMN)) {
+  if (!Matches(lex::TokenType::SEMICOLON)) {
     ret_expr = ParseExpression();
-    Consume(lex::TokenType::SEMICOLUMN);
+    Consume(lex::TokenType::SEMICOLON);
   } else {
     ret_expr = SpawnUnitNode(return_token.location);
   }
@@ -161,9 +161,9 @@ YieldStatement* Parser::ParseYieldStatement() {
   auto location_token = lexer_.GetPreviousToken();
 
   Expression* yield_value = nullptr;
-  if (!Matches(lex::TokenType::SEMICOLUMN)) {
+  if (!Matches(lex::TokenType::SEMICOLON)) {
     yield_value = ParseExpression();
-    Consume(lex::TokenType::SEMICOLUMN);
+    Consume(lex::TokenType::SEMICOLON);
   }
 
   return new YieldStatement{location_token, yield_value};
@@ -187,7 +187,7 @@ VarDeclStatement* Parser::ParseVarDeclStatement() {
 
   auto value = ParseExpression();
 
-  Consume(lex::TokenType::SEMICOLUMN);
+  Consume(lex::TokenType::SEMICOLON);
 
   return new VarDeclStatement{lvalue, value};
 }
@@ -206,7 +206,7 @@ Statement* Parser::ParseExprStatement() {
   }
 
   try {
-    Consume(lex::TokenType::SEMICOLUMN);
+    Consume(lex::TokenType::SEMICOLON);
   } catch (...) {
     // So that the last expression in block can be caught
     //   {
@@ -224,6 +224,6 @@ Statement* Parser::ParseExprStatement() {
 AssignmentStatement* Parser::ParseAssignment(LvalueExpression* target) {
   auto assignment_loc = lexer_.GetPreviousToken();
   auto value = ParseExpression();
-  Consume(lex::TokenType::SEMICOLUMN);
+  Consume(lex::TokenType::SEMICOLON);
   return new AssignmentStatement{assignment_loc, target, value};
 }

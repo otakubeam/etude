@@ -36,7 +36,7 @@ class BuiltinType : public Type {
     return false;
   }
 
-  std::string Format() override {
+  std::string_view Format() override {
     if (this == &builtin_int) {
       return "Int";
     } else if (this == &builtin_unit) {

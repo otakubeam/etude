@@ -41,6 +41,8 @@ enum class TokenType {
 
   ADDR,
   STAR,
+  ARROW,
+
   NEW,
 
   FUN,
@@ -50,6 +52,8 @@ enum class TokenType {
   VAR,
   TYPE,
   STRUCT,
+  
+  OF,
 
   TY_INT,
   TY_BOOL,

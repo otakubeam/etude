@@ -42,14 +42,24 @@ class PointerType : public Type {
     return underlying_;
   }
 
-  std::string Format() override {
-    return "*" + underlying_->Format();
+  std::string_view Format() override {
+    if (format_view_.length() == 1) {
+      InitFormatView();
+    }
+    return format_view_;
+  }
+
+ private:
+  void InitFormatView() {
+    format_view_ += underlying_->Format();
   }
 
  private:
   // Perhaps should not work with functions?
   // They are already pointers, after all
   Type* underlying_ = nullptr;
+
+  std::string format_view_{"*"};
 };
 
 //////////////////////////////////////////////////////////////////////

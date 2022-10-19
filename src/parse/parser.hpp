@@ -12,6 +12,8 @@ class Parser {
 
   Statement* ParseStatement();
 
+  Statement* ParseStatement();
+
   StructDeclStatement* ParseStructDeclStatement();
   FunDeclStatement* ParseFunDeclStatement();
   ReturnStatement* ParseReturnStatement();

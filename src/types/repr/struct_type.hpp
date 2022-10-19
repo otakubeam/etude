@@ -13,14 +13,14 @@ namespace types {
 class StructType : public Type {
  public:
   struct Member {
-    std::string name;
+    std::string_view name;
     types::Type* type;
   };
 
-  StructType(std::string name) : struct_name_{name} {
+  StructType(std::string_view name) : struct_name_{name} {
   }
 
-  StructType(std::string name, std::vector<Member> members)
+  StructType(std::string_view name, std::vector<Member> members)
       : struct_name_{name}, members_{std::move(members)} {
   }
 
@@ -57,14 +57,14 @@ class StructType : public Type {
     return false;
   }
 
-  std::string GetName() {
+  std::string_view GetName() {
     return struct_name_;
   }
 
   // Logically, type is not responsible for calculating the offsets of field
   // (this might differ in an interpreter and in a compiler for example)
   // so just send back all the types and let the caller calculate the offset
-  std::vector<Type*> AllTypesBeforeField(std::string field_name) {
+  std::vector<Type*> AllTypesBeforeField(std::string_view field_name) {
     std::vector<Type*> result;
 
     for (auto m : members_) {
@@ -81,12 +81,12 @@ class StructType : public Type {
     return true;
   }
 
-  std::string Format() override {
+  std::string_view Format() override {
     return struct_name_;
   }
 
  private:
-  std::string struct_name_;
+  std::string_view struct_name_;
   std::vector<Member> members_;
 };
 

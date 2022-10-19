@@ -200,14 +200,14 @@ std::vector<Expression*> Parser::ParseCSV() {
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseFnCallExpression(lex::Token id) {
-  // Consume(lex::TokenType::LEFT_BRACE);
+  // Consume(lex::TokenType::LEFT_PAREN);
 
-  if (Matches(lex::TokenType::RIGHT_BRACE)) {
+  if (Matches(lex::TokenType::RIGHT_PAREN)) {
     return new FnCallExpression{id, {}};
   }
 
   auto args = ParseCSV();
-  Consume(lex::TokenType::RIGHT_BRACE);
+  Consume(lex::TokenType::RIGHT_PAREN);
 
   return new FnCallExpression{id, std::move(args)};
 }
@@ -232,10 +232,10 @@ Expression* Parser::ParseConstructionExpression(lex::Token id) {
 Expression* Parser::ParsePrimary() {
   // Try parsing grouping first
 
-  if (Matches(lex::TokenType::LEFT_BRACE)) {
+  if (Matches(lex::TokenType::LEFT_PAREN)) {
     auto expr = ParseExpression();
 
-    Consume(lex::TokenType::RIGHT_BRACE);
+    Consume(lex::TokenType::RIGHT_PAREN);
 
     if (Matches(lex::TokenType::DOT)) {
       return ParseFieldAccess(dynamic_cast<LvalueExpression*>(expr));
@@ -260,11 +260,11 @@ Expression* Parser::ParsePrimary() {
     case lex::TokenType::IDENTIFIER: {
       Consume(lex::TokenType::IDENTIFIER);
 
-      if (Matches(lex::TokenType::COLUMN)) {
+      if (Matches(lex::TokenType::COLON)) {
         return ParseConstructionExpression(token);
       }
 
-      if (Matches(lex::TokenType::LEFT_BRACE)) {
+      if (Matches(lex::TokenType::LEFT_PAREN)) {
         return ParseFnCallExpression(token);
       }
 

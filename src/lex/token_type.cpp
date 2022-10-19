@@ -28,6 +28,7 @@ namespace lex {
   code(NOT)                 \
   code(ADDR)                \
   code(STAR)                \
+  code(ARROW)               \
   code(NEW)                 \
   code(FUN)                 \
   code(DOT)                 \
@@ -35,6 +36,7 @@ namespace lex {
   code(VAR)                 \
   code(TYPE)                \
   code(STRUCT)              \
+  code(OF)                  \
   code(TY_INT)              \
   code(TY_BOOL)             \
   code(TY_UNIT)             \
@@ -42,8 +44,8 @@ namespace lex {
   code(IF)                  \
   code(ELSE)                \
   code(FOR)                 \
-  code(COLON)              \
-  code(SEMICOLON)          \
+  code(COLON)               \
+  code(SEMICOLON)           \
   code(RETURN)              \
   code(YIELD)               \
   code(TOKEN_EOF)

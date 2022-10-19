@@ -39,7 +39,7 @@ types::Type* Parser::ParseType() {
     }
 
     // Syntax: (Int) Unit
-    case lex::TokenType::LEFT_BRACE:
+    case lex::TokenType::LEFT_PAREN:
       return ParseFunctionType();
 
     case lex::TokenType::IDENTIFIER:
@@ -57,7 +57,7 @@ types::Type* Parser::ParseType() {
 ///////////////////////////////////////////////////////////////////
 
 types::Type* Parser::ParseFunctionType() {
-  Consume(lex::TokenType::LEFT_BRACE);
+  Consume(lex::TokenType::LEFT_PAREN);
 
   std::vector<types::Type*> args;
 
@@ -69,7 +69,7 @@ types::Type* Parser::ParseFunctionType() {
     }
   }
 
-  Consume(lex::TokenType::RIGHT_BRACE);
+  Consume(lex::TokenType::RIGHT_PAREN);
 
   auto return_type = ParseType();
 

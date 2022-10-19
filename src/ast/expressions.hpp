@@ -202,7 +202,7 @@ class FnCallExpression : public Expression {
     return expression_type;
   };
 
-  std::string GetFunctionName() {
+  std::string_view GetFunctionName() {
     return fn_name_.GetName();
   };
 
@@ -239,7 +239,7 @@ class StructConstructionExpression : public Expression {
     return type_;
   };
 
-  std::string GetStructName() {
+  std::string_view GetStructName() {
     return struct_name_.GetName();
   };
 
@@ -279,7 +279,7 @@ class FieldAccessExpression : public LvalueExpression {
     return struct_expression_->IsDirect();
   }
 
-  std::string GetFieldName() {
+  std::string_view GetFieldName() {
     return field_name_.GetName();
   }
 
@@ -444,7 +444,7 @@ class VarAccessExpression : public LvalueExpression {
     return type_;
   };
 
-  std::string GetName() {
+  std::string_view GetName() {
     return name_.GetName();
   }
 
