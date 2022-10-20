@@ -8,19 +8,26 @@ class Parser {
  public:
   Parser(lex::Lexer l);
 
+  // Top-level
+  // Parses all declarations in a file
+  auto ParseUnit() -> std::vector<Statement*>;
+
   ///////////////////////////////////////////////////////////////////
 
   Statement* ParseStatement();
 
-  Statement* ParseStatement();
+  ReturnStatement* ParseReturnStatement();
+  YieldStatement* ParseYieldStatement();
+  Statement* ParseExprStatement();
+  AssignmentStatement* ParseAssignment(LvalueExpression* target);
+
+  ////////////////////////////////////////////////////////////////////
+
+  Statement* ParseDeclaration();
 
   StructDeclStatement* ParseStructDeclStatement();
   FunDeclStatement* ParseFunDeclStatement();
-  ReturnStatement* ParseReturnStatement();
-  YieldStatement* ParseYieldStatement();
   VarDeclStatement* ParseVarDeclStatement();
-  Statement* ParseExprStatement();
-  AssignmentStatement* ParseAssignment(LvalueExpression* target);
 
   ////////////////////////////////////////////////////////////////////
 

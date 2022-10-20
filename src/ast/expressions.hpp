@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ast/scope/context.hpp>
 #include <ast/syntax_tree.hpp>
 
 #include <types/repr/pointer_type.hpp>
@@ -23,10 +24,6 @@ class Expression : public TreeNode {
 // Identifier, Named entity
 class LvalueExpression : public Expression {
  public:
-  // TODO: use StorageLocation interface instead
-  // This will be useful for implementing different backends
-  virtual int GetAddress() = 0;
-
   virtual bool IsDirect() {
     // True for compile-time expressions
     // But not for pointers
@@ -130,12 +127,6 @@ class DereferenceExpression : public LvalueExpression {
     return type_;
   };
 
-  virtual int GetAddress() override {
-    FMT_ASSERT(false,
-               "Cannot take the address of "
-               "pointer dereference at compile-time\n");
-  }
-
   virtual bool IsDirect() override {
     return false;
   }
@@ -145,10 +136,9 @@ class DereferenceExpression : public LvalueExpression {
   }
 
   lex::Token star_;
+
   // The pointer expression
   Expression* operand_;
-
-  int address_ = 0;
 
   types::Type* type_ = nullptr;
 };
@@ -218,6 +208,8 @@ class FnCallExpression : public Expression {
   bool is_tail_call_ = false;
 
   types::Type* expression_type = nullptr;
+
+  ast::scope::ScopeLayer* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -252,6 +244,8 @@ class StructConstructionExpression : public Expression {
   std::vector<Expression*> values_;
 
   types::Type* type_ = nullptr;
+
+  ast::scope::ScopeLayer* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -264,10 +258,6 @@ class FieldAccessExpression : public LvalueExpression {
 
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitFieldAccess(this);
-  }
-
-  virtual int GetAddress() override {
-    return address_;
   }
 
   virtual types::Type* GetType() override {
@@ -295,9 +285,7 @@ class FieldAccessExpression : public LvalueExpression {
 
   lex::Token field_name_;
 
-  bool is_direct_ = true;
-
-  int address_ = 0;
+  ast::scope::ScopeLayer* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -326,6 +314,8 @@ class BlockExpression : public Expression {
   std::vector<Statement*> stmts_;
 
   Expression* final_;
+
+  ast::scope::ScopeLayer* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -383,10 +373,6 @@ class NewExpression : public LvalueExpression {
     return new_token_.location;
   }
 
-  virtual int GetAddress() override {
-    FMT_ASSERT(false, "Not known at compile time address");
-  }
-
   virtual bool IsDirect() override {
     return false;
   }
@@ -435,10 +421,6 @@ class VarAccessExpression : public LvalueExpression {
     visitor->VisitVarAccess(this);
   }
 
-  virtual int GetAddress() override {
-    return address_;
-  }
-
   virtual types::Type* GetType() override {
     FMT_ASSERT(type_, "Type field is not set!");
     return type_;
@@ -456,7 +438,7 @@ class VarAccessExpression : public LvalueExpression {
 
   types::Type* type_ = nullptr;
 
-  int address_ = 0;
+  ast::scope::ScopeLayer* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////

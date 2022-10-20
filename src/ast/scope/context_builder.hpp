@@ -1,0 +1,44 @@
+#pragma once
+
+#include <ast/scope/context.hpp>
+
+#include <ast/visitors/visitor.hpp>
+
+namespace ast::scope {
+
+class ContextBuilder : Visitor {
+ public:
+  ContextBuilder(Context& unit_context)
+      : unit_context_{unit_context}, current_context_{&unit_context} {
+  }
+
+  virtual void VisitYield(YieldStatement* node) override;
+  virtual void VisitReturn(ReturnStatement* node) override;
+  virtual void VisitAssignment(AssignmentStatement* node) override;
+  virtual void VisitExprStatement(ExprStatement* node) override;
+
+  virtual void VisitStructDecl(StructDeclStatement* node) override;
+  virtual void VisitVarDecl(VarDeclStatement* node) override;
+  virtual void VisitFunDecl(FunDeclStatement* node) override;
+
+  virtual void VisitComparison(ComparisonExpression* node) override;
+  virtual void VisitBinary(BinaryExpression* node) override;
+  virtual void VisitUnary(UnaryExpression* node) override;
+  virtual void VisitDeref(DereferenceExpression* node) override;
+  virtual void VisitAddressof(AddressofExpression* node) override;
+  virtual void VisitIf(IfExpression* node) override;
+  virtual void VisitNew(NewExpression* node) override;
+  virtual void VisitBlock(BlockExpression* node) override;
+  virtual void VisitFnCall(FnCallExpression* node) override;
+  virtual void VisitStructConstruction(
+      StructConstructionExpression* node) override;
+  virtual void VisitFieldAccess(FieldAccessExpression* node) override;
+  virtual void VisitVarAccess(VarAccessExpression* node) override;
+  virtual void VisitLiteral(LiteralExpression* node) override;
+
+ private:
+  Context& unit_context_;
+  Context* current_context_;
+};
+
+}  // namespace ast::scope

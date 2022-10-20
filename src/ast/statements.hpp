@@ -104,6 +104,9 @@ class VarDeclStatement : public Statement {
   // Specific type for GetName method
   VarAccessExpression* lvalue_;
 
+  // Optional, can be inferred from the right part
+  types::Type* annotation_ = nullptr;
+
   Expression* value_;
 };
 
@@ -157,6 +160,7 @@ class FunDeclStatement : public Statement {
   ///////////////////////////////////////////////////////////////////////
 
   lex::Token name_;
+
   types::FnType* type_ = nullptr;
 
   std::vector<FormalParam> formals_;

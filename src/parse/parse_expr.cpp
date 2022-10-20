@@ -92,11 +92,11 @@ Expression* Parser::ParseNewExpression() {
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseBlockExpression() {
-  auto location_token = lexer_.Peek();
-
   if (!Matches(lex::TokenType::LEFT_CBRACE)) {
     return nullptr;
   }
+
+  auto location_token = lexer_.GetPreviousToken();
 
   std::vector<Statement*> stmts;
   Expression* final_expr = nullptr;
