@@ -163,4 +163,8 @@ void ContextBuilder::VisitLiteral(LiteralExpression*) {
   // No-op
 }
 
+void ContextBuilder::VisitTypecast(TypecastExpression* node) {
+  node->expr_->Accept(this);
+}
+
 }  // namespace ast::scope

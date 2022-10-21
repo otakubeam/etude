@@ -33,20 +33,27 @@ fun min_or_max flavor =
 
 of Type -> Type
 type Vec T = struct {
-   & size: Int
-   & data: *T
-   & ast: union {
-       | AstLiteral
-       | AstAddition
-       | AstMultiplication
-     }
-   # etc...
+   size: Int,
+   data: *T,
+   ast: variant {
+      | AstLiteral
+      | AstAddition
+      | AstMultiplication
+   },
+};
+
+######################################################################
+
+type VariantRecord = union {
+   div: AstDiv,
+   sum: AstSum,
+   # etc ...
 };
 
 ######################################################################
 
 of Type -> Type
-type VariantRecord T = union {
+type VariantRecord T = sum {
    | Exception
    | String T
    | (Int, Bool)

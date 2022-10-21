@@ -6,6 +6,10 @@
 
 #include <string>
 
+namespace ast::scope {
+struct Symbol;
+}
+
 namespace types {
 
 //////////////////////////////////////////////////////////////////////
@@ -17,11 +21,7 @@ class StructType : public Type {
     types::Type* type;
   };
 
-  StructType(std::string_view name) : struct_name_{name} {
-  }
-
-  StructType(std::string_view name, std::vector<Member> members)
-      : struct_name_{name}, members_{std::move(members)} {
+  StructType(std::vector<Member> members) : members_{std::move(members)} {
   }
 
   virtual bool IsEqual(Type* other) override {
@@ -36,9 +36,10 @@ class StructType : public Type {
     return false;
   }
 
-  virtual bool IsEqual(StructType* other) override {
+  virtual bool IsEqual(StructType*) override {
     // XXX: Radically simplify!
-    return other->struct_name_ == struct_name_;
+    // return other->struct_name_ == struct_name_;
+    return true;
 
     // if (other->types_.size() != types_.size()) {
     //   return false;
@@ -58,7 +59,8 @@ class StructType : public Type {
   }
 
   std::string_view GetName() {
-    return struct_name_;
+    // return struct_name_;
+    std::abort();
   }
 
   // Logically, type is not responsible for calculating the offsets of field
@@ -82,12 +84,15 @@ class StructType : public Type {
   }
 
   std::string_view Format() override {
-    return struct_name_;
+    std::abort();
   }
 
  private:
-  std::string_view struct_name_;
+  // ast::scope::Symbol* symbol_;
+
   std::vector<Member> members_;
+
+  std::string type_format_;
 };
 
 //////////////////////////////////////////////////////////////////////

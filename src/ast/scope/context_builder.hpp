@@ -35,6 +35,7 @@ class ContextBuilder : public Visitor {
   virtual void VisitFieldAccess(FieldAccessExpression* node) override;
   virtual void VisitVarAccess(VarAccessExpression* node) override;
   virtual void VisitLiteral(LiteralExpression* node) override;
+  virtual void VisitTypecast(TypecastExpression* node) override;
 
  private:
   void PopScopeLayer() {

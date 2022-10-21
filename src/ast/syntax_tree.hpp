@@ -13,6 +13,11 @@ class TreeNode {
   virtual lex::Location GetLocation() = 0;
 
   virtual ~TreeNode() = default;
+
+  template <typename T>
+  T* as() const {
+    return dynamic_cast<T*>(this);
+  }
 };
 
 //////////////////////////////////////////////////////////////////////

@@ -29,6 +29,7 @@ namespace lex {
   code(ADDR)                \
   code(STAR)                \
   code(ARROW)               \
+  code(ARROW_CAST)          \
   code(NEW)                 \
   code(FUN)                 \
   code(DOT)                 \

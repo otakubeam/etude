@@ -42,6 +42,7 @@ enum class TokenType {
   ADDR,
   STAR,
   ARROW,
+  ARROW_CAST,
 
   NEW,
 

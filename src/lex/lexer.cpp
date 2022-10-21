@@ -134,6 +134,14 @@ std::optional<TokenType> Lexer::MatchOperator() {
         return TokenType::MINUS;
       }
 
+    case '~':
+      if (scanner_.PeekNextSymbol() == '>') {
+        scanner_.MoveRight();
+        return TokenType::ARROW_CAST;
+      } else {
+        std::abort();
+      }
+
     case '+':
       return TokenType::PLUS;
     case '*':

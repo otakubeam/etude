@@ -16,6 +16,7 @@ class StructConstructionExpression;
 class FieldAccessExpression;
 class LiteralExpression;
 class VarAccessExpression;
+class TypecastExpression;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -77,6 +78,8 @@ class Visitor {
   virtual void VisitVarAccess(VarAccessExpression* node) = 0;
 
   virtual void VisitLiteral(LiteralExpression* node) = 0;
+
+  virtual void VisitTypecast(TypecastExpression* node) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////

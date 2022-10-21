@@ -179,8 +179,8 @@ class AddressofExpression : public Expression {
 
 class FnCallExpression : public Expression {
  public:
-  FnCallExpression(lex::Token fn_name, std::vector<Expression*> arguments)
-      : fn_name_(fn_name), arguments_{arguments} {
+  FnCallExpression(lex::Token call_site, std::vector<Expression*> arguments)
+      : call_site_(call_site), arguments_{arguments} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -193,14 +193,16 @@ class FnCallExpression : public Expression {
   };
 
   std::string_view GetFunctionName() {
-    return fn_name_.GetName();
+    return fn_name_;
   };
 
   virtual lex::Location GetLocation() override {
-    return fn_name_.location;
+    return call_site_.location;
   }
 
-  lex::Token fn_name_;
+  lex::Token call_site_;
+
+  std::string_view fn_name_;
 
   std::vector<Expression*> arguments_;
 
@@ -250,9 +252,9 @@ class StructConstructionExpression : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
-class FieldAccessExpression : public LvalueExpression {
+class FieldAccessExpression : public Expression {
  public:
-  FieldAccessExpression(lex::Token field_name, LvalueExpression* lvalue)
+  FieldAccessExpression(lex::Token field_name, Expression* lvalue)
       : struct_expression_{lvalue}, field_name_{field_name} {
   }
 
@@ -265,10 +267,6 @@ class FieldAccessExpression : public LvalueExpression {
     return type_;
   };
 
-  virtual bool IsDirect() override {
-    return struct_expression_->IsDirect();
-  }
-
   std::string_view GetFieldName() {
     return field_name_.GetName();
   }
@@ -279,7 +277,7 @@ class FieldAccessExpression : public LvalueExpression {
 
   // This can be an Identifier or or result of
   // indexing an array, or of a field access.
-  LvalueExpression* struct_expression_;
+  Expression* struct_expression_;
 
   types::Type* type_ = nullptr;
 
@@ -442,3 +440,30 @@ class VarAccessExpression : public LvalueExpression {
 };
 
 //////////////////////////////////////////////////////////////////////
+
+class TypecastExpression : public Expression {
+ public:
+  TypecastExpression(Expression* expr, lex::Token flowy_arrow,
+                     types::Type* dest)
+      : expr_{expr}, flowy_arrow_{flowy_arrow}, type_{dest} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitTypecast(this);
+  }
+
+  virtual types::Type* GetType() override {
+    FMT_ASSERT(type_, "Type field is not set!");
+    return type_;
+  };
+
+  virtual lex::Location GetLocation() override {
+    return flowy_arrow_.location;
+  }
+
+  Expression* expr_ = nullptr;
+
+  lex::Token flowy_arrow_;
+
+  types::Type* type_ = nullptr;
+};

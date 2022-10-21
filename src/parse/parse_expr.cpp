@@ -171,7 +171,7 @@ Expression* Parser::ParseUnary() {
 
 ///////////////////////////////////////////////////////////////////
 
-Expression* Parser::ParseFieldAccess(LvalueExpression* expr) {
+Expression* Parser::ParseFieldAccess(Expression* expr) {
   do {
     auto field_name = lexer_.Peek();
     Consume(lex::TokenType::IDENTIFIER);
@@ -199,6 +199,21 @@ std::vector<Expression*> Parser::ParseCSV() {
 
 ////////////////////////////////////////////////////////////////////
 
+Expression* Parser::ParseFnCallUnnamed() {
+  // Consume(lex::TokenType::LEFT_PAREN);
+
+  if (Matches(lex::TokenType::RIGHT_PAREN)) {
+    return new FnCallExpression{id, {}};
+  }
+
+  auto args = ParseCSV();
+  Consume(lex::TokenType::RIGHT_PAREN);
+
+  return new FnCallExpression{id, std::move(args)};
+}
+
+////////////////////////////////////////////////////////////////////
+
 Expression* Parser::ParseFnCallExpression(lex::Token id) {
   // Consume(lex::TokenType::LEFT_PAREN);
 
@@ -207,6 +222,7 @@ Expression* Parser::ParseFnCallExpression(lex::Token id) {
   }
 
   auto args = ParseCSV();
+
   Consume(lex::TokenType::RIGHT_PAREN);
 
   return new FnCallExpression{id, std::move(args)};
@@ -229,19 +245,84 @@ Expression* Parser::ParseConstructionExpression(lex::Token id) {
 
 ////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////
+
+// Precedence one
+Expression* Parser::ParseTypecastExpression() {
+  auto expr = ParsePrimary();
+
+  while (true) {
+    if (Matches(lex::TokenType::DOT)) {
+      Consume(lex::TokenType::IDENTIFIER);
+
+      auto field_name = lexer_.GetPreviousToken();
+
+      expr = new FieldAccessExpression{field_name, expr};
+
+      if (Matches(lex::TokenType::LEFT_PAREN)) {
+        expr = ParseFnCallExpression(field_name);
+      }
+
+      continue;
+    }
+
+    if (Matches(lex::TokenType::ARROW)) {
+      auto star = lexer_.GetPreviousToken();
+
+      Consume(lex::TokenType::IDENTIFIER);
+
+      auto field_name = lexer_.GetPreviousToken();
+
+      expr = new FieldAccessExpression{
+          field_name,
+          new DereferenceExpression{star, expr},
+      };
+
+      if (Matches(lex::TokenType::LEFT_PAREN)) {
+        expr = ParseFnCallExpression(field_name);
+      }
+
+      continue;
+    }
+
+    if (Matches(lex::TokenType::ARROW_CAST)) {
+      auto flowy_arrow = lexer_.GetPreviousToken();
+      auto dest_type = ParsePointerType();
+      expr = new TypecastExpression{expr, flowy_arrow, dest_type};
+      continue;
+    }
+
+    if (Matches(lex::TokenType::LEFT_SBRACE)) {
+      auto loc_token = lexer_.GetPreviousToken();
+
+      auto plus = loc_token;
+      plus.type = lex::TokenType::PLUS;
+
+      auto add = ParseExpression();
+
+      Consume(lex::TokenType::RIGHT_SBRACE);
+
+      expr = new DereferenceExpression{loc_token,
+                                       new BinaryExpression{expr, plus, add}};
+    }
+
+    break;
+  }
+
+  return expr;
+}
+
 Expression* Parser::ParsePrimary() {
+  auto ParseGrouping = [this]() -> Expression* {
+    auto expr = ParseExpression();
+    Consume(lex::TokenType::RIGHT_PAREN);
+    return expr;
+  };
+
   // Try parsing grouping first
 
   if (Matches(lex::TokenType::LEFT_PAREN)) {
-    auto expr = ParseExpression();
-
-    Consume(lex::TokenType::RIGHT_PAREN);
-
-    if (Matches(lex::TokenType::DOT)) {
-      return ParseFieldAccess(dynamic_cast<LvalueExpression*>(expr));
-    }
-
-    return expr;
+    return ParseGrouping();
   }
 
   // Then all the base cases
@@ -257,22 +338,13 @@ Expression* Parser::ParsePrimary() {
       lexer_.Advance();
       return new LiteralExpression{token};
 
+    // Compound literal, e.g. { field : 123, ... }
+    case lex::TokenType::RIGHT_CBRACE:
+
     case lex::TokenType::IDENTIFIER: {
       Consume(lex::TokenType::IDENTIFIER);
 
-      if (Matches(lex::TokenType::COLON)) {
-        return ParseConstructionExpression(token);
-      }
-
-      if (Matches(lex::TokenType::LEFT_PAREN)) {
-        return ParseFnCallExpression(token);
-      }
-
-      if (Matches(lex::TokenType::DOT)) {
-        return ParseFieldAccess(new VarAccessExpression{token});
-      }
-
-      return new VarAccessExpression{token};
+      // What should I return here?
     }
 
     default: {

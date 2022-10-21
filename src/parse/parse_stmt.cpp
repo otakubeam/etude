@@ -76,7 +76,7 @@ Statement* Parser::ParseExprStatement() {
   auto expr = ParseExpression();
 
   if (Matches(lex::TokenType::ASSIGN)) {
-    if (auto target = dynamic_cast<LvalueExpression*>(expr)) {
+    if (auto target = expr->as<LvalueExpression>()) {
       return ParseAssignment(target);
     }
 

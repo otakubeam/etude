@@ -64,32 +64,6 @@ StructDeclStatement* Parser::ParseStructDeclStatement() {
 
   auto struct_name = lexer_.Peek();
   Consume(lex::TokenType::IDENTIFIER);
-  Consume(lex::TokenType::LEFT_CBRACE);
-
-  // 2. Parse contents
-
-  std::vector<lex::Token> fields;
-  std::vector<types::Type*> types;
-
-  while (Matches(lex::TokenType::IDENTIFIER)) {
-    fields.push_back(lexer_.GetPreviousToken());
-    Consume(lex::TokenType::COLON);
-
-    if (auto type = ParseType()) {
-      types.push_back(type);
-    } else {
-      throw parse::errors::ParseTypeError{FormatLocation()};
-    }
-
-    // Demand the trailing comma!
-    Consume(lex::TokenType::COMMA);
-  }
-
-  Consume(lex::TokenType::RIGHT_CBRACE);
-  Consume(lex::TokenType::SEMICOLON);
-
-  return new StructDeclStatement{struct_name, std::move(fields),
-                                 std::move(types)};
 }
 
 ///////////////////////////////////////////////////////////////////

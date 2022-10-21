@@ -8,80 +8,90 @@
 
 ///////////////////////////////////////////////////////////////////
 
-types::Type* Parser::ParseType() {
-  types::Type* result = nullptr;
+// Int -> (Int -> Bool) -> *Bool
+types::Type* Parser::ParseFunctionType() {
+  auto first = ParsePointerType();
 
-  switch (lexer_.Peek().type) {
-    case lex::TokenType::TY_INT:
-      result = &types::builtin_int;
-      break;
-
-    case lex::TokenType::TY_BOOL:
-      result = &types::builtin_bool;
-      break;
-
-    case lex::TokenType::TY_STRING:
-      result = &types::builtin_string;
-      break;
-
-    case lex::TokenType::TY_UNIT:
-      result = &types::builtin_unit;
-      break;
-
-    case lex::TokenType::STAR: {
-      lexer_.Advance();
-
-      if (auto type = ParseType()) {
-        return new types::PointerType{type};
-      }
-
-      throw parse::errors::ParseTypeError{FormatLocation()};
-    }
-
-    // Syntax: (Int) Unit
-    case lex::TokenType::LEFT_PAREN:
-      return ParseFunctionType();
-
-    case lex::TokenType::IDENTIFIER:
-      return ParseStructType();
-
-    default:
-      return nullptr;
+  while (Matches(lex::TokenType::ARROW)) {
+    first = new types::FnType{{first}, ParsePointerType()};
   }
 
-  // Advance for simple types
-  lexer_.Advance();
-  return result;
+  return first;
 }
 
 ///////////////////////////////////////////////////////////////////
 
-types::Type* Parser::ParseFunctionType() {
-  Consume(lex::TokenType::LEFT_PAREN);
-
-  std::vector<types::Type*> args;
-
-  while (auto type = ParseType()) {
-    args.push_back(type);
-
-    if (!Matches(lex::TokenType::COMMA)) {
-      break;
-    }
+// struct {}
+types::Type* Parser::ParsePointerType() {
+  if (Matches(lex::TokenType::STAR)) {
+    return new types::PointerType{ParsePointerType()};
   }
-
-  Consume(lex::TokenType::RIGHT_PAREN);
-
-  auto return_type = ParseType();
-
-  return new types::FnType{std::move(args), return_type};
+  return ParseStructType();
 }
 
 ///////////////////////////////////////////////////////////////////
 
 types::Type* Parser::ParseStructType() {
-  auto token = lexer_.Peek();
-  Consume(lex::TokenType::IDENTIFIER);
-  return new types::StructType{token.GetName()};
+  if (!Matches(lex::TokenType::STRUCT)) {
+    return ParsePrimitiveType();
+  }
+
+  Consume(lex::TokenType::LEFT_CBRACE);
+
+  // 2. Parse struct fields
+
+  std::vector<types::StructType::Member> fields;
+
+  while (Matches(lex::TokenType::IDENTIFIER)) {
+    fields.push_back(types::StructType::Member{
+        .name = lexer_.GetPreviousToken().GetName(),
+    });
+
+    Consume(lex::TokenType::COLON);
+
+    if (auto type = ParseFunctionType()) {
+      fields.back().type = type;
+    } else {
+      throw parse::errors::ParseTypeError{FormatLocation()};
+    }
+
+    // May or may not be, advance
+    Matches(lex::TokenType::COMMA);
+  }
+
+  Consume(lex::TokenType::RIGHT_CBRACE);
+
+  return new types::StructType{std::move(fields)};
 }
 
 ///////////////////////////////////////////////////////////////////
+
+types::Type* Parser::ParsePrimitiveType() {
+  if (Matches(lex::TokenType::LEFT_PAREN)) {
+    auto type = ParseFunctionType();
+    Consume(lex::TokenType::RIGHT_PAREN);
+    return type;
+  }
+
+  lexer_.Advance();
+  switch (lexer_.GetPreviousToken().type) {
+    case lex::TokenType::TY_INT:
+      return &types::builtin_int;
+      break;
+
+    case lex::TokenType::TY_BOOL:
+      return &types::builtin_bool;
+      break;
+
+    case lex::TokenType::TY_STRING:
+      return &types::builtin_string;
+      break;
+
+    case lex::TokenType::TY_UNIT:
+      return &types::builtin_unit;
+      break;
+
+    default:
+      throw parse::errors::ParseTypeError{FormatLocation()};
+  }
+}

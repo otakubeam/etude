@@ -38,19 +38,24 @@ class Parser {
   Expression* ParseComparison();
   Expression* ParseBinary();
   Expression* ParseUnary();
-  Expression* ParseFieldAccess(LvalueExpression* expr);
   Expression* ParseIfExpression();
   Expression* ParseNewExpression();
   Expression* ParseBlockExpression();
+
+  // Precedence 1
+  Expression* ParseTypecastExpression();
+  Expression* ParseFieldAccess(Expression* expr);
   Expression* ParseFnCallExpression(lex::Token id);
   Expression* ParseConstructionExpression(lex::Token id);
+
   Expression* ParsePrimary();
 
   ////////////////////////////////////////////////////////////////////
 
-  types::Type* ParseType();
   types::Type* ParseFunctionType();
+  types::Type* ParsePointerType();
   types::Type* ParseStructType();
+  types::Type* ParsePrimitiveType();
 
   ////////////////////////////////////////////////////////////////////
 
