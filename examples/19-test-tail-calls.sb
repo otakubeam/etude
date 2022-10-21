@@ -14,3 +14,4 @@ fun main() Unit {
   assert(*v == 4005);
   assert(*v == result);
 }
+

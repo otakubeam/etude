@@ -44,7 +44,7 @@ report_test() {
   printf '%-60s ... ' "$name"
 
   if runtest $f; then 
-    printf $(bold $green "OK!") && echo
+    printf $(bold $green "PASS!") && echo
   else
     printf $(bold $red "FAIL!") && echo
     collect_debug_artifacts $f

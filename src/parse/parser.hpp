@@ -6,7 +6,7 @@
 
 class Parser {
  public:
-  Parser(lex::Lexer l);
+  Parser(lex::Lexer& l);
 
   // Top-level
   // Parses all declarations in a file
@@ -65,5 +65,5 @@ class Parser {
   std::string FormatLocation();
 
  private:
-  lex::Lexer lexer_;
+  lex::Lexer& lexer_;
 };

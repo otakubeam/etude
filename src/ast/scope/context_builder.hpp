@@ -6,7 +6,7 @@
 
 namespace ast::scope {
 
-class ContextBuilder : Visitor {
+class ContextBuilder : public Visitor {
  public:
   ContextBuilder(Context& unit_context)
       : unit_context_{unit_context}, current_context_{&unit_context} {
@@ -37,8 +37,19 @@ class ContextBuilder : Visitor {
   virtual void VisitLiteral(LiteralExpression* node) override;
 
  private:
+  void PopScopeLayer() {
+    // debug_context_leafs_.push_back(current_context_);
+    current_context_->Print();
+    current_context_ = current_context_->parent;
+  }
+
+ private:
   Context& unit_context_;
   Context* current_context_;
+
+ public:
+  // For dumping all symbols in the program
+  std::vector<Context*> debug_context_leafs_;
 };
 
 }  // namespace ast::scope

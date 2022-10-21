@@ -24,16 +24,44 @@ struct ScopeLayer {
 };
 
 struct Context {
-  ScopeLayer type_tags;
-  ScopeLayer functions;
-  ScopeLayer bindings;
+  ScopeLayer type_tags{};
+  ScopeLayer functions{};
+  ScopeLayer bindings{};
+
+  std::string_view name;
+
+  lex::Location location;
 
   Context* parent = nullptr;
 
-  Context* MakeNewScopeLayer() {
+  Context* MakeNewScopeLayer(lex::Location loc, std::string_view name) {
     return new Context{
+        .name = name,
+        .location = loc,
         .parent = this,
     };
+  }
+
+  void Print() {
+    fmt::print(stderr, "[!] Popping context {} at {}\n", name,
+               location.Format());
+
+    fmt::print(stderr, "Bindings: \n");
+    for (auto& sym : bindings.symbols) {
+      fmt::print(stderr, "{}\n", sym.FormatSymbol());
+    }
+
+    fmt::print(stderr, "Functions: \n");
+    for (auto& sym : functions.symbols) {
+      fmt::print(stderr, "{}\n", sym.FormatSymbol());
+    }
+
+    fmt::print(stderr, "Type tags: \n");
+    for (auto& sym : type_tags.symbols) {
+      fmt::print(stderr, "{}\n", sym.FormatSymbol());
+    }
+
+    fmt::print(stderr, "\n");
   }
 };
 

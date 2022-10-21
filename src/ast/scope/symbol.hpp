@@ -22,8 +22,8 @@ struct StructSymbol {
 };
 
 struct FnSymbol {
-  types::FnType* type;
-  bool type_is_known;
+  types::FnType* type = nullptr;
+  bool type_is_known = false;
 
   // What form should this take?
   // std::vector<...> constraints;
@@ -38,22 +38,26 @@ struct VarbindSymbol {
 };
 
 struct Symbol {
-  SymbolType type;
+  SymbolType sym_type;
 
   // Fun, types and var can be incomplete
   // Can static be incomplete?
-  bool is_complete;
+  bool is_complete = false;
 
   std::string_view name;
 
   union {
-    FnSymbol fn_symbol;
-    StructSymbol struct_symbol;
-    VarbindSymbol varbind_symbol;
-  } as;
+    FnSymbol as_fn_sym{};
+    StructSymbol as_struct;
+    VarbindSymbol as_varbind;
+  };
 
   lex::Location declared_at;
-  std::vector<lex::Location> uses;
+  std::vector<lex::Location> uses{};
+
+  std::string_view FormatSymbol() {
+    return name;
+  }
 };
 
 }  // namespace ast::scope

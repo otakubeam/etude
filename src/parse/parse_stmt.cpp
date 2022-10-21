@@ -4,6 +4,10 @@
 ///////////////////////////////////////////////////////////////////
 
 Statement* Parser::ParseStatement() {
+  if (auto decl_statement = ParseDeclaration()) {
+    return decl_statement;
+  }
+
   if (auto return_statement = ParseReturnStatement()) {
     return return_statement;
   }

@@ -18,6 +18,9 @@ static inc_counter = 0;
 
 ######################################################################
 
+of Bool -> (Int -> Int -> Bool)
+fun min_or_max flavor;
+
 fun min_or_max flavor =
     of Int -> Int -> Bool
     fun _ a b = if flavor {

@@ -23,7 +23,7 @@ find_package(Catch2 2 REQUIRED)
 
 add_subdirectory(src)
 
-# add_subdirectory(app)
+add_subdirectory(app)
 
 add_subdirectory(tests)
 

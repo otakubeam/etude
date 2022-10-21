@@ -127,7 +127,7 @@ class FunDeclStatement : public Statement {
 
   FunDeclStatement(lex::Token name, types::Type* return_type,
                    std::vector<FormalParam> formals, BlockExpression* block)
-      : name_{name}, formals_{std::move(formals)}, block_{block} {
+      : name_{name}, formals_{std::move(formals)}, expression_{block} {
     type_ = new types::FnType{GetArgumentTypes(), return_type};
   }
 
@@ -164,7 +164,10 @@ class FunDeclStatement : public Statement {
   types::FnType* type_ = nullptr;
 
   std::vector<FormalParam> formals_;
-  BlockExpression* block_;
+
+  Expression* expression_;
+
+  ast::scope::ScopeLayer* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
