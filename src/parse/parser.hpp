@@ -33,21 +33,26 @@ class Parser {
 
   Expression* ParseExpression();
 
-  Expression* ParseDeref();
-  Expression* ParseAddressof();
-  Expression* ParseComparison();
-  Expression* ParseBinary();
-  Expression* ParseUnary();
   Expression* ParseIfExpression();
   Expression* ParseNewExpression();
   Expression* ParseBlockExpression();
 
-  // Precedence 1
-  Expression* ParseTypecastExpression();
-  Expression* ParseFieldAccess(Expression* expr);
-  Expression* ParseFnCallExpression(lex::Token id);
-  Expression* ParseConstructionExpression(lex::Token id);
+  Expression* ParseComparison();
+  Expression* ParseBinary();
 
+  Expression* ParseUnary();
+  Expression* ParseDeref();
+  Expression* ParseAddressof();
+
+  // Precedence 1
+  Expression* ParsePostfixExpressions();
+  Expression* ParseFieldAccess(Expression* expr);
+  Expression* ParseIndirectFieldAccess(Expression* expr);
+  Expression* ParseIndexingExpression(Expression* expr);
+  Expression* ParseFnCallUnnamed(Expression* expr);
+  Expression* ParseFnCallExpression(Expression* expr, lex::Token id);
+
+  Expression* ParseCompoundInitializer(lex::Token id);
   Expression* ParsePrimary();
 
   ////////////////////////////////////////////////////////////////////

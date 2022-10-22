@@ -31,7 +31,7 @@ class ContextBuilder : public Visitor {
   virtual void VisitBlock(BlockExpression* node) override;
   virtual void VisitFnCall(FnCallExpression* node) override;
   virtual void VisitStructConstruction(
-      StructConstructionExpression* node) override;
+      CompoundInitializerExpr* node) override;
   virtual void VisitFieldAccess(FieldAccessExpression* node) override;
   virtual void VisitVarAccess(VarAccessExpression* node) override;
   virtual void VisitLiteral(LiteralExpression* node) override;

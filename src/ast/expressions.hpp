@@ -179,8 +179,19 @@ class AddressofExpression : public Expression {
 
 class FnCallExpression : public Expression {
  public:
-  FnCallExpression(lex::Token call_site, std::vector<Expression*> arguments)
-      : call_site_(call_site), arguments_{arguments} {
+  // No-name, e.g. vec[10]()
+  FnCallExpression(lex::Location call_site, Expression* callable,
+                   std::vector<Expression*> arguments)
+      : call_site_(call_site), callable_{callable}, arguments_{arguments} {
+  }
+
+  // Named function call: foo(), struct.field(), etc...
+  FnCallExpression(lex::Token name, Expression* callable,
+                   std::vector<Expression*> arguments)
+      : call_site_(name.location),
+        fn_name_{name.GetName()},
+        callable_{callable},
+        arguments_{arguments} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -197,12 +208,15 @@ class FnCallExpression : public Expression {
   };
 
   virtual lex::Location GetLocation() override {
-    return call_site_.location;
+    return call_site_;
   }
 
-  lex::Token call_site_;
+  lex::Location call_site_;
 
+  // May be absent
   std::string_view fn_name_;
+
+  Expression* callable_;
 
   std::vector<Expression*> arguments_;
 
@@ -217,15 +231,15 @@ class FnCallExpression : public Expression {
 //////////////////////////////////////////////////////////////////////
 
 // At least for now let's call it that
-class StructConstructionExpression : public Expression {
+class CompoundInitializerExpr : public Expression {
  public:
-  StructConstructionExpression(lex::Token struct_name,
+  CompoundInitializerExpr(lex::Token struct_name,
                                std::vector<Expression*> values)
       : struct_name_{struct_name}, values_{values} {
   }
 
   virtual void Accept(Visitor* visitor) override {
-    visitor->VisitStructConstruction(this);
+    visitor->VisitCompoundInitalizer(this);
   }
 
   virtual types::Type* GetType() override {

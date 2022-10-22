@@ -346,7 +346,7 @@ TEST_CASE("Struct creation", "[parser]") {
   Parser p{l};
 
   auto expr = p.ParseExpression();
-  REQUIRE(typeid(*expr) == typeid(StructConstructionExpression));
+  REQUIRE(typeid(*expr) == typeid(CompoundInitializerExpr));
 }
 
 //////////////////////////////////////////////////////////////////////

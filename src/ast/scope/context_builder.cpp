@@ -141,7 +141,7 @@ void ContextBuilder::VisitFnCall(FnCallExpression* node) {
 }
 
 void ContextBuilder::VisitStructConstruction(
-    StructConstructionExpression* node) {
+    CompoundInitializerExpr* node) {
   for (auto val : node->values_) {
     val->Accept(this);
   }

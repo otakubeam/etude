@@ -12,7 +12,7 @@ class IfExpression;
 class NewExpression;
 class BlockExpression;
 class FnCallExpression;
-class StructConstructionExpression;
+class CompoundInitializerExpr;
 class FieldAccessExpression;
 class LiteralExpression;
 class VarAccessExpression;
@@ -71,7 +71,7 @@ class Visitor {
 
   virtual void VisitFnCall(FnCallExpression* node) = 0;
 
-  virtual void VisitStructConstruction(StructConstructionExpression* node) = 0;
+  virtual void VisitCompoundInitalizer(CompoundInitializerExpr* node) = 0;
 
   virtual void VisitFieldAccess(FieldAccessExpression* node) = 0;
 

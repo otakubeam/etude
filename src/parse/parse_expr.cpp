@@ -22,26 +22,26 @@ Expression* Parser::ParseExpression() {
 ///////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseDeref() {
-  auto token = lexer_.Peek();
-
   if (!Matches(lex::TokenType::STAR)) {
     return nullptr;
   }
 
-  auto ptr_expr = ParsePrimary();
+  auto token = lexer_.GetPreviousToken();
+  auto ptr_expr = ParseUnary();
+
   return new DereferenceExpression{token, ptr_expr};
 }
 
 ///////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseAddressof() {
-  auto token = lexer_.Peek();
-
   if (!Matches(lex::TokenType::ADDR)) {
     return nullptr;
   }
 
-  auto lvalue_expr = dynamic_cast<LvalueExpression*>(ParsePrimary());
+  auto token = lexer_.GetPreviousToken();
+  auto lvalue_expr = ParseUnary()->as<LvalueExpression>();
+
   return new AddressofExpression{token, lvalue_expr};
 }
 
@@ -55,7 +55,7 @@ Expression* Parser::ParseIfExpression() {
   auto location_token = lexer_.GetPreviousToken();
 
   auto condition = ParseExpression();
-  auto true_branch = ParseBlockExpression();
+  auto true_branch = ParseExpression();
 
   if (!condition || !true_branch) {
     throw parse::errors::ParseTrueBlockError{
@@ -65,7 +65,7 @@ Expression* Parser::ParseIfExpression() {
 
   Expression* false_branch = nullptr;
   if (Matches(lex::TokenType::ELSE)) {
-    false_branch = ParseBlockExpression();
+    false_branch = ParseExpression();
   }
 
   return new IfExpression(condition, true_branch, false_branch);
@@ -81,12 +81,12 @@ Expression* Parser::ParseNewExpression() {
   auto new_tok = lexer_.GetPreviousToken();
 
   if (!Matches(lex::TokenType::LEFT_SBRACE)) {
-    return new NewExpression{new_tok, nullptr, ParseType()};
+    return new NewExpression{new_tok, nullptr, ParseFunctionType()};
   }
 
   auto size = ParseExpression();
   Consume(lex::TokenType::RIGHT_SBRACE);
-  return new NewExpression{new_tok, size, ParseType()};
+  return new NewExpression{new_tok, size, ParseFunctionType()};
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -162,7 +162,7 @@ Expression* Parser::ParseUnary() {
   }
 
   if (Matches(lex::TokenType::MINUS) || Matches(lex::TokenType::NOT)) {
-    auto expr = ParsePrimary();
+    auto expr = ParseUnary();
     return new UnaryExpression{token, expr};
   }
 
@@ -171,12 +171,41 @@ Expression* Parser::ParseUnary() {
 
 ///////////////////////////////////////////////////////////////////
 
+// Assume lex::TokenType::ARROW has already been parsed
+Expression* Parser::ParseIndirectFieldAccess(Expression* expr) {
+  auto star = lexer_.GetPreviousToken();
+
+  Consume(lex::TokenType::IDENTIFIER);
+
+  auto field_name = lexer_.GetPreviousToken();
+
+  expr = new FieldAccessExpression{
+      field_name,
+      new DereferenceExpression{star, expr},
+  };
+
+  // Also check for the start of function call
+  if (Matches(lex::TokenType::LEFT_PAREN)) {
+    expr = ParseFnCallExpression(expr, field_name);
+  }
+
+  return expr;
+}
+
+///////////////////////////////////////////////////////////////////
+
+// Assume lex::TokenType::DOT has already been parsed
 Expression* Parser::ParseFieldAccess(Expression* expr) {
-  do {
-    auto field_name = lexer_.Peek();
-    Consume(lex::TokenType::IDENTIFIER);
-    expr = new FieldAccessExpression(field_name, expr);
-  } while (Matches(lex::TokenType::DOT));
+  Consume(lex::TokenType::IDENTIFIER);
+
+  auto field_name = lexer_.GetPreviousToken();
+
+  expr = new FieldAccessExpression{field_name, expr};
+
+  // Also check for the start of function call
+  if (Matches(lex::TokenType::LEFT_PAREN)) {
+    expr = ParseFnCallExpression(expr, field_name);
+  }
 
   return expr;
 }
@@ -199,111 +228,88 @@ std::vector<Expression*> Parser::ParseCSV() {
 
 ////////////////////////////////////////////////////////////////////
 
-Expression* Parser::ParseFnCallUnnamed() {
+Expression* Parser::ParseIndexingExpression(Expression* expr) {
+  auto loc_token = lexer_.GetPreviousToken();
+
+  auto plus = loc_token;
+  plus.type = lex::TokenType::PLUS;
+
+  auto add = ParseExpression();
+
+  Consume(lex::TokenType::RIGHT_SBRACE);
+
+  return new DereferenceExpression{loc_token,
+                                   new BinaryExpression{expr, plus, add}};
+}
+////////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseFnCallExpression(Expression* expr, lex::Token id) {
   // Consume(lex::TokenType::LEFT_PAREN);
 
   if (Matches(lex::TokenType::RIGHT_PAREN)) {
-    return new FnCallExpression{id, {}};
+    return new FnCallExpression{id, expr, {}};
+  }
+
+  auto args = ParseCSV();
+
+  Consume(lex::TokenType::RIGHT_PAREN);
+
+  return new FnCallExpression{id, expr, std::move(args)};
+}
+
+////////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseFnCallUnnamed(Expression* expr) {
+  // Consume(lex::TokenType::LEFT_PAREN);
+  auto loc = lexer_.GetPreviousToken().location;
+
+  if (Matches(lex::TokenType::RIGHT_PAREN)) {
+    return new FnCallExpression{loc, expr, {}};
   }
 
   auto args = ParseCSV();
   Consume(lex::TokenType::RIGHT_PAREN);
 
-  return new FnCallExpression{id, std::move(args)};
+  return new FnCallExpression{loc, expr, std::move(args)};
 }
-
-////////////////////////////////////////////////////////////////////
-
-Expression* Parser::ParseFnCallExpression(lex::Token id) {
-  // Consume(lex::TokenType::LEFT_PAREN);
-
-  if (Matches(lex::TokenType::RIGHT_PAREN)) {
-    return new FnCallExpression{id, {}};
-  }
-
-  auto args = ParseCSV();
-
-  Consume(lex::TokenType::RIGHT_PAREN);
-
-  return new FnCallExpression{id, std::move(args)};
-}
-
-////////////////////////////////////////////////////////////////////
-
-Expression* Parser::ParseConstructionExpression(lex::Token id) {
-  Consume(lex::TokenType::LEFT_CBRACE);
-
-  if (Matches(lex::TokenType::RIGHT_CBRACE)) {
-    return new StructConstructionExpression{id, {}};
-  }
-
-  auto initializers = ParseCSV();
-  Consume(lex::TokenType::RIGHT_CBRACE);
-
-  return new StructConstructionExpression{id, std::move(initializers)};
-}
-
-////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////
 
 // Precedence one
-Expression* Parser::ParseTypecastExpression() {
+// https://en.cppreference.com/w/c/language/operator_precedence
+Expression* Parser::ParsePostfixExpressions() {
+  auto ParseCast = [this](Expression* expr) {
+    auto flowy_arrow = lexer_.GetPreviousToken();
+    auto dest_type = ParsePointerType();
+    return new TypecastExpression{expr, flowy_arrow, dest_type};
+  };
+
   auto expr = ParsePrimary();
 
   while (true) {
     if (Matches(lex::TokenType::DOT)) {
-      Consume(lex::TokenType::IDENTIFIER);
-
-      auto field_name = lexer_.GetPreviousToken();
-
-      expr = new FieldAccessExpression{field_name, expr};
-
-      if (Matches(lex::TokenType::LEFT_PAREN)) {
-        expr = ParseFnCallExpression(field_name);
-      }
-
+      expr = ParseFieldAccess(expr);
       continue;
     }
 
     if (Matches(lex::TokenType::ARROW)) {
-      auto star = lexer_.GetPreviousToken();
-
-      Consume(lex::TokenType::IDENTIFIER);
-
-      auto field_name = lexer_.GetPreviousToken();
-
-      expr = new FieldAccessExpression{
-          field_name,
-          new DereferenceExpression{star, expr},
-      };
-
-      if (Matches(lex::TokenType::LEFT_PAREN)) {
-        expr = ParseFnCallExpression(field_name);
-      }
-
+      expr = ParseIndirectFieldAccess(expr);
       continue;
     }
 
     if (Matches(lex::TokenType::ARROW_CAST)) {
-      auto flowy_arrow = lexer_.GetPreviousToken();
-      auto dest_type = ParsePointerType();
-      expr = new TypecastExpression{expr, flowy_arrow, dest_type};
+      expr = ParseCast(expr);
       continue;
     }
 
     if (Matches(lex::TokenType::LEFT_SBRACE)) {
-      auto loc_token = lexer_.GetPreviousToken();
+      expr = ParseIndexingExpression(expr);
+      continue;
+    }
 
-      auto plus = loc_token;
-      plus.type = lex::TokenType::PLUS;
-
-      auto add = ParseExpression();
-
-      Consume(lex::TokenType::RIGHT_SBRACE);
-
-      expr = new DereferenceExpression{loc_token,
-                                       new BinaryExpression{expr, plus, add}};
+    if (Matches(lex::TokenType::LEFT_PAREN)) {
+      expr = ParseFnCallUnnamed(expr);
+      continue;
     }
 
     break;
@@ -338,13 +344,15 @@ Expression* Parser::ParsePrimary() {
       lexer_.Advance();
       return new LiteralExpression{token};
 
-    // Compound literal, e.g. { field : 123, ... }
-    case lex::TokenType::RIGHT_CBRACE:
-
     case lex::TokenType::IDENTIFIER: {
       Consume(lex::TokenType::IDENTIFIER);
-
-      // What should I return here?
+      auto id = lexer_.GetPreviousToken();
+      if (Matches(lex::TokenType::COLON)) {
+        // Compound literal, e.g. User:{ field : 123, ... }
+        return ParseCompoundInitializer(id);
+      } else {
+        return new VarAccessExpression{id};
+      }
     }
 
     default: {
@@ -354,6 +362,21 @@ Expression* Parser::ParsePrimary() {
   }
 
   FMT_ASSERT(false, "Unreachable!");
+}
+
+////////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseCompoundInitializer(lex::Token id) {
+  Consume(lex::TokenType::LEFT_CBRACE);
+
+  if (Matches(lex::TokenType::RIGHT_CBRACE)) {
+    return new CompoundInitializerExpr{id, {}};
+  }
+
+  auto initializers = ParseCSV();
+  Consume(lex::TokenType::RIGHT_CBRACE);
+
+  return new CompoundInitializerExpr{id, std::move(initializers)};
 }
 
 ////////////////////////////////////////////////////////////////////
