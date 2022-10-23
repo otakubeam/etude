@@ -3,9 +3,6 @@
 #include <ast/syntax_tree.hpp>
 #include <ast/expressions.hpp>
 
-#include <types/repr/struct_type.hpp>
-#include <types/repr/fn_type.hpp>
-
 #include <lex/token.hpp>
 
 #include <vector>
@@ -44,8 +41,7 @@ class TypeDeclStatement : public Statement {
   // TypeDeclStatement name params type
   TypeDeclStatement(lex::Token name, std::vector<lex::Token> params,
                     types::Type* type)
-      : name_{name},
-  parameters_{params}, type_{type} {
+      : name_{name}, parameters_{params}, type_{type} {
   }
 
   ///////////////////////////////////////////////////////////////////////
@@ -132,10 +128,6 @@ class FunDeclStatement : public Statement {
   auto GetArgumentTypes() -> std::vector<types::Type*> {
     std::vector<types::Type*> result;
 
-    for (auto formal : type_->as<types::FnType>()->GetArgTypes()) {
-      result.push_back(formal);
-    }
-
     return result;
   }
 
@@ -163,7 +155,7 @@ class FunDeclStatement : public Statement {
 
   Expression* body_;
 
-  ast::scope::ScopeLayer* layer_ = nullptr;
+  ast::scope::Context* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////

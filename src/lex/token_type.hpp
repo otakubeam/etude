@@ -53,8 +53,11 @@ enum class TokenType {
   VAR,
   TYPE,
   STRUCT,
+  UNION,
   
   OF,
+  UNDERSCORE
+
 
   TY_INT,
   TY_BOOL,

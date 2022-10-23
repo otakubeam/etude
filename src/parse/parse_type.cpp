@@ -1,10 +1,7 @@
 #include <parse/parser.hpp>
 #include <parse/parse_error.hpp>
 
-#include <types/repr/pointer_type.hpp>
-#include <types/repr/struct_type.hpp>
-#include <types/repr/builtins.hpp>
-#include <types/repr/fn_type.hpp>
+#include <types/type.hpp>
 
 ///////////////////////////////////////////////////////////////////
 
@@ -19,7 +16,7 @@ types::Type* Parser::ParseFunctionType() {
   auto first = ParsePointerType();
 
   while (Matches(lex::TokenType::ARROW)) {
-    first = new types::FnType{{first}, ParsePointerType()};
+    // first = new types::FnType{{first}, ParsePointerType()};
   }
 
   return first;
@@ -30,7 +27,7 @@ types::Type* Parser::ParseFunctionType() {
 // struct {}
 types::Type* Parser::ParsePointerType() {
   if (Matches(lex::TokenType::STAR)) {
-    return new types::PointerType{ParsePointerType()};
+    // return new types::PointerType{ParsePointerType()};
   }
   return ParseStructType();
 }
@@ -46,17 +43,17 @@ types::Type* Parser::ParseStructType() {
 
   // 2. Parse struct fields
 
-  std::vector<types::StructType::Member> fields;
+  std::vector<types::Member> fields;
 
   while (Matches(lex::TokenType::IDENTIFIER)) {
-    fields.push_back(types::StructType::Member{
-        .name = lexer_.GetPreviousToken().GetName(),
+    fields.push_back(types::Member{
+        .field = lexer_.GetPreviousToken().GetName(),
     });
 
     Consume(lex::TokenType::COLON);
 
     if (auto type = ParseFunctionType()) {
-      fields.back().type = type;
+      fields.back().ty = type;
     } else {
       throw parse::errors::ParseTypeError{FormatLocation()};
     }
@@ -67,7 +64,7 @@ types::Type* Parser::ParseStructType() {
 
   Consume(lex::TokenType::RIGHT_CBRACE);
 
-  return new types::StructType{std::move(fields)};
+  // return new types::StructType{std::move(fields)};
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -81,6 +78,11 @@ types::Type* Parser::ParsePrimitiveType() {
 
   lexer_.Advance();
   switch (lexer_.GetPreviousToken().type) {
+    case lex::TokenType::UNDERSCORE:
+      return nullptr;
+      // Here I probably want to allocate a new type variable
+      break;
+
     case lex::TokenType::TY_INT:
       return &types::builtin_int;
       break;
@@ -90,7 +92,7 @@ types::Type* Parser::ParsePrimitiveType() {
       break;
 
     case lex::TokenType::TY_STRING:
-      return &types::builtin_string;
+      // return &types::builtin_string;
       break;
 
     case lex::TokenType::TY_UNIT:

@@ -3,7 +3,6 @@
 #include <ast/scope/context.hpp>
 #include <ast/syntax_tree.hpp>
 
-#include <types/repr/pointer_type.hpp>
 #include <types/type.hpp>
 
 #include <lex/token.hpp>
@@ -172,7 +171,7 @@ class AddressofExpression : public Expression {
   /*Lvalue*/ Expression* operand_;
 
   // Mabye embed and save allocation
-  types::PointerType* type_ = nullptr;
+  types::Type* type_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -234,7 +233,7 @@ class FnCallExpression : public Expression {
 class CompoundInitializerExpr : public Expression {
  public:
   CompoundInitializerExpr(lex::Token struct_name,
-                               std::vector<Expression*> values)
+                          std::vector<Expression*> values)
       : struct_name_{struct_name}, values_{values} {
   }
 
@@ -369,8 +368,7 @@ class NewExpression : public LvalueExpression {
                 types::Type* underlying)
       : new_token_{new_token},
         allocation_size_{allocation_size},
-        underlying_{underlying},
-        type_{new types::PointerType{underlying_}} {
+        underlying_{underlying} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -378,6 +376,7 @@ class NewExpression : public LvalueExpression {
   }
 
   virtual types::Type* GetType() override {
+    FMT_ASSERT(type_, "Not set type");
     return type_;
   };
 

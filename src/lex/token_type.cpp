@@ -37,7 +37,9 @@ namespace lex {
   code(VAR)                 \
   code(TYPE)                \
   code(STRUCT)              \
+  code(UNION)               \
   code(OF)                  \
+  code(UNDERSCORE)          \
   code(TY_INT)              \
   code(TY_BOOL)             \
   code(TY_UNIT)             \

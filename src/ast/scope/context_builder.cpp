@@ -12,7 +12,7 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
       .sym_type = SymbolType::TYPE,
       .is_complete = node->type_ != nullptr,
       .name = node->GetStructName(),
-      .as_struct = {.type = node->type_->as<types::StructType>()},
+      .as_struct = {.type = node->type_},
       .declared_at = node->GetLocation(),
   });
 }

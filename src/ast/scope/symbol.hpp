@@ -1,7 +1,6 @@
 #pragma once
 
-#include <types/repr/struct_type.hpp>
-#include <types/repr/fn_type.hpp>
+#include <types/type.hpp>
 
 #include <lex/location.hpp>
 
@@ -18,7 +17,7 @@ enum class SymbolType {
 };
 
 struct StructSymbol {
-  types::StructType* type;
+  types::Type* type;
 };
 
 struct FnSymbol {
