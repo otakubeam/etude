@@ -8,6 +8,12 @@
 
 ///////////////////////////////////////////////////////////////////
 
+types::Type* Parser::ParseType() {
+  return ParseFunctionType();
+}
+
+///////////////////////////////////////////////////////////////////
+
 // Int -> (Int -> Bool) -> *Bool
 types::Type* Parser::ParseFunctionType() {
   auto first = ParsePointerType();

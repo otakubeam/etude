@@ -17,7 +17,7 @@ class ContextBuilder : public Visitor {
   virtual void VisitAssignment(AssignmentStatement* node) override;
   virtual void VisitExprStatement(ExprStatement* node) override;
 
-  virtual void VisitStructDecl(StructDeclStatement* node) override;
+  virtual void VisitTypeDecl(TypeDeclStatement* node) override;
   virtual void VisitVarDecl(VarDeclStatement* node) override;
   virtual void VisitFunDecl(FunDeclStatement* node) override;
 
@@ -30,12 +30,11 @@ class ContextBuilder : public Visitor {
   virtual void VisitNew(NewExpression* node) override;
   virtual void VisitBlock(BlockExpression* node) override;
   virtual void VisitFnCall(FnCallExpression* node) override;
-  virtual void VisitStructConstruction(
-      CompoundInitializerExpr* node) override;
   virtual void VisitFieldAccess(FieldAccessExpression* node) override;
-  virtual void VisitVarAccess(VarAccessExpression* node) override;
-  virtual void VisitLiteral(LiteralExpression* node) override;
   virtual void VisitTypecast(TypecastExpression* node) override;
+  virtual void VisitLiteral(LiteralExpression* node) override;
+  virtual void VisitVarAccess(VarAccessExpression* node) override;
+  virtual void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
 
  private:
   void PopScopeLayer() {

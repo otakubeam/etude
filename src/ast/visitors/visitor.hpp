@@ -24,7 +24,7 @@ class Statement;
 class ExprStatement;
 class YieldStatement;
 class ReturnStatement;
-class StructDeclStatement;
+class TypeDeclStatement;
 class VarDeclStatement;
 class AssignmentStatement;
 class FunDeclStatement;
@@ -41,7 +41,7 @@ class Visitor {
 
   virtual void VisitReturn(ReturnStatement* node) = 0;
 
-  virtual void VisitStructDecl(StructDeclStatement* node) = 0;
+  virtual void VisitTypeDecl(TypeDeclStatement* node) = 0;
 
   virtual void VisitVarDecl(VarDeclStatement* node) = 0;
 

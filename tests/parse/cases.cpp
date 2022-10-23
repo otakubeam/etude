@@ -335,7 +335,7 @@ TEST_CASE("Struct declaration", "[parser]") {
   Parser p{l};
 
   auto expr = p.ParseStatement();
-  REQUIRE(typeid(*expr) == typeid(StructDeclStatement));
+  REQUIRE(typeid(*expr) == typeid(TypeDeclStatement));
 }
 
 //////////////////////////////////////////////////////////////////////

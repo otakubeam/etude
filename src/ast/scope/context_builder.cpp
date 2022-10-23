@@ -7,12 +7,12 @@ namespace ast::scope {
 
 //////////////////////////////////////////////////////////////////////
 
-void ContextBuilder::VisitStructDecl(StructDeclStatement* node) {
+void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
   current_context_->type_tags.InsertSymbol(Symbol{
       .sym_type = SymbolType::TYPE,
       .is_complete = node->type_ != nullptr,
       .name = node->GetStructName(),
-      .as_struct = StructSymbol{.type = node->type_},
+      .as_struct = {.type = node->type_->as<types::StructType>()},
       .declared_at = node->GetLocation(),
   });
 }
@@ -38,15 +38,15 @@ void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
 void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
   current_context_->functions.InsertSymbol({
       .sym_type = SymbolType::FUN,
-      .is_complete = node->expression_ != nullptr,
+      .is_complete = node->body_ != nullptr,
       .name = node->GetFunctionName(),
       .as_fn_sym = {.type = node->type_},
       .declared_at = node->GetLocation(),
   });
 
-  if (node->expression_) {
+  if (node->body_) {
     current_context_ = current_context_->MakeNewScopeLayer(
-        node->expression_->GetLocation(), node->GetFunctionName());
+        node->body_->GetLocation(), node->GetFunctionName());
 
     // Bring parameters into the scope (one only for them)
 
@@ -54,15 +54,13 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
       current_context_->bindings.InsertSymbol({
           .sym_type = SymbolType::VAR,
           .is_complete = true,
-          .name = param.GetParameterName(),
-          .as_varbind = {.type = param.type},
+          .name = param.GetName(),
+          .as_varbind = {},
           .declared_at = node->GetLocation(),
       });
     }
 
-    // If the expression is a block it then opens another scope
-
-    node->expression_->Accept(this);
+    node->body_->Accept(this);
 
     PopScopeLayer();
   }
@@ -140,8 +138,7 @@ void ContextBuilder::VisitFnCall(FnCallExpression* node) {
   node->layer_ = &current_context_->functions;
 }
 
-void ContextBuilder::VisitStructConstruction(
-    CompoundInitializerExpr* node) {
+void ContextBuilder::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   for (auto val : node->values_) {
     val->Accept(this);
   }

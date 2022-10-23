@@ -15,15 +15,20 @@ auto Parser::ParseUnit() -> std::vector<Statement*> {
 ///////////////////////////////////////////////////////////////////
 
 Statement* Parser::ParseDeclaration() {
-  if (auto struct_declaration = ParseStructDeclStatement()) {
+  types::Type* hint = nullptr;
+  if (Matches(lex::TokenType::OF)) {
+    hint = ParseFunctionType();
+  }
+
+  if (auto struct_declaration = ParseStructDeclStatement(hint)) {
     return struct_declaration;
   }
 
-  if (auto var_declaration = ParseVarDeclStatement()) {
+  if (auto var_declaration = ParseVarDeclStatement(hint)) {
     return var_declaration;
   }
 
-  if (auto fun_declaration = ParseFunDeclStatement()) {
+  if (auto fun_declaration = ParseFunDeclStatement(hint)) {
     return fun_declaration;
   }
 
@@ -32,74 +37,88 @@ Statement* Parser::ParseDeclaration() {
 
 ///////////////////////////////////////////////////////////////////
 
-FunDeclStatement* Parser::ParseFunDeclStatement() {
+FunDeclStatement* Parser::ParseFunDeclStatement(types::Type* hint) {
   if (!Matches(lex::TokenType::FUN)) {
     return nullptr;
   }
 
-  auto function_name = lexer_.Peek();
+  auto fun_name = lexer_.Peek();
   Consume(lex::TokenType::IDENTIFIER);
 
-  auto typed_formals = ParseFormals();
-  auto return_type = ParseType();
+  auto formals = ParseFormals();
 
-  if (auto block = dynamic_cast<BlockExpression*>(ParseBlockExpression())) {
-    return new FunDeclStatement{function_name, return_type,
-                                std::move(typed_formals), block};
-  }
+  // Funtion prototype
 
-  throw parse::errors::ParseTrueBlockError{
-      function_name.location.Format(),
+  if (Matches(lex::TokenType::SEMICOLON)) {
+    return new FunDeclStatement{fun_name, std::move(formals), nullptr, hint};
   };
+
+  // Funtion definition
+
+  Consume(lex::TokenType::ASSIGN);
+
+  auto body = ParseExpression();
+
+  Consume(lex::TokenType::SEMICOLON);
+
+  return new FunDeclStatement{fun_name, std::move(formals), body, hint};
 }
 
 ///////////////////////////////////////////////////////////////////
 
-StructDeclStatement* Parser::ParseStructDeclStatement() {
-  if (!Matches(lex::TokenType::STRUCT)) {
+TypeDeclStatement* Parser::ParseStructDeclStatement(types::Type* hint) {
+  (void)hint;
+  if (!Matches(lex::TokenType::TYPE)) {
     return nullptr;
   }
 
-  // 1. Get the name of the new struct
-
-  auto struct_name = lexer_.Peek();
+  auto type_name = lexer_.Peek();
   Consume(lex::TokenType::IDENTIFIER);
+
+  auto formals = ParseFormals();
+
+  // Type declaration
+
+  if (Matches(lex::TokenType::SEMICOLON)) {
+    return new TypeDeclStatement{type_name, std::move(formals), nullptr};
+  };
+
+  // Typedefinition definition
+
+  Consume(lex::TokenType::ASSIGN);
+
+  auto body = ParseFunctionType();
+
+  Consume(lex::TokenType::SEMICOLON);
+
+  return new TypeDeclStatement{type_name, std::move(formals), body};
 }
 
 ///////////////////////////////////////////////////////////////////
 
-auto Parser::ParseFormals() -> std::vector<FunDeclStatement::FormalParam> {
-  Consume(lex::TokenType::LEFT_PAREN);
-
-  std::vector<FunDeclStatement::FormalParam> typed_formals;
+auto Parser::ParseFormals() -> std::vector<lex::Token> {
+  std::vector<lex::Token> result;
 
   while (Matches(lex::TokenType::IDENTIFIER)) {
-    auto param_name = lexer_.GetPreviousToken();
-    Consume(lex::TokenType::COLON);
-
-    if (auto type = ParseType()) {
-      typed_formals.push_back(FunDeclStatement::FormalParam{
-          .ident = param_name,
-          .type = type,
-      });
-    } else {
-      throw parse::errors::ParseTypeError{FormatLocation()};
-    }
-
-    if (!Matches(lex::TokenType::COMMA)) {
-      break;
-    }
+    result.push_back(lexer_.GetPreviousToken());
   }
 
-  Consume(lex::TokenType::RIGHT_PAREN);
-  return typed_formals;
+  return result;
 }
 
 ///////////////////////////////////////////////////////////////////
 
-VarDeclStatement* Parser::ParseVarDeclStatement() {
-  if (!Matches(lex::TokenType::VAR)) {
-    return nullptr;
+VarDeclStatement* Parser::ParseVarDeclStatement(types::Type* hint) {
+  lex::Token type;
+  switch (lexer_.Peek().type) {
+    case lex::TokenType::VAR:
+      // case lex::TokenType::STATIC:
+      lexer_.Advance();
+      type = lexer_.GetPreviousToken();
+      break;
+
+    default:
+      return nullptr;
   }
 
   // 1. Get a name to assign to
@@ -115,7 +134,7 @@ VarDeclStatement* Parser::ParseVarDeclStatement() {
 
   Consume(lex::TokenType::SEMICOLON);
 
-  return new VarDeclStatement{lvalue, value};
+  return new VarDeclStatement{lvalue, value, hint};
 }
 
 ///////////////////////////////////////////////////////////////////

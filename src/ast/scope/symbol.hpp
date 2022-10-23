@@ -22,7 +22,7 @@ struct StructSymbol {
 };
 
 struct FnSymbol {
-  types::FnType* type = nullptr;
+  types::Type* type = nullptr;
   bool type_is_known = false;
 
   // What form should this take?

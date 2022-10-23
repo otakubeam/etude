@@ -37,18 +37,21 @@ class ExprStatement : public Statement {
 
 //////////////////////////////////////////////////////////////////////
 
-class StructDeclStatement : public Statement {
+class TypeDeclStatement : public Statement {
  public:
-  StructDeclStatement(lex::Token name, std::vector<lex::Token> field_names,
-                      std::vector<types::Type*> field_types)
-      : name_{name}, field_names_{field_names}, field_types_{field_types} {
-    type_ = new types::StructType{name.GetName(), ZipMembers()};
+  // of lex::Token -> Vec<_> -> *_
+  // -> _
+  // TypeDeclStatement name params type
+  TypeDeclStatement(lex::Token name, std::vector<lex::Token> params,
+                    types::Type* type)
+      : name_{name},
+  parameters_{params}, type_{type} {
   }
 
   ///////////////////////////////////////////////////////////////////////
 
   virtual void Accept(Visitor* visitor) override {
-    visitor->VisitStructDecl(this);
+    visitor->VisitTypeDecl(this);
   }
 
   virtual lex::Location GetLocation() override {
@@ -61,32 +64,34 @@ class StructDeclStatement : public Statement {
 
   ///////////////////////////////////////////////////////////////////////
 
-  auto ZipMembers() -> std::vector<types::StructType::Member> {
-    std::vector<types::StructType::Member> result;
-    for (size_t i = 0; i < field_names_.size(); i++) {
-      result.push_back({
-          .name = field_names_[i].GetName(),
-          .type = field_types_[i],
-      });
-    }
-    return result;
-  }
+  // auto ZipMembers() -> std::vector<types::StructType::Member> {
+  //   std::vector<types::StructType::Member> result;
+  //   for (size_t i = 0; i < field_names_.size(); i++) {
+  //     result.push_back({
+  //         .name = field_names_[i].GetName(),
+  //         .type = field_types_[i],
+  //     });
+  //   }
+  //   return result;
+  // }
 
   ///////////////////////////////////////////////////////////////////////
 
   lex::Token name_;
-  types::StructType* type_;
 
-  std::vector<lex::Token> field_names_;
-  std::vector<types::Type*> field_types_;
+  // In the future...
+  std::vector<lex::Token> parameters_;
+
+  types::Type* type_;
 };
 
 //////////////////////////////////////////////////////////////////////
 
 class VarDeclStatement : public Statement {
  public:
-  VarDeclStatement(VarAccessExpression* lvalue, Expression* value)
-      : lvalue_{lvalue}, value_{value} {
+  VarDeclStatement(VarAccessExpression* lvalue, Expression* value,
+                   types::Type* hint)
+      : lvalue_{lvalue}, annotation_{hint}, value_{value} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -101,6 +106,9 @@ class VarDeclStatement : public Statement {
     return lvalue_->GetName();
   }
 
+  // var or static
+  lex::Token type_;
+
   // Specific type for GetName method
   VarAccessExpression* lvalue_;
 
@@ -114,21 +122,9 @@ class VarDeclStatement : public Statement {
 
 class FunDeclStatement : public Statement {
  public:
-  struct FormalParam {
-    lex::Token ident;
-    types::Type* type;
-
-    std::string_view GetParameterName() {
-      return ident.GetName();
-    }
-  };
-
-  ///////////////////////////////////////////////////////////////////////
-
-  FunDeclStatement(lex::Token name, types::Type* return_type,
-                   std::vector<FormalParam> formals, BlockExpression* block)
-      : name_{name}, formals_{std::move(formals)}, expression_{block} {
-    type_ = new types::FnType{GetArgumentTypes(), return_type};
+  FunDeclStatement(lex::Token name, std::vector<lex::Token> formals,
+                   Expression* body, types::Type* hint)
+      : name_{name}, type_{hint}, formals_{std::move(formals)}, body_{body} {
   }
 
   ///////////////////////////////////////////////////////////////////////
@@ -136,8 +132,8 @@ class FunDeclStatement : public Statement {
   auto GetArgumentTypes() -> std::vector<types::Type*> {
     std::vector<types::Type*> result;
 
-    for (auto fm : formals_) {
-      result.push_back(fm.type);
+    for (auto formal : type_->as<types::FnType>()->GetArgTypes()) {
+      result.push_back(formal);
     }
 
     return result;
@@ -161,11 +157,11 @@ class FunDeclStatement : public Statement {
 
   lex::Token name_;
 
-  types::FnType* type_ = nullptr;
+  types::Type* type_ = nullptr;
 
-  std::vector<FormalParam> formals_;
+  std::vector<lex::Token> formals_;
 
-  Expression* expression_;
+  Expression* body_;
 
   ast::scope::ScopeLayer* layer_ = nullptr;
 };

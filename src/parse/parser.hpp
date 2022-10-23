@@ -25,9 +25,9 @@ class Parser {
 
   Statement* ParseDeclaration();
 
-  StructDeclStatement* ParseStructDeclStatement();
-  FunDeclStatement* ParseFunDeclStatement();
-  VarDeclStatement* ParseVarDeclStatement();
+  TypeDeclStatement* ParseStructDeclStatement(types::Type* hint);
+  FunDeclStatement* ParseFunDeclStatement(types::Type* hint);
+  VarDeclStatement* ParseVarDeclStatement(types::Type* hint);
 
   ////////////////////////////////////////////////////////////////////
 
@@ -57,6 +57,7 @@ class Parser {
 
   ////////////////////////////////////////////////////////////////////
 
+  types::Type* ParseType();
   types::Type* ParseFunctionType();
   types::Type* ParsePointerType();
   types::Type* ParseStructType();
@@ -65,7 +66,7 @@ class Parser {
   ////////////////////////////////////////////////////////////////////
 
  private:
-  auto ParseFormals() -> std::vector<FunDeclStatement::FormalParam>;
+  auto ParseFormals() -> std::vector<lex::Token>;
   auto ParseCSV() -> std::vector<Expression*>;
 
   bool Matches(lex::TokenType type);
