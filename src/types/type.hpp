@@ -55,7 +55,7 @@ struct FunType {
 
 struct AliasType {
   std::string_view name;
-  Type* underlying;
+  Type* underlying = nullptr;
 };
 
 struct TypeVariable {

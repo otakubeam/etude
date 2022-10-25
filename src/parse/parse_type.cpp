@@ -21,11 +21,12 @@ types::Type* Parser::ParseFunctionType() {
     first = ParsePointerType();
   }
 
-  return new types::Type{
-      .tag = types::TypeTag::TY_FUN,
-      .as_fun = {.param_pack = std::move(ts), .result_type = first},
-  };
-  ;
+  return ts.empty() ? first
+                    : new types::Type{
+                          .tag = types::TypeTag::TY_FUN,
+                          .as_fun = {.param_pack = std::move(ts),
+                                     .result_type = first},
+                      };
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -36,7 +37,7 @@ types::Type* Parser::ParsePointerType() {
   }
 
   return new types::Type{
-      .tag = types::TypeTag::TY_FUN,
+      .tag = types::TypeTag::TY_PTR,
       .as_ptr = {.underlying = ParsePointerType()},
   };
 }
@@ -86,8 +87,9 @@ types::Type* Parser::ParsePrimitiveType() {
     return type;
   }
 
+  auto tok = lexer_.Peek();
   lexer_.Advance();
-  switch (lexer_.GetPreviousToken().type) {
+  switch (tok.type) {
     case lex::TokenType::UNDERSCORE:
       // Here I probably want to allocate a new type variable
       return nullptr;
@@ -110,6 +112,8 @@ types::Type* Parser::ParsePrimitiveType() {
       break;
 
     default:
-      throw parse::errors::ParseTypeError{FormatLocation()};
+      return new types::Type{.tag = types::TypeTag::TY_ALIAS,
+                             .as_alias = {.name = tok.GetName()}};
+      // throw parse::errors::ParseTypeError{FormatLocation()};
   }
 }

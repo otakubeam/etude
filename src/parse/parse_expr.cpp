@@ -166,7 +166,7 @@ Expression* Parser::ParseUnary() {
     return new UnaryExpression{token, expr};
   }
 
-  return ParsePrimary();
+  return ParsePostfixExpressions();
 }
 
 ///////////////////////////////////////////////////////////////////
