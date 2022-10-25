@@ -6,6 +6,8 @@
 
 #include <ast/visitors/template_visitor.hpp>
 
+#include <queue>
+
 namespace types::check {
 
 class AlgorithmW : public ReturnVisitor<Type*> {
@@ -38,6 +40,8 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   void VisitCompoundInitalizer(CompoundInitializerExpr* node) ;
 
  private:
+  std::queue<int> deferred_checks_;
+
   ast::scope::Context* current_context_;
 };
 

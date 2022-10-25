@@ -135,7 +135,7 @@ void ContextBuilder::VisitBlock(BlockExpression* node) {
 }
 
 void ContextBuilder::VisitFnCall(FnCallExpression* node) {
-  node->layer_ = &current_context_->functions;
+  node->layer_ = current_context_;
 }
 
 void ContextBuilder::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
@@ -149,11 +149,11 @@ void ContextBuilder::VisitFieldAccess(FieldAccessExpression* node) {
   //
   // dynamic_cast<types::StructType*>(node->GetType())->GetName();
   //
-  node->layer_ = &current_context_->type_tags;
+  node->layer_ = current_context_;
 }
 
 void ContextBuilder::VisitVarAccess(VarAccessExpression* node) {
-  node->layer_ = &current_context_->bindings;
+  node->layer_ = current_context_;
 }
 
 void ContextBuilder::VisitLiteral(LiteralExpression*) {

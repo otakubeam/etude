@@ -10,11 +10,6 @@ namespace types {
 
 struct Type;
 
-extern Type builtin_int;
-extern Type builtin_bool;
-extern Type builtin_char;
-extern Type builtin_unit;
-
 enum class TypeTag {
   TY_INT,
   TY_BOOL,
@@ -36,14 +31,12 @@ enum class TypeTag {
 
 struct Member {
   std::string_view field;
-  Type* ty;
-
-  Member* next;
+  Type* ty = nullptr;
 };
 
 // This is also plain union type
 struct StructTy {
-  Member first;
+  std::vector<Member> first;
 };
 
 struct CoproductType {
@@ -56,7 +49,7 @@ struct PtrType {
 };
 
 struct FunType {
-  Type* param_pack;
+  std::vector<Type*> param_pack;
   Type* result_type;
 };
 
@@ -76,17 +69,21 @@ struct Type {
 
   Type* leader = nullptr;  // For use in union find
 
-  union {
-    PtrType as_ptr;
-    FunType as_fun;
-    StructTy as_struct;
-    AliasType as_alias;
-    CoproductType as_copro;
-    TypeVariable as_variable;
-  };
+  // union {
+  PtrType as_ptr{};
+  FunType as_fun{};
+  StructTy as_struct{};
+  AliasType as_alias{};
+  CoproductType as_copro{};
+  TypeVariable as_variable{};
 };
 
-Type* FindLeader(Type* a) {
+inline Type builtin_int;
+inline Type builtin_bool;
+inline Type builtin_char;
+inline Type builtin_unit;
+
+inline Type* FindLeader(Type* a) {
   auto leader = a;
   while (a->leader) {
     leader = a->leader;
@@ -94,9 +91,9 @@ Type* FindLeader(Type* a) {
   return leader;
 }
 
-void Unify(Type* a, Type* b);
+inline void Unify(Type* a, Type* b);
 
-void UnifyUnderlyingTypes(Type* a, Type* b) {
+inline void UnifyUnderlyingTypes(Type* a, Type* b) {
   // assert(la->tag == lb->tag);
   switch (a->tag) {
     case TypeTag::TY_PTR:
@@ -111,28 +108,23 @@ void UnifyUnderlyingTypes(Type* a, Type* b) {
       break;
 
     case TypeTag::TY_STRUCT: {
-      auto a_member = &a->as_struct.first;
-      auto b_member = &b->as_struct.first;
-
-      while (a_member && b_member) {
-        Unify(a_member->ty, b_member->ty);
-
-        if (a_member->field != b_member->field) {
-          break;
-        }
-
-        a_member = a_member->next;
-        b_member = a_member->next;
+      if (a->as_struct.first.size() != b->as_struct.first.size()) {
+        throw "";
       }
 
-      if (a_member || b_member) {
-        throw "this";
+      for (size_t i = 0; i < a->as_struct.first.size(); i++) {
+        // TODO:
       }
+
+      std::abort();
+      break;
     }
 
     case TypeTag::TY_FUN:
-      Unify(a->as_fun.param_pack, b->as_fun.param_pack);
-      Unify(a->as_fun.result_type, b->as_fun.result_type);
+      // Unify(a->as_fun.param_pack, b->as_fun.param_pack);
+      // Unify(a->as_fun.result_type, b->as_fun.result_type);
+
+      std::abort();
       break;
 
     case TypeTag::TY_VARIABLE:
@@ -145,7 +137,7 @@ void UnifyUnderlyingTypes(Type* a, Type* b) {
   }
 }
 
-void Unify(Type* a, Type* b) {
+inline void Unify(Type* a, Type* b) {
   auto la = FindLeader(a);
   auto lb = FindLeader(b);
 
@@ -168,5 +160,4 @@ void Unify(Type* a, Type* b) {
 }
 
 //////////////////////////////////////////////////////////////////////
-
 };  // namespace types

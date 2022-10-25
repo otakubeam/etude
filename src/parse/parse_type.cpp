@@ -14,22 +14,31 @@ types::Type* Parser::ParseType() {
 // Int -> (Int -> Bool) -> *Bool
 types::Type* Parser::ParseFunctionType() {
   auto first = ParsePointerType();
+  std::vector<types::Type*> ts;
 
   while (Matches(lex::TokenType::ARROW)) {
-    // first = new types::FnType{{first}, ParsePointerType()};
+    ts.push_back(std::move(first));
+    first = ParsePointerType();
   }
 
-  return first;
+  return new types::Type{
+      .tag = types::TypeTag::TY_FUN,
+      .as_fun = {.param_pack = std::move(ts), .result_type = first},
+  };
+  ;
 }
 
 ///////////////////////////////////////////////////////////////////
 
-// struct {}
 types::Type* Parser::ParsePointerType() {
-  if (Matches(lex::TokenType::STAR)) {
-    // return new types::PointerType{ParsePointerType()};
+  if (!Matches(lex::TokenType::STAR)) {
+    return ParseStructType();
   }
-  return ParseStructType();
+
+  return new types::Type{
+      .tag = types::TypeTag::TY_FUN,
+      .as_ptr = {.underlying = ParsePointerType()},
+  };
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -64,7 +73,8 @@ types::Type* Parser::ParseStructType() {
 
   Consume(lex::TokenType::RIGHT_CBRACE);
 
-  // return new types::StructType{std::move(fields)};
+  return new types::Type{.tag = types::TypeTag::TY_STRUCT,
+                         .as_struct = {std::move(fields)}};
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -79,8 +89,8 @@ types::Type* Parser::ParsePrimitiveType() {
   lexer_.Advance();
   switch (lexer_.GetPreviousToken().type) {
     case lex::TokenType::UNDERSCORE:
-      return nullptr;
       // Here I probably want to allocate a new type variable
+      return nullptr;
       break;
 
     case lex::TokenType::TY_INT:
@@ -92,7 +102,7 @@ types::Type* Parser::ParsePrimitiveType() {
       break;
 
     case lex::TokenType::TY_STRING:
-      // return &types::builtin_string;
+      std::abort();
       break;
 
     case lex::TokenType::TY_UNIT:

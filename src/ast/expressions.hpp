@@ -224,7 +224,7 @@ class FnCallExpression : public Expression {
 
   types::Type* expression_type = nullptr;
 
-  ast::scope::ScopeLayer* layer_ = nullptr;
+  ast::scope::Context* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -296,7 +296,7 @@ class FieldAccessExpression : public Expression {
 
   lex::Token field_name_;
 
-  ast::scope::ScopeLayer* layer_ = nullptr;
+  ast::scope::Context* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -449,7 +449,7 @@ class VarAccessExpression : public LvalueExpression {
 
   types::Type* type_ = nullptr;
 
-  ast::scope::ScopeLayer* layer_ = nullptr;
+  ast::scope::Context* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////

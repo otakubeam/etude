@@ -4,25 +4,36 @@
 
 namespace types {
 
+struct Type;
+
 enum class TraitTags {
-  NUMERIC,
+  EQ,
+  ORD,
+
+  NUM,  // + and *
+
+  DEREF,
+
   CALLABLE,
   HAS_FIELD,
-  IS_POINTER,
 
   USER_DEFINED,
 };
 
+struct HasFieldTrait {
+  std::string_view field_name;
+  Type* field_type;
+};
+
 struct UserDefinedTrait {
-  // This is perhaphs stored in a symbol table?
-  UserDefinedTrait* next;
+  // Pointer to ast node or something
 };
 
 struct Trait {
   TraitTags tag;
 
   union {
-    std::string_view field_name;
+    HasFieldTrait has_field;
     UserDefinedTrait* user = nullptr;
   };
 };

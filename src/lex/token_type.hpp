@@ -56,7 +56,7 @@ enum class TokenType {
   UNION,
   
   OF,
-  UNDERSCORE
+  UNDERSCORE,
 
 
   TY_INT,

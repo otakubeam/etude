@@ -8,7 +8,7 @@ namespace types::check {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitTypeDecl(TypeDeclStatement* node) {
+void AlgorithmW::VisitTypeDecl(TypeDeclStatement*) {
   // No-op
 }
 
@@ -74,59 +74,187 @@ void AlgorithmW::VisitBinary(BinaryExpression* node) {
 void AlgorithmW::VisitUnary(UnaryExpression* node) {
   auto result = Eval(node->operand_);
 
-  switch (node->operator_) {
+  switch (node->operator_.type) {
     case lex::TokenType::MINUS:
+      Unify(Eval(node->operand_), &builtin_int);
+      break;
+
     case lex::TokenType::NOT:
+      Unify(Eval(node->operand_), &builtin_bool);
+      break;
 
     default:
       std::abort();
   }
 
-  Unify(Eval(node->operand_), &builtin_int);
   return_value = result;
 }
 
 void AlgorithmW::VisitDeref(DereferenceExpression* node) {
-  node->operand_;
+  // An example:
+  // fun use_ptr p = {    <<<--- 1) p :: a
+  //    *p                       2) a ~ *b
+  // };                          3) *p :: b
+  //
+  auto a = Eval(node->operand_);
+  auto b = new Type{};
+  Unify(a, new Type{.tag = TypeTag::TY_PTR, .as_ptr = {.underlying = b}});
+  return_value = b;
 }
 
 void AlgorithmW::VisitAddressof(AddressofExpression* node) {
-  node->operand_;
+  // Add constraint on operand type?
+  return_value = new Type{
+      .tag = TypeTag::TY_PTR,
+      .as_ptr = {.underlying = Eval(node->operand_)},
+  };
 }
 
 void AlgorithmW::VisitIf(IfExpression* node) {
-  node->condition_;
+  Unify(Eval(node->condition_), &builtin_bool);
+  auto a = Eval(node->true_branch_);
+  Unify(a, Eval(node->false_branch_));
+  return_value = a;
 }
 
 void AlgorithmW::VisitNew(NewExpression* node) {
   if (node->allocation_size_) {
-    node->allocation_size_;
+    Unify(Eval(node->allocation_size_), &builtin_int);
   }
+
+  return_value = new Type{
+      .tag = TypeTag::TY_PTR,
+      .as_ptr = {.underlying = node->type_},
+  };
 }
 
 void AlgorithmW::VisitBlock(BlockExpression* node) {
+  for (auto stmt : node->stmts_) {
+    Eval(stmt);
+  }
+
+  if (node->final_) {
+    return_value = Eval(node->final_);
+  } else {
+    return_value = &builtin_unit;
+  }
 }
 
 void AlgorithmW::VisitFnCall(FnCallExpression* node) {
+  if (!node->fn_name_.empty()) {
+    if (!node->layer_->functions.symbol_map.at(node->fn_name_)
+             ->as_fn_sym.type) {
+      auto n = node->layer_->functions.symbol_map.at(node->fn_name_)
+                   ->as_fn_sym.type = new Type{};
+
+      if (n->as_fun.param_pack.size() != node->arguments_.size()) {
+        throw "Error";
+      };
+      // Eval(node->callable_);  // TODO: Unify?
+      for (size_t i = 0; i < node->arguments_.size(); i++) {
+        Unify(Eval(node->arguments_[i]), n->as_fun.param_pack[i]);
+      }
+
+      // Can I just return  n->as_fun.result_type  ?
+      return_value = n->as_fun.result_type;
+    }
+  } else {
+    std::abort();
+  }
 }
 
 void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
-  for (auto val : node->values_) {
-    val;
+  // ? node->layer_->symbol_map.contains(node->struct_name_.GetName());
+
+  auto& v = node->layer_->symbol_map.at("wef")->as_struct.type->as_struct.first;
+
+  if (v.size() != node->values_.size()) {
+    throw;
+  }
+
+  for (size_t i = 0; i < v.size(); i++) {
+    Unify(Eval(node->values_[i]), v[i].ty);
   }
 }
 
 void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
+  auto e = Eval(node->struct_expression_);
+  (void)e;
+
+  if (!node->type_) {
+    node->type_ = new Type{};
+  }
+
+  return_value = node->type_;
+
+  // Constraints are registered for post-resolution
+
+  // WHERE DO I PUT THIS?
+  (void)Trait{.tag = TraitTags::HAS_FIELD,
+              .has_field = {.field_name = node->field_name_.GetName(),
+                            .field_type = node->type_}};
 }
 
 void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
+  if (node->layer_->bindings.symbol_map.contains(node->name_.GetName())) {
+    // If we were not provided user annotation
+    if (!node->layer_->bindings.symbol_map.at(node->name_.GetName())
+             ->as_varbind.type) {
+      //
+      // Allocate new type variable!
+      //
+      node->layer_->bindings.symbol_map.at(node->name_.GetName())
+          ->as_varbind.type = new types::Type{};
+    }
+
+    node->type_ = node->layer_->bindings.symbol_map.at(node->name_.GetName())
+                      ->as_varbind.type;
+
+    return_value = node->type_;
+    return;
+  }
+
+  // TODO: also handle functions
+
+  std::abort();
 }
 
 void AlgorithmW::VisitLiteral(LiteralExpression* node) {
+  switch (node->token_.type) {
+    case lex::TokenType::NUMBER:
+      return_value = &builtin_int;
+      break;
+
+    case lex::TokenType::STRING:
+      return_value = new Type{.tag = TypeTag::TY_PTR,
+                              .as_ptr = {.underlying = &builtin_char}};
+      break;
+
+    case lex::TokenType::UNIT:
+      return_value = &builtin_unit;
+      break;
+
+    case lex::TokenType::TRUE:
+    case lex::TokenType::FALSE:
+      return_value = &builtin_bool;
+      break;
+
+    default:
+      FMT_ASSERT(false, "Typechecking unknown literal");
+  }
+
+  node->type_ = return_value;
 }
 
 void AlgorithmW::VisitTypecast(TypecastExpression* node) {
-  node->expr_;
+  FMT_ASSERT(node->type_, "Explicit cast must provide type");
+
+  auto e = Eval(node->expr_);
+  (void)e;
+
+  // TODO: push constraint that e must be convertible to node->type_
+
+  return_value = node->type_;
 }
 
 }  // namespace types::check
