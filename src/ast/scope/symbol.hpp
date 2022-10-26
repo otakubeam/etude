@@ -17,23 +17,15 @@ enum class SymbolType {
 };
 
 struct StructSymbol {
-  types::Type* type;
+  types::Type* type = nullptr;
 };
 
 struct FnSymbol {
   types::Type* type = nullptr;
-  bool type_is_known = false;
-
-  // What form should this take?
-  // std::vector<...> constraints;
 };
 
 struct VarbindSymbol {
   types::Type* type = nullptr;
-  bool type_is_known = false;
-
-  // What form should this take?
-  // std::vector<...> constraints;
 };
 
 struct Symbol {
@@ -56,6 +48,19 @@ struct Symbol {
 
   std::string_view FormatSymbol() {
     return name;
+  }
+
+  types::Type* GetType() {
+    switch (sym_type) {
+      case SymbolType::VAR:
+        return types::FindLeader(as_varbind.type);
+      case SymbolType::FUN:
+        return types::FindLeader(as_fn_sym.type);
+      case SymbolType::TYPE:
+        return types::FindLeader(as_struct.type);
+      case SymbolType::STATIC:
+        std::abort();
+    }
   }
 };
 

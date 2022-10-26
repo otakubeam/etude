@@ -7,10 +7,13 @@
 #include <string_view>
 #include <vector>
 #include <string>
+#include <deque>
 
 namespace types {
 
 struct Type;
+
+//////////////////////////////////////////////////////////////////////
 
 enum class TypeTag {
   TY_INT,
@@ -31,10 +34,14 @@ enum class TypeTag {
   TY_PARAMETER,  // aplha, beta, etc... ?
 };
 
+//////////////////////////////////////////////////////////////////////
+
 struct Member {
   std::string_view field;
   Type* ty = nullptr;
 };
+
+//////////////////////////////////////////////////////////////////////
 
 // This is also plain union type
 struct StructTy {
@@ -70,10 +77,17 @@ extern Type builtin_bool;
 extern Type builtin_char;
 extern Type builtin_unit;
 
+//////////////////////////////////////////////////////////////////////
+
 struct Type {
-  TypeTag tag = TypeTag::TY_VARIABLE;  // Unknown type
+  using Arena = std::deque<Type>;
+  inline static Arena type_store{};
 
   Type* leader = nullptr;  // For use in union find
+
+  size_t id = 0;  // For easy identification
+
+  TypeTag tag = TypeTag::TY_VARIABLE;  // Unknown type
 
   // union {
   PtrType as_ptr{};
@@ -84,14 +98,26 @@ struct Type {
   TypeVariable as_variable{};
 };
 
-Type* FindLeader(Type* a);
+//////////////////////////////////////////////////////////////////////
+
+Type* HintedOrNew(Type*);
+Type* MakeTypeVar();
+Type* MakeTypePtr(Type* underlying);
+Type* MakeFunType(std::vector<Type*> param_pack, Type* result_type);
+
+//////////////////////////////////////////////////////////////////////
 
 std::string FormatType(Type& type);
 std::string FormatStruct(Type& type);
 std::string FormatFun(Type& type);
 
+//////////////////////////////////////////////////////////////////////
+
+Type* FindLeader(Type* a);
+
 void Unify(Type* a, Type* b);
 void UnifyUnderlyingTypes(Type* a, Type* b);
 
 //////////////////////////////////////////////////////////////////////
+
 };  // namespace types

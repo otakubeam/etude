@@ -16,6 +16,7 @@ enum class TraitTags {
 
   CALLABLE,
   HAS_FIELD,
+  CONVERTIBLE_TO,
 
   USER_DEFINED,
 };
@@ -23,6 +24,10 @@ enum class TraitTags {
 struct HasFieldTrait {
   std::string_view field_name;
   Type* field_type;
+};
+
+struct ConvertibleToTrait {
+  Type* to_type;
 };
 
 struct UserDefinedTrait {
@@ -34,6 +39,7 @@ struct Trait {
 
   union {
     HasFieldTrait has_field;
+    ConvertibleToTrait convertible_to;;
     UserDefinedTrait* user = nullptr;
   };
 };

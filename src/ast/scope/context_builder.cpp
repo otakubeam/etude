@@ -12,7 +12,7 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
       .sym_type = SymbolType::TYPE,
       .is_complete = node->type_ != nullptr,
       .name = node->GetStructName(),
-      .as_struct = {.type = node->type_},
+      .as_struct = {.type = types::HintedOrNew(node->type_)},
       .declared_at = node->GetLocation(),
   });
 }
@@ -28,7 +28,7 @@ void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
       .sym_type = SymbolType::VAR,
       .is_complete = node->value_ != nullptr,
       .name = node->GetVarName(),
-      .as_varbind = {.type = node->annotation_},
+      .as_varbind = {.type = types::HintedOrNew(node->annotation_)},
       .declared_at = node->GetLocation(),
   });
 }
@@ -42,7 +42,7 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
       .sym_type = SymbolType::FUN,
       .is_complete = node->body_ != nullptr,
       .name = node->GetFunctionName(),
-      .as_fn_sym = {.type = node->type_},
+      .as_fn_sym = {.type = types::HintedOrNew(node->type_)},
       .declared_at = node->GetLocation(),
   });
 
@@ -52,15 +52,14 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
 
     node->layer_ = current_context_;
 
-    // Bring parameters into the scope (one only for them)
+    // Bring parameters into the scope (their very special one)
 
     for (auto param : node->formals_) {
-      fmt::print("Bringing param {} into scope\n", param.GetName());
       current_context_->bindings.InsertSymbol({
           .sym_type = SymbolType::VAR,
           .is_complete = true,
           .name = param.GetName(),
-          .as_varbind = {},
+          .as_varbind = {.type = types::MakeTypeVar()},
           .declared_at = node->GetLocation(),
       });
     }
@@ -116,12 +115,15 @@ void ContextBuilder::VisitAddressof(AddressofExpression* node) {
 
 void ContextBuilder::VisitIf(IfExpression* node) {
   node->condition_->Accept(this);
+  node->true_branch_->Accept(this);
+  node->false_branch_->Accept(this);
 }
 
 void ContextBuilder::VisitNew(NewExpression* node) {
   if (node->allocation_size_) {
     node->allocation_size_->Accept(this);
   }
+  node->type_ = types::MakeTypePtr(node->underlying_);
 }
 
 void ContextBuilder::VisitBlock(BlockExpression* node) {
@@ -141,6 +143,10 @@ void ContextBuilder::VisitBlock(BlockExpression* node) {
 
 void ContextBuilder::VisitFnCall(FnCallExpression* node) {
   node->layer_ = current_context_;
+  node->callable_->Accept(this);
+  for (auto& a : node->arguments_) {
+    a->Accept(this);
+  }
 }
 
 void ContextBuilder::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
@@ -150,15 +156,14 @@ void ContextBuilder::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
 }
 
 void ContextBuilder::VisitFieldAccess(FieldAccessExpression* node) {
-  // I will know the type of struct later, after typecheck
-  //
-  // dynamic_cast<types::StructType*>(node->GetType())->GetName();
-  //
   node->layer_ = current_context_;
+  node->struct_expression_->Accept(this);
 }
 
 void ContextBuilder::VisitVarAccess(VarAccessExpression* node) {
   node->layer_ = current_context_;
+  fmt::print("Node layer {} and {}\n", node->layer_->level,
+             node->name_.GetName());
 }
 
 void ContextBuilder::VisitLiteral(LiteralExpression*) {

@@ -350,6 +350,8 @@ Expression* Parser::ParsePrimary() {
       if (Matches(lex::TokenType::COLON)) {
         // Compound literal, e.g. User:{ field : 123, ... }
         return ParseCompoundInitializer(id);
+      } else if (Matches(lex::TokenType::LEFT_PAREN)) {
+        return ParseFnCallExpression(new VarAccessExpression{id}, id);
       } else {
         return new VarAccessExpression{id};
       }

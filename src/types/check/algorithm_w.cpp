@@ -37,41 +37,30 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
   std::vector<Type*> param_pack;
 
   for (auto f : node->formals_) {
-    param_pack.push_back(new Type{});
+    param_pack.push_back(MakeTypeVar());
 
     auto find = node->layer_->Find(f);
     auto symbol = find->bindings.symbol_map.at(f);
 
-    // Allocate new type variable
-    if (!symbol->as_varbind.type) {
-      symbol->as_varbind.type = new types::Type{};
-    }
-
-    Unify(symbol->as_varbind.type, param_pack.back());
+    Unify(symbol->GetType(), param_pack.back());
   }
 
-  fmt::print("GOOD\n");
+  // Make function type
 
-  auto ty = node->layer_->parent->functions.symbol_map.at(node->GetFunctionName())
-                ->as_fn_sym.type =
-      new Type{.tag = TypeTag::TY_FUN,
-               .as_fun = {.param_pack = std::move(param_pack),
-                          .result_type = new Type{}}};
+  auto fn_name = node->GetFunctionName();
+  auto find = node->layer_->Find(fn_name);
+  auto symbol = find->functions.symbol_map.at(fn_name);
+  auto ty = MakeFunType(std::move(param_pack), MakeTypeVar());
 
+  Unify(ty, symbol->GetType());
 
-  fmt::print("GOOD\n");
+  Unify(Eval(node->body_), ty->as_fun.result_type);
 
-  return_value = Eval(node->body_);
+  // TODO: Generics, Generalize
 
-  Unify(return_value, ty->as_fun.result_type);
+  // Return the type of this declaration ??
 
-  // Generalize
-
-  fmt::print("Fn type {}\n", (void*)ty);
-  fmt::print("Fn type {}\n", types::FormatType(*ty));
-
-  fmt::print("Almost done\n");
-  fmt::print("{}\n", FormatType(*return_value));
+  return_value = ty;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -87,9 +76,9 @@ void AlgorithmW::VisitReturn(ReturnStatement* node) {
 }
 
 void AlgorithmW::VisitAssignment(AssignmentStatement* node) {
-  auto val_ty = Eval(node->value_);
-  auto targ_ty = Eval(node->target_);
-  Unify(val_ty, targ_ty);
+  auto value_ty = Eval(node->value_);
+  auto target_ty = Eval(node->target_);
+  Unify(value_ty, target_ty);
 }
 
 void AlgorithmW::VisitExprStatement(ExprStatement* node) {
@@ -132,29 +121,31 @@ void AlgorithmW::VisitUnary(UnaryExpression* node) {
 
 void AlgorithmW::VisitDeref(DereferenceExpression* node) {
   // An example:
-  // fun use_ptr p = {    <<<--- 1) p :: a
-  //    *p                       2) a ~ *b
-  // };                          3) *p :: b
   //
+  //     fun use_ptr p = {    <<<--- 1) p :: a
+  //        *p                       2) a ~ *b
+  //     };                          3) *p :: b
+  //
+  fmt::print("Inside deref\n");
   auto a = Eval(node->operand_);
-  auto b = new Type{};
-  Unify(a, new Type{.tag = TypeTag::TY_PTR, .as_ptr = {.underlying = b}});
+  fmt::print("Inside deref\n");
+  // fmt::print("{}", (void*)a);
+  auto b = MakeTypeVar();
+  fmt::print("Inside deref\n");
+  Unify(a, MakeTypePtr(b));
+
   return_value = b;
 }
 
 void AlgorithmW::VisitAddressof(AddressofExpression* node) {
-  // Add constraint on operand type?
-  return_value = new Type{
-      .tag = TypeTag::TY_PTR,
-      .as_ptr = {.underlying = Eval(node->operand_)},
-  };
+  return_value = MakeTypePtr(Eval(node->operand_));
 }
 
 void AlgorithmW::VisitIf(IfExpression* node) {
   Unify(Eval(node->condition_), &builtin_bool);
-  auto a = Eval(node->true_branch_);
-  Unify(a, Eval(node->false_branch_));
-  return_value = a;
+  auto true_ty = Eval(node->true_branch_);
+  Unify(true_ty, Eval(node->false_branch_));
+  return_value = true_ty;
 }
 
 void AlgorithmW::VisitNew(NewExpression* node) {
@@ -162,10 +153,7 @@ void AlgorithmW::VisitNew(NewExpression* node) {
     Unify(Eval(node->allocation_size_), &builtin_int);
   }
 
-  return_value = new Type{
-      .tag = TypeTag::TY_PTR,
-      .as_ptr = {.underlying = node->type_},
-  };
+  return_value = node->type_;  // Set in ContextBuilder
 }
 
 void AlgorithmW::VisitBlock(BlockExpression* node) {
@@ -174,9 +162,7 @@ void AlgorithmW::VisitBlock(BlockExpression* node) {
   }
 
   if (node->final_) {
-    fmt::print("Calc final\n");
     return_value = Eval(node->final_);
-    fmt::print("Calced\n");
   } else {
     return_value = &builtin_unit;
   }
@@ -186,29 +172,40 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
   if (!node->fn_name_.empty()) {
     // Handle this case separately
 
-    if (!node->layer_->functions.symbol_map.at(node->fn_name_)
-             ->as_fn_sym.type) {
-      auto n = node->layer_->functions.symbol_map.at(node->fn_name_)
-                   ->as_fn_sym.type = new Type{};
+    auto find = node->layer_->Find(node->fn_name_);
+    auto symbol = find->functions.symbol_map.at(node->fn_name_);
 
-      if (n->as_fun.param_pack.size() != node->arguments_.size()) {
-        throw "Error";
-      };
-      // Eval(node->callable_);  // TODO: Unify?
-      for (size_t i = 0; i < node->arguments_.size(); i++) {
-        Unify(Eval(node->arguments_[i]), n->as_fun.param_pack[i]);
-      }
+    node->layer_->Print();
 
-      // Can I just return  n->as_fun.result_type  ?
-      return_value = n->as_fun.result_type;
+    auto ty = symbol->GetType();
+
+    auto& pack = ty->as_fun.param_pack;
+    auto& args = node->arguments_;
+
+    if (pack.size() != args.size()) {
+      fmt::print("{} {}\n", pack.size(), args.size());
+      throw "Error";
+    };
+
+    // Eval(node->callable_);  // TODO: Constrain?
+
+    for (size_t i = 0; i < args.size(); i++) {
+      // TODO(Generics): specialize here, not unify
+      Unify(Eval(args[i]), pack[i]);
     }
+
+    return_value = symbol->GetType()->as_fun.result_type;
+
+    fmt::print("Ok here\n");
   } else {
-    std::abort();
+    FMT_ASSERT(false, "Why are you here?");
   }
 }
 
 void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   // ? node->layer_->symbol_map.contains(node->struct_name_);
+
+  // Basically check that all fields match
 
   auto& v = node->layer_->symbol_map.at("wef")->as_struct.type->as_struct.first;
 
@@ -226,7 +223,7 @@ void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
   (void)e;
 
   if (!node->type_) {
-    node->type_ = new Type{};
+    node->type_ = MakeTypeVar();
   }
 
   return_value = node->type_;
@@ -240,11 +237,12 @@ void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
 }
 
 void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
+  FMT_ASSERT(node->layer_, "Fail W");
+  fmt::print("{}\n", node->name_.GetName());
+  node->layer_->Print();
   if (auto cxt = node->layer_->Find(node->name_)) {
-    // If we were not provided user annotation
-    node->type_ = cxt->bindings.symbol_map.at(node->name_)->as_varbind.type;
-
-    return_value = node->type_;
+    auto symbol = cxt->bindings.symbol_map.at(node->name_);
+    return_value = symbol->GetType();
     return;
   }
 
@@ -260,8 +258,7 @@ void AlgorithmW::VisitLiteral(LiteralExpression* node) {
       break;
 
     case lex::TokenType::STRING:
-      return_value = new Type{.tag = TypeTag::TY_PTR,
-                              .as_ptr = {.underlying = &builtin_char}};
+      return_value = MakeTypePtr(&builtin_char);
       break;
 
     case lex::TokenType::UNIT:
@@ -281,13 +278,12 @@ void AlgorithmW::VisitLiteral(LiteralExpression* node) {
 }
 
 void AlgorithmW::VisitTypecast(TypecastExpression* node) {
-  FMT_ASSERT(node->type_, "Explicit cast must provide type");
-
   auto e = Eval(node->expr_);
   (void)e;
 
   // TODO: push constraint that e must be convertible to node->type_
 
+  FMT_ASSERT(node->type_, "Explicit cast must provide type");
   return_value = node->type_;
 }
 

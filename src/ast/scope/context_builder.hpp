@@ -38,8 +38,8 @@ class ContextBuilder : public Visitor {
 
  private:
   void PopScopeLayer() {
-    debug_context_leafs_.push_back(current_context_);
-    current_context_->Print();
+    // debug_context_leafs_.push_back(current_context_);
+    // current_context_->Print();
     current_context_ = current_context_->parent;
   }
 
