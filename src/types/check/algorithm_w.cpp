@@ -31,7 +31,47 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
     return;
 
   current_context_ = node->layer_;
+
+  // Build param pack
+
+  std::vector<Type*> param_pack;
+
+  for (auto f : node->formals_) {
+    param_pack.push_back(new Type{});
+
+    auto find = node->layer_->Find(f);
+    auto symbol = find->bindings.symbol_map.at(f);
+
+    // Allocate new type variable
+    if (!symbol->as_varbind.type) {
+      symbol->as_varbind.type = new types::Type{};
+    }
+
+    Unify(symbol->as_varbind.type, param_pack.back());
+  }
+
+  fmt::print("GOOD\n");
+
+  auto ty = node->layer_->parent->functions.symbol_map.at(node->GetFunctionName())
+                ->as_fn_sym.type =
+      new Type{.tag = TypeTag::TY_FUN,
+               .as_fun = {.param_pack = std::move(param_pack),
+                          .result_type = new Type{}}};
+
+
+  fmt::print("GOOD\n");
+
   return_value = Eval(node->body_);
+
+  Unify(return_value, ty->as_fun.result_type);
+
+  // Generalize
+
+  fmt::print("Fn type {}\n", (void*)ty);
+  fmt::print("Fn type {}\n", types::FormatType(*ty));
+
+  fmt::print("Almost done\n");
+  fmt::print("{}\n", FormatType(*return_value));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -66,9 +106,9 @@ void AlgorithmW::VisitComparison(ComparisonExpression* node) {
 }
 
 void AlgorithmW::VisitBinary(BinaryExpression* node) {
-  Unify(Eval(node->left_), &builtin_int);
+  // Unify(, &builtin_int);
   Unify(Eval(node->right_), &builtin_int);
-  return_value = &builtin_int;
+  return_value = Eval(node->left_);
 }
 
 void AlgorithmW::VisitUnary(UnaryExpression* node) {
@@ -134,7 +174,9 @@ void AlgorithmW::VisitBlock(BlockExpression* node) {
   }
 
   if (node->final_) {
+    fmt::print("Calc final\n");
     return_value = Eval(node->final_);
+    fmt::print("Calced\n");
   } else {
     return_value = &builtin_unit;
   }
@@ -142,6 +184,8 @@ void AlgorithmW::VisitBlock(BlockExpression* node) {
 
 void AlgorithmW::VisitFnCall(FnCallExpression* node) {
   if (!node->fn_name_.empty()) {
+    // Handle this case separately
+
     if (!node->layer_->functions.symbol_map.at(node->fn_name_)
              ->as_fn_sym.type) {
       auto n = node->layer_->functions.symbol_map.at(node->fn_name_)
@@ -164,7 +208,7 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
 }
 
 void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
-  // ? node->layer_->symbol_map.contains(node->struct_name_.GetName());
+  // ? node->layer_->symbol_map.contains(node->struct_name_);
 
   auto& v = node->layer_->symbol_map.at("wef")->as_struct.type->as_struct.first;
 
@@ -191,24 +235,14 @@ void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
 
   // WHERE DO I PUT THIS?
   (void)Trait{.tag = TraitTags::HAS_FIELD,
-              .has_field = {.field_name = node->field_name_.GetName(),
+              .has_field = {.field_name = node->field_name_,
                             .field_type = node->type_}};
 }
 
 void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
-  if (node->layer_->bindings.symbol_map.contains(node->name_.GetName())) {
+  if (auto cxt = node->layer_->Find(node->name_)) {
     // If we were not provided user annotation
-    if (!node->layer_->bindings.symbol_map.at(node->name_.GetName())
-             ->as_varbind.type) {
-      //
-      // Allocate new type variable!
-      //
-      node->layer_->bindings.symbol_map.at(node->name_.GetName())
-          ->as_varbind.type = new types::Type{};
-    }
-
-    node->type_ = node->layer_->bindings.symbol_map.at(node->name_.GetName())
-                      ->as_varbind.type;
+    node->type_ = cxt->bindings.symbol_map.at(node->name_)->as_varbind.type;
 
     return_value = node->type_;
     return;

@@ -38,18 +38,18 @@ class ContextBuilder : public Visitor {
 
  private:
   void PopScopeLayer() {
-    // debug_context_leafs_.push_back(current_context_);
+    debug_context_leafs_.push_back(current_context_);
     current_context_->Print();
     current_context_ = current_context_->parent;
   }
 
  private:
   Context& unit_context_;
-  Context* current_context_;
+  Context* current_context_{&unit_context_};
 
  public:
   // For dumping all symbols in the program
-  std::vector<Context*> debug_context_leafs_;
+  std::vector<Context*> debug_context_leafs_{current_context_};
 };
 
 }  // namespace ast::scope

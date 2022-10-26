@@ -34,6 +34,13 @@ struct Context {
 
   Context* parent = nullptr;
 
+  Context* Find(std::string_view name) {
+    if (bindings.symbol_map.contains(name)) {
+      return this;
+    }
+    return parent == nullptr ? nullptr : parent->Find(name);
+  }
+
   Context* MakeNewScopeLayer(lex::Location loc, std::string_view name) {
     return new Context{
         .name = name,

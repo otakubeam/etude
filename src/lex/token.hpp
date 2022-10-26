@@ -22,6 +22,12 @@ struct Token {
 
   Token() = default;
 
+  operator std::string_view() {
+    FMT_ASSERT(type == TokenType::IDENTIFIER,
+               "Requesting the name of non-identifier");
+    return std::get<std::string_view>(sem_info);
+  }
+
   std::string_view GetName() const {
     FMT_ASSERT(type == TokenType::IDENTIFIER,
                "Requesting the name of non-identifier");

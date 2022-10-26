@@ -36,6 +36,8 @@ void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
 //////////////////////////////////////////////////////////////////////
 
 void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
+  node->layer_ = current_context_;
+
   current_context_->functions.InsertSymbol({
       .sym_type = SymbolType::FUN,
       .is_complete = node->body_ != nullptr,
@@ -48,9 +50,12 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
     current_context_ = current_context_->MakeNewScopeLayer(
         node->body_->GetLocation(), node->GetFunctionName());
 
+    node->layer_ = current_context_;
+
     // Bring parameters into the scope (one only for them)
 
     for (auto param : node->formals_) {
+      fmt::print("Bringing param {} into scope\n", param.GetName());
       current_context_->bindings.InsertSymbol({
           .sym_type = SymbolType::VAR,
           .is_complete = true,
