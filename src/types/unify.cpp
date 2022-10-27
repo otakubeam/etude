@@ -1,5 +1,7 @@
 #include <types/type.hpp>
 
+#include <unordered_map>
+
 namespace types {
 
 //////////////////////////////////////////////////////////////////////
@@ -9,6 +11,10 @@ void Unify(Type* a, Type* b) {
 
   auto la = FindLeader(a);
   auto lb = FindLeader(b);
+
+  if (la == lb) {
+    return;
+  }
 
   fmt::print("Their leaders: {} and {}\n", FormatType(*la), FormatType(*lb));
 
@@ -37,6 +43,7 @@ Type* FindLeader(Type* a) {
   FMT_ASSERT(a, "Fail");
 
   if (a->leader) {
+    // fmt::print("Leader of {} is {}\n", a->id, a->leader->id);
     return a->leader = FindLeader(a->leader);
   } else {
     return a;
@@ -104,5 +111,90 @@ void UnifyUnderlyingTypes(Type* a, Type* b) {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+void Generalize(Type* ty) {
+  auto l = FindLeader(ty);
+
+  switch (l->tag) {
+    case TypeTag::TY_PTR:
+      Generalize(l->as_ptr.underlying);
+      break;
+
+    case TypeTag::TY_STRUCT:
+      for (auto& mem : l->as_struct.first) {
+        Generalize(mem.ty);
+      }
+      break;
+
+    case TypeTag::TY_FUN: {
+      auto& pack = l->as_fun.param_pack;
+
+      for (size_t i = 0; i < pack.size(); i++) {
+        Generalize(pack[i]);
+      }
+
+      Generalize(l->as_fun.result_type);
+      break;
+    }
+
+    case TypeTag::TY_VARIABLE:
+      l->tag = TypeTag::TY_PARAMETER;
+      break;
+
+    case TypeTag::TY_PARAMETER:
+      // No-op
+      break;
+
+    case TypeTag::TY_ALIAS:
+    case TypeTag::TY_UNION:
+      std::abort();
+    default:
+      break;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+
+// Ty here is a type schema
+using KnownParams = std::unordered_map<Type*, Type*>;
+Type* Instantinate(Type* ty, KnownParams& map) {
+  auto l = FindLeader(ty);
+
+  switch (l->tag) {
+    case TypeTag::TY_VARIABLE:
+      return l;  // TODO: idk, when should I instantiate in recursive defs?
+
+    case TypeTag::TY_PTR:
+      return MakeTypePtr(Instantinate(l->as_ptr.underlying, map));
+
+    case TypeTag::TY_PARAMETER:
+      if (map.contains(l)) {
+        return map.at(l);
+      }
+      return map[l] = MakeTypeVar();
+
+    case TypeTag::TY_FUN: {
+      std::vector<Type*> args;
+
+      auto& pack = l->as_fun.param_pack;
+
+      for (size_t i = 0; i < pack.size(); i++) {
+        args.push_back(Instantinate(pack[i], map));
+      }
+
+      return MakeFunType(std::move(args),
+                         Instantinate(l->as_fun.result_type, map));
+    }
+
+    case TypeTag::TY_ALIAS:
+    case TypeTag::TY_STRUCT:
+    case TypeTag::TY_UNION:
+      std::abort();
+      break;
+
+    default:
+      return l;  // Int, Bool, Unit, etc
+  }
+}
 
 };  // namespace types

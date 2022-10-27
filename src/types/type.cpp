@@ -37,4 +37,5 @@ Type* MakeFunType(std::vector<Type*> param_pack, Type* result_type) {
 
 //////////////////////////////////////////////////////////////////////
 
+
 };  // namespace types

@@ -4,6 +4,7 @@
 
 #include <fmt/format.h>
 
+#include <unordered_map>
 #include <string_view>
 #include <vector>
 #include <string>
@@ -28,7 +29,7 @@ enum class TypeTag {
   TY_STRUCT,
 
   TY_FUN,
-  TY_ALIAS,  // Idk how they are related to inference
+  TY_ALIAS,  // rename to ty_cons
 
   TY_VARIABLE,
   TY_PARAMETER,  // aplha, beta, etc... ?
@@ -117,6 +118,11 @@ Type* FindLeader(Type* a);
 
 void Unify(Type* a, Type* b);
 void UnifyUnderlyingTypes(Type* a, Type* b);
+
+using KnownParams = std::unordered_map<Type*, Type*>;
+Type* Instantinate(Type* ty, KnownParams& map);
+
+void Generalize(Type* ty);
 
 //////////////////////////////////////////////////////////////////////
 

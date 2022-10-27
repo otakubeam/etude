@@ -85,6 +85,8 @@ std::string FormatType(Type& type) {
       return fmt::format("${}", type.id);
 
     case TypeTag::TY_PARAMETER:
+      return fmt::format("G{}", type.id);
+
     default:
       std::abort();
   }

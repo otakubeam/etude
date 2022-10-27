@@ -112,6 +112,8 @@ class VarDeclStatement : public Statement {
   types::Type* annotation_ = nullptr;
 
   Expression* value_;
+
+  ast::scope::Context* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////

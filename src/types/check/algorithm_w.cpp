@@ -15,8 +15,10 @@ void AlgorithmW::VisitTypeDecl(TypeDeclStatement*) {
 //////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitVarDecl(VarDeclStatement* node) {
-  Unify(node->annotation_, Eval(node->value_));
-  // return_value = &builtin_never;
+  auto symbol = node->layer_->bindings.symbol_map.at(node->GetVarName());
+
+  auto ty = symbol->GetType();
+  Unify(ty, Eval(node->value_));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -50,9 +52,11 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
 
   Unify(Eval(node->body_), ty->as_fun.result_type);
 
-  // TODO: Generics, Generalize
+  // Top-level: Generalize
 
-  // Return the type of this declaration ??
+  if (node->layer_->level == 1) {
+    Generalize(ty);
+  }
 
   return_value = ty;
 }
@@ -189,8 +193,17 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
 
     auto ty = symbol->GetType();
 
-    deferred_checks_.push(
-        {.tag = TraitTags::CALLABLE, .bound = ty, .none = {},});
+    // Get new fresh variables for all type parameters
+
+    KnownParams map = {};
+    ty = Instantinate(ty, map);
+    fmt::print("Instantiated type: {}\n", FormatType(*ty));
+
+    deferred_checks_.push({
+        .tag = TraitTags::CALLABLE,
+        .bound = ty,
+        .none = {},
+    });
 
     auto& pack = ty->as_fun.param_pack;
     auto& args = node->arguments_;
@@ -200,7 +213,6 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
     };
 
     for (size_t i = 0; i < args.size(); i++) {
-      // TODO(Generics): specialize here, not unify
       Unify(Eval(args[i]), pack[i]);
     }
 

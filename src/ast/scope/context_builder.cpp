@@ -24,6 +24,8 @@ void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
     node->value_->Accept(this);
   }
 
+  node->layer_ = current_context_;
+
   current_context_->bindings.InsertSymbol({
       .sym_type = SymbolType::VAR,
       .is_complete = node->value_ != nullptr,

@@ -28,8 +28,6 @@ TEST_CASE("infer:simple", "[infer]") {
   for (auto r : result) {
     r->Accept(&infer);
   }
-
-  global_context.Print();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -48,15 +46,11 @@ TEST_CASE("infer:pointer", "[infer]") {
     r->Accept(&ctx_builder);
   }
 
-  global_context.Print();
-
   types::check::AlgorithmW infer;
 
   for (auto r : result) {
     r->Accept(&infer);
   }
-
-  global_context.Print();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -80,7 +74,6 @@ TEST_CASE("infer:pointer-II", "[infer]") {
   for (auto r : result) {
     r->Accept(&infer);
   }
-  global_context.Print();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -99,22 +92,63 @@ TEST_CASE("infer:recursive:simple", "[infer]") {
     r->Accept(&ctx_builder);
   }
 
-  global_context.Print();
+  types::check::AlgorithmW infer;
+
+  for (auto r : result) {
+    r->Accept(&infer);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("infer:poly:id", "[infer]") {
+  char stream[] =
+      "    fun id x = x;      "
+      "                       "
+      "    fun main = {       "
+      "        id(3);         "
+      "        id(true);      "
+      "    };                 ";
+  std::stringstream source{stream};
+  lex::Lexer l{source};
+  Parser p{l};
+  auto result = p.ParseUnit();
+
+  ast::scope::Context global_context;
+  ast::scope::ContextBuilder ctx_builder{global_context};
+
+  for (auto r : result) {
+    r->Accept(&ctx_builder);
+  }
 
   types::check::AlgorithmW infer;
 
   for (auto r : result) {
     r->Accept(&infer);
   }
-  global_context.Print();
 }
 
 //////////////////////////////////////////////////////////////////////
 
-TEST_CASE("infer:recursive:simple", "[infer]") {
+TEST_CASE("infer:poly:swap", "[infer]") {
   char stream[] =
-      ""
-      "";
+      "    fun swap a b = {       "
+      "       var t = *a;         "
+      "       *a = *b;            "
+      "       *b = t;             "
+      "    };                     "
+      "                           "
+      "    fun main = {           "
+      "        var a = 3;         "
+      "        var b = 4;         "
+      "                           "
+      "        swap(&a, &b);      "
+      "                           "
+      "        var t = true;      "
+      "        var f = false;     "
+      "                           "
+      "        swap(&t, &f);      "
+      "    };                     ";
   std::stringstream source{stream};
   lex::Lexer l{source};
   Parser p{l};
@@ -134,6 +168,7 @@ TEST_CASE("infer:recursive:simple", "[infer]") {
   for (auto r : result) {
     r->Accept(&infer);
   }
+
   global_context.Print();
 }
 
