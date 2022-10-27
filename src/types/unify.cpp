@@ -77,7 +77,21 @@ void UnifyUnderlyingTypes(Type* a, Type* b) {
       break;
     }
 
-    case TypeTag::TY_FUN:
+    case TypeTag::TY_FUN: {
+      auto& pack = a->as_fun.param_pack;
+      auto& pack2 = b->as_fun.param_pack;
+      if (pack.size() != pack2.size()) {
+        throw "Function unification size mismatch";
+      }
+
+      for (size_t i = 0; i < pack.size(); i++) {
+        Unify(pack[i], pack2[i]);
+      }
+
+      Unify(a->as_fun.result_type, b->as_fun.result_type);
+      break;
+    }
+
     case TypeTag::TY_ALIAS:
     case TypeTag::TY_VARIABLE:
     case TypeTag::TY_PARAMETER:

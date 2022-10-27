@@ -40,9 +40,7 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   void VisitCompoundInitalizer(CompoundInitializerExpr* node) ;
 
  private:
-  std::queue<int> deferred_checks_;
-
-  ast::scope::Context* current_context_;
+  std::queue<Trait> deferred_checks_;
 };
 
 }  // namespace types::check

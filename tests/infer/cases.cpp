@@ -86,7 +86,35 @@ TEST_CASE("infer:pointer-II", "[infer]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("infer:recursive:simple", "[infer]") {
-  char stream[] = "fun fib n = { if n == 0 fib(n - 1) else {  1 } };";
+  char stream[] = "fun fib n = if n == 0 1 else fib(n - 1) + fib(n - 2);";
+  std::stringstream source{stream};
+  lex::Lexer l{source};
+  Parser p{l};
+  auto result = p.ParseUnit();
+
+  ast::scope::Context global_context;
+  ast::scope::ContextBuilder ctx_builder{global_context};
+
+  for (auto r : result) {
+    r->Accept(&ctx_builder);
+  }
+
+  global_context.Print();
+
+  types::check::AlgorithmW infer;
+
+  for (auto r : result) {
+    r->Accept(&infer);
+  }
+  global_context.Print();
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("infer:recursive:simple", "[infer]") {
+  char stream[] =
+      ""
+      "";
   std::stringstream source{stream};
   lex::Lexer l{source};
   Parser p{l};

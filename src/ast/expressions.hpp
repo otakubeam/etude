@@ -260,7 +260,7 @@ class CompoundInitializerExpr : public Expression {
 
   types::Type* type_ = nullptr;
 
-  ast::scope::ScopeLayer* layer_ = nullptr;
+  ast::scope::Context* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////

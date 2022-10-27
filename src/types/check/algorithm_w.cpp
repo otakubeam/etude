@@ -15,22 +15,16 @@ void AlgorithmW::VisitTypeDecl(TypeDeclStatement*) {
 //////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitVarDecl(VarDeclStatement* node) {
-  return_value = Eval(node->value_);
-
-  if (node->annotation_) {
-    Unify(return_value, node->annotation_);
-  } else {
-    node->annotation_ = return_value;
-  }
+  Unify(node->annotation_, Eval(node->value_));
+  // return_value = &builtin_never;
 }
 
 //////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
-  if (!node->body_)
+  if (!node->body_) {
     return;
-
-  current_context_ = node->layer_;
+  }
 
   // Build param pack
 
@@ -89,13 +83,34 @@ void AlgorithmW::VisitExprStatement(ExprStatement* node) {
 //////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitComparison(ComparisonExpression* node) {
-  Unify(Eval(node->left_), &builtin_int);
-  Unify(Eval(node->right_), &builtin_int);
+  auto e = Eval(node->left_);
+  auto e2 = Eval(node->right_);
+
+  switch (node->operator_.type) {
+    case lex::TokenType::EQUALS:
+      deferred_checks_.push({.tag = TraitTags::EQ, .bound = e, .none = {}});
+      break;
+
+    case lex::TokenType::LT:
+    case lex::TokenType::GT:
+      deferred_checks_.push({.tag = TraitTags::ORD, .bound = e, .none = {}});
+      break;
+
+    case lex::TokenType::LE:
+    case lex::TokenType::GE:
+      deferred_checks_.push({.tag = TraitTags::EQ, .bound = e, .none = {}});
+      deferred_checks_.push({.tag = TraitTags::ORD, .bound = e, .none = {}});
+      break;
+
+    default:
+      std::abort();
+  }
+
+  Unify(e, e2);  // Do not implicitly convert types
   return_value = &builtin_bool;
 }
 
 void AlgorithmW::VisitBinary(BinaryExpression* node) {
-  // Unify(, &builtin_int);
   Unify(Eval(node->right_), &builtin_int);
   return_value = Eval(node->left_);
 }
@@ -126,14 +141,9 @@ void AlgorithmW::VisitDeref(DereferenceExpression* node) {
   //        *p                       2) a ~ *b
   //     };                          3) *p :: b
   //
-  fmt::print("Inside deref\n");
   auto a = Eval(node->operand_);
-  fmt::print("Inside deref\n");
-  // fmt::print("{}", (void*)a);
   auto b = MakeTypeVar();
-  fmt::print("Inside deref\n");
   Unify(a, MakeTypePtr(b));
-
   return_value = b;
 }
 
@@ -153,7 +163,7 @@ void AlgorithmW::VisitNew(NewExpression* node) {
     Unify(Eval(node->allocation_size_), &builtin_int);
   }
 
-  return_value = node->type_;  // Set in ContextBuilder
+  return_value = node->type_;
 }
 
 void AlgorithmW::VisitBlock(BlockExpression* node) {
@@ -179,15 +189,15 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
 
     auto ty = symbol->GetType();
 
+    deferred_checks_.push(
+        {.tag = TraitTags::CALLABLE, .bound = ty, .none = {},});
+
     auto& pack = ty->as_fun.param_pack;
     auto& args = node->arguments_;
 
     if (pack.size() != args.size()) {
-      fmt::print("{} {}\n", pack.size(), args.size());
-      throw "Error";
+      throw "Function call size mismatch";
     };
-
-    // Eval(node->callable_);  // TODO: Constrain?
 
     for (size_t i = 0; i < args.size(); i++) {
       // TODO(Generics): specialize here, not unify
@@ -196,50 +206,40 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
 
     return_value = symbol->GetType()->as_fun.result_type;
 
-    fmt::print("Ok here\n");
   } else {
     FMT_ASSERT(false, "Why are you here?");
   }
 }
 
 void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
-  // ? node->layer_->symbol_map.contains(node->struct_name_);
+  auto find = node->layer_->Find(node->struct_name_);
+  auto symbol = find->type_tags.symbol_map.at(node->struct_name_);
+  auto ty = symbol->GetType();
 
-  // Basically check that all fields match
+  auto& members = ty->as_struct.first;
+  auto& values = node->values_;
 
-  auto& v = node->layer_->symbol_map.at("wef")->as_struct.type->as_struct.first;
-
-  if (v.size() != node->values_.size()) {
-    throw;
+  if (members.size() != values.size()) {
+    throw "Struct construction size mismatch";
   }
 
-  for (size_t i = 0; i < v.size(); i++) {
-    Unify(Eval(node->values_[i]), v[i].ty);
+  for (size_t i = 0; i < values.size(); i++) {
+    Unify(Eval(values[i]), members[i].ty);
   }
 }
 
 void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
   auto e = Eval(node->struct_expression_);
-  (void)e;
 
-  if (!node->type_) {
-    node->type_ = MakeTypeVar();
-  }
+  return_value = node->type_ = MakeTypeVar();
 
-  return_value = node->type_;
-
-  // Constraints are registered for post-resolution
-
-  // WHERE DO I PUT THIS?
-  (void)Trait{.tag = TraitTags::HAS_FIELD,
-              .has_field = {.field_name = node->field_name_,
-                            .field_type = node->type_}};
+  deferred_checks_.push(Trait{.tag = TraitTags::HAS_FIELD,
+                              .bound = FindLeader(e),
+                              .has_field = {.field_name = node->field_name_,
+                                            .field_type = node->type_}});
 }
 
 void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
-  FMT_ASSERT(node->layer_, "Fail W");
-  fmt::print("{}\n", node->name_.GetName());
-  node->layer_->Print();
   if (auto cxt = node->layer_->Find(node->name_)) {
     auto symbol = cxt->bindings.symbol_map.at(node->name_);
     return_value = symbol->GetType();
@@ -279,11 +279,12 @@ void AlgorithmW::VisitLiteral(LiteralExpression* node) {
 
 void AlgorithmW::VisitTypecast(TypecastExpression* node) {
   auto e = Eval(node->expr_);
-  (void)e;
-
-  // TODO: push constraint that e must be convertible to node->type_
 
   FMT_ASSERT(node->type_, "Explicit cast must provide type");
+
+  deferred_checks_.push(Trait{.tag = TraitTags::CONVERTIBLE_TO,
+                              .bound = FindLeader(e),
+                              .convertible_to = {.to_type = node->type_}});
   return_value = node->type_;
 }
 

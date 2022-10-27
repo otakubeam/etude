@@ -172,6 +172,8 @@ std::optional<TokenType> Lexer::MatchOperator() {
       return TokenType::DOT;
     case EOF:
       return TokenType::TOKEN_EOF;
+    case '_':
+      return TokenType::UNDERSCORE;
     default:
       return std::nullopt;
   }

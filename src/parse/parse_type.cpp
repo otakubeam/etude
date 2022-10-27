@@ -91,8 +91,7 @@ types::Type* Parser::ParsePrimitiveType() {
   lexer_.Advance();
   switch (tok.type) {
     case lex::TokenType::UNDERSCORE:
-      // Here I probably want to allocate a new type variable
-      return nullptr;
+      return types::MakeTypeVar();;
       break;
 
     case lex::TokenType::TY_INT:

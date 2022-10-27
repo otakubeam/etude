@@ -59,6 +59,7 @@ struct Symbol {
       case SymbolType::TYPE:
         return types::FindLeader(as_struct.type);
       case SymbolType::STATIC:
+      default:
         std::abort();
     }
   }
