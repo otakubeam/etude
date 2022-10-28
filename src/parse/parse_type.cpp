@@ -89,30 +89,40 @@ types::Type* Parser::ParsePrimitiveType() {
 
   auto tok = lexer_.Peek();
   lexer_.Advance();
+
   switch (tok.type) {
+    case lex::TokenType::IDENTIFIER: {
+      std::vector<types::Type*> types;
+      auto id = lexer_.GetPreviousToken();
+
+      if (Matches(lex::TokenType::LEFT_PAREN)) {
+        while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
+          types.push_back(ParseType());
+          Matches(lex::TokenType::COMMA);
+        }
+      }
+
+      return new types::Type{
+          .tag = types::TypeTag::TY_APP,
+          .as_tyapp = {.name = id, .param_pack = std::move(types)}};
+    }
+
     case lex::TokenType::UNDERSCORE:
-      return types::MakeTypeVar();;
-      break;
+      return types::MakeTypeVar();
 
     case lex::TokenType::TY_INT:
       return &types::builtin_int;
-      break;
 
     case lex::TokenType::TY_BOOL:
       return &types::builtin_bool;
-      break;
 
     case lex::TokenType::TY_STRING:
       std::abort();
-      break;
 
     case lex::TokenType::TY_UNIT:
       return &types::builtin_unit;
-      break;
 
     default:
-      return new types::Type{.tag = types::TypeTag::TY_ALIAS,
-                             .as_alias = {.name = tok.GetName()}};
-      // throw parse::errors::ParseTypeError{FormatLocation()};
+      throw parse::errors::ParseTypeError{FormatLocation()};
   }
 }

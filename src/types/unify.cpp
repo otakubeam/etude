@@ -43,7 +43,6 @@ Type* FindLeader(Type* a) {
   FMT_ASSERT(a, "Fail");
 
   if (a->leader) {
-    // fmt::print("Leader of {} is {}\n", a->id, a->leader->id);
     return a->leader = FindLeader(a->leader);
   } else {
     return a;

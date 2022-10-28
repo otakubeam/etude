@@ -8,11 +8,10 @@ struct Type;
 
 enum class TraitTags {
   EQ,
-  ORD,
+  ORD, // ORD a => EQ a
 
-  NUM,  // + and *
-
-  DEREF,
+  ADD,  // only + : for pointers and numeric
+  NUM,  // ADD a => NUM a
 
   CALLABLE,
   HAS_FIELD,

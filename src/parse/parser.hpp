@@ -25,7 +25,7 @@ class Parser {
 
   Statement* ParseDeclaration();
 
-  TypeDeclStatement* ParseStructDeclStatement(types::Type* hint);
+  TypeDeclStatement* ParseTypeDeclStatement(types::Type* hint);
   FunDeclStatement* ParseFunDeclStatement(types::Type* hint);
   VarDeclStatement* ParseVarDeclStatement(types::Type* hint);
 

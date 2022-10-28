@@ -75,7 +75,6 @@ class TypeDeclStatement : public Statement {
 
   lex::Token name_;
 
-  // In the future...
   std::vector<lex::Token> parameters_;
 
   types::Type* type_;

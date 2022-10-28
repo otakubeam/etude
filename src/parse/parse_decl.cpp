@@ -20,7 +20,7 @@ Statement* Parser::ParseDeclaration() {
     hint = ParseFunctionType();
   }
 
-  if (auto struct_declaration = ParseStructDeclStatement(hint)) {
+  if (auto struct_declaration = ParseTypeDeclStatement(hint)) {
     return struct_declaration;
   }
 
@@ -66,7 +66,7 @@ FunDeclStatement* Parser::ParseFunDeclStatement(types::Type* hint) {
 
 ///////////////////////////////////////////////////////////////////
 
-TypeDeclStatement* Parser::ParseStructDeclStatement(types::Type* hint) {
+TypeDeclStatement* Parser::ParseTypeDeclStatement(types::Type* hint) {
   (void)hint;
   if (!Matches(lex::TokenType::TYPE)) {
     return nullptr;

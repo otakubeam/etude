@@ -2,6 +2,8 @@
 
 #include <types/trait.hpp>
 
+#include <lex/token.hpp>
+
 #include <fmt/format.h>
 
 #include <unordered_map>
@@ -29,10 +31,13 @@ enum class TypeTag {
   TY_STRUCT,
 
   TY_FUN,
-  TY_ALIAS,  // rename to ty_cons
+
+  TY_APP,   // Vec(Int), Maybe(String) -- concrete types
+  TY_CONS,  // `Vec` in `type Vec t = { data: *t, ... }`;
+  TY_KIND,  // *
 
   TY_VARIABLE,
-  TY_PARAMETER,  // aplha, beta, etc... ?
+  TY_PARAMETER,  // Generalized type parameters
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -62,9 +67,24 @@ struct FunType {
   Type* result_type;
 };
 
-struct AliasType {
-  std::string_view name;
-  Type* underlying = nullptr;
+// This is like a function symbol
+
+struct TyConsType {
+  lex::Token name;
+  std::vector<lex::Token> param_pack;
+
+  Type* body;
+  Type* kind;
+};
+
+// And this is like a function call
+
+struct TyAppType {
+  lex::Token name;
+  std::vector<Type*> param_pack;
+
+  // Needed?
+  // Type* result = nullptr;
 };
 
 struct TypeVariable {
@@ -94,7 +114,8 @@ struct Type {
   PtrType as_ptr{};
   FunType as_fun{};
   StructTy as_struct{};
-  AliasType as_alias{};
+  TyAppType as_tyapp{};
+  TyConsType as_tycons{};
   CoproductType as_copro{};
   TypeVariable as_variable{};
 };
@@ -119,10 +140,10 @@ Type* FindLeader(Type* a);
 void Unify(Type* a, Type* b);
 void UnifyUnderlyingTypes(Type* a, Type* b);
 
+void Generalize(Type* ty);
+
 using KnownParams = std::unordered_map<Type*, Type*>;
 Type* Instantinate(Type* ty, KnownParams& map);
-
-void Generalize(Type* ty);
 
 //////////////////////////////////////////////////////////////////////
 
