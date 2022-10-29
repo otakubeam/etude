@@ -1,0 +1,35 @@
+export {
+
+  | *Vec(a) -> a -> Unit
+  fun appendVec vector element;
+
+
+  | Int -> Vec(a)
+  fun makeVec initial_capacity;
+
+
+};
+
+type Vec T = struct {
+   data: *T,
+   size: Int,
+   capacity: Int,
+};
+
+| Int -> _
+fun makeVec capInit = {
+   0 ~> Vec(_)
+};
+
+| *Vec(_) -> _ -> _
+fun appendVec v e = {
+   v.data[v.size] = e;
+   v.size = v.size + 1;
+};
+
+fun main = {
+   var v = makeVec(7);
+   appendVec(&v, 7);
+   v.appendVec(7);
+   v.vec::append(7);
+};

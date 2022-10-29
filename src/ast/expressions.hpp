@@ -265,7 +265,7 @@ class CompoundInitializerExpr : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
-class FieldAccessExpression : public Expression {
+class FieldAccessExpression : public LvalueExpression {
  public:
   FieldAccessExpression(lex::Token field_name, Expression* lvalue)
       : struct_expression_{lvalue}, field_name_{field_name} {

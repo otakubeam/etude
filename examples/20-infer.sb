@@ -1,0 +1,26 @@
+type Vec T = struct {
+   size: Int,
+   data: *T,
+};
+
+of Vec(Int) -> _
+fun takeVecInt v = {};
+
+of Vec(_) -> _ -> _
+fun appendVec v e = {
+   v.data[v.size] = e;
+   v.size = v.size + 1;
+};
+
+fun main = {
+   type R = Vec(_);
+   var t = 1 ~> R;
+   takeVecInt(t);
+
+   # t.takeVecInt() <=> takeVecInt(&t)
+
+   # t.foo() is UFCS and not calling the function field of t
+   # because that field would have no arguments and, consequently,
+   # would be impossible to write as a function, lol
+
+};

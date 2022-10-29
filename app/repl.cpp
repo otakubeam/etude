@@ -1,4 +1,5 @@
 #include <ast/scope/context_builder.hpp>
+#include <types/check/algorithm_w.hpp>
 
 #include <parse/parse_error.hpp>
 #include <parse/parser.hpp>
@@ -25,6 +26,14 @@ int main(int, char** argv) {
 
   for (auto r : result) {
     r->Accept(&ctx_builder);
+  }
+
+  global_context.Print();
+
+  types::check::AlgorithmW infer;
+
+  for (auto r : result) {
+    r->Accept(&infer);
   }
 
   global_context.Print();

@@ -348,7 +348,7 @@ Expression* Parser::ParsePrimary() {
       Consume(lex::TokenType::IDENTIFIER);
       auto id = lexer_.GetPreviousToken();
       if (Matches(lex::TokenType::COLON)) {
-        // Compound literal, e.g. User:{ field : 123, ... }
+        // Compound literal, e.g. _:{ field : 123, ... }
         return ParseCompoundInitializer(id);
       } else if (Matches(lex::TokenType::LEFT_PAREN)) {
         return ParseFnCallExpression(new VarAccessExpression{id}, id);

@@ -187,6 +187,12 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
     // Handle this case separately
 
     auto find = node->layer_->Find(node->fn_name_);
+    if (!find) {
+      node->layer_->Print();
+      throw std::runtime_error{
+          fmt::format("Could not find function {} at loc {}", node->fn_name_,
+                      node->GetLocation().Format())};
+    }
     auto symbol = find->bindings.symbol_map.at(node->fn_name_);
 
     node->layer_->Print();
@@ -243,6 +249,15 @@ void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
 void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
   auto e = Eval(node->struct_expression_);
 
+  if (e->tag == TypeTag::TY_STRUCT) {
+    for (auto& f : e->as_struct.first) {
+      if (f.field == node->field_name_) {
+        return_value = node->type_ = f.ty;
+        return;
+      }
+    }
+  }
+
   return_value = node->type_ = MakeTypeVar();
 
   deferred_checks_.push(Trait{.tag = TraitTags::HAS_FIELD,
@@ -256,6 +271,8 @@ void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
     auto symbol = cxt->bindings.symbol_map.at(node->name_);
     return_value = symbol->GetType();
     return;
+  } else {
+    throw fmt::format("Could not find {}", node->name_.GetName());
   }
 
   // TODO: also handle functions
