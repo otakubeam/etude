@@ -71,10 +71,10 @@ struct FunType {
 
 struct TyConsType {
   lex::Token name;
-  std::vector<lex::Token> param_pack;
+  std::vector<lex::Token> param_pack{};
 
-  Type* body;
-  Type* kind;
+  Type* body = nullptr;
+  Type* kind = nullptr;
 };
 
 // And this is like a function call
@@ -97,6 +97,8 @@ extern Type builtin_int;
 extern Type builtin_bool;
 extern Type builtin_char;
 extern Type builtin_unit;
+
+extern Type builtin_kind;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -124,8 +126,13 @@ struct Type {
 
 Type* HintedOrNew(Type*);
 Type* MakeTypeVar();
+
 Type* MakeTypePtr(Type* underlying);
 Type* MakeFunType(std::vector<Type*> param_pack, Type* result_type);
+Type* MakeTyApp(lex::Token name, std::vector<Type*> param_pack);
+Type* MakeStructType(std::vector<Member> fields);
+
+auto MakeKindParamPack(size_t size) -> std::vector<Type*>;
 
 //////////////////////////////////////////////////////////////////////
 

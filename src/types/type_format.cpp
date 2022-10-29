@@ -19,6 +19,21 @@ std::string FormatStruct(Type& type) {
 
 //////////////////////////////////////////////////////////////////////
 
+std::string FormatApp(Type& type) {
+  std::string result;
+  auto insert = std::back_inserter(result);
+  fmt::format_to(insert, "{}( ", type.as_tyapp.name.GetName());
+
+  for (auto& a : type.as_tyapp.param_pack) {
+    fmt::format_to(insert, "{}, ", FormatType(*a));
+  }
+
+  fmt::format_to(insert, ")");
+  return result;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 std::string FormatFun(Type& type) {
   std::string result;
   auto insert = std::back_inserter(result);
@@ -46,11 +61,10 @@ std::string FormatUnion(Type&) {
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatAlias(Type& type) {
-  return fmt::format("alias {} of {}", std::string(type.as_alias.name),
-                     type.as_alias.underlying
-                         ? FormatType(*type.as_alias.underlying)
-                         : "<Unknown>");
+std::string FormatCons(Type& type) {
+  return fmt::format(
+      "Cons {} of {}", type.as_tycons.name.GetName(),
+      type.as_tycons.kind ? FormatType(*type.as_tycons.kind) : "<kind>");
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -61,6 +75,8 @@ std::string FormatType(Type& type) {
   }
 
   switch (type.tag) {
+    case TypeTag::TY_KIND:
+      return fmt::format("*");
     case TypeTag::TY_INT:
       return fmt::format("Int");
     case TypeTag::TY_BOOL:
@@ -78,8 +94,10 @@ std::string FormatType(Type& type) {
       return FormatStruct(type);
     case TypeTag::TY_FUN:
       return FormatFun(type);
-    case TypeTag::TY_ALIAS:
-      return FormatAlias(type);
+    case TypeTag::TY_CONS:
+      return FormatCons(type);
+    case TypeTag::TY_APP:
+      return FormatApp(type);
 
     case TypeTag::TY_VARIABLE:
       return fmt::format("${}", type.id);

@@ -173,3 +173,44 @@ TEST_CASE("infer:poly:swap", "[infer]") {
 }
 
 //////////////////////////////////////////////////////////////////////
+
+TEST_CASE("infer:type", "[infer]") {
+  char stream[] =
+      "    type Vec T = struct {       \n"
+      "       size: Int,               \n"
+      "       data: *T,                \n"
+      "    };                          \n"
+      "                                \n"
+      "    of Vec(Int) -> Unit         \n"
+      "    fun takeVecInt v = {};      \n"
+      "                                \n"
+      "    fun main = {                \n"
+      "       type R = Vec(_);         \n"
+      "       var t = 1 ~> R;          \n"
+      "       takeVecInt(t);           \n"
+      "    };                          \n"
+      "                                \n";
+  std::stringstream source{stream};
+  lex::Lexer l{source};
+  Parser p{l};
+  auto result = p.ParseUnit();
+
+  ast::scope::Context global_context;
+  ast::scope::ContextBuilder ctx_builder{global_context};
+
+  for (auto r : result) {
+    r->Accept(&ctx_builder);
+  }
+
+  global_context.Print();
+
+  types::check::AlgorithmW infer;
+
+  for (auto r : result) {
+    r->Accept(&infer);
+  }
+
+  global_context.Print();
+}
+
+//////////////////////////////////////////////////////////////////////

@@ -8,13 +8,47 @@ namespace ast::scope {
 //////////////////////////////////////////////////////////////////////
 
 void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
-  current_context_->type_tags.InsertSymbol(Symbol{
+  if (!node->body_) {
+    std::abort();
+  }
+
+  current_context_ = current_context_->MakeNewScopeLayer(node->GetLocation(),
+                                                         node->GetStructName());
+
+  // Replicate * `size` times
+
+  auto kind_args = types::MakeKindParamPack(node->parameters_.size());
+  auto kind = types::MakeFunType(std::move(kind_args), &types::builtin_kind);
+
+  auto ty = new types::Type{.tag = types::TypeTag::TY_CONS,
+                            .as_tycons = types::TyConsType{
+                                .name = node->name_,
+                                .param_pack = node->parameters_,
+                                .body = node->body_,
+                                .kind = kind,
+                            }};
+
+  // Accessible from parent
+
+  current_context_->parent->bindings.InsertSymbol(Symbol{
       .sym_type = SymbolType::TYPE,
-      .is_complete = node->type_ != nullptr,
+      .is_complete = node->body_ != nullptr,
       .name = node->GetStructName(),
-      .as_struct = {.type = types::HintedOrNew(node->type_)},
+      // .as_type = {.kind = kind, .body = ty, .layer = current_context_},
+      .as_type = {.type = ty},
       .declared_at = node->GetLocation(),
   });
+
+  for (auto param : node->parameters_) {
+    current_context_->bindings.InsertSymbol({
+        .sym_type = SymbolType::TYPE,
+        .name = param.GetName(),
+        .as_type = {.type = &types::builtin_kind},  // Why?
+        .declared_at = param.location,
+    });
+  }
+
+  PopScopeLayer();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -26,11 +60,16 @@ void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
 
   node->layer_ = current_context_;
 
+  // e.g. `of Vec(Vec(Int)) static matrix = ...`
+
+  auto inst_ty =
+      ConstructType(types::HintedOrNew(node->annotation_), current_context_);
+
   current_context_->bindings.InsertSymbol({
       .sym_type = SymbolType::VAR,
       .is_complete = node->value_ != nullptr,
       .name = node->GetVarName(),
-      .as_varbind = {.type = types::HintedOrNew(node->annotation_)},
+      .as_varbind = {.type = inst_ty},
       .declared_at = node->GetLocation(),
   });
 }
@@ -40,11 +79,17 @@ void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
 void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
   node->layer_ = current_context_;
 
-  current_context_->functions.InsertSymbol({
+  // Handle cases where pars of the signature are known
+  // e.g. Vec(_) -> Maybe(_)
+
+  auto inst_fun_ty =
+      ConstructType(types::HintedOrNew(node->type_), current_context_);
+
+  current_context_->bindings.InsertSymbol({
       .sym_type = SymbolType::FUN,
       .is_complete = node->body_ != nullptr,
       .name = node->GetFunctionName(),
-      .as_fn_sym = {.type = types::HintedOrNew(node->type_)},
+      .as_fn_sym = {.type = inst_fun_ty},
       .declared_at = node->GetLocation(),
   });
 
@@ -62,7 +107,7 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
           .is_complete = true,
           .name = param.GetName(),
           .as_varbind = {.type = types::MakeTypeVar()},
-          .declared_at = node->GetLocation(),
+          .declared_at = param.location,
       });
     }
 
@@ -125,7 +170,11 @@ void ContextBuilder::VisitNew(NewExpression* node) {
   if (node->allocation_size_) {
     node->allocation_size_->Accept(this);
   }
-  node->type_ = types::MakeTypePtr(node->underlying_);
+
+  // Handle stuff like `new [10] Vec(_)`
+  auto inst = ConstructType(node->underlying_, current_context_);
+
+  node->type_ = types::MakeTypePtr(inst);
 }
 
 void ContextBuilder::VisitBlock(BlockExpression* node) {
@@ -164,8 +213,6 @@ void ContextBuilder::VisitFieldAccess(FieldAccessExpression* node) {
 
 void ContextBuilder::VisitVarAccess(VarAccessExpression* node) {
   node->layer_ = current_context_;
-  fmt::print("Node layer {} and {}\n", node->layer_->level,
-             node->name_.GetName());
 }
 
 void ContextBuilder::VisitLiteral(LiteralExpression*) {
@@ -174,6 +221,9 @@ void ContextBuilder::VisitLiteral(LiteralExpression*) {
 
 void ContextBuilder::VisitTypecast(TypecastExpression* node) {
   node->expr_->Accept(this);
+
+  // (...) ~> *Vec(Int)        <<<------- instantiate
+  node->type_ = ConstructType(node->type_, current_context_);
 }
 
 }  // namespace ast::scope

@@ -18,8 +18,6 @@ struct ScopeLayer {
 };
 
 struct Context {
-  ScopeLayer type_tags{};
-  ScopeLayer functions{};
   ScopeLayer bindings{};
 
   std::string_view name;
@@ -38,5 +36,11 @@ struct Context {
 
   Context* MakeNewScopeLayer(lex::Location loc, std::string_view name);
 };
+
+using Type = types::Type;
+using TypeTag = types::TypeTag;
+
+Type* ConstructType(Type* ty, Context* ctx);
+Type* ConstructTypeRec(Type* ty, Context* ctx);
 
 }  // namespace ast::scope

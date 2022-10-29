@@ -98,7 +98,9 @@ void UnifyUnderlyingTypes(Type* a, Type* b) {
       break;
     }
 
-    case TypeTag::TY_ALIAS:
+    case TypeTag::TY_CONS:
+    case TypeTag::TY_KIND:
+    case TypeTag::TY_APP:
     case TypeTag::TY_VARIABLE:
     case TypeTag::TY_PARAMETER:
     case TypeTag::TY_UNION:
@@ -136,6 +138,12 @@ void Generalize(Type* ty) {
       break;
     }
 
+    case TypeTag::TY_APP:
+      for (auto& mem : l->as_tyapp.param_pack) {
+        Generalize(mem);
+      }
+      break;
+
     case TypeTag::TY_VARIABLE:
       l->tag = TypeTag::TY_PARAMETER;
       break;
@@ -144,7 +152,8 @@ void Generalize(Type* ty) {
       // No-op
       break;
 
-    case TypeTag::TY_ALIAS:
+    case TypeTag::TY_CONS:
+    case TypeTag::TY_KIND:
     case TypeTag::TY_UNION:
       std::abort();
     default:
@@ -172,6 +181,18 @@ Type* Instantinate(Type* ty, KnownParams& map) {
       }
       return map[l] = MakeTypeVar();
 
+    case TypeTag::TY_APP: {
+      std::vector<Type*> args;
+
+      auto& pack = l->as_tyapp.param_pack;
+
+      for (size_t i = 0; i < pack.size(); i++) {
+        args.push_back(Instantinate(pack[i], map));
+      }
+
+      return MakeTyApp(l->as_tyapp.name, std::move(args));
+    }
+
     case TypeTag::TY_FUN: {
       std::vector<Type*> args;
 
@@ -185,15 +206,28 @@ Type* Instantinate(Type* ty, KnownParams& map) {
                          Instantinate(l->as_fun.result_type, map));
     }
 
-    case TypeTag::TY_ALIAS:
-    case TypeTag::TY_STRUCT:
+    case TypeTag::TY_STRUCT: {
+      std::vector<Member> args;
+      auto& pack = l->as_struct.first;
+
+      for (auto& p : pack) {
+        args.push_back(Member{.field = p.field, .ty = Instantinate(p.ty, map)});
+      }
+
+      return MakeStructType(std::move(args));
+    }
+
+    case TypeTag::TY_CONS:
     case TypeTag::TY_UNION:
       std::abort();
       break;
 
+    case TypeTag::TY_KIND:
     default:
       return l;  // Int, Bool, Unit, etc
   }
 }
+
+//////////////////////////////////////////////////////////////////////
 
 };  // namespace types

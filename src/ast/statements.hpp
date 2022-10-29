@@ -40,8 +40,8 @@ class TypeDeclStatement : public Statement {
   // -> _
   // TypeDeclStatement name params type
   TypeDeclStatement(lex::Token name, std::vector<lex::Token> params,
-                    types::Type* type)
-      : name_{name}, parameters_{params}, type_{type} {
+                    types::Type* body)
+      : name_{name}, parameters_{params}, body_{body} {
   }
 
   ///////////////////////////////////////////////////////////////////////
@@ -78,6 +78,8 @@ class TypeDeclStatement : public Statement {
   std::vector<lex::Token> parameters_;
 
   types::Type* type_;
+
+  types::Type* body_;
 };
 
 //////////////////////////////////////////////////////////////////////

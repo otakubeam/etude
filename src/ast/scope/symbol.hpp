@@ -9,6 +9,8 @@
 
 namespace ast::scope {
 
+struct Context;
+
 enum class SymbolType {
   STATIC,
   TYPE,
@@ -17,6 +19,10 @@ enum class SymbolType {
 };
 
 struct StructSymbol {
+  // types::Type* kind = nullptr;
+  // types::Type* body = nullptr;
+
+  // Context* layer = nullptr;
   types::Type* type = nullptr;
 };
 
@@ -39,7 +45,7 @@ struct Symbol {
 
   union {
     FnSymbol as_fn_sym{};
-    StructSymbol as_struct;
+    StructSymbol as_type;
     VarbindSymbol as_varbind;
   };
 
@@ -57,12 +63,14 @@ struct Symbol {
       case SymbolType::FUN:
         return types::FindLeader(as_fn_sym.type);
       case SymbolType::TYPE:
-        return types::FindLeader(as_struct.type);
+        return types::FindLeader(as_type.type);
       case SymbolType::STATIC:
       default:
         std::abort();
     }
   }
+
+  //////////////////////////////////////////////////////////////////////
 };
 
 }  // namespace ast::scope

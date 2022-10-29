@@ -275,7 +275,7 @@ TEST_CASE("parser:struct-decl", "[parser]") {
   Parser p{l};
 
   auto expr = p.ParseStatement();
-  auto expr2 = expr->as<TypeDeclStatement>()->type_;
+  auto expr2 = expr->as<TypeDeclStatement>()->body_;
   REQUIRE(typeid(*expr) == typeid(TypeDeclStatement));
   REQUIRE(expr2->tag == types::TypeTag::TY_STRUCT);
 }

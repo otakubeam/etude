@@ -93,10 +93,9 @@ types::Type* Parser::ParsePrimitiveType() {
   switch (tok.type) {
     case lex::TokenType::IDENTIFIER: {
       std::vector<types::Type*> types;
-      auto id = lexer_.GetPreviousToken();
 
       if (Matches(lex::TokenType::LEFT_PAREN)) {
-        while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
+        while (!Matches(lex::TokenType::RIGHT_PAREN)) {
           types.push_back(ParseType());
           Matches(lex::TokenType::COMMA);
         }
@@ -104,7 +103,7 @@ types::Type* Parser::ParsePrimitiveType() {
 
       return new types::Type{
           .tag = types::TypeTag::TY_APP,
-          .as_tyapp = {.name = id, .param_pack = std::move(types)}};
+          .as_tyapp = {.name = tok, .param_pack = std::move(types)}};
     }
 
     case lex::TokenType::UNDERSCORE:

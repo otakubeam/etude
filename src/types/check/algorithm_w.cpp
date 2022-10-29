@@ -45,7 +45,7 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
 
   auto fn_name = node->GetFunctionName();
   auto find = node->layer_->Find(fn_name);
-  auto symbol = find->functions.symbol_map.at(fn_name);
+  auto symbol = find->bindings.symbol_map.at(fn_name);
   auto ty = MakeFunType(std::move(param_pack), MakeTypeVar());
 
   Unify(ty, symbol->GetType());
@@ -187,7 +187,7 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
     // Handle this case separately
 
     auto find = node->layer_->Find(node->fn_name_);
-    auto symbol = find->functions.symbol_map.at(node->fn_name_);
+    auto symbol = find->bindings.symbol_map.at(node->fn_name_);
 
     node->layer_->Print();
 
@@ -225,7 +225,7 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
 
 void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   auto find = node->layer_->Find(node->struct_name_);
-  auto symbol = find->type_tags.symbol_map.at(node->struct_name_);
+  auto symbol = find->bindings.symbol_map.at(node->struct_name_);
   auto ty = symbol->GetType();
 
   auto& members = ty->as_struct.first;

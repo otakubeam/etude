@@ -8,22 +8,6 @@
 #include <fstream>
 #include <string>
 
-std::string DumpSymbolTable(ast::scope::ContextBuilder& ctx_builder) {
-  std::string dump;
-  dump.reserve(4096);
-  auto inserter = std::back_inserter(dump);
-
-  fmt::format_to(inserter, "Final symbol table: \n");
-
-  for (auto leaf : ctx_builder.debug_context_leafs_) {
-    for (auto& sym : leaf->bindings.symbols) {
-      fmt::format_to(inserter, "{}\n", sym.FormatSymbol());
-    }
-  }
-
-  return dump;
-}
-
 int main(int, char** argv) {
   auto path = std::string{argv[1]};
 
