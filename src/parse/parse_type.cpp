@@ -21,12 +21,7 @@ types::Type* Parser::ParseFunctionType() {
     first = ParsePointerType();
   }
 
-  return ts.empty() ? first
-                    : new types::Type{
-                          .tag = types::TypeTag::TY_FUN,
-                          .as_fun = {.param_pack = std::move(ts),
-                                     .result_type = first},
-                      };
+  return ts.empty() ? first : types::MakeFunType(std::move(ts), first);
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -36,10 +31,7 @@ types::Type* Parser::ParsePointerType() {
     return ParseStructType();
   }
 
-  return new types::Type{
-      .tag = types::TypeTag::TY_PTR,
-      .as_ptr = {.underlying = ParsePointerType()},
-  };
+  return types::MakeTypePtr(ParsePointerType());
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -74,8 +66,7 @@ types::Type* Parser::ParseStructType() {
 
   Consume(lex::TokenType::RIGHT_CBRACE);
 
-  return new types::Type{.tag = types::TypeTag::TY_STRUCT,
-                         .as_struct = {std::move(fields)}};
+  return types::MakeStructType(std::move(fields));
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -101,9 +92,7 @@ types::Type* Parser::ParsePrimitiveType() {
         }
       }
 
-      return new types::Type{
-          .tag = types::TypeTag::TY_APP,
-          .as_tyapp = {.name = tok, .param_pack = std::move(types)}};
+      return types::MakeTyApp(tok, std::move(types));
     }
 
     case lex::TokenType::UNDERSCORE:

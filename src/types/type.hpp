@@ -1,6 +1,6 @@
 #pragma once
 
-#include <types/trait.hpp>
+#include <ast/scope/context.hpp>
 
 #include <lex/token.hpp>
 
@@ -82,13 +82,10 @@ struct TyConsType {
 struct TyAppType {
   lex::Token name;
   std::vector<Type*> param_pack;
-
-  // Needed?
-  // Type* result = nullptr;
 };
 
 struct TypeVariable {
-  Trait* constraints;
+  // Trait* constraints;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -112,6 +109,8 @@ struct Type {
 
   TypeTag tag = TypeTag::TY_VARIABLE;  // Unknown type
 
+  ast::scope::Context* typing_context_ = nullptr;
+
   // union {
   PtrType as_ptr{};
   FunType as_fun{};
@@ -124,12 +123,17 @@ struct Type {
 
 //////////////////////////////////////////////////////////////////////
 
+void PrintTypeStore();
+
 Type* HintedOrNew(Type*);
 Type* MakeTypeVar();
+Type* MakeTypeVar(ast::scope::Context* ty_cons);
 
 Type* MakeTypePtr(Type* underlying);
 Type* MakeFunType(std::vector<Type*> param_pack, Type* result_type);
 Type* MakeTyApp(lex::Token name, std::vector<Type*> param_pack);
+Type* MakeTyCons(lex::Token name, std::vector<lex::Token> params, Type* body,
+                 Type* kind, ast::scope::Context* context);
 Type* MakeStructType(std::vector<Member> fields);
 
 auto MakeKindParamPack(size_t size) -> std::vector<Type*>;
@@ -148,6 +152,8 @@ void Unify(Type* a, Type* b);
 void UnifyUnderlyingTypes(Type* a, Type* b);
 
 void Generalize(Type* ty);
+
+Type* ApplyTyconsLazy(Type* ty);
 
 using KnownParams = std::unordered_map<Type*, Type*>;
 Type* Instantinate(Type* ty, KnownParams& map);

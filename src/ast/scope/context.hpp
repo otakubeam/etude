@@ -33,14 +33,9 @@ struct Context {
   void Print();
 
   Context* Find(std::string_view name);
+  Symbol* RetrieveSymbol(std::string_view name);
 
   Context* MakeNewScopeLayer(lex::Location loc, std::string_view name);
 };
-
-using Type = types::Type;
-using TypeTag = types::TypeTag;
-
-Type* ConstructType(Type* ty, Context* ctx);
-Type* ConstructTypeRec(Type* ty, Context* ctx);
 
 }  // namespace ast::scope

@@ -1,15 +1,15 @@
 #pragma once
 
-#include <types/type.hpp>
-
 #include <lex/location.hpp>
 
 #include <string_view>
 #include <vector>
 
-namespace ast::scope {
+namespace types {
+struct Type;
+}
 
-struct Context;
+namespace ast::scope {
 
 enum class SymbolType {
   STATIC,
@@ -19,10 +19,6 @@ enum class SymbolType {
 };
 
 struct StructSymbol {
-  // types::Type* kind = nullptr;
-  // types::Type* body = nullptr;
-
-  // Context* layer = nullptr;
   types::Type* type = nullptr;
 };
 
@@ -56,19 +52,7 @@ struct Symbol {
     return name;
   }
 
-  types::Type* GetType() {
-    switch (sym_type) {
-      case SymbolType::VAR:
-        return types::FindLeader(as_varbind.type);
-      case SymbolType::FUN:
-        return types::FindLeader(as_fn_sym.type);
-      case SymbolType::TYPE:
-        return types::FindLeader(as_type.type);
-      case SymbolType::STATIC:
-      default:
-        std::abort();
-    }
-  }
+  types::Type* GetType();
 
   //////////////////////////////////////////////////////////////////////
 };

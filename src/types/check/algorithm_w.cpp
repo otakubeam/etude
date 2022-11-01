@@ -1,3 +1,4 @@
+#include <types/constraints/solver.hpp>
 #include <types/check/algorithm_w.hpp>
 
 #include <ast/expressions.hpp>
@@ -8,6 +9,15 @@ namespace types::check {
 
 //////////////////////////////////////////////////////////////////////
 
+void AlgorithmW::PushEqual(Type* a, Type* b) {
+  deferred_checks_.push(Trait{
+      .tag = TraitTags::TYPES_EQ,
+      .types_equal = {.a = a, .b = b},
+  });
+}
+
+//////////////////////////////////////////////////////////////////////
+
 void AlgorithmW::VisitTypeDecl(TypeDeclStatement*) {
   // No-op
 }
@@ -15,10 +25,11 @@ void AlgorithmW::VisitTypeDecl(TypeDeclStatement*) {
 //////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitVarDecl(VarDeclStatement* node) {
-  auto symbol = node->layer_->bindings.symbol_map.at(node->GetVarName());
+  auto symbol = node->layer_->RetrieveSymbol(node->GetVarName());
 
   auto ty = symbol->GetType();
-  Unify(ty, Eval(node->value_));
+
+  PushEqual(ty, Eval(node->value_));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -35,22 +46,26 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
   for (auto f : node->formals_) {
     param_pack.push_back(MakeTypeVar());
 
-    auto find = node->layer_->Find(f);
-    auto symbol = find->bindings.symbol_map.at(f);
+    auto symbol = node->layer_->RetrieveSymbol(f);
 
-    Unify(symbol->GetType(), param_pack.back());
+    PushEqual(symbol->GetType(), param_pack.back());
   }
 
   // Make function type
 
   auto fn_name = node->GetFunctionName();
-  auto find = node->layer_->Find(fn_name);
-  auto symbol = find->bindings.symbol_map.at(fn_name);
+  auto symbol = node->layer_->RetrieveSymbol(fn_name);
   auto ty = MakeFunType(std::move(param_pack), MakeTypeVar());
 
-  Unify(ty, symbol->GetType());
+  PushEqual(ty, symbol->GetType());
 
-  Unify(Eval(node->body_), ty->as_fun.result_type);
+  PushEqual(Eval(node->body_), ty->as_fun.result_type);
+
+  // Resolve constraints
+
+  constraints::ConstraintSolver solver{std::move(deferred_checks_)};
+  deferred_checks_ = {};  // Empty checks
+  solver.Solve();
 
   // Top-level: Generalize
 
@@ -58,7 +73,7 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
     Generalize(ty);
   }
 
-  return_value = ty;
+  node->type_ = return_value = ty;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -69,14 +84,18 @@ void AlgorithmW::VisitYield(YieldStatement* node) {
 }
 
 void AlgorithmW::VisitReturn(ReturnStatement* node) {
-  Eval(node->return_value_);
+  auto find = node->layer_->RetrieveSymbol(node->this_fun);
+  auto result_type = find->GetType()->as_fun.result_type;
+
+  PushEqual(result_type, Eval(node->return_value_));
+
   return_value = &builtin_unit;
 }
 
 void AlgorithmW::VisitAssignment(AssignmentStatement* node) {
   auto value_ty = Eval(node->value_);
   auto target_ty = Eval(node->target_);
-  Unify(value_ty, target_ty);
+  PushEqual(value_ty, target_ty);
 }
 
 void AlgorithmW::VisitExprStatement(ExprStatement* node) {
@@ -110,12 +129,12 @@ void AlgorithmW::VisitComparison(ComparisonExpression* node) {
       std::abort();
   }
 
-  Unify(e, e2);  // Do not implicitly convert types
+  PushEqual(e, e2);  // Do not implicitly convert types
   return_value = &builtin_bool;
 }
 
 void AlgorithmW::VisitBinary(BinaryExpression* node) {
-  Unify(Eval(node->right_), &builtin_int);
+  PushEqual(Eval(node->right_), &builtin_int);
   return_value = Eval(node->left_);
 }
 
@@ -124,11 +143,11 @@ void AlgorithmW::VisitUnary(UnaryExpression* node) {
 
   switch (node->operator_.type) {
     case lex::TokenType::MINUS:
-      Unify(Eval(node->operand_), &builtin_int);
+      PushEqual(Eval(node->operand_), &builtin_int);
       break;
 
     case lex::TokenType::NOT:
-      Unify(Eval(node->operand_), &builtin_bool);
+      PushEqual(Eval(node->operand_), &builtin_bool);
       break;
 
     default:
@@ -147,8 +166,8 @@ void AlgorithmW::VisitDeref(DereferenceExpression* node) {
   //
   auto a = Eval(node->operand_);
   auto b = MakeTypeVar();
-  Unify(a, MakeTypePtr(b));
-  return_value = b;
+  PushEqual(a, MakeTypePtr(b));
+  return_value = FindLeader(b);
 }
 
 void AlgorithmW::VisitAddressof(AddressofExpression* node) {
@@ -156,15 +175,15 @@ void AlgorithmW::VisitAddressof(AddressofExpression* node) {
 }
 
 void AlgorithmW::VisitIf(IfExpression* node) {
-  Unify(Eval(node->condition_), &builtin_bool);
+  PushEqual(Eval(node->condition_), &builtin_bool);
   auto true_ty = Eval(node->true_branch_);
-  Unify(true_ty, Eval(node->false_branch_));
+  PushEqual(true_ty, Eval(node->false_branch_));
   return_value = true_ty;
 }
 
 void AlgorithmW::VisitNew(NewExpression* node) {
   if (node->allocation_size_) {
-    Unify(Eval(node->allocation_size_), &builtin_int);
+    PushEqual(Eval(node->allocation_size_), &builtin_int);
   }
 
   return_value = node->type_;
@@ -195,15 +214,12 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
     }
     auto symbol = find->bindings.symbol_map.at(node->fn_name_);
 
-    node->layer_->Print();
-
     auto ty = symbol->GetType();
 
     // Get new fresh variables for all type parameters
 
     KnownParams map = {};
     ty = Instantinate(ty, map);
-    fmt::print("Instantiated type: {}\n", FormatType(*ty));
 
     deferred_checks_.push({
         .tag = TraitTags::CALLABLE,
@@ -219,10 +235,10 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
     };
 
     for (size_t i = 0; i < args.size(); i++) {
-      Unify(Eval(args[i]), pack[i]);
+      PushEqual(Eval(args[i]), pack[i]);
     }
 
-    return_value = symbol->GetType()->as_fun.result_type;
+    return_value = ty->as_fun.result_type;
 
   } else {
     FMT_ASSERT(false, "Why are you here?");
@@ -242,40 +258,32 @@ void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   }
 
   for (size_t i = 0; i < values.size(); i++) {
-    Unify(Eval(values[i]), members[i].ty);
+    PushEqual(Eval(values[i]), members[i].ty);
   }
 }
 
 void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
   auto e = Eval(node->struct_expression_);
 
-  if (e->tag == TypeTag::TY_STRUCT) {
-    for (auto& f : e->as_struct.first) {
-      if (f.field == node->field_name_) {
-        return_value = node->type_ = f.ty;
-        return;
-      }
-    }
-  }
+  e = FindLeader(e);
+  e->typing_context_ = node->layer_;
 
   return_value = node->type_ = MakeTypeVar();
 
   deferred_checks_.push(Trait{.tag = TraitTags::HAS_FIELD,
-                              .bound = FindLeader(e),
+                              .bound = e,
                               .has_field = {.field_name = node->field_name_,
                                             .field_type = node->type_}});
 }
 
 void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
-  if (auto cxt = node->layer_->Find(node->name_)) {
-    auto symbol = cxt->bindings.symbol_map.at(node->name_);
+  if (auto symbol = node->layer_->RetrieveSymbol(node->name_)) {
     return_value = symbol->GetType();
     return;
   } else {
-    throw fmt::format("Could not find {}", node->name_.GetName());
+    throw std::runtime_error{
+        fmt::format("Could not find {}", node->name_.GetName())};
   }
-
-  // TODO: also handle functions
 
   std::abort();
 }

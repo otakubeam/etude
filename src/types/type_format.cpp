@@ -13,7 +13,7 @@ std::string FormatStruct(Type& type) {
     fmt::format_to(insert, "{}: {}, ", a.field, FormatType(*a.ty));
   }
 
-  fmt::format_to(insert, "}};");
+  fmt::format_to(insert, "}}");
   return result;
 }
 
@@ -22,6 +22,7 @@ std::string FormatStruct(Type& type) {
 std::string FormatApp(Type& type) {
   std::string result;
   auto insert = std::back_inserter(result);
+
   fmt::format_to(insert, "{}( ", type.as_tyapp.name.GetName());
 
   for (auto& a : type.as_tyapp.param_pack) {
@@ -40,10 +41,10 @@ std::string FormatFun(Type& type) {
   fmt::format_to(insert, "(");
 
   for (auto& a : type.as_fun.param_pack) {
-    fmt::format_to(insert, " {} -> ", FormatType(*a));
+    fmt::format_to(insert, "{} -> ", FormatType(*a));
   }
 
-  fmt::format_to(insert, "{} )", FormatType(*type.as_fun.result_type));
+  fmt::format_to(insert, "{})", FormatType(*type.as_fun.result_type));
   return result;
 }
 
@@ -69,11 +70,7 @@ std::string FormatCons(Type& type) {
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatType(Type& type) {
-  if (type.leader) {
-    return FormatType(*FindLeader(&type));
-  }
-
+std::string FormatTypeInner(Type& type) {
   switch (type.tag) {
     case TypeTag::TY_KIND:
       return fmt::format("*");
@@ -108,6 +105,15 @@ std::string FormatType(Type& type) {
     default:
       std::abort();
   }
+}
+
+std::string FormatType(Type& type) {
+  if (FindLeader(&type) == &type) {
+    return fmt::format("{}", FormatTypeInner(type));
+  }
+
+  return fmt::format("({} => {})", FormatTypeInner(type),
+                     FormatTypeInner(*FindLeader(&type)));
 }
 
 //////////////////////////////////////////////////////////////////////

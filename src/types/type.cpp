@@ -4,6 +4,17 @@ namespace types {
 
 //////////////////////////////////////////////////////////////////////
 
+void PrintTypeStore() {
+  auto& store = Type::type_store;
+  fmt::print("[!] Type store\n\n");
+  for (auto& t : store) {
+    fmt::print("id:{} \t context:{:<20} \t\t\t type:{} \n", t.id,
+               (void*)t.typing_context_, FormatType(t));
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+
 Type* HintedOrNew(Type* type) {
   return type ? type : MakeTypeVar();
 }
@@ -22,6 +33,33 @@ auto MakeKindParamPack(size_t size) -> std::vector<Type*> {
 
 Type* MakeTypeVar() {
   Type::type_store.push_back(Type{.id = Type::type_store.size()});
+  return &Type::type_store.back();
+}
+
+//////////////////////////////////////////////////////////////////////
+
+Type* MakeTyCons(lex::Token name, std::vector<lex::Token> params, Type* body,
+                 Type* kind, ast::scope::Context* context) {
+  Type::type_store.push_back(Type{.id = Type::type_store.size(),
+                                  .tag = TypeTag::TY_CONS,
+                                  .typing_context_ = context,
+                                  .as_tycons = {
+                                      .name = name,
+                                      .param_pack = std::move(params),
+                                      .body = body,
+                                      .kind = kind,
+                                  }});
+  return &Type::type_store.back();
+}
+
+//////////////////////////////////////////////////////////////////////
+
+Type* MakeTypeVar(ast::scope::Context* ty_cons) {
+  Type::type_store.push_back(Type{
+      .id = Type::type_store.size(),
+      .typing_context_ = ty_cons,
+  });
+
   return &Type::type_store.back();
 }
 

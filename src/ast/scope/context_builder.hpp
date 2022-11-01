@@ -47,6 +47,8 @@ class ContextBuilder : public Visitor {
   Context& unit_context_;
   Context* current_context_{&unit_context_};
 
+  std::string_view current_fn_;
+
  public:
   // For dumping all symbols in the program
   std::vector<Context*> debug_context_leafs_{current_context_};
