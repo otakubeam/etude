@@ -1,0 +1,14 @@
+
+fun cycle i last = {
+  if i == 0 { return *last; };
+  *last = *last + 1;
+  cycle(i - 1, last)
+};
+
+fun main = {
+  var v = new Int;
+  var result = cycle(4005, v);
+  # assert(*v == 4005);
+  # assert(*v == result);
+};
+

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <types/type.hpp>
-
 #include <fmt/core.h>
 
 #include <string_view>
@@ -50,7 +48,7 @@ struct None {};
 struct Trait {
   TraitTags tag;
 
-  Type* bound;
+  Type* bound = nullptr;
 
   union {
     None none;  // shut up [-Wmissing-field-initializers] warnings
@@ -62,32 +60,6 @@ struct Trait {
   };
 };
 
-inline std::string FormatTrait(Trait& trait) {
-  switch (trait.tag) {
-    case TraitTags::EQ:
-    case TraitTags::ORD:
-
-    case TraitTags::ADD:
-    case TraitTags::NUM:
-
-    case TraitTags::CALLABLE:
-
-    case TraitTags::TYPES_EQ:
-      return fmt::format("{} ~ {}", FormatType(*trait.types_equal.a),
-                         FormatType(*trait.types_equal.b));
-
-    case TraitTags::HAS_FIELD:
-      return fmt::format("{} .{} ~ {}", FormatType(*trait.bound),
-                         trait.has_field.field_name,
-                         FormatType(*trait.has_field.field_type));
-
-    case TraitTags::CONVERTIBLE_TO:
-
-    case TraitTags::USER_DEFINED:
-
-    default:
-      std::abort();
-  }
-}
+std::string FormatTrait(Trait& trait);
 
 }  // namespace types

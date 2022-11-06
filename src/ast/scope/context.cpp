@@ -65,4 +65,17 @@ void Context::Print() {
 
 //////////////////////////////////////////////////////////////////////
 
+Symbol* Context::RetrieveFromChild(std::string_view name) {
+  if (bindings.symbol_map.contains(name)) {
+    return bindings.symbol_map.at(name);
+  }
+
+  for (auto& ch : children) {
+    if (auto s = ch->RetrieveFromChild(name))
+      return s;
+  }
+
+  return nullptr;
+}
+
 }  // namespace ast::scope

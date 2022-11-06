@@ -44,7 +44,7 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   void PushEqual(Type* a, Type* b);
 
  private:
-  std::queue<Trait> deferred_checks_;
+  std::deque<Trait> deferred_checks_;
 };
 
 }  // namespace types::check

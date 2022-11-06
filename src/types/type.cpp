@@ -4,6 +4,132 @@ namespace types {
 
 //////////////////////////////////////////////////////////////////////
 
+struct NotEquivalentError : std::exception {
+  std::string message = "Types are not equivalent";
+
+  const char* what() const noexcept override {
+    return message.c_str();
+  }
+};
+
+//////////////////////////////////////////////////////////////////////
+
+bool EqApp(TyAppType* lhs, TyAppType* rhs) {
+  auto& pack_a = lhs->param_pack;
+  auto& pack_b = rhs->param_pack;
+
+  if (lhs->name.GetName() != rhs->name.GetName()) {
+    return false;
+  }
+
+  if (pack_a.size() != pack_b.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < pack_a.size(); i++) {
+    if (!TypesEquivalent(pack_a[i], pack_b[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool EqFun(FunType* lhs, FunType* rhs) {
+  auto& pack_a = lhs->param_pack;
+  auto& pack_b = rhs->param_pack;
+
+  if (pack_a.size() != pack_b.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < pack_a.size(); i++) {
+    if (!TypesEquivalent(pack_a[i], pack_b[i])) {
+      return false;
+    }
+  }
+
+  return TypesEquivalent(lhs->result_type, rhs->result_type);
+}
+
+bool EqStr(StructTy* lhs, StructTy* rhs) {
+  auto& pack_a = lhs->first;
+  auto& pack_b = rhs->first;
+
+  if (pack_a.size() != pack_b.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < pack_a.size(); i++) {
+    if (pack_a[i].field != pack_b[i].field) {
+      return false;
+    }
+
+    if (!TypesEquivalent(pack_a[i].ty, pack_b[i].ty)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool TypesEquivalent(Type* lhs, Type* rhs,
+                     std::unordered_map<size_t, size_t> map) {
+  lhs = FindLeader(lhs);
+  rhs = FindLeader(rhs);
+
+  if (lhs->tag != rhs->tag) {
+    return false;
+  }
+
+  switch (lhs->tag) {
+    case TypeTag::TY_APP:
+      return EqApp(&lhs->as_tyapp, &rhs->as_tyapp);
+
+    case TypeTag::TY_FUN:
+      return EqFun(&lhs->as_fun, &rhs->as_fun);
+
+    case TypeTag::TY_PTR:
+      return TypesEquivalent(lhs->as_ptr.underlying, rhs->as_ptr.underlying,
+                             map);
+
+    case TypeTag::TY_STRUCT:
+      return EqStr(&lhs->as_struct, &rhs->as_struct);
+
+    case TypeTag::TY_UNION:
+      fmt::print("Comparing unions!");
+      std::abort();
+
+    case TypeTag::TY_VARIABLE:
+      fmt::print("Comparing variables!");
+      return false;
+
+    case TypeTag::TY_PARAMETER:
+      if (map.contains(rhs->id)) {
+        if (lhs->id != map.at(rhs->id)) {
+          return false;
+        }
+      } else {
+        map[rhs->id] = lhs->id;
+      }
+      return true;
+
+    case TypeTag::TY_INT:
+    case TypeTag::TY_BOOL:
+    case TypeTag::TY_CHAR:
+    case TypeTag::TY_UNIT:
+    case TypeTag::TY_BUILTIN:
+    case TypeTag::TY_KIND:
+      return true;
+
+    case TypeTag::TY_CONS:
+    default:
+      std::abort();
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+
 void PrintTypeStore() {
   auto& store = Type::type_store;
   fmt::print("[!] Type store\n\n");
@@ -103,6 +229,45 @@ Type* MakeStructType(std::vector<Member> fields) {
   });
   return &Type::type_store.back();
 };
+
+//////////////////////////////////////////////////////////////////////
+
+void SetTyContext(types::Type* ty, ast::scope::Context* typing_context) {
+  ty->typing_context_ = typing_context;
+
+  switch (ty->tag) {
+    case TypeTag::TY_PTR:
+      SetTyContext(ty->as_ptr.underlying, typing_context);
+      break;
+
+    case TypeTag::TY_STRUCT:
+      for (auto& member : ty->as_struct.first)
+        SetTyContext(member.ty, typing_context);
+      break;
+
+    case TypeTag::TY_FUN: {
+      auto& pack = ty->as_fun.param_pack;
+      for (auto& p : pack) SetTyContext(p, typing_context);
+      SetTyContext(ty->as_fun.result_type, typing_context);
+      break;
+    }
+
+    case TypeTag::TY_APP:
+      for (auto& arg : ty->as_tyapp.param_pack)
+        SetTyContext(arg, typing_context);
+      break;
+
+    case TypeTag::TY_UNION:
+      std::abort();
+
+    case TypeTag::TY_VARIABLE:
+    case TypeTag::TY_PARAMETER:
+    case TypeTag::TY_CONS:
+    case TypeTag::TY_KIND:
+    default:
+      break;
+  }
+}
 
 //////////////////////////////////////////////////////////////////////
 

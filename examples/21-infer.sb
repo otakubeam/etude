@@ -22,54 +22,53 @@ type Vec T = struct {
    capacity: Int,
 };
 
-of Vec(_) -> _ -> _
+of *Vec(_) -> _ -> _
 fun appendVec v e = {
-   # if v.capacity == v.size {
-   #    # v = relocate(v, v.size);
-   # };
+   if v->capacity == v->size {
+     v = relocate(v, v->size);
+   };
 
-   *v.data = e;
-   # v.size = v.size + 1;
+   v->data[v->size] = e;
+   v->size = v->size + 1;
 };
 
-# of Int -> Vec(_)
-# fun makeVec capInit = {
-#    # var t = match x {
-#    #    of Int: {} # do this
-#    #    of (_, 123): {} # do that
-#    # };
-#    0 ~> Vec(_)
-# };
-# 
-# 
-# of _ -> _ -> Int -> _
-# fun memcpy src dest bytes = {
-#    *dest = *src;
-#    return memcpy(src + 1, dest + 1, bytes - 1);
-# };
-# 
-# 
-# of Vec(_) -> _ -> _
-# fun relocate v sz = {
-#    var new_cap = 2 + sz;
-#    var old_data = v.data;
-# 
-#    v.data = (new [new_cap] Unit) ~> _;
-#    memcpy(old_data, v.data, sz);
-# 
-#    v.capacity = new_cap;
-# 
-#    v
-# };
-# 
-# 
+
+static_assert(typeof(appendVec) == *Vec(a) -> a -> Unit);
 
 
+of Int -> *Vec(_)
+fun makeVec capInit = {
+   var v = (new _) ~> *Vec(_);
+   v->capacity = capInit;
+   v
+};
 
-# fun main = {
-#    var v = makeVec(7);
-#    appendVec(v, 7);
-# 
-#    # v.appendVec(7);
-#    # v.vec::append(7);
-# };
+
+fun memcpy src dest bytes = {
+   if bytes == 0 { return unit; };
+   *dest = *src;
+   return memcpy(src + 1, dest + 1, bytes - 1);
+};
+
+
+of *Vec(_) -> _ -> _
+fun relocate v sz = {
+   var new_cap = 2 + sz;
+   var old_data = v->data;
+
+   v->data = (new [new_cap] Unit) ~> _;
+   memcpy(old_data, v->data, sz);
+
+   v->capacity = new_cap;
+
+   v
+};
+
+
+fun main = {
+   var v = makeVec(7);
+   appendVec(v, 7);
+
+   # v.appendVec(7);
+   # v.vec::append(7);
+};

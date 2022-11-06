@@ -9,9 +9,7 @@ template <typename T>
 class ReturnVisitor : public Visitor {
  public:
   T Eval(TreeNode* expr) {
-    FMT_ASSERT(expr,
-               "\nError: "
-               "Evaluating null expression \n");
+    FMT_ASSERT(expr, "Error: evaluating null expression");
     expr->Accept(this);
     return return_value;
   }

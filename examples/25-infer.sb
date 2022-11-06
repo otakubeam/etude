@@ -1,0 +1,100 @@
+######################################################################
+
+fun swap a b = {
+    var temp = *a;
+    *a = *b;
+    *b = temp;
+};
+
+######################################################################
+
+type Vec T = struct {
+    data: *T,
+    size: Int,
+    capacity: Int,
+};
+
+######################################################################
+
+type Ord T = trait {
+
+    trait Eq(T);
+
+    of T -> T -> Bool
+    fun less a b = 0;
+
+};
+
+######################################################################
+
+type Iterable T = trait {
+
+    type Item;
+
+    of T -> Item
+    fun next self = 0;
+
+};
+
+type Deref T = trait {
+
+    type Item = T;
+
+    of T -> Int -> Item
+    fun deref self = 0;
+
+};
+
+impl Iterable(Vec(T)) {
+
+    type Item = T;
+
+    of *Vec(T) -> Int -> Item
+    fun deref self idx = {
+        self->data[idx]
+    };
+   
+};
+
+######################################################################
+
+of Ord(a) => *Vec(a) -> a -> _ -> Unit
+fun iterateLeft vec pivot lPtr = {
+  if pivot < vec->data[*lPtr] {
+    return;
+  };
+
+  if *lPtr >= vec->size {
+    return;
+  };
+
+  *lPtr = *lPtr + 1;
+  return iterateLeft(vec, pivot, lPtr);
+};
+
+fun sortTwo vec = if vec.data[0] < vec.data[1] {
+    # No-op
+  } else {
+    swap(vec.data, vec.data + 1);
+  };
+
+fun sortThree vec = {
+  sortTwo(vec);
+  sortTwo(vec + 1);
+  sortTwo(vec);
+};
+
+fun sortSmall vec = {
+  if vec.size == 3 {
+    sortThree(vec);
+    return;
+  };
+
+  if vec.size == 2 {
+    sortTwo(vec);
+  };
+};
+
+fun main = {
+};
+

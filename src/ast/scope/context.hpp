@@ -35,6 +35,8 @@ struct Context {
   Context* Find(std::string_view name);
   Symbol* RetrieveSymbol(std::string_view name);
 
+  Symbol* RetrieveFromChild(std::string_view name);
+
   Context* MakeNewScopeLayer(lex::Location loc, std::string_view name);
 };
 

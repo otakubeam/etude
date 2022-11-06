@@ -198,8 +198,8 @@ class FnCallExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    FMT_ASSERT(expression_type, "Typechecking fault");
-    return expression_type;
+    FMT_ASSERT(false, "Typechecking fault");
+    // return expression_type;
   };
 
   std::string_view GetFunctionName() {
@@ -216,13 +216,12 @@ class FnCallExpression : public Expression {
   std::string_view fn_name_;
 
   Expression* callable_;
+  types::Type* callable_type_ = nullptr;
 
   std::vector<Expression*> arguments_;
 
   bool is_native_call_ = false;
   bool is_tail_call_ = false;
-
-  types::Type* expression_type = nullptr;
 
   ast::scope::Context* layer_ = nullptr;
 };
@@ -403,6 +402,8 @@ class LiteralExpression : public Expression {
  public:
   LiteralExpression(lex::Token token) : token_{token} {
   }
+
+  LiteralExpression(const LiteralExpression& other) = default;
 
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitLiteral(this);

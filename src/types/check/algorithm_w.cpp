@@ -10,7 +10,7 @@ namespace types::check {
 //////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::PushEqual(Type* a, Type* b) {
-  deferred_checks_.push(Trait{
+  deferred_checks_.push_back(Trait{
       .tag = TraitTags::TYPES_EQ,
       .types_equal = {.a = a, .b = b},
   });
@@ -70,6 +70,7 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
   // Top-level: Generalize
 
   if (node->layer_->level == 1) {
+    // Is this correct? What if some other type points at me as a leader?
     Generalize(ty);
   }
 
@@ -85,9 +86,15 @@ void AlgorithmW::VisitYield(YieldStatement* node) {
 
 void AlgorithmW::VisitReturn(ReturnStatement* node) {
   auto find = node->layer_->RetrieveSymbol(node->this_fun);
-  auto result_type = find->GetType()->as_fun.result_type;
 
-  PushEqual(result_type, Eval(node->return_value_));
+  std::vector<Type*> args;
+  for (size_t i = 0; i < find->as_fn_sym.argnum; i++) {
+    args.push_back(MakeTypeVar());
+  }
+
+  auto ty = MakeFunType(std::move(args), Eval(node->return_value_));
+
+  PushEqual(find->GetType(), ty);
 
   return_value = &builtin_unit;
 }
@@ -111,18 +118,22 @@ void AlgorithmW::VisitComparison(ComparisonExpression* node) {
 
   switch (node->operator_.type) {
     case lex::TokenType::EQUALS:
-      deferred_checks_.push({.tag = TraitTags::EQ, .bound = e, .none = {}});
+      deferred_checks_.push_back(
+          {.tag = TraitTags::EQ, .bound = e, .none = {}});
       break;
 
     case lex::TokenType::LT:
     case lex::TokenType::GT:
-      deferred_checks_.push({.tag = TraitTags::ORD, .bound = e, .none = {}});
+      deferred_checks_.push_back(
+          {.tag = TraitTags::ORD, .bound = e, .none = {}});
       break;
 
     case lex::TokenType::LE:
     case lex::TokenType::GE:
-      deferred_checks_.push({.tag = TraitTags::EQ, .bound = e, .none = {}});
-      deferred_checks_.push({.tag = TraitTags::ORD, .bound = e, .none = {}});
+      deferred_checks_.push_back(
+          {.tag = TraitTags::EQ, .bound = e, .none = {}});
+      deferred_checks_.push_back(
+          {.tag = TraitTags::ORD, .bound = e, .none = {}});
       break;
 
     default:
@@ -135,7 +146,14 @@ void AlgorithmW::VisitComparison(ComparisonExpression* node) {
 
 void AlgorithmW::VisitBinary(BinaryExpression* node) {
   PushEqual(Eval(node->right_), &builtin_int);
+
   return_value = Eval(node->left_);
+
+  deferred_checks_.push_back(Trait{
+      .tag = TraitTags::ADD,
+      .bound = return_value,
+      .none = {},
+  });
 }
 
 void AlgorithmW::VisitUnary(UnaryExpression* node) {
@@ -202,52 +220,55 @@ void AlgorithmW::VisitBlock(BlockExpression* node) {
 }
 
 void AlgorithmW::VisitFnCall(FnCallExpression* node) {
-  if (!node->fn_name_.empty()) {
-    // Handle this case separately
-
-    auto find = node->layer_->Find(node->fn_name_);
-    if (!find) {
-      node->layer_->Print();
-      throw std::runtime_error{
-          fmt::format("Could not find function {} at loc {}", node->fn_name_,
-                      node->GetLocation().Format())};
-    }
-    auto symbol = find->bindings.symbol_map.at(node->fn_name_);
-
-    auto ty = symbol->GetType();
-
-    // Get new fresh variables for all type parameters
-
-    KnownParams map = {};
-    ty = Instantinate(ty, map);
-
-    deferred_checks_.push({
-        .tag = TraitTags::CALLABLE,
-        .bound = ty,
-        .none = {},
-    });
-
-    auto& pack = ty->as_fun.param_pack;
-    auto& args = node->arguments_;
-
-    if (pack.size() != args.size()) {
-      throw "Function call size mismatch";
-    };
-
-    for (size_t i = 0; i < args.size(); i++) {
-      PushEqual(Eval(args[i]), pack[i]);
-    }
-
-    return_value = ty->as_fun.result_type;
-
-  } else {
+  if (node->fn_name_.empty()) {
     FMT_ASSERT(false, "Why are you here?");
   }
+
+  auto symbol = node->layer_->RetrieveSymbol(node->fn_name_);
+
+  if (!symbol) {
+    node->layer_->Print();
+    throw std::runtime_error{
+        fmt::format("Could not find function {} at loc {}",  //
+                    node->fn_name_, node->GetLocation().Format())};
+  }
+
+  auto ty = symbol->GetType();
+  auto ctx = ty->typing_context_;
+
+  // Get new fresh variables for all type parameters
+
+  KnownParams map = {};
+  ty = Instantinate(ty, map);
+  ty->typing_context_ = ctx;
+
+  // Build function type bases on arguments
+
+  std::vector<Type*> result;
+  for (auto& a : node->arguments_) {
+    result.push_back(Eval(a));
+  }
+  auto result_ty = MakeTypeVar();
+  auto f = MakeFunType(std::move(result), result_ty);
+
+  SetTyContext(f, ty->typing_context_);
+  node->callable_type_ = f;
+
+  // Constrain
+
+  deferred_checks_.push_back({
+      .tag = TraitTags::CALLABLE,
+      .bound = ty,
+      .none = {},
+  });
+
+  PushEqual(f, ty);
+
+  return_value = result_ty;
 }
 
 void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
-  auto find = node->layer_->Find(node->struct_name_);
-  auto symbol = find->bindings.symbol_map.at(node->struct_name_);
+  auto symbol = node->layer_->RetrieveSymbol(node->struct_name_);
   auto ty = symbol->GetType();
 
   auto& members = ty->as_struct.first;
@@ -266,19 +287,25 @@ void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
   auto e = Eval(node->struct_expression_);
 
   e = FindLeader(e);
-  e->typing_context_ = node->layer_;
 
   return_value = node->type_ = MakeTypeVar();
 
-  deferred_checks_.push(Trait{.tag = TraitTags::HAS_FIELD,
-                              .bound = e,
-                              .has_field = {.field_name = node->field_name_,
-                                            .field_type = node->type_}});
+  deferred_checks_.push_back(
+      Trait{.tag = TraitTags::HAS_FIELD,
+            .bound = e,
+            .has_field = {.field_name = node->field_name_,
+                          .field_type = node->type_}});
 }
 
 void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
   if (auto symbol = node->layer_->RetrieveSymbol(node->name_)) {
-    return_value = symbol->GetType();
+    auto ty = symbol->GetType();
+
+    node->type_ = ty;
+
+    KnownParams p = {};
+    return_value = ty->tag == TypeTag::TY_FUN ? Instantinate(ty, p) : ty;
+
     return;
   } else {
     throw std::runtime_error{
@@ -319,9 +346,9 @@ void AlgorithmW::VisitTypecast(TypecastExpression* node) {
 
   FMT_ASSERT(node->type_, "Explicit cast must provide type");
 
-  deferred_checks_.push(Trait{.tag = TraitTags::CONVERTIBLE_TO,
-                              .bound = FindLeader(e),
-                              .convertible_to = {.to_type = node->type_}});
+  deferred_checks_.push_back(Trait{.tag = TraitTags::CONVERTIBLE_TO,
+                                   .bound = FindLeader(e),
+                                   .convertible_to = {.to_type = node->type_}});
   return_value = node->type_;
 }
 

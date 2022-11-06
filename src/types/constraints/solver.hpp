@@ -1,81 +1,133 @@
 #pragma once
 
 #include <types/trait.hpp>
+#include <types/type.hpp>
 
+#include <utility>
 #include <queue>
 
 namespace types::constraints {
 
 class ConstraintSolver {
  public:
-  ConstraintSolver(std::queue<Trait> work) : work_queue{std::move(work)} {
+  ConstraintSolver(std::deque<Trait> work) : work_queue{std::move(work)} {
+  }
+
+  bool TrySolveConstraint(Trait i) {
+    fmt::print("Solving constraint {}\n", FormatTrait(i));
+
+    if (i.tag == TraitTags::TYPES_EQ) {
+      Unify(i.types_equal.a, i.types_equal.b, fill_queue);
+      return true;
+    }
+
+    if (i.tag == TraitTags::ADD) {
+      i.bound = FindLeader(i.bound);
+
+      if (i.bound->tag == TypeTag::TY_VARIABLE ||
+          i.bound->tag == TypeTag::TY_PARAMETER) {
+        i.bound->as_variable.constraints.push_back(i);
+      }
+      return true;
+    }
+
+    if (i.tag == TraitTags::EQ) {
+      i.bound = FindLeader(i.bound);
+      if (i.bound->tag < TypeTag::TY_BUILTIN) {
+        return true;
+      }
+    }
+
+    if (i.tag == TraitTags::CONVERTIBLE_TO) {
+      i.bound = FindLeader(i.bound);
+      i.convertible_to.to_type = FindLeader(i.convertible_to.to_type);
+
+      if (i.convertible_to.to_type->tag == TypeTag::TY_PTR &&
+          i.bound->tag == TypeTag::TY_PTR) {
+        // Always convert pointers, no questions asked
+        return true;
+      }
+    }
+
+    if (i.tag == TraitTags::CALLABLE) {
+      i.bound = FindLeader(i.bound);
+      if (i.bound->tag == TypeTag::TY_FUN) {
+        return true;
+      } else {
+        fill_queue.push_back(i);
+        return false;
+      }
+    }
+
+    if (i.tag == TraitTags::ORD) {
+      i.bound = FindLeader(i.bound);
+      if (i.bound->tag == TypeTag::TY_INT) {
+        return true;
+      } else {
+        fill_queue.push_back(i);
+        return false;
+      }
+    }
+
+    if (i.tag == TraitTags::HAS_FIELD) {
+      i.bound = FindLeader(i.bound);
+
+      if (i.bound->tag == TypeTag::TY_STRUCT) {
+        auto pack = i.bound->as_struct.first;
+        for (auto& p : pack) {
+          if (p.field == i.has_field.field_name) {
+            Unify(p.ty, i.has_field.field_type, fill_queue);
+            return true;
+          }
+        }
+      }
+
+      if (i.bound->tag == TypeTag::TY_APP) {
+        i.bound = ApplyTyconsLazy(i.bound);
+        fmt::print("Applied tycons {}\n", FormatType(*i.bound));
+        fill_queue.push_back(i);
+        return true;
+      }
+
+      if (i.bound->tag != TypeTag::TY_VARIABLE) {
+        throw std::runtime_error{"Not a variable"};
+      }
+    }
+
+    fill_queue.push_back(i);
+    return false;
   }
 
   void Solve() {
-    // When do I stop if I have residual constraints?
+    bool once_more = true;
 
-    fmt::print("Work queue!\n");
-    size_t i = 0;
-
-    while (!work_queue.empty()) {
-      if (i++ > 500)
-        break;
-
-      auto i = work_queue.front();
-
-      fmt::print("{}\n", FormatTrait(i));
-
-      if (i.tag == TraitTags::TYPES_EQ) {
-        Unify(i.types_equal.a, i.types_equal.b);
-      } else if (i.tag == TraitTags::HAS_FIELD) {
-        // Find leader
-
-        auto ctx = i.bound->typing_context_;
-        i.bound = FindLeader(i.bound);
-        if (!i.bound->typing_context_) {
-          i.bound->typing_context_ = ctx;
-        }
-
-        //
-
-        if (i.bound->tag == TypeTag::TY_STRUCT) {
-          auto pack = i.bound->as_struct.first;
-          for (auto& p : pack) {
-            if (p.field == i.has_field.field_name) {
-              Unify(p.ty, i.has_field.field_type);
-            }
-          }
-        } else if (i.bound->tag == TypeTag::TY_APP) {
-          i.bound = ApplyTyconsLazy(i.bound);
-          fmt::print("Applied tycons {}\n", FormatType(*i.bound));
-          work_queue.push(i);
-        } else {
-          work_queue.push(i);
-        }
+    while (std::exchange(once_more, false)) {
+      PrintQueue();
+      while (work_queue.size()) {
+        auto i = std::move(work_queue.front());
+        once_more |= TrySolveConstraint(std::move(i));
+        work_queue.pop_front();
       }
-      work_queue.pop();
+
+      std::swap(work_queue, fill_queue);
     }
 
-    fmt::print("End! ---------\n");
+    if (work_queue.size()) {
+      PrintQueue();
+      throw std::runtime_error{"Residual constraints remain!"};
+    }
+  }
 
-    // while (work_queue.size()) {
-    //   auto it = std::move(work_queue.front());
-
-    //   work_queue.pop();
-
-    //   switch (it.tag) {
-    //     case TraitTags::NUM:
-    //     case TraitTags::ORD:
-    //     case TraitTags::EQ:
-    //     case TraitTags::CALLABLE:
-    //     default:
-    //       break;
-    //   }
-    // }
+  void PrintQueue() {
+    for (auto& i : work_queue) {
+      fmt::print("{}\n", FormatTrait(i));
+    }
+    fmt::print("\n\n");
   }
 
  private:
-  std::queue<Trait> work_queue;
+  std::deque<Trait> work_queue;
+  std::deque<Trait> fill_queue;
 };
 
 }  // namespace types::constraints

@@ -1,0 +1,11 @@
+###################################################
+
+type Tree = struct {
+   tag: Int,
+   left: *Tree,
+};
+
+fun main = {
+  var a = new Tree;
+};
+

@@ -1,0 +1,23 @@
+
+type Size2 = struct {
+  a: Int,
+  b: *Size2,
+};
+
+fun main = {
+  var p = new [2] Size2;
+
+  var addrA = &(p->a);
+  var addrAManual = p;
+
+  var addrB = &(p->b);
+  var addrBManual = addrA + 1;
+
+  var secondElem = &((p + 1)->a);
+
+
+  # assert((addrB == addrA) == false);
+  # assert((addrB == addrBManual));
+  # assert((addrA == addrAManual));
+  # assert((addrB == secondElem) == false);
+};

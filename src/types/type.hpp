@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ast/scope/context.hpp>
-
+#include <types/trait.hpp>
 #include <lex/token.hpp>
 
 #include <fmt/format.h>
@@ -85,7 +85,7 @@ struct TyAppType {
 };
 
 struct TypeVariable {
-  // Trait* constraints;
+  std::vector<Trait> constraints;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -111,7 +111,6 @@ struct Type {
 
   ast::scope::Context* typing_context_ = nullptr;
 
-  // union {
   PtrType as_ptr{};
   FunType as_fun{};
   StructTy as_struct{};
@@ -140,6 +139,10 @@ auto MakeKindParamPack(size_t size) -> std::vector<Type*>;
 
 //////////////////////////////////////////////////////////////////////
 
+void SetTyContext(types::Type* ty, ast::scope::Context* typing_context);
+
+//////////////////////////////////////////////////////////////////////
+
 std::string FormatType(Type& type);
 std::string FormatStruct(Type& type);
 std::string FormatFun(Type& type);
@@ -148,8 +151,9 @@ std::string FormatFun(Type& type);
 
 Type* FindLeader(Type* a);
 
-void Unify(Type* a, Type* b);
-void UnifyUnderlyingTypes(Type* a, Type* b);
+struct Trait;
+void Unify(Type* a, Type* b, std::deque<Trait>& fill_queue);
+void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue);
 
 void Generalize(Type* ty);
 
@@ -157,6 +161,11 @@ Type* ApplyTyconsLazy(Type* ty);
 
 using KnownParams = std::unordered_map<Type*, Type*>;
 Type* Instantinate(Type* ty, KnownParams& map);
+
+// a -> Vec(a) == b -> Vec(b)
+// For use in testing, works on generalized types
+bool TypesEquivalent(Type* lhs, Type* rhs,
+                     std::unordered_map<size_t, size_t> map = {});
 
 //////////////////////////////////////////////////////////////////////
 

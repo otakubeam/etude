@@ -18,22 +18,22 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
   // Replicate * `size` times
 
   auto kind_args = types::MakeKindParamPack(node->parameters_.size());
-  auto kind = types::MakeFunType(std::move(kind_args), &types::builtin_kind);
+  auto kind = MakeFunType(std::move(kind_args), &types::builtin_kind);
 
-  //types::MakeTyCons(node->name_, std::move(node->parameters_), body, kind, current_context);
-  auto ty = new types::Type{.tag = types::TypeTag::TY_CONS,
-                            .as_tycons = types::TyConsType{
-                                .name = node->name_,
-                                .param_pack = node->parameters_,
-                                .body = node->body_,
-                                .kind = kind,
-                            }};
+  // type Ty t = struct { v: Vec(t), }     <<<----   set context for vec
+  types::SetTyContext(node->body_, current_context_);
+
+  auto ty = new types::Type{
+      .tag = types::TypeTag::TY_CONS,
+      .as_tycons = types::TyConsType{.name = node->name_,
+                                     .param_pack = node->parameters_,
+                                     .body = node->body_,
+                                     .kind = kind}};
 
   // Accessible from parent
 
   current_context_->parent->bindings.InsertSymbol(Symbol{
       .sym_type = SymbolType::TYPE,
-      .is_complete = node->body_ != nullptr,
       .name = node->GetStructName(),
       .as_type = {.type = ty},
       .declared_at = node->GetLocation(),
@@ -60,14 +60,13 @@ void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
 
   node->layer_ = current_context_;
 
-  // e.g. `of Vec(Vec(Int)) static matrix = ...`
+  auto inst_ty = node->annotation_ = types::HintedOrNew(node->annotation_);
 
-  auto inst_ty = types::HintedOrNew(node->annotation_);
-  inst_ty->typing_context_ = current_context_;
+  // e.g. `of Vec(Vec(Int)) static matrix = ...`
+  SetTyContext(inst_ty, current_context_);
 
   current_context_->bindings.InsertSymbol({
       .sym_type = SymbolType::VAR,
-      .is_complete = node->value_ != nullptr,
       .name = node->GetVarName(),
       .as_varbind = {.type = inst_ty},
       .declared_at = node->GetLocation(),
@@ -79,17 +78,22 @@ void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
 void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
   node->layer_ = current_context_;
 
+  auto fun_ty = types::HintedOrNew(node->type_);
+
   // Handle cases where parts of the signature are known
   // e.g. Vec(_) -> Maybe(_)
 
-  auto inst_fun_ty = types::HintedOrNew(node->type_);
-  inst_fun_ty->typing_context_ = current_context_;
+  SetTyContext(fun_ty, current_context_);
 
   current_context_->bindings.InsertSymbol({
       .sym_type = SymbolType::FUN,
-      .is_complete = node->body_ != nullptr,
       .name = node->GetFunctionName(),
-      .as_fn_sym = {.type = inst_fun_ty},
+      .as_fn_sym =
+          {
+              .argnum = node->formals_.size(),
+              .type = fun_ty,
+              .def = node,
+          },
       .declared_at = node->GetLocation(),
   });
 
@@ -104,7 +108,6 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
     for (auto param : node->formals_) {
       current_context_->bindings.InsertSymbol({
           .sym_type = SymbolType::VAR,
-          .is_complete = true,
           .name = param.GetName(),
           .as_varbind = {.type = types::MakeTypeVar(current_context_)},
           .declared_at = param.location,
@@ -112,7 +115,7 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
     }
 
     {
-      auto fn = current_fn_; // For return
+      auto fn = current_fn_;  // For return
       current_fn_ = node->GetFunctionName();
 
       node->body_->Accept(this);
@@ -180,7 +183,7 @@ void ContextBuilder::VisitNew(NewExpression* node) {
   }
 
   // Handle stuff like `new [10] Vec(_)`
-  node->underlying_->typing_context_ = current_context_;
+  types::SetTyContext(node->underlying_, current_context_);
 
   node->type_ = types::MakeTypePtr(node->underlying_);
 }
@@ -231,7 +234,7 @@ void ContextBuilder::VisitTypecast(TypecastExpression* node) {
   node->expr_->Accept(this);
 
   // (...) ~> *Vec(Int)        <<<------- Instantiate
-  node->type_->typing_context_ = current_context_;
+  types::SetTyContext(node->type_, current_context_);
 }
 
 }  // namespace ast::scope

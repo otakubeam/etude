@@ -64,8 +64,9 @@ std::string FormatUnion(Type&) {
 
 std::string FormatCons(Type& type) {
   return fmt::format(
-      "Cons {} of {}", type.as_tycons.name.GetName(),
-      type.as_tycons.kind ? FormatType(*type.as_tycons.kind) : "<kind>");
+      "Cons {} of {} of {}", type.as_tycons.name.GetName(),
+      type.as_tycons.kind ? FormatType(*type.as_tycons.kind) : "<kind>",
+      FormatType(*type.as_tycons.body));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -107,13 +108,33 @@ std::string FormatTypeInner(Type& type) {
   }
 }
 
+//////////////////////////////////////////////////////////////////////
+
+std::string FormatConstraints(Type& type) {
+  std::string output;
+  auto ins = std::back_inserter(output);
+  for (auto& cons : type.as_variable.constraints) {
+    fmt::format_to(ins, "{}::", (int)cons.tag);
+  }
+  return output;
+}
+
 std::string FormatType(Type& type) {
   if (FindLeader(&type) == &type) {
-    return fmt::format("{}", FormatTypeInner(type));
+    return fmt::format("{}{}", FormatConstraints(type), FormatTypeInner(type));
+    // return fmt::format("{}{}@{:<3}", FormatConstraints(type),
+    //                    FormatTypeInner(type), (void*)type.typing_context_);
   }
 
-  return fmt::format("({} => {})", FormatTypeInner(type),
+  return fmt::format("({}{} => {}{})", FormatConstraints(type),
+                     FormatTypeInner(type),
+                     FormatConstraints(*FindLeader(&type)),
                      FormatTypeInner(*FindLeader(&type)));
+  // return fmt::format("({}{} => {}{}@{:<3})", FormatConstraints(type),
+  //                    FormatTypeInner(type),
+  //                    FormatConstraints(*FindLeader(&type)),
+  //                    FormatTypeInner(*FindLeader(&type)),
+  //                    (void*)FindLeader(&type)->typing_context_);
 }
 
 //////////////////////////////////////////////////////////////////////

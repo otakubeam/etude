@@ -5,6 +5,8 @@
 #include <string_view>
 #include <vector>
 
+class FunDeclStatement;
+
 namespace types {
 struct Type;
 }
@@ -23,7 +25,9 @@ struct StructSymbol {
 };
 
 struct FnSymbol {
+  size_t argnum = 0;
   types::Type* type = nullptr;
+  FunDeclStatement* def = nullptr;
 };
 
 struct VarbindSymbol {
