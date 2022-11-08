@@ -66,8 +66,10 @@ class Parser {
   ////////////////////////////////////////////////////////////////////
 
  private:
-  auto ParseFormals() -> std::vector<lex::Token>;
   auto ParseCSV() -> std::vector<Expression*>;
+  auto ParseFormals() -> std::vector<lex::Token>;
+  auto ParseDesignatedList()  //
+      -> std::vector<CompoundInitializerExpr::Member>;
 
   bool Matches(lex::TokenType type);
   bool MatchesComparisonSign(lex::TokenType type);

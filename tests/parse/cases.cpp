@@ -283,7 +283,7 @@ TEST_CASE("parser:struct-decl", "[parser]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("parser:struct-init", "[parser]") {
-  std::stringstream source("Str:{123, true}");
+  std::stringstream source("{ .i = 123, .b = true, }");
   lex::Lexer l{source};
   Parser p{l};
 

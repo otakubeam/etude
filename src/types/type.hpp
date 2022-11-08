@@ -99,6 +99,11 @@ extern Type builtin_kind;
 
 //////////////////////////////////////////////////////////////////////
 
+std::string FormatType(Type& type);
+std::string Mangle(Type& type);
+
+//////////////////////////////////////////////////////////////////////
+
 struct Type {
   using Arena = std::deque<Type>;
   inline static Arena type_store{};
@@ -118,6 +123,10 @@ struct Type {
   TyConsType as_tycons{};
   CoproductType as_copro{};
   TypeVariable as_variable{};
+
+  std::string Format() {
+    return FormatType(*this);
+  }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -143,7 +152,6 @@ void SetTyContext(types::Type* ty, ast::scope::Context* typing_context);
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatType(Type& type);
 std::string FormatStruct(Type& type);
 std::string FormatFun(Type& type);
 

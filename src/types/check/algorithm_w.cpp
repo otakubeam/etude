@@ -147,7 +147,7 @@ void AlgorithmW::VisitComparison(ComparisonExpression* node) {
 void AlgorithmW::VisitBinary(BinaryExpression* node) {
   PushEqual(Eval(node->right_), &builtin_int);
 
-  return_value = Eval(node->left_);
+  node->type_ = return_value = Eval(node->left_);
 
   deferred_checks_.push_back(Trait{
       .tag = TraitTags::ADD,
@@ -185,11 +185,11 @@ void AlgorithmW::VisitDeref(DereferenceExpression* node) {
   auto a = Eval(node->operand_);
   auto b = MakeTypeVar();
   PushEqual(a, MakeTypePtr(b));
-  return_value = FindLeader(b);
+  node->type_ = return_value = FindLeader(b);
 }
 
 void AlgorithmW::VisitAddressof(AddressofExpression* node) {
-  return_value = MakeTypePtr(Eval(node->operand_));
+  node->type_ = return_value = MakeTypePtr(Eval(node->operand_));
 }
 
 void AlgorithmW::VisitIf(IfExpression* node) {
@@ -248,7 +248,7 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
   for (auto& a : node->arguments_) {
     result.push_back(Eval(a));
   }
-  auto result_ty = MakeTypeVar();
+  auto result_ty = MakeTypeVar(ctx);
   auto f = MakeFunType(std::move(result), result_ty);
 
   SetTyContext(f, ty->typing_context_);
@@ -268,19 +268,18 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
 }
 
 void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
-  auto symbol = node->layer_->RetrieveSymbol(node->struct_name_);
-  auto ty = symbol->GetType();
+  node->type_ = MakeTypeVar(node->layer_);
 
-  auto& members = ty->as_struct.first;
-  auto& values = node->values_;
-
-  if (members.size() != values.size()) {
-    throw "Struct construction size mismatch";
+  for (auto& mem : node->initializers_) {
+    deferred_checks_.push_back(Trait{.tag = TraitTags::HAS_FIELD,
+                                     .bound = node->type_,
+                                     .has_field = {
+                                         .field_name = mem.field,
+                                         .field_type = Eval(mem.init),
+                                     }});
   }
 
-  for (size_t i = 0; i < values.size(); i++) {
-    PushEqual(Eval(values[i]), members[i].ty);
-  }
+  return_value = node->type_;
 }
 
 void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {

@@ -98,6 +98,10 @@ Expression* Parser::ParseBlockExpression() {
 
   auto location_token = lexer_.GetPreviousToken();
 
+  if (lexer_.Peek().type == lex::TokenType::DOT) {
+    return ParseCompoundInitializer(location_token);
+  }
+
   std::vector<Statement*> stmts;
   Expression* final_expr = nullptr;
 
@@ -226,6 +230,29 @@ std::vector<Expression*> Parser::ParseCSV() {
   return exprs;
 }
 
+auto Parser::ParseDesignatedList()
+    -> std::vector<CompoundInitializerExpr::Member> {
+  std::vector<CompoundInitializerExpr::Member> initializers;
+
+  while (Matches(lex::TokenType::DOT)) {
+    auto field = lexer_.Peek();
+    Consume(lex::TokenType::IDENTIFIER);
+
+    Consume(lex::TokenType::ASSIGN);
+
+    initializers.push_back({
+        .field = field,
+        .init = ParseExpression(),
+    });
+
+    if (!Matches(lex::TokenType::COMMA)) {
+      break;
+    }
+  }
+
+  return initializers;
+}
+
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseIndexingExpression(Expression* expr) {
@@ -346,14 +373,11 @@ Expression* Parser::ParsePrimary() {
 
     case lex::TokenType::IDENTIFIER: {
       Consume(lex::TokenType::IDENTIFIER);
-      auto id = lexer_.GetPreviousToken();
-      if (Matches(lex::TokenType::COLON)) {
-        // Compound literal, e.g. _:{ field : 123, ... }
-        return ParseCompoundInitializer(id);
-      } else if (Matches(lex::TokenType::LEFT_PAREN)) {
-        return ParseFnCallExpression(new VarAccessExpression{id}, id);
+
+      if (Matches(lex::TokenType::LEFT_PAREN)) {
+        return ParseFnCallExpression(new VarAccessExpression{token}, token);
       } else {
-        return new VarAccessExpression{id};
+        return new VarAccessExpression{token};
       }
     }
 
@@ -368,17 +392,22 @@ Expression* Parser::ParsePrimary() {
 
 ////////////////////////////////////////////////////////////////////
 
-Expression* Parser::ParseCompoundInitializer(lex::Token id) {
-  Consume(lex::TokenType::LEFT_CBRACE);
+// of Str(_) {.field = 3, .bar = true,}
+//                or
+// var t = {.field = 3, .bar = true,};
+// takesStrInt(t);
+
+Expression* Parser::ParseCompoundInitializer(lex::Token curly) {
+  // Consume(lex::TokenType::LEFT_CBRACE);
 
   if (Matches(lex::TokenType::RIGHT_CBRACE)) {
-    return new CompoundInitializerExpr{id, {}};
+    return new CompoundInitializerExpr{curly, {}};
   }
 
-  auto initializers = ParseCSV();
+  auto initializers = ParseDesignatedList();
   Consume(lex::TokenType::RIGHT_CBRACE);
 
-  return new CompoundInitializerExpr{id, std::move(initializers)};
+  return new CompoundInitializerExpr{curly, std::move(initializers)};
 }
 
 ////////////////////////////////////////////////////////////////////

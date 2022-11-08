@@ -69,7 +69,7 @@ class BinaryExpression : public Expression {
 
   virtual types::Type* GetType() override {
     FMT_ASSERT(type_, "Type is not set");
-    return type_;
+    return types::FindLeader(type_);
   };
 
   virtual lex::Location GetLocation() override {
@@ -123,7 +123,7 @@ class DereferenceExpression : public LvalueExpression {
 
   virtual types::Type* GetType() override {
     FMT_ASSERT(type_, "Typechecker fault!");
-    return type_;
+    return types::FindLeader(type_);
   };
 
   virtual bool IsDirect() override {
@@ -159,7 +159,7 @@ class AddressofExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    return type_;
+    return types::FindLeader(type_);
   };
 
   virtual lex::Location GetLocation() override {
@@ -198,8 +198,9 @@ class FnCallExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    FMT_ASSERT(false, "Typechecking fault");
-    // return expression_type;
+    auto l = types::FindLeader(callable_type_);
+    FMT_ASSERT(l->tag == types::TypeTag::TY_FUN, "Typechecker fault");
+    return types::FindLeader(l->as_fun.result_type);
   };
 
   std::string_view GetFunctionName() {
@@ -231,9 +232,14 @@ class FnCallExpression : public Expression {
 // At least for now let's call it that
 class CompoundInitializerExpr : public Expression {
  public:
-  CompoundInitializerExpr(lex::Token struct_name,
-                          std::vector<Expression*> values)
-      : struct_name_{struct_name}, values_{values} {
+  struct Member {
+    // In this order!
+    std::string_view field;
+    Expression* init;
+  };
+
+  CompoundInitializerExpr(lex::Token curly, std::vector<Member> values)
+      : curly_{curly}, initializers_{values} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -242,20 +248,16 @@ class CompoundInitializerExpr : public Expression {
 
   virtual types::Type* GetType() override {
     FMT_ASSERT(type_, "Oh-huh!");
-    return type_;
-  };
-
-  std::string_view GetStructName() {
-    return struct_name_.GetName();
+    return types::FindLeader(type_);
   };
 
   virtual lex::Location GetLocation() override {
-    return struct_name_.location;
+    return curly_.location;
   }
 
-  lex::Token struct_name_;
+  lex::Token curly_;
 
-  std::vector<Expression*> values_;
+  std::vector<Member> initializers_;
 
   types::Type* type_ = nullptr;
 
@@ -276,7 +278,7 @@ class FieldAccessExpression : public LvalueExpression {
 
   virtual types::Type* GetType() override {
     FMT_ASSERT(type_, "Returning unassigned type");
-    return type_;
+    return types::FindLeader(type_);
   };
 
   std::string_view GetFieldName() {
@@ -312,7 +314,7 @@ class BlockExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    return final_->GetType();
+    return final_ ? final_->GetType() : &types::builtin_unit;
   };
 
   virtual lex::Location GetLocation() override {
@@ -376,7 +378,7 @@ class NewExpression : public LvalueExpression {
 
   virtual types::Type* GetType() override {
     FMT_ASSERT(type_, "Not set type");
-    return type_;
+    return types::FindLeader(type_);
   };
 
   virtual lex::Location GetLocation() override {
@@ -410,7 +412,7 @@ class LiteralExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    return type_;
+    return types::FindLeader(type_);
   };
 
   virtual lex::Location GetLocation() override {
@@ -435,7 +437,7 @@ class VarAccessExpression : public LvalueExpression {
 
   virtual types::Type* GetType() override {
     FMT_ASSERT(type_, "Type field is not set!");
-    return type_;
+    return types::FindLeader(type_);
   };
 
   std::string_view GetName() {
@@ -468,7 +470,7 @@ class TypecastExpression : public Expression {
 
   virtual types::Type* GetType() override {
     FMT_ASSERT(type_, "Type field is not set!");
-    return type_;
+    return types::FindLeader(type_);
   };
 
   virtual lex::Location GetLocation() override {

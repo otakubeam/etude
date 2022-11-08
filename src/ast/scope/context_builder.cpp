@@ -212,8 +212,8 @@ void ContextBuilder::VisitFnCall(FnCallExpression* node) {
 }
 
 void ContextBuilder::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
-  for (auto val : node->values_) {
-    val->Accept(this);
+  for (auto mem : node->initializers_) {
+    mem.init->Accept(this);
   }
 }
 

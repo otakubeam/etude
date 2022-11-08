@@ -241,13 +241,16 @@ void SetTyContext(types::Type* ty, ast::scope::Context* typing_context) {
       break;
 
     case TypeTag::TY_STRUCT:
-      for (auto& member : ty->as_struct.first)
+      for (auto& member : ty->as_struct.first) {
         SetTyContext(member.ty, typing_context);
+      }
       break;
 
     case TypeTag::TY_FUN: {
       auto& pack = ty->as_fun.param_pack;
-      for (auto& p : pack) SetTyContext(p, typing_context);
+      for (auto& p : pack) {
+        SetTyContext(p, typing_context);
+      }
       SetTyContext(ty->as_fun.result_type, typing_context);
       break;
     }
