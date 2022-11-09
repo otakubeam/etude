@@ -16,49 +16,6 @@ type Vec T = struct {
 
 ######################################################################
 
-type Ord T = trait {
-
-    trait Eq(T);
-
-    of T -> T -> Bool
-    fun less a b = 0;
-
-};
-
-######################################################################
-
-type Iterable T = trait {
-
-    type Item;
-
-    of T -> Item
-    fun next self = 0;
-
-};
-
-type Deref T = trait {
-
-    type Item = T;
-
-    of T -> Int -> Item
-    fun deref self = 0;
-
-};
-
-impl Iterable(Vec(T)) {
-
-    type Item = T;
-
-    of *Vec(T) -> Int -> Item
-    fun deref self idx = {
-        self->data[idx]
-    };
-   
-};
-
-######################################################################
-
-of Ord(a) => *Vec(a) -> a -> _ -> Unit
 fun iterateLeft vec pivot lPtr = {
   if pivot < vec->data[*lPtr] {
     return;

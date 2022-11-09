@@ -1,4 +1,3 @@
-
 type Size2 = struct {
   a: Int,
   b: *Size2,
@@ -16,8 +15,9 @@ fun main = {
   var secondElem = &((p + 1)->a);
 
 
-  # assert((addrB == addrA) == false);
-  # assert((addrB == addrBManual));
-  # assert((addrA == addrAManual));
-  # assert((addrB == secondElem) == false);
+  assert((addrB ~> _ == addrA ) == false);
+  assert((addrB ~> _ == addrBManual));
+  assert((addrA ~> _ == addrAManual));
+  assert((addrB ~> _ == secondElem) == false);
 };
+

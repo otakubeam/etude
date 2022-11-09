@@ -1,4 +1,4 @@
-fun fib(n: Int) Int {
+fun fib n = {
   if n == 0 {
     return 1;
   };
@@ -7,9 +7,10 @@ fun fib(n: Int) Int {
     return 1;
   };
 
-  return fib(n-1) + fib(n-2);
-}
+  fib(n-1) + fib(n-2)
+};
 
-fun main() Unit {
+fun main = {
   fib(20);
-}
+};
+

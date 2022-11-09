@@ -1,7 +1,7 @@
-fun main() Unit {
+fun main = {
   var v1 = new [1] Int;
   *v1 = 6;
   *v1 = *v1 + *v1;
   assert(*v1 == 12);
   assert((*v1 == 13) == false);
-}
+};

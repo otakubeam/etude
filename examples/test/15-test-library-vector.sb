@@ -1,0 +1,111 @@
+
+type Vec a = struct {
+  data: *a,
+  size: Int,
+  capacity: Int,
+};
+
+
+fun memcpy dst src cnt = {
+  if cnt == 0 {
+    return;
+  };
+
+  *dst = *src;
+  return memcpy(dst + 1, src + 1, cnt - 1);
+};
+
+fun replicate dst val cnt = {
+  if cnt == 0 {
+    return;
+  };
+
+  *dst = val;
+  return replicate(dst + 1, val, cnt - 1);
+};
+
+
+fun makeVec initVal size = {
+  var vec = new Vec(_);
+
+  # Could also do
+
+  # of Vec(_) var vec = { 
+  #     .data = new [size] _,
+  #     .size = size, 
+  #     .capacity = size,
+  # };
+
+  vec->data = new [size] _;
+  replicate(vec->data, initVal, size);
+
+  vec->size = size;
+  vec->capacity = size;
+
+  vec
+};
+
+
+of *Vec(_) -> _
+fun extend_cap v = {
+  assert(v->size == v->capacity);
+
+  var newcap = v->capacity + 2;
+
+  var v2 = new [newcap] _;
+  memcpy(v2, v->data, v->size);
+
+  v->data = v2;
+  v->capacity = newcap;
+};
+
+
+of *Vec(_) -> _ -> _
+fun append v val = {
+  if v->capacity == v->size {
+     extend_cap(v);
+  };
+
+  v->data[v->size] = val;
+  v->size = v->size + 1;
+};
+
+
+of *Vec(Int) -> _ -> _ -> _
+fun populate v cur left = {
+  if left == 0 {
+    return;
+  };
+
+  append(v, cur);
+  return populate(v, cur + 1, left - 1);
+};
+
+
+of *Vec(_) -> _ -> _
+fun at v i = {
+  assert(v->size > i);
+  v->data[i]
+};
+
+
+fun main = {
+  var t1 = makeVec(1, 1);
+  populate(t1, 2, 4);
+
+  assert(at(t1, 0) == 1);
+  assert(at(t1, 1) == 2);
+  assert(at(t1, 2) == 3);
+  assert(at(t1, 3) == 4);
+  assert(at(t1, 4) == 5);
+
+  var t2 = makeVec(true, 3);
+  append(t2, false);
+
+  assert(at(t2, 0) == true);
+  assert(at(t2, 1) == true);
+  assert(at(t2, 2) == true);
+  assert(at(t2, 3) == false);
+};
+
+
