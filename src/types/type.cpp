@@ -130,12 +130,15 @@ bool TypesEquivalent(Type* lhs, Type* rhs,
 
 //////////////////////////////////////////////////////////////////////
 
-void PrintTypeStore() {
+void CheckTypes() {
   auto& store = Type::type_store;
   fmt::print("[!] Type store\n\n");
   for (auto& t : store) {
-    fmt::print("id:{} \t context:{:<20} \t\t\t type:{} \n", t.id,
-               (void*)t.typing_context_, FormatType(t));
+    if (t.tag == TypeTag::TY_APP && !t.typing_context_) {
+      fmt::print("id:{} \t context:{:<20} \t\t\t type:{} \n", t.id,
+                 (void*)t.typing_context_, FormatType(t));
+      std::abort();
+    }
   }
 }
 
@@ -233,6 +236,7 @@ Type* MakeStructType(std::vector<Member> fields) {
 //////////////////////////////////////////////////////////////////////
 
 void SetTyContext(types::Type* ty, ast::scope::Context* typing_context) {
+  FMT_ASSERT(typing_context, "Not null");
   ty->typing_context_ = typing_context;
 
   switch (ty->tag) {

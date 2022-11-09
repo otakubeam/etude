@@ -90,14 +90,8 @@ void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue) {
       }
 
       for (size_t i = 0; i < pack.size(); i++) {
-        SetTyContext(pack[i], a->typing_context_);
-        SetTyContext(pack2[i], b->typing_context_);
-
         PushEqual(pack[i], pack2[i], fill_queue);
       }
-
-      SetTyContext(a->as_fun.result_type, a->typing_context_);
-      SetTyContext(b->as_fun.result_type, b->typing_context_);
 
       PushEqual(a->as_fun.result_type, b->as_fun.result_type, fill_queue);
       break;
@@ -109,8 +103,6 @@ void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue) {
           fmt::print("a ~ {}\n", FormatType(*new_a));
           a = new_a;
         }
-
-        fmt::print("Checkpoint\n");
 
         while (auto new_b = ApplyTyconsLazy(b)) {
           fmt::print("b ~ {}\n", FormatType(*new_b));

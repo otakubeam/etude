@@ -2,15 +2,13 @@
 
 #include <ast/scope/context.hpp>
 
-#include <ast/visitors/visitor.hpp>
+#include <ast/visitors/abort_visitor.hpp>
 
 namespace ast::scope {
 
-class ContextBuilder : public Visitor {
+class ContextBuilder : public AbortVisitor {
  public:
-  ContextBuilder(Context& unit_context)
-      : unit_context_{unit_context}, current_context_{&unit_context} {
-  }
+  ContextBuilder(Context& unit_context);
 
   virtual void VisitYield(YieldStatement* node) override;
   virtual void VisitReturn(ReturnStatement* node) override;

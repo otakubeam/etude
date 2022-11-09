@@ -85,16 +85,6 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
         .dbg_instr = {{.type_name = node->arguments_[i]->GetType()->Format()}}};
   }
 
-  if (rt::intrinsics_table.contains(node->GetFunctionName())) {
-    TranslateInstruction(FatInstr::MakePushInt(node->arguments_.size()));
-    TranslateInstruction(
-        {.type = vm::InstrType::NATIVE_CALL,
-         .arg = (uint8_t)rt::intrinsics_table[node->GetFunctionName()],
-         .debug_info = {.location = node->GetLocation()}});
-
-    return;
-  }
-
   // Branch direct / indirect
 
   if (auto mb_offset = current_frame_->LookupOffset(node->GetFunctionName())) {
@@ -119,8 +109,25 @@ void Compiler::VisitFnCall(FnCallExpression* node) {
 
   TranslateInstruction({
       .type = vm::InstrType::FIN_CALL,
-      .arg = (uint8_t)node->arguments_.size(),
+      .arg = size,
   });
+}
+
+////////////////////////////////////////////////////////////////////
+
+void Compiler::VisitIntrinsic(IntrinsicCall* node) {
+  for (int i = node->arguments_.size() - 1; i >= 0; i -= 1) {
+    node->arguments_[i]->Accept(this);
+  }
+
+  TranslateInstruction(FatInstr::MakePushInt(node->arguments_.size()));
+  TranslateInstruction({
+      .type = vm::InstrType::NATIVE_CALL,
+      .arg = (uint8_t)node->intrinsic,
+      .debug_info = {.location = node->GetLocation()},
+  });
+
+  return;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -237,7 +244,7 @@ void Compiler::VisitBinary(BinaryExpression* node) {
   node->left_->Accept(this);
   node->right_->Accept(this);
 
-  if (node->is_pointer_arithmetic_) {
+  if (node->left_->GetType()->tag == types::TypeTag::TY_PTR) {
     auto ptr_type = node->left_->GetType();
     auto underlying = ptr_type->as_ptr.underlying;
     auto multiplier = GetTypeSize(underlying);

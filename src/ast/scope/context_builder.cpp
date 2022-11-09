@@ -7,6 +7,12 @@ namespace ast::scope {
 
 //////////////////////////////////////////////////////////////////////
 
+ContextBuilder::ContextBuilder(Context& unit_context)
+    : unit_context_{unit_context}, current_context_{&unit_context} {
+}
+
+//////////////////////////////////////////////////////////////////////
+
 void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
   if (!node->body_) {
     std::abort();
@@ -31,6 +37,7 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
                                      .kind = kind}};
 
   // Accessible from parent
+  types::SetTyContext(ty, current_context_);
 
   current_context_->parent->bindings.InsertSymbol(Symbol{
       .sym_type = SymbolType::TYPE,
@@ -164,10 +171,12 @@ void ContextBuilder::VisitUnary(UnaryExpression* node) {
 }
 
 void ContextBuilder::VisitDeref(DereferenceExpression* node) {
+  node->layer_ = current_context_;
   node->operand_->Accept(this);
 }
 
 void ContextBuilder::VisitAddressof(AddressofExpression* node) {
+  node->layer_ = current_context_;
   node->operand_->Accept(this);
 }
 
@@ -186,6 +195,7 @@ void ContextBuilder::VisitNew(NewExpression* node) {
   types::SetTyContext(node->underlying_, current_context_);
 
   node->type_ = types::MakeTypePtr(node->underlying_);
+  types::SetTyContext(node->type_, current_context_);
 }
 
 void ContextBuilder::VisitBlock(BlockExpression* node) {

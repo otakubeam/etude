@@ -15,6 +15,7 @@ class ConstraintSolver {
 
   bool TrySolveConstraint(Trait i) {
     fmt::print("Solving constraint {}\n", FormatTrait(i));
+    CheckTypes();
 
     if (i.tag == TraitTags::TYPES_EQ) {
       Unify(i.types_equal.a, i.types_equal.b, fill_queue);
@@ -33,7 +34,7 @@ class ConstraintSolver {
 
     if (i.tag == TraitTags::EQ) {
       i.bound = FindLeader(i.bound);
-      if (i.bound->tag < TypeTag::TY_BUILTIN) {
+      if (i.bound->tag <= TypeTag::TY_PTR) {
         return true;
       }
     }
@@ -80,12 +81,15 @@ class ConstraintSolver {
 
       if (i.bound->tag == TypeTag::TY_STRUCT) {
         auto pack = i.bound->as_struct.first;
+
         for (auto& p : pack) {
           if (p.field == i.has_field.field_name) {
             Unify(p.ty, i.has_field.field_type, fill_queue);
             return true;
           }
         }
+
+        throw std::runtime_error{"No such field"};
       }
 
       if (i.bound->tag == TypeTag::TY_APP) {
@@ -96,6 +100,7 @@ class ConstraintSolver {
       }
 
       if (i.bound->tag != TypeTag::TY_VARIABLE) {
+        fmt::print("{}\n", FormatType(*i.bound));
         throw std::runtime_error{"Not a variable"};
       }
     }

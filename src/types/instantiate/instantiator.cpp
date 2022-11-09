@@ -21,7 +21,7 @@ void TemplateInstantiator::VisitVarDecl(VarDeclStatement* node) {
   auto n = new VarDeclStatement{*node};
 
   n->annotation_ = Instantinate(n->annotation_, poly_to_mono_);
-  SetTyContext(n->annotation_, FindLeader(node->annotation_)->typing_context_);
+  SetTyContext(n->annotation_, node->layer_);
 
   n->value_ = Eval(n->value_)->as<Expression>();
 
@@ -86,11 +86,12 @@ void TemplateInstantiator::VisitComparison(ComparisonExpression* node) {
 void TemplateInstantiator::VisitBinary(BinaryExpression* node) {
   auto n = new BinaryExpression{*node};
 
-  n->type_ = Instantinate(n->type_, poly_to_mono_);
-  SetTyContext(n->type_, FindLeader(node->type_)->typing_context_);
 
   n->left_ = Eval(n->left_)->as<Expression>();
   n->right_ = Eval(n->right_)->as<Expression>();
+
+  n->type_ = n->left_->GetType();
+  // SetTyContext(n->type_, FindLeader(node->type_)->typing_context_);
 
   return_value = n;
 }
@@ -106,7 +107,7 @@ void TemplateInstantiator::VisitDeref(DereferenceExpression* node) {
   auto n = new DereferenceExpression{*node};
 
   n->type_ = Instantinate(n->type_, poly_to_mono_);
-  SetTyContext(n->type_, FindLeader(node->type_)->typing_context_);
+  SetTyContext(n->type_, node->layer_);
 
   n->operand_ = Eval(n->operand_)->as<Expression>();
 
@@ -117,7 +118,7 @@ void TemplateInstantiator::VisitAddressof(AddressofExpression* node) {
   auto n = new AddressofExpression{*node};
 
   n->type_ = Instantinate(n->type_, poly_to_mono_);
-  SetTyContext(n->type_, FindLeader(node->type_)->typing_context_);
+  SetTyContext(n->type_, node->layer_);
 
   n->operand_ = Eval(n->operand_)->as<Expression>();
 
@@ -138,10 +139,10 @@ void TemplateInstantiator::VisitNew(NewExpression* node) {
   auto n = new NewExpression{*node};
 
   n->type_ = Instantinate(node->type_, poly_to_mono_);
-  SetTyContext(n->type_, FindLeader(node->type_)->typing_context_);
+  SetTyContext(n->type_, node->type_->typing_context_);
 
   n->underlying_ = Instantinate(node->underlying_, poly_to_mono_);
-  SetTyContext(n->underlying_, FindLeader(node->underlying_)->typing_context_);
+  SetTyContext(n->underlying_, node->underlying_->typing_context_);
 
   if (auto alloc = n->allocation_size_) {
     alloc = Eval(n->allocation_size_)->as<Expression>();
@@ -187,6 +188,14 @@ void TemplateInstantiator::VisitFnCall(FnCallExpression* node) {
   return_value = n;
 }
 
+void TemplateInstantiator::VisitIntrinsic(IntrinsicCall* node) {
+  auto n = new IntrinsicCall{*node};
+  for (auto& a : n->arguments_) {
+    a = Eval(a)->as<Expression>();
+  }
+  return_value = n;
+}
+
 void TemplateInstantiator::VisitCompoundInitalizer(
     CompoundInitializerExpr* node) {
   auto n = new CompoundInitializerExpr{*node};
@@ -206,7 +215,7 @@ void TemplateInstantiator::VisitFieldAccess(FieldAccessExpression* node) {
   n->struct_expression_ = Eval(node->struct_expression_)->as<Expression>();
 
   n->type_ = Instantinate(node->type_, poly_to_mono_);
-  SetTyContext(n->type_, FindLeader(node->type_)->typing_context_);
+  SetTyContext(n->type_, node->layer_);
 
   return_value = n;
 }
@@ -215,7 +224,7 @@ void TemplateInstantiator::VisitVarAccess(VarAccessExpression* node) {
   auto n = new VarAccessExpression{*node};
 
   n->type_ = Instantinate(node->GetType(), poly_to_mono_);
-  SetTyContext(n->type_, node->GetType()->typing_context_);
+  SetTyContext(n->type_, node->layer_);
 
   return_value = n;
 }

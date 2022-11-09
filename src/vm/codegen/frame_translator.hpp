@@ -30,11 +30,7 @@ class FrameTranslator {
     auto& pack = decl->type_->as_fun.param_pack;
 
     for (int i = decl->formals_.size() - 1; i >= 0; i--) {
-      layout_.emplace_back(Slot{
-          .name = decl->formals_[i],
-          .size = measure.MeasureSize(pack[i]),
-          .depth = 0,
-      });
+      AddLocal(decl->formals_[i], measure.MeasureSize(pack[i]));
     }
 
     layout_.emplace_back(Slot{

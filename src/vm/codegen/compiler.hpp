@@ -41,6 +41,7 @@ class Compiler : public Visitor {
   virtual void VisitBinary(BinaryExpression* node) override;
   virtual void VisitUnary(UnaryExpression*) override;
   virtual void VisitFnCall(FnCallExpression* node) override;
+  virtual void VisitIntrinsic(IntrinsicCall* node) override;
   virtual void VisitFieldAccess(FieldAccessExpression* node) override;
   virtual void VisitVarAccess(VarAccessExpression* node) override;
   virtual void VisitLiteral(LiteralExpression* node) override;

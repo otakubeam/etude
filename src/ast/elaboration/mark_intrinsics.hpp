@@ -1,21 +1,14 @@
 #pragma once
 
-#include <types/type.hpp>
-#include <types/trait.hpp>
-
-#include <ast/scope/context.hpp>
-
 #include <ast/visitors/template_visitor.hpp>
+#include <ast/visitors/abort_visitor.hpp>
 
-#include <queue>
+#include <utility>
 
-namespace types::check {
+namespace ast::elaboration {
 
-class AlgorithmW : public ReturnVisitor<Type*> {
+class MarkIntrinsics : public ReturnVisitor<TreeNode*> {
  public:
-  AlgorithmW() {
-  }
-
   void VisitYield(YieldStatement* node);
   void VisitReturn(ReturnStatement* node);
   void VisitAssignment(AssignmentStatement* node);
@@ -40,12 +33,6 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   void VisitLiteral(LiteralExpression* node);
   void VisitVarAccess(VarAccessExpression* node);
   void VisitCompoundInitalizer(CompoundInitializerExpr* node);
-
- private:
-  void PushEqual(Type* a, Type* b);
-
- private:
-  std::deque<Trait> deferred_checks_;
 };
 
-}  // namespace types::check
+}  // namespace ast::elaboration

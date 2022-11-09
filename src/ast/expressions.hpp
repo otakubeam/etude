@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ast/elaboration/intrinsics.hpp>
+
 #include <ast/scope/context.hpp>
 #include <ast/syntax_tree.hpp>
 
@@ -23,11 +25,6 @@ class Expression : public TreeNode {
 // Identifier, Named entity
 class LvalueExpression : public Expression {
  public:
-  virtual bool IsDirect() {
-    // True for compile-time expressions
-    // But not for pointers
-    return true;
-  }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -126,10 +123,6 @@ class DereferenceExpression : public LvalueExpression {
     return types::FindLeader(type_);
   };
 
-  virtual bool IsDirect() override {
-    return false;
-  }
-
   virtual lex::Location GetLocation() override {
     return star_.location;
   }
@@ -140,6 +133,8 @@ class DereferenceExpression : public LvalueExpression {
   Expression* operand_;
 
   types::Type* type_ = nullptr;
+
+  ast::scope::Context* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -172,6 +167,8 @@ class AddressofExpression : public Expression {
 
   // Mabye embed and save allocation
   types::Type* type_ = nullptr;
+
+  ast::scope::Context* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -221,10 +218,40 @@ class FnCallExpression : public Expression {
 
   std::vector<Expression*> arguments_;
 
-  bool is_native_call_ = false;
   bool is_tail_call_ = false;
 
   ast::scope::Context* layer_ = nullptr;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class IntrinsicCall : public FnCallExpression {
+ public:
+  IntrinsicCall(FnCallExpression* node) : FnCallExpression(std::move(*node)) {
+    intrinsic = ast::elaboration::intrinsics_table.at(node->GetFunctionName());
+  }
+
+  virtual types::Type* GetType() override {
+    switch (intrinsic) {
+      case ast::elaboration::Intrinsic::PRINT:
+        return &types::builtin_unit;
+
+      case ast::elaboration::Intrinsic::ASSERT:
+        return &types::builtin_unit;
+
+      case ast::elaboration::Intrinsic::IS_NULL:
+        return &types::builtin_bool;
+
+      default:
+        std::abort();
+    }
+  };
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitIntrinsic(this);
+  }
+
+  ast::elaboration::Intrinsic intrinsic;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -383,10 +410,6 @@ class NewExpression : public LvalueExpression {
 
   virtual lex::Location GetLocation() override {
     return new_token_.location;
-  }
-
-  virtual bool IsDirect() override {
-    return false;
   }
 
   lex::Token new_token_{};

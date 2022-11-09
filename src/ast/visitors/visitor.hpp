@@ -12,6 +12,7 @@ class IfExpression;
 class NewExpression;
 class BlockExpression;
 class FnCallExpression;
+class IntrinsicCall;
 class CompoundInitializerExpr;
 class FieldAccessExpression;
 class LiteralExpression;
@@ -70,6 +71,8 @@ class Visitor {
   virtual void VisitBlock(BlockExpression* node) = 0;
 
   virtual void VisitFnCall(FnCallExpression* node) = 0;
+
+  virtual void VisitIntrinsic(IntrinsicCall* node) = 0;
 
   virtual void VisitCompoundInitalizer(CompoundInitializerExpr* node) = 0;
 

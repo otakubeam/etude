@@ -7,6 +7,7 @@
 
 #include <vm/interpreter.hpp>
 
+#include <ast/elaboration/mark_intrinsics.hpp>
 #include <ast/scope/context_builder.hpp>
 
 #include <types/instantiate/instantiator.hpp>
@@ -20,6 +21,8 @@
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("vm:codgen:simple", "[vm:codgen]") {
+  types::Type::type_store.clear();
+
   char stream[] =
       "   fun main = {        "
       "      var a = 5;       "
@@ -46,17 +49,13 @@ TEST_CASE("vm:codgen:simple", "[vm:codgen]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(0)->as<FunDeclStatement>());
-  fmt::print("Here!\n");
   auto funs = inst.Flush();
-  fmt::print("Here!\n");
 
   vm::codegen::Compiler compiler;
   vm::debug::Disassembler d;
 
-  fmt::print("Here!\n");
   auto elf = vm::ElfFile{{}, {}, {}, {}};
   for (auto& d : funs) {
-    fmt::print("Inside!\n");
     elf += compiler.Compile(d);
   }
 
@@ -69,6 +68,8 @@ TEST_CASE("vm:codgen:simple", "[vm:codgen]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("vm:poly:swap", "[vm:codgen]") {
+  types::Type::type_store.clear();
+
   char stream[] =
       "    fun swap a b = {       "
       "        var t = *a;        "
@@ -125,6 +126,7 @@ TEST_CASE("vm:poly:swap", "[vm:codgen]") {
 }
 
 TEST_CASE("vm:codgen:simple:mul", "[vm:codgen]") {
+  types::Type::type_store.clear();
   char stream[] =
       "        fun mul a b = {                        "
       "           if a == 1 {                         "
@@ -178,6 +180,7 @@ TEST_CASE("vm:codgen:simple:mul", "[vm:codgen]") {
 ///////////////////////////////////////////////////////////////////
 
 TEST_CASE("vm:codgen:struct", "[vm:codgen]") {
+  types::Type::type_store.clear();
   char stream[] =
       "  type Str = struct {                            \n"
       "      count: Int,                                \n"
@@ -232,6 +235,7 @@ TEST_CASE("vm:codgen:struct", "[vm:codgen]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("vm:codgen:struct:nested", "[vm:codgen]") {
+  types::Type::type_store.clear();
   char stream[] =
       "                                         "
       "    type Inner = struct {                "
@@ -296,6 +300,7 @@ TEST_CASE("vm:codgen:struct:nested", "[vm:codgen]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("vm:codgen:array", "[vm:codgen]") {
+  types::Type::type_store.clear();
   char stream[] =
       "        fun main = {                              "
       "           var vec = new [10] _;                  "
@@ -341,6 +346,7 @@ TEST_CASE("vm:codgen:array", "[vm:codgen]") {
 //////////////////////////////////////////////////////////////////////
 
 TEST_CASE("vm:codgen:struct:tree", "[vm:codgen]") {
+  types::Type::type_store.clear();
   char stream[] =
       "   type Tree a = struct {                     "
       "       left: *Tree(a),                           "
@@ -358,8 +364,9 @@ TEST_CASE("vm:codgen:struct:tree", "[vm:codgen]") {
       "                                              "
       "   fun main = {                               "
       "       var tr1 = consTree(1);                 "
-      "       var tree = new Tree(Int);              "
-      "       var tr2 = consTree(*tree);             "
+      "       of Tree(Int) var tree = {.value = 123,};"
+      "       var tr2 = consTree(tree);             "
+      "       tr2 = consTree(*tr1);             "
       //"       insertNewValue(tr1, consTree(5));      "
       //"       insertNewValue(tr1, consTree(4));      "
       //"       insertNewValue(tr1, consTree(3));      "
@@ -402,7 +409,10 @@ TEST_CASE("vm:codgen:struct:tree", "[vm:codgen]") {
   debugger.StepToTheEnd();
 }
 
+//////////////////////////////////////////////////////////////////////
+
 TEST_CASE("vm:codgen:array:dynsize", "[vm:codgen]") {
+  types::Type::type_store.clear();
   char stream[] =
       "    fun iterateVec vec size = {               "
       "      if size == 0 {                          "
@@ -443,6 +453,57 @@ TEST_CASE("vm:codgen:array:dynsize", "[vm:codgen]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(2)->as<FunDeclStatement>());
+  auto funs = inst.Flush();
+
+  vm::codegen::Compiler compiler;
+  vm::debug::Disassembler d;
+
+  auto elf = vm::ElfFile{{}, {}, {}, {}};
+  for (auto& d : funs) {
+    elf += compiler.Compile(d);
+  }
+
+  d.Disassemble(elf);
+
+  vm::debug::Debugger debugger;
+  debugger.Load(std::move(elf));
+
+  debugger.StepToTheEnd();
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("vm:codgen:assert", "[vm:codgen]") {
+  types::Type::type_store.clear();
+  // assert : Bool -> Unit
+  char stream[] =
+      "    fun main = {                              "
+      "       assert(true);                          "
+      "    };                                        ";
+  std::stringstream source{stream};
+  auto l = lex::Lexer{source};
+  Parser p{l};
+  auto result = p.ParseUnit();
+
+  ast::scope::Context global_context;
+  ast::scope::ContextBuilder ctx_builder{global_context};
+
+  for (auto r : result) {
+    r->Accept(&ctx_builder);
+  }
+
+  ast::elaboration::MarkIntrinsics mark;
+  for (auto& r : result) {
+    r = mark.Eval(r)->as<Statement>();
+  }
+
+  types::check::AlgorithmW infer;
+
+  for (auto r : result) {
+    r->Accept(&infer);
+  }
+
+  types::check::TemplateInstantiator inst(result.at(0)->as<FunDeclStatement>());
   auto funs = inst.Flush();
 
   vm::codegen::Compiler compiler;

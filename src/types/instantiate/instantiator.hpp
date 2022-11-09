@@ -190,6 +190,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   void VisitNew(NewExpression* node);
   void VisitBlock(BlockExpression* node);
   void VisitFnCall(FnCallExpression* node);
+  void VisitIntrinsic(IntrinsicCall* node);
   void VisitFieldAccess(FieldAccessExpression* node);
   void VisitTypecast(TypecastExpression* node);
   void VisitLiteral(LiteralExpression* node);

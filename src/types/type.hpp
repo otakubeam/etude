@@ -131,7 +131,7 @@ struct Type {
 
 //////////////////////////////////////////////////////////////////////
 
-void PrintTypeStore();
+void CheckTypes();
 
 Type* HintedOrNew(Type*);
 Type* MakeTypeVar();

@@ -44,7 +44,7 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
   std::vector<Type*> param_pack;
 
   for (auto f : node->formals_) {
-    param_pack.push_back(MakeTypeVar());
+    param_pack.push_back(MakeTypeVar(node->layer_));
 
     auto symbol = node->layer_->RetrieveSymbol(f);
 
@@ -56,6 +56,7 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
   auto fn_name = node->GetFunctionName();
   auto symbol = node->layer_->RetrieveSymbol(fn_name);
   auto ty = MakeFunType(std::move(param_pack), MakeTypeVar());
+  SetTyContext(ty, node->layer_);
 
   PushEqual(ty, symbol->GetType());
 
@@ -89,10 +90,11 @@ void AlgorithmW::VisitReturn(ReturnStatement* node) {
 
   std::vector<Type*> args;
   for (size_t i = 0; i < find->as_fn_sym.argnum; i++) {
-    args.push_back(MakeTypeVar());
+    args.push_back(MakeTypeVar(node->layer_));
   }
 
   auto ty = MakeFunType(std::move(args), Eval(node->return_value_));
+  SetTyContext(ty, node->layer_);
 
   PushEqual(find->GetType(), ty);
 
@@ -190,6 +192,7 @@ void AlgorithmW::VisitDeref(DereferenceExpression* node) {
 
 void AlgorithmW::VisitAddressof(AddressofExpression* node) {
   node->type_ = return_value = MakeTypePtr(Eval(node->operand_));
+  SetTyContext(node->type_, node->layer_);
 }
 
 void AlgorithmW::VisitIf(IfExpression* node) {
@@ -240,7 +243,7 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
 
   KnownParams map = {};
   ty = Instantinate(ty, map);
-  ty->typing_context_ = ctx;
+  SetTyContext(ty, ctx);
 
   // Build function type bases on arguments
 
@@ -265,6 +268,34 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
   PushEqual(f, ty);
 
   return_value = result_ty;
+}
+
+void AlgorithmW::VisitIntrinsic(IntrinsicCall* node) {
+  if (node->arguments_.size() > 1) {
+    throw "Too many arguments";
+  }
+
+  switch (node->intrinsic) {
+    case ast::elaboration::Intrinsic::PRINT:
+      // TODO: Show typeclass?
+      PushEqual(Eval(node->arguments_.at(0)), MakeTypePtr(&builtin_char));
+      return_value = &builtin_unit;
+      break;
+
+    case ast::elaboration::Intrinsic::ASSERT:
+      PushEqual(Eval(node->arguments_.at(0)), &builtin_bool);
+      return_value = &builtin_unit;
+      break;
+
+    case ast::elaboration::Intrinsic::IS_NULL:
+      PushEqual(Eval(node->arguments_.at(0)),
+                MakeTypePtr(MakeTypeVar(node->layer_)));
+      return_value = &builtin_bool;
+      break;
+
+    default:
+      std::abort();
+  }
 }
 
 void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
