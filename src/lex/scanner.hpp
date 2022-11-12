@@ -24,7 +24,7 @@ class Scanner {
   }
 
   void InitBuffer() {
-    constexpr size_t INITIAL_BUF_SIZE = 2000;
+    constexpr size_t INITIAL_BUF_SIZE = 20000;
     buffer_.reserve(INITIAL_BUF_SIZE);
   }
 

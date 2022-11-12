@@ -102,7 +102,7 @@ fun moveCenter pivot left right v = {
   # # &(*((*v).data + *right)) !
   swap(v->data + *right, v->data + *left);
 
-  moveCenter(pivot, left, right, v)
+  moveCenter(v->data[0], left, right, v)
 };
 
 of *Vec(Int) -> _
@@ -124,11 +124,13 @@ fun sort v = {
   of Vec(Int) var r = { .data = v->data + (c + 1), 
                         .size = v->size - (c + 1),
                         .capacity = v->size - (c + 1), };
+  of Vec(Int) var l = { .data = v->data, 
+                        .size = c, 
+                        .capacity = c, };
   sort(&r);
-  of Vec(Int) var l = { .data = v->data, .size = c, .capacity = c, };
-
-  return sort(&l); # Tail call!
+  sort(&l);
 };
+
 fun main = {
   var v1 = new [10] Int;
 

@@ -15,6 +15,7 @@ fun memcpy dst src cnt = {
   return memcpy(dst + 1, src + 1, cnt - 1);
 };
 
+
 fun replicate dst val cnt = {
   if cnt == 0 {
     return;
@@ -30,9 +31,9 @@ fun makeVec initVal size = {
 
   # Could also do
 
-  # of Vec(_) var vec = { 
+  # of Vec(_) var vec = {
   #     .data = new [size] _,
-  #     .size = size, 
+  #     .size = size,
   #     .capacity = size,
   # };
 

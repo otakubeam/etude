@@ -31,7 +31,7 @@ collect_debug_artifacts() {
   (
     local _base=$(pwd)
     cd $_dirname
-    $(timeout 0.1 $_base/examples/repl $_base/$1 --debug &> log)
+    $(timeout 0.5 $_base/examples/repl $_base/$1 --debug &> log)
   )
   cp graph.sh $_dirname
 }
