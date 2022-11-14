@@ -32,22 +32,6 @@ fun iterateLeft pivot left vec  = {
 
 of _ -> _ -> *Vec(Int) -> _
 fun iterateRight pivot right vec = {
-  # *(vec->data + *right)
-
-  #    0:    get_at_fp        0f fe ff                -2
-  # pivot
-  #    3:    get_at_fp        0f fc ff                -4
-  # pivot vec
-  #    6:    add_addr         05 00 00                0
-  #    9:    load             18 01                   1
-  # pivot vec->data
-  #   11:    get_at_fp        0f fd ff                -3
-  # pivot vec->data right
-  #   14:    load             18 01                   1
-  # pivot vec->data *right
-  #   16:    add              10
-  #   17:    load             18 01                   1
-  #   19:    cmp_ge           15
   if pivot >= vec->data[*right] {
     return;
   };
@@ -121,18 +105,18 @@ fun sort v = {
   var c = moveCenter(v->data[0], left, right, v);
   swap(v->data + c, v->data);
 
-  of Vec(Int) var r = { .data = v->data + (c + 1), 
+  of Vec(Int) var r = { .data = v->data + (c + 1),
                         .size = v->size - (c + 1),
                         .capacity = v->size - (c + 1), };
-  of Vec(Int) var l = { .data = v->data, 
-                        .size = c, 
+  of Vec(Int) var l = { .data = v->data,
+                        .size = c,
                         .capacity = c, };
   sort(&r);
   sort(&l);
 };
 
 fun main = {
-  var v1 = new [10] Int;
+  var v1 = new [10] _;
 
   of Vec(Int) var vec = {
       .data = v1,
