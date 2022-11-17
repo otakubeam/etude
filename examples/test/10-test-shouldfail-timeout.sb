@@ -1,6 +1,6 @@
 fun fib n = {
   if n == 0 {
-    return 1;
+    return 0;
   };
 
   if n == 1 {
@@ -11,6 +11,6 @@ fun fib n = {
 };
 
 fun main = {
-  fib(20);
+  fib(40);
 };
 

@@ -7,7 +7,7 @@ type Tree = struct {
 
 of *Tree -> _ -> _
 fun binSearchInt tree val = {
-    if isNull(tree) {
+    if !(tree ~> _) {
         return false;
     };
 
@@ -41,15 +41,15 @@ fun binSearchInt tree val = {
 ##############################
 
 fun main = {
-    of Tree var tr1 = { .left = unit, .right = unit, .value = 1, };
-    of Tree var tr4 = { .left = unit, .right = unit, .value = 4, };
-    of Tree var tr3 = { .left = unit, .right = &tr4, .value = 3, };
-    of Tree var tr2 = { .left = &tr1, .right = &tr3, .value = 2, };
+    of Tree var tr1 = { .left = unit ~> _, .right = unit ~> _, .value = 1, };
+    # of Tree var tr4 = { .left = unit ~> _, .right = unit ~> _, .value = 4, };
+    # of Tree var tr3 = { .left = unit ~> _, .right = &tr4,      .value = 3, };
+    # of Tree var tr2 = { .left = &tr1, .right = &tr3, .value = 2, };
 
-    assert(binSearchInt(&tr2, 3));
-    assert(binSearchInt(&tr2, 2));
-    assert(binSearchInt(&tr2, 4));
-    assert(binSearchInt(&tr2, 1));
-    assert(binSearchInt(&tr2, 123) == false);
+    # assert(binSearchInt(&tr2, 3));
+    # assert(binSearchInt(&tr2, 2));
+    # assert(binSearchInt(&tr2, 4));
+    # assert(binSearchInt(&tr2, 1));
+    # assert(binSearchInt(&tr2, 123) == false);
 };
 

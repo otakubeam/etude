@@ -1,0 +1,16 @@
+fun swap a b = {
+  var t = *a;
+  *a = *b;
+  *b = t;
+};
+
+fun main = {
+  var x = 3; var y = 5;
+  print("Orignal: %d %d\n", x, y);
+
+  swap(&x, &y);
+  print("Swapped: %d %d\n", x, y);
+
+  assert(x == 5);
+  assert(y == 3);
+};

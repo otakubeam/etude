@@ -89,6 +89,25 @@ fun at v i = {
   v->data[i]
 };
 
+of *Vec(_) -> _
+fun print_vec v = {
+  print("Vec[ .data = 0x%.8x, .size = %d, .capacity = %d, ]\n",
+                  v->data, v->size, v->capacity,);
+  print("Contents: "); print_contents(v, 0); print("\n");
+};
+
+of String -> Int -> Unit
+fun raw_bytes mem size = {
+  if size == 0 { print("\n"); return; };
+  print("[%x] = %hhx, ", mem, *mem);
+  return raw_bytes(mem + 1, size - 1);
+};
+
+fun print_contents vec i = {
+  if vec->size == i { return; };
+  print("[%d] = %d, ", i, vec->data[i]);
+  return print_contents(vec, i+1);
+};
 
 fun main = {
   var t1 = makeVec(1, 1);
@@ -102,6 +121,11 @@ fun main = {
 
   var t2 = makeVec(true, 3);
   append(t2, false);
+
+  # print_vec(t2);
+  # raw_bytes(t2->data ~> _, 4);
+
+  # print("%hhx %hx %x\n", at(t2, 0), at(t2, 0), at(t2, 0));
 
   assert(at(t2, 0) == true);
   assert(at(t2, 1) == true);

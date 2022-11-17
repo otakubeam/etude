@@ -44,7 +44,7 @@ fun iterateRight pivot right vec = {
   return iterateRight(pivot, right, vec);
 };
 
-of *Int -> _
+of *Int -> Unit
 fun sortTwo data = if data[0] < data[1] {
     # No-op
   } else {
@@ -105,24 +105,26 @@ fun sort v = {
   var c = moveCenter(v->data[0], left, right, v);
   swap(v->data + c, v->data);
 
-  of Vec(Int) var r = { .data = v->data + (c + 1),
-                        .size = v->size - (c + 1),
-                        .capacity = v->size - (c + 1), };
-  of Vec(Int) var l = { .data = v->data,
-                        .size = c,
-                        .capacity = c, };
-  sort(&r);
-  sort(&l);
+  var r = new Vec(_);
+  r->data = v->data + (c + 1);
+  r->size = v->size - (c + 1);
+  r->capacity = v->size - (c + 1);
+
+  var l = new Vec(_);
+  l->data = v->data; l->size = c; l->capacity = c;
+
+  sort(r);
+  sort(l);
 };
 
 fun main = {
   var v1 = new [10] _;
 
-  of Vec(Int) var vec = {
-      .data = v1,
-      .size = 10,
-      .capacity = 10,
-  };
+  var vec = new Vec(_);
+
+  vec->data = v1;
+  vec->size = 10;
+  vec->capacity = 10;
 
   v1[0] = 6;
   v1[1] = 1;
@@ -135,7 +137,7 @@ fun main = {
   v1[8] = 4;
   v1[9] = 0;
 
-  sort(&vec);
+  sort(vec);
 
   assert(v1[0] == 0);
   assert(v1[1] == 1);
