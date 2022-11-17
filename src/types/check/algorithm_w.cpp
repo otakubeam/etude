@@ -271,8 +271,8 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
 }
 
 void AlgorithmW::VisitIntrinsic(IntrinsicCall* node) {
-  if (node->arguments_.size() > 1) {
-    throw "Too many arguments";
+  for (auto a : node->arguments_) {
+    Eval(a);
   }
 
   switch (node->intrinsic) {

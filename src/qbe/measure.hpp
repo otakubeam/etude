@@ -23,7 +23,7 @@ class SizeMeasure {
 
       case types::TypeTag::TY_BOOL:
       case types::TypeTag::TY_CHAR:
-        return 1;
+        return 1; // Is this ok?
 
       case types::TypeTag::TY_UNIT:
       case types::TypeTag::TY_PTR:
@@ -106,11 +106,19 @@ class SizeMeasure {
 
   size_t MeasureStruct(types::Type* t) {
     FMT_ASSERT(t->tag == types::TypeTag::TY_STRUCT, "Incorrect tag");
+
     auto result = 0;
     for (auto& mem : t->as_struct.first) {
       result += MeasureSize(mem.ty);
     }
-    return result;
+
+    auto align = MeasureAlignment(t);
+    //      3    =   4   - (  5    %  4 )
+    auto unused = (align - (result % align)) % align;
+
+    // Make result a multiple of alignment!
+
+    return result + unused;
   }
 
  private:

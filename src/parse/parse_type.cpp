@@ -105,7 +105,7 @@ types::Type* Parser::ParsePrimitiveType() {
       return &types::builtin_bool;
 
     case lex::TokenType::TY_STRING:
-      std::abort();
+      return types::MakeTypePtr(&types::builtin_char);
 
     case lex::TokenType::TY_UNIT:
       return &types::builtin_unit;

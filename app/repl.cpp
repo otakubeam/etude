@@ -12,6 +12,8 @@
 #include <vm/debug/debugger.hpp>
 #include <vm/elf_file.hpp>
 
+#include <qbe/ir_emitter.hpp>
+
 #include <fmt/color.h>
 
 #include <fstream>
@@ -54,7 +56,6 @@ int main(int argc, char** argv) {
   ast::scope::ContextBuilder ctx_builder{global_context};
 
   for (auto r : result) {
-    fmt::print("Here!");
     r->Accept(&ctx_builder);
   }
 
@@ -73,7 +74,7 @@ int main(int argc, char** argv) {
 
   for (auto r : result) {
     if (auto fun = r->as<FunDeclStatement>()) {
-      fmt::print("{}", fun->GetFunctionName());
+      fmt::print(stderr, "searching {}\n", fun->GetFunctionName());
       if (fun->GetFunctionName() == "main") {
         main = fun;
       }
@@ -82,6 +83,15 @@ int main(int argc, char** argv) {
 
   types::check::TemplateInstantiator inst(main);
   auto funs = inst.Flush();
+
+  qbe::IrEmitter ir;
+
+  if (!strcmp(argv[2], "--native")) {
+    for (auto f : funs) {
+      f->Accept(&ir);
+    }
+    return 0;
+  }
 
   vm::codegen::Compiler compiler;
   vm::debug::Disassembler d;

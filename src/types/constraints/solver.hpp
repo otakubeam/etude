@@ -14,7 +14,7 @@ class ConstraintSolver {
   }
 
   bool TrySolveConstraint(Trait i) {
-    fmt::print("Solving constraint {}\n", FormatTrait(i));
+    fmt::print(stderr, "Solving constraint {}\n", FormatTrait(i));
     CheckTypes();
 
     if (i.tag == TraitTags::TYPES_EQ) {
@@ -94,13 +94,13 @@ class ConstraintSolver {
 
       if (i.bound->tag == TypeTag::TY_APP) {
         i.bound = ApplyTyconsLazy(i.bound);
-        fmt::print("Applied tycons {}\n", FormatType(*i.bound));
+        fmt::print(stderr, "Applied tycons {}\n", FormatType(*i.bound));
         fill_queue.push_back(i);
         return true;
       }
 
       if (i.bound->tag != TypeTag::TY_VARIABLE) {
-        fmt::print("{}\n", FormatType(*i.bound));
+        fmt::print(stderr, "{}\n", FormatType(*i.bound));
         throw std::runtime_error{"Not a variable"};
       }
     }
@@ -113,7 +113,7 @@ class ConstraintSolver {
     bool once_more = true;
 
     while (std::exchange(once_more, false)) {
-      PrintQueue();
+      // PrintQueue();
       while (work_queue.size()) {
         auto i = std::move(work_queue.front());
         once_more |= TrySolveConstraint(std::move(i));
@@ -131,9 +131,9 @@ class ConstraintSolver {
 
   void PrintQueue() {
     for (auto& i : work_queue) {
-      fmt::print("{}\n", FormatTrait(i));
+      fmt::print(stderr, "{}\n", FormatTrait(i));
     }
-    fmt::print("\n\n");
+    fmt::print(stderr, "\n\n");
   }
 
  private:

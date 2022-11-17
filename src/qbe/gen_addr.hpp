@@ -1,6 +1,7 @@
 #pragma once
 
 #include <qbe/qbe_value.hpp>
+#include <qbe/qbe_types.hpp>
 #include <qbe/ir_emitter.hpp>
 
 #include <ast/visitors/abort_visitor.hpp>
@@ -17,7 +18,7 @@ namespace qbe {
 
 class GenAddr : public AbortVisitor {
  public:
-  GenAddr(IrEmitter& parent, size_t target_id)
+  GenAddr(IrEmitter& parent, Value target_id)
       : parent_{parent}, target_id_{target_id} {
   }
 
@@ -26,22 +27,30 @@ class GenAddr : public AbortVisitor {
   }
 
   virtual void VisitDeref(DereferenceExpression* node) override {
-    node->operand_->Accept(this);
+    result_ += fmt::format("  {} =l copy {}\n", target_id_.Emit(),
+                           parent_.Eval(node->operand_).Emit());
   }
 
   virtual void VisitFieldAccess(FieldAccessExpression* node) override {
-    (void)node;
-    std::abort();
+    node->struct_expression_->Accept(this);
+
+    auto offset = parent_.measure_.MeasureFieldOffset(
+        node->struct_expression_->GetType(), node->field_name_);
+
+    result_ += fmt::format("  {} =l add {}, {}\n",  //
+                           target_id_.Emit(), target_id_.Emit(), offset);
   }
 
   virtual void VisitVarAccess(VarAccessExpression* node) override {
-    result_ += fmt::format("  %.{} =w %.{}\n",  //
-                           target_id_, parent_.ids_.at(node->GetName()));
+    result_ += fmt::format("  {} = {} copy {}\n",  //
+                           target_id_.Emit(),
+                           ToQbeType(node->GetType()),
+                           parent_.named_values_.at(node->GetName()).Emit());
   }
 
  private:
   IrEmitter& parent_;
-  size_t target_id_;
+  Value target_id_;
   std::string result_;
 };
 

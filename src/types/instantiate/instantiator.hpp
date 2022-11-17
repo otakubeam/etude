@@ -39,17 +39,17 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
       return;
     }
 
-    fmt::print("[!] Symbol\n");
+    fmt::print(stderr,"[!] Symbol\n");
     auto symbol = i->layer_->RetrieveSymbol(i->fn_name_);
 
-    fmt::print("[!] Symbol\n");
+    fmt::print(stderr,"[!] Symbol\n");
 
     // 2) Enter context
 
     auto poly = symbol->GetType();
-    fmt::print("[!] Poly {}\n", FormatType(*poly));
+    fmt::print(stderr,"[!] Poly {}\n", FormatType(*poly));
     auto mono = i->callable_type_;
-    fmt::print("[!] Mono {}\n", FormatType(*mono));
+    fmt::print(stderr,"[!] Mono {}\n", FormatType(*mono));
 
     poly_to_mono_.clear();
     BuildPolyToMono(poly, mono, poly_to_mono_);
@@ -70,9 +70,9 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   void ProcessQueue() {
     while (instantiation_quque_.size()) {
       auto i = instantiation_quque_.front();
-      fmt::print("[!] Processing item\n");
+      fmt::print(stderr,"[!] Processing item\n");
       ProcessQueueItem(i);
-      fmt::print("[!] Processed item\n");
+      fmt::print(stderr,"[!] Processed item\n");
       instantiation_quque_.pop_front();
     }
   }
@@ -80,7 +80,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   TemplateInstantiator(FunDeclStatement* main) {
     StartUp(main);
 
-    fmt::print("Finished processing main\n");
+    fmt::print(stderr,"Finished processing main\n");
 
     ProcessQueue();
   }
@@ -88,7 +88,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   auto Flush() -> std::vector<FunDeclStatement*> {
     std::vector<FunDeclStatement*> result;
     for (auto& mono : mono_items_) {
-      fmt::print("name: {} type: {}\n", mono.second->GetFunctionName(),
+      fmt::print(stderr,"name: {} type: {}\n", mono.second->GetFunctionName(),
                  FormatType(*mono.second->type_));
 
       result.push_back(mono.second);

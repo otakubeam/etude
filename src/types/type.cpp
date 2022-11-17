@@ -97,11 +97,11 @@ bool TypesEquivalent(Type* lhs, Type* rhs,
       return EqStr(&lhs->as_struct, &rhs->as_struct);
 
     case TypeTag::TY_UNION:
-      fmt::print("Comparing unions!");
+      fmt::print(stderr,"Comparing unions!");
       std::abort();
 
     case TypeTag::TY_VARIABLE:
-      fmt::print("Comparing variables!");
+      fmt::print(stderr,"Comparing variables!");
       return false;
 
     case TypeTag::TY_PARAMETER:
@@ -132,10 +132,10 @@ bool TypesEquivalent(Type* lhs, Type* rhs,
 
 void CheckTypes() {
   auto& store = Type::type_store;
-  fmt::print("[!] Type store\n\n");
+  fmt::print(stderr,"[!] Type store\n\n");
   for (auto& t : store) {
     if (t.tag == TypeTag::TY_APP && !t.typing_context_) {
-      fmt::print("id:{} \t context:{:<20} \t\t\t type:{} \n", t.id,
+      fmt::print(stderr,"id:{} \t context:{:<20} \t\t\t type:{} \n", t.id,
                  (void*)t.typing_context_, FormatType(t));
       std::abort();
     }

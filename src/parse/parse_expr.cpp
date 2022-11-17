@@ -222,7 +222,8 @@ std::vector<Expression*> Parser::ParseCSV() {
 
   while (auto expr = ParseExpression()) {
     exprs.push_back(expr);
-    if (!Matches(lex::TokenType::COMMA)) {
+    Matches(lex::TokenType::COMMA);
+    if (lexer_.Peek().type == lex::TokenType::RIGHT_PAREN) {
       break;
     }
   }

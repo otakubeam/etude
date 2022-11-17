@@ -180,8 +180,8 @@ void TemplateInstantiator::VisitFnCall(FnCallExpression* node) {
   auto leader = FindLeader(node->callable_type_);
   SetTyContext(n->callable_type_, leader->typing_context_);
 
-  fmt::print("{}\n", FormatType(*n->callable_type_));
-  fmt::print("Adding a node to the queue\n");
+  fmt::print(stderr,"{}\n", FormatType(*n->callable_type_));
+  fmt::print(stderr,"Adding a node to the queue\n");
 
   instantiation_quque_.push_back(n);
 
