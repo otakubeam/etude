@@ -67,6 +67,8 @@ for f in $tests; do
   report_test $f
 done
 
+rm out a.out
+
 bold $green "-----------------------------------------------------------"
 bold $green "All tests passed! (ideally)"
 
