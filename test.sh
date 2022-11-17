@@ -11,7 +11,7 @@ cecho () {
 }
 
 bold() {
-  local _color=$1; 
+  local _color=$1;
   echo -e ${bold}$(cecho $_color $2)${normal}
 }
 
@@ -21,6 +21,14 @@ runtest() {
   local _testname=$1
   # https://stackoverflow.com/questions/34964332
   $(timeout 0.5 ./examples/repl $_testname &> /dev/null)
+}
+
+runtest_native() {
+  local _testname=$1
+  # https://stackoverflow.com/questions/34964332
+  $(timeout 0.5 ./examples/repl $_testname --native 2> /dev/null \
+    | qbe | as -o out && gcc out)
+  $(timeout 0.5 ./a.out &> /dev/null)
 }
 
 collect_debug_artifacts() {
@@ -43,11 +51,11 @@ report_test() {
   local name=$(cecho $white "[!] Running test $(basename $f)")
   printf '%-60s ... ' "$name"
 
-  if runtest $f; then 
+  if runtest_native $f; then
     printf $(bold $green "PASS!") && echo
   else
     printf $(bold $red "FAIL!") && echo
-    collect_debug_artifacts $f
+    # collect_debug_artifacts $f
   fi
 }
 

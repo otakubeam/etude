@@ -143,7 +143,7 @@ std::string Mangle(Type& type) {
       return fmt::format("u");
 
     case TypeTag::TY_PTR:
-      return "*" + Mangle(*type.as_ptr.underlying);
+      return "P" + Mangle(*type.as_ptr.underlying);
     case TypeTag::TY_FUN:
       return MangleFun(type);
     case TypeTag::TY_APP:

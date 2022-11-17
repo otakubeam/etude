@@ -42,9 +42,8 @@ class GenAddr : public AbortVisitor {
   }
 
   virtual void VisitVarAccess(VarAccessExpression* node) override {
-    result_ += fmt::format("  {} = {} copy {}\n",  //
+    result_ += fmt::format("  {} =l copy {}\n",  //
                            target_id_.Emit(),
-                           ToQbeType(node->GetType()),
                            parent_.named_values_.at(node->GetName()).Emit());
   }
 

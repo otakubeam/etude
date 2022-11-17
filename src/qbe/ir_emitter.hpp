@@ -57,6 +57,12 @@ class IrEmitter : public ReturnVisitor<Value> {
   }
 
  private:
+  void GenAt(Expression* what, Value where) {
+    auto out = Eval(what);
+    fmt::print("  store{} {}, {}\n",  //
+               StoreSuf(what->GetType()), out.Emit(), where.Emit());
+  }
+
   uint8_t GetTypeSize(types::Type* t) {
     return measure_.MeasureSize(t);
   }

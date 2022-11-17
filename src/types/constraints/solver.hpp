@@ -49,6 +49,12 @@ class ConstraintSolver {
         return true;
       }
 
+      if (i.convertible_to.to_type->tag == TypeTag::TY_BOOL &&
+          i.bound->tag == TypeTag::TY_PTR) {
+        // Contextual conversion of ptr to bool
+        return true;
+      }
+
       if (i.convertible_to.to_type->tag == TypeTag::TY_PTR &&
           i.bound->tag == TypeTag::TY_PTR) {
         // Always convert pointers, no questions asked

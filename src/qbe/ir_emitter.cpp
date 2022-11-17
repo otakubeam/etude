@@ -16,16 +16,17 @@ void IrEmitter::GenAddress(Expression* what, Value out) {
 };
 
 void IrEmitter::GenAtAddress(Expression* what, Value where) {
-  GenAt gen_at(*this, where);
-  what->Accept(&gen_at);
-  fmt::print("{}", gen_at.Give());
+  GenAt(what, where);
+  // GenAt gen_at(*this, where);
+  // what->Accept(&gen_at);
+  // fmt::print("{}", gen_at.Give());
 };
 
 ////////////////////////////////////////////////////////////////////
 
 void IrEmitter::VisitVarDecl(VarDeclStatement* node) {
   auto address = GenTemporary();
-  named_values_.insert({node->GetVarName(), address});
+  named_values_.insert_or_assign(node->GetVarName(), address);
 
   auto type = node->value_->GetType();
   auto size = GetTypeSize(type);
@@ -69,7 +70,7 @@ void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
 
   for (size_t i = 0; i < arg_ty.size(); i++) {
     auto t = GenParam();
-    named_values_.insert({formals[i].GetName(), t});
+    named_values_.insert_or_assign(formals[i].GetName(), t);
 
     fmt::print("{} {},", ToQbeType(arg_ty[i]), t.Emit());
   }
@@ -127,7 +128,6 @@ void IrEmitter::VisitIntrinsic(IntrinsicCall* node) {
       CallPrintf(node);
       break;
 
-
     case ast::elaboration::Intrinsic::ASSERT:
       CheckAssertion(node->arguments_[0]);
       break;
@@ -172,8 +172,9 @@ void IrEmitter::VisitDeref(DereferenceExpression* node) {
   // This only works for small stuff!
 
   auto temp = GenTemporary();
-  fmt::print("  {} =w loadsw {}\n",  //
-             temp.Emit(), Eval(node->operand_).Emit());
+  fmt::print("  {} =w load{} {}\n",  //
+             temp.Emit(), LoadSuf(node->GetType()),
+             Eval(node->operand_).Emit());
 
   return_value = temp;
 }
@@ -195,8 +196,9 @@ void IrEmitter::VisitComparison(ComparisonExpression* node) {
 
   switch (node->operator_.type) {
     case lex::TokenType::EQUALS:
-      fmt::print("  {} =w ceqw {}, {}\n",  //
-                 out.Emit(), left.Emit(), right.Emit());
+      fmt::print("  {} =w ceq{} {}, {}\n",  //
+                 out.Emit(), ToQbeType(node->left_->GetType()), left.Emit(),
+                 right.Emit());
       break;
 
     case lex::TokenType::LT:
@@ -230,8 +232,8 @@ void IrEmitter::VisitComparison(ComparisonExpression* node) {
 
 void IrEmitter::VisitBinary(BinaryExpression* node) {
   auto out = GenTemporary();
-  auto lid = Eval(node->left_);
-  auto rid = Eval(node->right_);
+  auto left = Eval(node->left_);
+  auto right = Eval(node->right_);
 
   // Handle pointer arithmetic
 
@@ -241,29 +243,32 @@ void IrEmitter::VisitBinary(BinaryExpression* node) {
     auto underlying = ptr_type->as_ptr.underlying;
     auto multiplier = GetTypeSize(underlying);
 
+    auto temp = GenTemporary();
+    fmt::print("  {} =l extuw {}\n", temp.Emit(), right.Emit());
+
     if (multiplier != 1) {
-      auto temp = GenTemporary();
       fmt::print("  {} =l mul {}, {}\n",  //
-                 temp.Emit(), rid.Emit(), multiplier);
-      rid = temp;
+                 temp.Emit(), temp.Emit(), multiplier);
     }
+
+    right = temp;
   }
 
   switch (node->operator_.type) {
     case lex::TokenType::PLUS:
       fmt::print("  {} ={} add {}, {}\n",  //
-                 out.Emit(), ToQbeType(node->GetType()), lid.Emit(),
-                 rid.Emit());
+                 out.Emit(), ToQbeType(node->GetType()), left.Emit(),
+                 right.Emit());
       break;
 
     case lex::TokenType::STAR:
       fmt::print("  {} =w mul {}, {}\n",  //
-                 out.Emit(), lid.Emit(), rid.Emit());
+                 out.Emit(), left.Emit(), right.Emit());
       break;
 
     case lex::TokenType::MINUS:
       fmt::print("  {} =w sub {}, {}\n",  //
-                 out.Emit(), lid.Emit(), rid.Emit());
+                 out.Emit(), left.Emit(), right.Emit());
       break;
 
     default:
@@ -411,7 +416,24 @@ void IrEmitter::VisitFieldAccess(FieldAccessExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void IrEmitter::VisitTypecast(TypecastExpression* node) {
-  // Unit -> Int -> Bool
+  // If the type is privimite, there is a set of built-in rules
+
+  auto original = node->expr_->GetType();
+  auto target = node->type_;
+
+  if (GetTypeSize(original) == GetTypeSize(target)) {
+    return_value = Eval(node->expr_);
+    return;
+  }
+
+  if (original->tag == types::TypeTag::TY_PTR &&
+      target->tag == types::TypeTag::TY_BOOL) {
+    // Subtyping: lowers automatically
+    // https://c9x.me/compile/doc/il.html#Subtyping
+    return_value = Eval(node->expr_);
+    return;
+  }
+
   (void)node;
   std::abort();  // Unreachable
 }
@@ -452,6 +474,8 @@ void IrEmitter::VisitLiteral(LiteralExpression* node) {
       break;
 
     case lex::TokenType::UNIT:
+      return_value = GenConstInt(0);
+      break;
 
     default:
       FMT_ASSERT(false, "Unreachable!");
