@@ -12,14 +12,11 @@ namespace qbe {
 void IrEmitter::GenAddress(Expression* what, Value out) {
   GenAddr gen_addr(*this, out);
   what->Accept(&gen_addr);
-  fmt::print("{}", gen_addr.Give());
 };
 
 void IrEmitter::GenAtAddress(Expression* what, Value where) {
-  GenAt(what, where);
-  // GenAt gen_at(*this, where);
-  // what->Accept(&gen_at);
-  // fmt::print("{}", gen_at.Give());
+  class GenAt gen_addr(*this, where);
+  what->Accept(&gen_addr);
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -28,10 +25,7 @@ void IrEmitter::VisitVarDecl(VarDeclStatement* node) {
   auto address = GenTemporary();
   named_values_.insert_or_assign(node->GetVarName(), address);
 
-  auto type = node->value_->GetType();
-  auto size = GetTypeSize(type);
-  auto alignment = measure_.MeasureAlignment(type);
-
+  auto [size, alignment] = SizeAlign(node->value_);
   fmt::print("# declare {}\n", node->GetVarName());
   fmt::print("  {} =l alloc{} {}\n", address.Emit(), alignment, size);
 
@@ -169,13 +163,16 @@ void IrEmitter::VisitExprStatement(ExprStatement* node) {
 ////////////////////////////////////////////////////////////////////
 
 void IrEmitter::VisitDeref(DereferenceExpression* node) {
-  // This only works for small stuff!
+  auto src = Eval(node->operand_);
+
+  if (measure_.IsStruct(node->GetType())) {
+    return_value = src;
+    return;
+  }
 
   auto temp = GenTemporary();
-  fmt::print("  {} =w load{} {}\n",  //
-             temp.Emit(), LoadSuf(node->GetType()),
-             Eval(node->operand_).Emit());
-
+  fmt::print("  {} = {} load{} {}  \n", temp.Emit(), ToQbeType(node->GetType()),
+             LoadSuf(node->GetType()), src.Emit());
   return_value = temp;
 }
 
@@ -256,18 +253,19 @@ void IrEmitter::VisitBinary(BinaryExpression* node) {
 
   switch (node->operator_.type) {
     case lex::TokenType::PLUS:
-      fmt::print("  {} ={} add {}, {}\n",  //
+      fmt::print("  {} = {} add {}, {}\n",  //
+                 out.Emit(), ToQbeType(node->GetType()), left.Emit(),
+                 right.Emit());
+      break;
+
+    case lex::TokenType::MINUS:
+      fmt::print("  {} = {} sub {}, {}\n",  //
                  out.Emit(), ToQbeType(node->GetType()), left.Emit(),
                  right.Emit());
       break;
 
     case lex::TokenType::STAR:
       fmt::print("  {} =w mul {}, {}\n",  //
-                 out.Emit(), left.Emit(), right.Emit());
-      break;
-
-    case lex::TokenType::MINUS:
-      fmt::print("  {} =w sub {}, {}\n",  //
                  out.Emit(), left.Emit(), right.Emit());
       break;
 
@@ -283,7 +281,7 @@ void IrEmitter::VisitUnary(UnaryExpression* node) {
 
   switch (node->operator_.type) {
     case lex::TokenType::MINUS:
-      fmt::print("  {} =w neg {}\n",  //
+      fmt::print("  {} =w neg {}    \n",  //
                  out.Emit(), Eval(node->operand_).Emit());
       break;
 
@@ -366,51 +364,37 @@ void IrEmitter::VisitBlock(BlockExpression* node) {
 
   // Here I need to return something else
 
-  return_value = Value{
-      .tag = Value::CONST_INT,
-      .value = 0,
-  };
+  return_value = Value{.tag = Value::CONST_INT, .value = 0};
 }
 
 ////////////////////////////////////////////////////////////////////
 
 void IrEmitter::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
-  auto out = GenTemporary();
-  auto size = GetTypeSize(node->GetType());
-  auto alignment = measure_.MeasureAlignment(node->GetType());
+  auto out = GenStruct();
 
+  auto [size, alignment] = SizeAlign(node);
   fmt::print("  {} =l alloc{} {}\n", out.Emit(), alignment, size);
 
   GenAtAddress(node, out);
-
   return_value = out;
 }
 
 ////////////////////////////////////////////////////////////////////
 
 void IrEmitter::VisitFieldAccess(FieldAccessExpression* node) {
-  auto out = GenTemporary();
-  auto field_name = node->GetFieldName();
+  auto addr = GenTemporary();
 
-  auto struct_type = node->struct_expression_->GetType();
-  auto offset = measure_.MeasureFieldOffset(struct_type, field_name);
-
-  GenAddress(node->struct_expression_, out);
-
-  fmt::print("  {} =l add {}, {} \n", out.Emit(), out.Emit(), offset);
+  GenAddress(node, addr);
 
   if (measure_.IsStruct(node->GetType())) {
-    return_value = out;
+    return_value = addr;
     return;
   }
 
-  auto temp = GenTemporary();
-
-  fmt::print("  {} = {} load{} {} \n",  //
-             temp.Emit(), ToQbeType(node->GetType()), LoadSuf(node->GetType()),
-             out.Emit());
-
-  return_value = temp;
+  auto out = GenTemporary();
+  fmt::print("  {} = {} load{} {}  \n", out.Emit(), ToQbeType(node->GetType()),
+             LoadSuf(node->GetType()), addr.Emit());
+  return_value = out;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -488,9 +472,6 @@ void IrEmitter::VisitVarAccess(VarAccessExpression* node) {
   auto out = GenTemporary();
   auto location = named_values_.at(node->GetName());
 
-  auto eq_type = ToQbeType(node->GetType());
-  auto load_suf = LoadSuf(node->GetType());
-
   switch (location.tag) {
     // Don't need to load params
     case Value::PARAM:
@@ -498,10 +479,14 @@ void IrEmitter::VisitVarAccess(VarAccessExpression* node) {
       return;
 
       // But do need to load locals
-    case Value::TEMPORARY:
+    case Value::TEMPORARY: {
+      auto eq_type = ToQbeType(node->GetType());
+      auto load_suf = LoadSuf(node->GetType());
+
       fmt::print("  {} = {} load{} {}\n",  //
                  out.Emit(), eq_type, load_suf, location.Emit());
       break;
+    }
 
     default:
       std::abort();

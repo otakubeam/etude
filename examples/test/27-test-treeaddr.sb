@@ -1,0 +1,129 @@
+
+type Tree = struct {
+   left: *Tree,
+   right: *Tree,
+   value: Int,
+};
+
+of *Tree -> _ -> _
+fun binSearchInt tree val = {
+    if !(tree ~> _) {
+        return false;
+    };
+
+    var nodeValue = tree->value;
+
+    if nodeValue == val {
+       return true;
+    };
+
+    var subtree = if nodeValue < val {
+        tree->left
+    } else {
+        tree->right
+    };
+
+    binSearchInt(subtree, val)
+};
+
+##############################
+#                            #
+#         +---+              #
+#         | 2 |              #
+#         +---+              #
+#   +---+       +---+        #
+#   | 1 |       | 3 |        #
+#   +---+       +---+        #
+#                     +---+  #
+#                     | 4 |  #
+#                     +---+  #
+#                            #
+##############################
+
+of String -> Int -> _
+fun raw_bytes mem i = {
+  if i == 0 { print("\n"); return; };
+  print("x%02hhX ", *mem);
+  return raw_bytes(mem + 1, i - 1);
+};
+
+of String -> Int -> _
+fun header_forwards mem i = {
+  if i == 0 { print("\n"); return; };
+  print("@%02hhX ", mem);
+  return header_forwards(mem + 1, i - 1);
+};
+
+of String -> Int -> _
+fun header_backwards mem i = {
+  if i == 0 { print("\n"); return; };
+  print("@%02hhX ", mem);
+  return header_backwards(mem - 1, i - 1);
+};
+
+of String -> Int -> _
+fun bytes_backwards mem i = {
+  if i == 0 { print("\n"); return; };
+  print("x%02hhX ", *mem);
+  return bytes_backwards(mem - 1, i - 1);
+};
+
+fun compute x = {};
+
+fun main = {
+    var tr1 = new Tree;
+
+    tr1->left = tr1;
+    tr1->right = tr1->left;
+    tr1->value = 2;
+
+
+    assert(tr1->value == 2);
+    assert(tr1->right == tr1->left);
+    assert(tr1 == tr1->left);
+
+    print("Address of tr1: %zX      \n", &tr1);
+    print("Value of tr1: %zX        \n", tr1);
+    print("Address of tr1->left: %zX\n", &tr1->left);
+    print("Value of tr1->left %zX   \n", tr1->left);
+    print("Address of tr1->value: %zX\n\n", &tr1->value);
+
+    of Tree var tr3 = { 
+      .left = tr1, 
+      .right = &tr3,      
+      .value = 3, 
+    };
+
+    print("tr3.value:  %d\n", tr3.value);
+    print("tr1->value: %d\n", tr1->value);
+
+    assert(tr3.left == tr1);
+
+    # Here is a bug: I move the pointer of tr3 during initialization
+    # assert(tr3.right == &tr3);
+    print("Value of tr3.right: %zX\n", tr3.right);
+
+    assert(tr3.value == 3);
+ 
+    print("Address of tr3: %zX\n", &tr3);
+    print("Address of tr3.left: %zX\n", &tr3.left);
+    print("Address of tr3.right: %zX\n", &tr3.right);
+    print("Address of tr3.value: %zX\n", &tr3.value);
+
+    tr3 = *tr1;
+
+    assert(tr3.value == 2);
+    assert(tr3.left == tr1);
+    assert(tr3.right == tr1);
+
+    tr3 = { 
+      .left = &tr3, 
+      .right = tr1,
+      .value = 1, 
+    };
+
+    assert(tr3.left == &tr3);
+    assert(tr3.right == tr1);
+    assert(tr3.value == 1);
+};
+

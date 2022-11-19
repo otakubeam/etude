@@ -23,7 +23,7 @@ class SizeMeasure {
 
       case types::TypeTag::TY_BOOL:
       case types::TypeTag::TY_CHAR:
-        return 1; // Is this ok?
+        return 1;  // Is this ok?
 
       case types::TypeTag::TY_UNIT:
       case types::TypeTag::TY_PTR:

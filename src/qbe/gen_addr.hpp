@@ -27,7 +27,7 @@ class GenAddr : public AbortVisitor {
   }
 
   virtual void VisitDeref(DereferenceExpression* node) override {
-    result_ += fmt::format("  {} =l copy {}\n", target_id_.Emit(),
+    fmt::print("  {} =l copy {}\n", target_id_.Emit(),
                            parent_.Eval(node->operand_).Emit());
   }
 
@@ -37,12 +37,12 @@ class GenAddr : public AbortVisitor {
     auto offset = parent_.measure_.MeasureFieldOffset(
         node->struct_expression_->GetType(), node->field_name_);
 
-    result_ += fmt::format("  {} =l add {}, {}\n",  //
+    fmt::print("  {} =l add {}, {}\n",  //
                            target_id_.Emit(), target_id_.Emit(), offset);
   }
 
   virtual void VisitVarAccess(VarAccessExpression* node) override {
-    result_ += fmt::format("  {} =l copy {}\n",  //
+    fmt::print("  {} =l copy {}\n",  //
                            target_id_.Emit(),
                            parent_.named_values_.at(node->GetName()).Emit());
   }

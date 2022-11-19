@@ -1,0 +1,60 @@
+type LiteralTree = struct {
+  value: Int,
+};
+
+type AdditionTree = struct {
+  left: *Tree,
+  right: *Tree,
+
+  value: Int,
+};
+
+type MultiplicationTree = struct {
+  left: *Tree,
+  right: *Tree,
+
+  value: Int,
+};
+
+type Tree = struct {
+   tag: Int,
+
+   # Number   -> 1
+   # Plus     -> 2
+   # Minus    -> 3
+   # Multiply -> 4
+
+   mul: MultiplicationTree,
+   add: AdditionTree,
+   lit: LiteralTree,
+};
+
+of String -> Int -> _
+fun raw_bytes mem i = {
+  if i == 0 { print("\n"); return; };
+  print("%hhx", *mem);
+  return raw_bytes(mem + 1, i - 1);
+};
+
+######################################################################
+
+type Token = struct {
+  ty: Int,
+
+  # Number       -> 1
+  number: Int,
+
+  # Plus     (+) -> 2
+  # Minus    (-) -> 3
+  # Multiply (*) -> 4
+};
+
+######################################################################
+
+fun main = {
+  var t = new Tree;
+
+  raw_bytes(t ~> _, 56);
+
+  var m = new MultiplicationTree;
+};
