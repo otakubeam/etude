@@ -18,6 +18,14 @@ enum class TokenType {
 
   PLUS,
   MINUS,
+  DIV,
+
+  PLUS_EQ,
+  MINUS_EQ,
+  STAR_EQ,
+  DIV_EQ, // /=
+
+  ATTRIBUTE,
 
   ASSIGN,
   EQUALS,

@@ -3,6 +3,23 @@ type Size2 = struct {
   b: *Size2,
 };
 
+
+type Large = struct {
+  i: Int,
+  b: Bool,
+  p: *Int,
+};
+
+
+type ManyBools = struct {
+  b1: Bool,
+  b2: Bool,
+  b3: Bool,
+  b4: Bool,
+  b5: Bool,
+};
+
+
 fun main = {
   var p = new [2] Size2;
 
@@ -10,14 +27,27 @@ fun main = {
   var addrAManual = p;
 
   var addrB = &(p->b);
-  var addrBManual = addrA + 1;
+  var addrBManual = (addrA ~> *Int) + 2; # Alignment!
 
   var secondElem = &((p + 1)->a);
-
 
   assert((addrB ~> _ == addrA ) == false);
   assert((addrB ~> _ == addrBManual));
   assert((addrA ~> _ == addrAManual));
   assert((addrB ~> _ == secondElem) == false);
+
+  var l = new Large;
+
+  assert((l ~> *Bool + 0 == (&l->i) ~> _));
+  assert((l ~> *Bool + 4 == (&l->b) ~> _));
+  assert((l ~> *Bool + 8 == (&l->p) ~> _));
+
+  var mb = new ManyBools;
+
+  assert((mb ~> *Bool + 0 == (&mb->b1) ~> _));
+  assert((mb ~> *Bool + 1 == (&mb->b2) ~> _));
+  assert((mb ~> *Bool + 2 == (&mb->b3) ~> _));
+  assert((mb ~> *Bool + 3 == (&mb->b4) ~> _));
+  assert((mb ~> *Bool + 4 == (&mb->b5) ~> _));
 };
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ast/statements.hpp>
+#include <ast/module.hpp>
 
 #include <lex/lexer.hpp>
 

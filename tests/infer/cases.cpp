@@ -35,7 +35,7 @@ TEST_CASE("infer:simple", "[infer]") {
   std::stringstream source{stream};
   lex::Lexer l{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -68,7 +68,7 @@ TEST_CASE("infer:pointer", "[infer]") {
   std::stringstream source{stream};
   lex::Lexer l{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -99,7 +99,7 @@ TEST_CASE("infer:pointer-II", "[infer]") {
   std::stringstream source{stream};
   lex::Lexer l{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -130,7 +130,7 @@ TEST_CASE("infer:recursive:simple", "[infer]") {
   std::stringstream source{stream};
   lex::Lexer l{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -167,7 +167,7 @@ TEST_CASE("infer:poly:id", "[infer]") {
   std::stringstream source{stream};
   lex::Lexer l{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -202,7 +202,7 @@ TEST_CASE("infer:poly:inst", "[infer]") {
   std::stringstream source{stream};
   lex::Lexer l{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -245,7 +245,7 @@ TEST_CASE("infer:poly:swap", "[infer]") {
   std::stringstream source{stream};
   lex::Lexer l{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -286,7 +286,7 @@ TEST_CASE("infer:type", "[infer]") {
   std::stringstream source{stream};
   lex::Lexer l{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -323,7 +323,7 @@ TEST_CASE("infer:type:recursive", "[infer]") {
   std::stringstream source{stream};
   lex::Lexer l{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};

@@ -3,7 +3,7 @@
 
 ///////////////////////////////////////////////////////////////////
 
-auto Parser::ParseUnit() -> std::vector<Statement*> {
+auto Parser::ParseModule() -> std::vector<Statement*> {
   auto result = std::vector<Statement*>{};
   while (auto declaration = ParseDeclaration()) {
     result.push_back(declaration);

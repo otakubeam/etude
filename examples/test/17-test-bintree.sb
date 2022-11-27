@@ -1,0 +1,107 @@
+
+type Tree = struct {                                      
+    left: *Tree,                                    
+    right: *Tree,                                   
+    value: Int,                                     
+};                                                 
+
+
+of Int -> *Tree
+fun makeNode init = {
+    var t = new Tree;
+    t->left = unit ~> _;
+    t->right = unit ~> _;
+    t->value = init;
+    t
+};
+
+
+of *Tree -> *Tree -> _
+fun insertNode tree node = { 
+    var nodeValue = tree->value;                  
+    var val = node->value;                  
+                                                    
+    if nodeValue == val {                           
+        return;                                      
+    };                                              
+                                                    
+    var candidate = if nodeValue < val {            
+        &tree->left                               
+    } else {                                        
+        &tree->right
+    };                                              
+                                                    
+    # candidate :: **Tree     <<-------   Tricky!
+    if (*candidate) ~> Bool {                         
+        insertNode(*candidate, node);          
+    } else {                                        
+        *candidate = node;                         
+    };                                              
+};                                                   
+                                                    
+                                                    
+of *Tree -> Int -> Bool
+fun binSearchInt tree val = {
+    if !tree ~> _ { return false; };
+
+    var nodeValue = tree->value;
+
+    if nodeValue == val {
+        return true;
+    };
+
+    var subtree = if nodeValue < val {
+        tree->left
+    } else {
+        tree->right
+    };
+
+    binSearchInt(subtree, val)
+};
+
+
+of *Tree -> Int -> _
+fun print_walk tree d = {
+    if !tree ~> _ { return; };
+    print_walk(tree->left, d + 1);
+
+    tabulate(d);
+    print("%d: \n", tree->value);
+
+    print_walk(tree->right, d + 1);
+};
+
+
+fun tabulate d = {
+    if d == 0 { return; };
+    print("\t");
+    return tabulate(d - 1);
+};
+
+
+fun draw_line = {
+    print("-----------------------\n");
+};
+
+
+fun print_tree tree = {
+    print_walk(tree, 0);
+    draw_line();
+};
+
+
+fun main = {
+    var root = makeNode(3);
+
+    insertNode(root, makeNode(1));
+    insertNode(root, makeNode(4));
+    insertNode(root, makeNode(5));
+    insertNode(root, makeNode(8));
+    insertNode(root, makeNode(7));
+
+    assert(binSearchInt(root, 5));
+    assert(binSearchInt(root, 1));
+    assert(binSearchInt(root, 4));
+    assert(binSearchInt(root, 7));
+    assert(binSearchInt(root, 8));
+};

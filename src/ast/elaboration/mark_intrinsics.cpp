@@ -25,7 +25,9 @@ void MarkIntrinsics::VisitVarDecl(VarDeclStatement* node) {
 //////////////////////////////////////////////////////////////////////
 
 void MarkIntrinsics::VisitFunDecl(FunDeclStatement* node) {
-  node->body_ = Eval(node->body_)->as<Expression>();
+  if (node->body_) {
+    node->body_ = Eval(node->body_)->as<Expression>();
+  }
   return_value = node;
 }
 

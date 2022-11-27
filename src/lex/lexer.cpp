@@ -130,6 +130,8 @@ std::optional<TokenType> Lexer::MatchOperator() {
       if (scanner_.PeekNextSymbol() == '>') {
         scanner_.MoveRight();
         return TokenType::ARROW;
+      } else if (scanner_.PeekNextSymbol() == '=') {
+        return TokenType::MINUS_EQ;
       } else {
         return TokenType::MINUS;
       }
@@ -143,9 +145,29 @@ std::optional<TokenType> Lexer::MatchOperator() {
       }
 
     case '+':
-      return TokenType::PLUS;
+      if (scanner_.PeekNextSymbol() == '=') {
+        scanner_.MoveRight();
+        return TokenType::PLUS_EQ;
+      } else {
+        return TokenType::PLUS;
+      }
+
     case '*':
-      return TokenType::STAR;
+      if (scanner_.PeekNextSymbol() == '=') {
+        scanner_.MoveRight();
+        return TokenType::STAR_EQ;
+      } else {
+        return TokenType::STAR;
+      }
+
+    case '/':
+      if (scanner_.PeekNextSymbol() == '=') {
+        scanner_.MoveRight();
+        return TokenType::DIV_EQ;
+      } else {
+        return TokenType::DIV;
+      }
+
     case '&':
       return TokenType::ADDR;
     case '!':
@@ -168,6 +190,8 @@ std::optional<TokenType> Lexer::MatchOperator() {
       return TokenType::COLON;
     case ',':
       return TokenType::COMMA;
+    case '@':
+      return TokenType::ATTRIBUTE;
     case '.':
       return TokenType::DOT;
     case EOF:

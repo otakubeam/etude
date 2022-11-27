@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -82,9 +82,11 @@ int main(int argc, char** argv) {
   }
 
   types::check::TemplateInstantiator inst(main);
-  auto funs = inst.Flush();
+  auto [funs, gen_ty_list] = inst.Flush();
 
   qbe::IrEmitter ir;
+
+  ir.EmitTypes(std::move(gen_ty_list));
 
   if (!strcmp(argv[2], "--native")) {
     for (auto f : funs) {

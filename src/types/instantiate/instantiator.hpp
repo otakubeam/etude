@@ -39,17 +39,17 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
       return;
     }
 
-    fmt::print(stderr,"[!] Symbol\n");
+    fmt::print(stderr, "[!] Symbol\n");
     auto symbol = i->layer_->RetrieveSymbol(i->fn_name_);
 
-    fmt::print(stderr,"[!] Symbol\n");
+    fmt::print(stderr, "[!] Symbol\n");
 
     // 2) Enter context
 
     auto poly = symbol->GetType();
-    fmt::print(stderr,"[!] Poly {}\n", FormatType(*poly));
+    fmt::print(stderr, "[!] Poly {}\n", FormatType(*poly));
     auto mono = i->callable_type_;
-    fmt::print(stderr,"[!] Mono {}\n", FormatType(*mono));
+    fmt::print(stderr, "[!] Mono {}\n", FormatType(*mono));
 
     poly_to_mono_.clear();
     BuildPolyToMono(poly, mono, poly_to_mono_);
@@ -63,16 +63,17 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
     auto mono_fun = Eval(definition)->as<FunDeclStatement>();
 
     // 5) Save result
-
-    mono_items_.insert({mono_fun->name_, mono_fun});
+    if (mono_fun->body_) {
+      mono_items_.insert({mono_fun->name_, mono_fun});
+    }
   }
 
   void ProcessQueue() {
     while (instantiation_quque_.size()) {
       auto i = instantiation_quque_.front();
-      fmt::print(stderr,"[!] Processing item\n");
+      fmt::print(stderr, "[!] Processing item\n");
       ProcessQueueItem(i);
-      fmt::print(stderr,"[!] Processed item\n");
+      fmt::print(stderr, "[!] Processed item\n");
       instantiation_quque_.pop_front();
     }
   }
@@ -80,20 +81,22 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   TemplateInstantiator(FunDeclStatement* main) {
     StartUp(main);
 
-    fmt::print(stderr,"Finished processing main\n");
+    fmt::print(stderr, "Finished processing main\n");
 
     ProcessQueue();
   }
 
-  auto Flush() -> std::vector<FunDeclStatement*> {
+  auto Flush()
+      -> std::pair<std::vector<FunDeclStatement*>, std::vector<Type*>> {
     std::vector<FunDeclStatement*> result;
+
     for (auto& mono : mono_items_) {
-      fmt::print(stderr,"name: {} type: {}\n", mono.second->GetFunctionName(),
+      fmt::print(stderr, "name: {} type: {}\n", mono.second->GetFunctionName(),
                  FormatType(*mono.second->type_));
 
       result.push_back(mono.second);
     }
-    return result;
+    return {result, types_to_gen_};
   }
 
   void BuildPolyToMono(Type* poly, Type* mono,
@@ -198,9 +201,26 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   void VisitCompoundInitalizer(CompoundInitializerExpr* node);
 
  private:
+  void MaybeSaveForIL(Type* ty) {
+    if (ty->tag != TypeTag::TY_APP) {
+      return;
+    }
+
+    auto storage = TypeStorage(ty);
+
+    if (storage->tag <= TypeTag::TY_PTR) {
+      return;
+    }
+
+    types_to_gen_.push_back(ty);
+  }
+
+ private:
   std::unordered_map<Type*, Type*> poly_to_mono_;
 
   std::deque<FnCallExpression*> instantiation_quque_;
+
+  std::vector<Type*> types_to_gen_;
 
   // How do I prevent myself from instantiating something twice or more?
   // A: place instantiated in map: name: string_view -> [](type, fun)

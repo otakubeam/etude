@@ -1,6 +1,4 @@
-{
-
-struct Tree {                                     
+type Tree = struct Tree {                                     
    left: *Tree,                                   
    right: *Tree,                                  
    parent: *Tree,                                  
@@ -11,18 +9,14 @@ struct Tree {
 
 ##########################################################
                                                    
-fun isLeaf(node: *Tree) Bool {
-   var left = (*node).left;
-   var right = (*node).right;
+of *Tree -> _
+fun isLeaf node = {
+  var left = node->left;
+  var right = node->right;
 
-   if isNull(left) {
-      if isNull(right) {
-         return true;
-      };
-   };
-
-   false
-}
+  if left ~> _ { ! right ~> _ }
+  else false 
+};
 
 ##########################################################
 
@@ -370,5 +364,3 @@ print(d103);
 print(d104);
 print(d105);
 print(d106);
-
-};

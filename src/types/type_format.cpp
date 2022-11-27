@@ -150,6 +150,7 @@ std::string Mangle(Type& type) {
       return MangleApp(type);
 
     case TypeTag::TY_STRUCT:
+      fmt::print("{}\n", FormatType(type));
       // Unimplemented
 
     case TypeTag::TY_UNION:

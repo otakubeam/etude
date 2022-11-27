@@ -36,9 +36,6 @@ class ExprStatement : public Statement {
 
 class TypeDeclStatement : public Statement {
  public:
-  // of lex::Token -> Vec<_> -> *_
-  // -> _
-  // TypeDeclStatement name params type
   TypeDeclStatement(lex::Token name, std::vector<lex::Token> params,
                     types::Type* body)
       : name_{name}, parameters_{params}, body_{body} {
@@ -60,20 +57,9 @@ class TypeDeclStatement : public Statement {
 
   ///////////////////////////////////////////////////////////////////////
 
-  // auto ZipMembers() -> std::vector<types::StructType::Member> {
-  //   std::vector<types::StructType::Member> result;
-  //   for (size_t i = 0; i < field_names_.size(); i++) {
-  //     result.push_back({
-  //         .name = field_names_[i].GetName(),
-  //         .type = field_types_[i],
-  //     });
-  //   }
-  //   return result;
-  // }
-
-  ///////////////////////////////////////////////////////////////////////
-
   lex::Token name_;
+
+  bool exported_ = false;
 
   std::vector<lex::Token> parameters_;
 
@@ -108,6 +94,8 @@ class VarDeclStatement : public Statement {
 
   // Specific type for GetName method
   VarAccessExpression* lvalue_;
+
+  bool exported_ = false;
 
   // Optional, can be inferred from the right part
   types::Type* annotation_ = nullptr;
@@ -151,6 +139,8 @@ class FunDeclStatement : public Statement {
   ///////////////////////////////////////////////////////////////////////
 
   lex::Token name_;
+
+  bool exported_ = false;
 
   types::Type* type_ = nullptr;
 

@@ -50,6 +50,10 @@ void IrEmitter::VisitAssignment(AssignmentStatement* node) {
 ////////////////////////////////////////////////////////////////////
 
 void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
+  if (!node->body_) {
+    return;
+  }
+
   auto mangled = std::string(node->GetFunctionName());
 
   if (!node->GetFunctionName().starts_with("main")) {
@@ -66,7 +70,7 @@ void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
     auto t = GenParam();
     named_values_.insert_or_assign(formals[i].GetName(), t);
 
-    fmt::print("{} {},", ToQbeType(arg_ty[i]), t.Emit());
+    fmt::print("{} {}, ", ToQbeType(arg_ty[i]), t.Emit());
   }
 
   fmt::print(") {{ \n");
@@ -97,14 +101,16 @@ void IrEmitter::VisitFnCall(FnCallExpression* node) {
     args.push_back(Arg{Eval(a), ToQbeType(a->GetType())});
   }
 
+  // If there are struct args, I need to allocate space for them and copy there
+
   auto mangled = std::string(node->GetFunctionName());
   mangled += types::Mangle(*node->callable_type_);
 
   auto result_ty = ToQbeType(node->GetType());
-  fmt::print("  {} = {} call ${}(", out.Emit(), result_ty, mangled);
+  fmt::print("  {} = {} call ${} ( ", out.Emit(), result_ty, mangled);
 
   for (auto& i : args) {
-    fmt::print("{} {},", i.qbe_ty, i.v.Emit());
+    fmt::print("{} {}, ", i.qbe_ty, i.v.Emit());
   }
 
   fmt::print(")\n");
@@ -313,14 +319,15 @@ void IrEmitter::VisitIf(IfExpression* node) {
 
   fmt::print("@true.{}          \n", true_id);
   auto true_v = Eval(node->true_branch_);
+  auto assign = ToQbeType(node->GetType());
 
-  fmt::print("  {} =w copy {}   \n", out.Emit(), true_v.Emit());
+  fmt::print("  {} = {} copy {}   \n", out.Emit(), assign, true_v.Emit());
   fmt::print("  jmp @join.{}    \n", join_id);
 
   fmt::print("@false.{}         \n", false_id);
   auto false_v = Eval(node->false_branch_);
 
-  fmt::print("  {} =w copy {}   \n", out.Emit(), false_v.Emit());
+  fmt::print("  {} = {} copy {}   \n", out.Emit(), assign, false_v.Emit());
   fmt::print("@join.{}          \n", join_id);
 
   return_value = out;
@@ -418,6 +425,14 @@ void IrEmitter::VisitTypecast(TypecastExpression* node) {
     return;
   }
 
+  if (original->tag == types::TypeTag::TY_CHAR &&
+      target->tag == types::TypeTag::TY_INT) {
+    auto cast = GenTemporary();
+    fmt::print("  {} = w extub {}\n", cast.Emit(), Eval(node->expr_).Emit());
+    return_value = cast;
+    return;
+  }
+
   (void)node;
   std::abort();  // Unreachable
 }
@@ -471,6 +486,11 @@ void IrEmitter::VisitLiteral(LiteralExpression* node) {
 void IrEmitter::VisitVarAccess(VarAccessExpression* node) {
   auto out = GenTemporary();
   auto location = named_values_.at(node->GetName());
+
+  if (measure_.IsStruct(node->GetType())) {
+    return_value = location;
+    return;
+  }
 
   switch (location.tag) {
     // Don't need to load params

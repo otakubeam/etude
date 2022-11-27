@@ -7,9 +7,7 @@ type Tree = struct {
 
 of *Tree -> _ -> _
 fun binSearchInt tree val = {
-    if !(tree ~> _) {
-        return false;
-    };
+    if tree ~> _ {} else { return false; };
 
     var nodeValue = tree->value;
 
@@ -88,10 +86,10 @@ fun main = {
     print("Value of tr1->left %zX   \n", tr1->left);
     print("Address of tr1->value: %zX\n\n", &tr1->value);
 
-    of Tree var tr3 = { 
-      .left = tr1, 
-      .right = &tr3,      
-      .value = 3, 
+    of Tree var tr3 = {
+      .left = tr1,
+      .right = &tr3,
+      .value = 3,
     };
 
     print("tr3.value:  %d\n", tr3.value);
@@ -104,7 +102,7 @@ fun main = {
     print("Value of tr3.right: %zX\n", tr3.right);
 
     assert(tr3.value == 3);
- 
+
     print("Address of tr3: %zX\n", &tr3);
     print("Address of tr3.left: %zX\n", &tr3.left);
     print("Address of tr3.right: %zX\n", &tr3.right);
@@ -116,10 +114,10 @@ fun main = {
     assert(tr3.left == tr1);
     assert(tr3.right == tr1);
 
-    tr3 = { 
-      .left = &tr3, 
+    tr3 = {
+      .left = &tr3,
       .right = tr1,
-      .value = 1, 
+      .value = 1,
     };
 
     assert(tr3.left == &tr3);

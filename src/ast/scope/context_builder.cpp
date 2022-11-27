@@ -105,6 +105,9 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
   });
 
   if (node->body_) {
+    auto symbol = current_context_->RetrieveSymbol(node->GetFunctionName());
+    symbol->as_fn_sym.def = node;
+
     current_context_ = current_context_->MakeNewScopeLayer(
         node->body_->GetLocation(), node->GetFunctionName());
 

@@ -33,7 +33,7 @@ TEST_CASE("vm:codgen:simple", "[vm:codgen]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -49,7 +49,7 @@ TEST_CASE("vm:codgen:simple", "[vm:codgen]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(0)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   vm::codegen::Compiler compiler;
   vm::debug::Disassembler d;
@@ -91,7 +91,7 @@ TEST_CASE("vm:poly:swap", "[vm:codgen]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -107,7 +107,7 @@ TEST_CASE("vm:poly:swap", "[vm:codgen]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(1)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   vm::codegen::Compiler compiler;
   vm::debug::Disassembler d;
@@ -143,7 +143,7 @@ TEST_CASE("vm:codgen:simple:mul", "[vm:codgen]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -159,7 +159,7 @@ TEST_CASE("vm:codgen:simple:mul", "[vm:codgen]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(1)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   vm::codegen::Compiler compiler;
   vm::debug::Disassembler d;
@@ -198,7 +198,7 @@ TEST_CASE("vm:codgen:struct", "[vm:codgen]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -214,7 +214,7 @@ TEST_CASE("vm:codgen:struct", "[vm:codgen]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(1)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   vm::codegen::Compiler compiler;
   vm::debug::Disassembler d;
@@ -263,7 +263,7 @@ TEST_CASE("vm:codgen:struct:nested", "[vm:codgen]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -279,7 +279,7 @@ TEST_CASE("vm:codgen:struct:nested", "[vm:codgen]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(2)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   vm::codegen::Compiler compiler;
   vm::debug::Disassembler d;
@@ -309,7 +309,7 @@ TEST_CASE("vm:codgen:array", "[vm:codgen]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -325,7 +325,7 @@ TEST_CASE("vm:codgen:array", "[vm:codgen]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(0)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   vm::codegen::Compiler compiler;
   vm::debug::Disassembler d;
@@ -375,7 +375,7 @@ TEST_CASE("vm:codgen:struct:tree", "[vm:codgen]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -391,7 +391,7 @@ TEST_CASE("vm:codgen:struct:tree", "[vm:codgen]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(2)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   vm::codegen::Compiler compiler;
   vm::debug::Disassembler d;
@@ -437,7 +437,7 @@ TEST_CASE("vm:codgen:array:dynsize", "[vm:codgen]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -453,7 +453,7 @@ TEST_CASE("vm:codgen:array:dynsize", "[vm:codgen]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(2)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   vm::codegen::Compiler compiler;
   vm::debug::Disassembler d;
@@ -483,7 +483,7 @@ TEST_CASE("vm:codgen:assert", "[vm:codgen]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -504,7 +504,7 @@ TEST_CASE("vm:codgen:assert", "[vm:codgen]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(0)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   vm::codegen::Compiler compiler;
   vm::debug::Disassembler d;

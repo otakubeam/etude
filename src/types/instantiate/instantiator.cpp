@@ -35,7 +35,9 @@ void TemplateInstantiator::VisitFunDecl(FunDeclStatement* node) {
   n->type_ = Instantinate(n->type_, poly_to_mono_);
   SetTyContext(n->type_, FindLeader(node->type_)->typing_context_);
 
-  n->body_ = Eval(n->body_)->as<Expression>();
+  if (n->body_) {
+    n->body_ = Eval(n->body_)->as<Expression>();
+  }
 
   return_value = n;
 }
@@ -85,7 +87,6 @@ void TemplateInstantiator::VisitComparison(ComparisonExpression* node) {
 
 void TemplateInstantiator::VisitBinary(BinaryExpression* node) {
   auto n = new BinaryExpression{*node};
-
 
   n->left_ = Eval(n->left_)->as<Expression>();
   n->right_ = Eval(n->right_)->as<Expression>();
@@ -170,7 +171,10 @@ void TemplateInstantiator::VisitFnCall(FnCallExpression* node) {
 
   for (auto& a : n->arguments_) {
     a = Eval(a)->as<Expression>();
+    MaybeSaveForIL(a->GetType());
   }
+
+  // Get result type
 
   // TODO: do I need this?
   // n->callable_ = Eval(node->callable_)->as<Expression>();
@@ -180,8 +184,10 @@ void TemplateInstantiator::VisitFnCall(FnCallExpression* node) {
   auto leader = FindLeader(node->callable_type_);
   SetTyContext(n->callable_type_, leader->typing_context_);
 
-  fmt::print(stderr,"{}\n", FormatType(*n->callable_type_));
-  fmt::print(stderr,"Adding a node to the queue\n");
+  MaybeSaveForIL(n->GetType());
+
+  fmt::print(stderr, "{}\n", FormatType(*n->callable_type_));
+  fmt::print(stderr, "Adding a node to the queue\n");
 
   instantiation_quque_.push_back(n);
 

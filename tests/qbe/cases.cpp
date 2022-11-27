@@ -24,7 +24,7 @@ TEST_CASE("qbe:simple", "[qbe]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -45,7 +45,7 @@ TEST_CASE("qbe:simple", "[qbe]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(0)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   qbe::IrEmitter ir;
   for (auto& fun : funs) {
@@ -65,7 +65,7 @@ TEST_CASE("qbe:if", "[qbe]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -86,7 +86,7 @@ TEST_CASE("qbe:if", "[qbe]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(0)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   qbe::IrEmitter ir;
   for (auto& fun : funs) {
@@ -110,7 +110,7 @@ TEST_CASE("qbe:struct", "[qbe]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -131,7 +131,7 @@ TEST_CASE("qbe:struct", "[qbe]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(1)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   qbe::IrEmitter ir;
   for (auto& fun : funs) {
@@ -153,7 +153,7 @@ TEST_CASE("qbe:call", "[qbe]") {
   std::stringstream source{stream};
   auto l = lex::Lexer{source};
   Parser p{l};
-  auto result = p.ParseUnit();
+  auto result = p.ParseModule();
 
   ast::scope::Context global_context;
   ast::scope::ContextBuilder ctx_builder{global_context};
@@ -174,7 +174,7 @@ TEST_CASE("qbe:call", "[qbe]") {
   }
 
   types::check::TemplateInstantiator inst(result.at(1)->as<FunDeclStatement>());
-  auto funs = inst.Flush();
+  auto [funs,_] = inst.Flush();
 
   qbe::IrEmitter ir;
   for (auto& fun : funs) {

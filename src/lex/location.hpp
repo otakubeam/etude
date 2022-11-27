@@ -13,7 +13,7 @@ struct Location {
 
   std::string Format() const {
     return fmt::format("line = {}, column = {}",  //
-                       lineno, columnno);
+                       lineno + 1, columnno + 1);
   }
 };
 

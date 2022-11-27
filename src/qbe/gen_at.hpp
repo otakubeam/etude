@@ -51,29 +51,35 @@ class GenAt : public AbortVisitor {
 
   virtual void VisitFnCall(FnCallExpression* node) override {
     auto call = parent_.Eval(node);
-    fmt::print("  store{} {}, {}\n", ToQbeType(node->GetType()), call.Emit(),
+
+    if (parent_.measure_.IsStruct(node->GetType())) {
+      auto [s, a] = parent_.SizeAlign(node);
+      parent_.Copy(a, s, call, target_id_);
+      return;
+    }
+
+    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), call.Emit(),
                target_id_.Emit());
   }
 
   virtual void VisitCompoundInitalizer(CompoundInitializerExpr* node) override {
     size_t previous_offset = 0;
 
+    auto target = parent_.GenTemporary();
+    fmt::print("  {} = l copy {}\n", target.Emit(), target_id_.Emit());
+
     for (auto& i : node->initializers_) {
       auto offset =
           parent_.measure_.MeasureFieldOffset(node->GetType(), i.field);
 
       // Move the pointer
-      fmt::print("  {} =l add {}, {}\n", target_id_.Emit(), target_id_.Emit(),
+      fmt::print("  {} =l add {}, {}\n", target.Emit(), target.Emit(),
                  offset - previous_offset);
 
       previous_offset = offset;
 
-      // Generate result there
-      i.init->Accept(this);
+      parent_.GenAtAddress(i.init, target);
     }
-
-    fmt::print("  {} =l sub {}, {}\n", target_id_.Emit(), target_id_.Emit(),
-               previous_offset);
   }
 
   virtual void VisitNew(NewExpression* node) override {
@@ -86,37 +92,37 @@ class GenAt : public AbortVisitor {
     fmt::print("  storel {}, {}\n", mem.Emit(), target_id_.Emit());
   }
 
-  void VisitUnary(UnaryExpression* node) override {
+  virtual void VisitUnary(UnaryExpression* node) override {
     auto id = parent_.Eval(node);
     fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
                target_id_.Emit());
   }
 
-  void VisitIf(IfExpression* node) override {
+  virtual void VisitIf(IfExpression* node) override {
     auto id = parent_.Eval(node);
     fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
                target_id_.Emit());
   }
 
-  void VisitTypecast(TypecastExpression* node) override {
+  virtual void VisitTypecast(TypecastExpression* node) override {
     auto id = parent_.Eval(node);
     fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
                target_id_.Emit());
   }
 
-  void VisitBinary(BinaryExpression* node) override {
+  virtual void VisitBinary(BinaryExpression* node) override {
     auto id = parent_.Eval(node);
     fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
                target_id_.Emit());
   }
 
-  void VisitComparison(ComparisonExpression* node) override {
+  virtual void VisitComparison(ComparisonExpression* node) override {
     auto id = parent_.Eval(node);
     fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
                target_id_.Emit());
   }
 
-  void VisitBlock(BlockExpression* node) override {
+  virtual void VisitBlock(BlockExpression* node) override {
     auto id = parent_.Eval(node);
     fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
                target_id_.Emit());

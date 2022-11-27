@@ -46,6 +46,54 @@ class IrEmitter : public ReturnVisitor<Value> {
   virtual void VisitTypecast(TypecastExpression* node) override;
   virtual void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
 
+ private:
+  auto SizeAlign(types::Type* ty) {
+    return std::pair(GetTypeSize(ty), measure_.MeasureAlignment(ty));
+  }
+
+  auto SizeAlign(Expression* node) {
+    auto ty = node->GetType();
+    return SizeAlign(ty);
+  }
+
+ public:
+  void EmitType(types::Type* ty) {
+    if (ty->tag != types::TypeTag::TY_APP) {
+      return;
+    }
+
+    auto storage = types::TypeStorage(ty);
+
+    if (storage->tag <= types::TypeTag::TY_PTR) {
+      return;
+    }
+
+    if (storage->tag != types::TypeTag::TY_STRUCT) {
+      fmt::print("{}\n", types::FormatType(*storage));
+      std::abort();  // TODO
+    }
+
+    auto& members = storage->as_struct.first;
+
+    for (auto& mem : members) {
+      EmitType(mem.ty);
+    }
+
+    fmt::print("type :{} = {{ ", Mangle(*ty));
+
+    for (auto& mem : members) {
+      fmt::print("{} {}, ", ToQbeType(mem.ty), 1);
+    }
+
+    fmt::print("}}\n");
+  }
+
+  void EmitTypes(std::vector<types::Type*> types) {
+    for (auto ty : types) {
+      EmitType(ty);
+    }
+  }
+
   ~IrEmitter() {
     // data $strdata.0 = { b "hello", b 0 }
 
@@ -96,26 +144,26 @@ class IrEmitter : public ReturnVisitor<Value> {
   }
 
   void Copy(size_t align, size_t size, Value src, Value dst) {
-    auto store_suf = GetStoreSuf(align);
-    auto load_suf = GetLoadSuf(align);
-    auto load_result = LoadResult(align);
+    auto str_suf = GetStoreSuf(align);
+    auto ld_suf = GetLoadSuf(align);
+    auto ld_res = LoadResult(align);
 
     auto temp = GenTemporary();
+    auto src_ptr = GenTemporary();
+    auto dst_ptr = GenTemporary();
 
-    // TODO: temoraries for pointers load and store
+    fmt::print("  {} = l copy {}\n", src_ptr.Emit(), src.Emit());
+    fmt::print("  {} = l copy {}\n", dst_ptr.Emit(), dst.Emit());
 
     for (size_t copied = 0; copied < size; copied += align) {
       fmt::print("# Copying \n");
-      fmt::print("  {} = {} load{} {}\n", temp.Emit(), load_result, load_suf,
-                 src.Emit());
-      fmt::print("  store{} {}, {}  \n", store_suf, temp.Emit(), dst.Emit());
+      fmt::print("  {} = {} load{} {}\n", temp.Emit(), ld_res, ld_suf,
+                 src_ptr.Emit());
+      fmt::print("  store{} {}, {}  \n", str_suf, temp.Emit(), dst_ptr.Emit());
 
-      fmt::print("  {} =l add {}, {}\n", src.Emit(), src.Emit(), align);
-      fmt::print("  {} =l add {}, {}\n", dst.Emit(), dst.Emit(), align);
+      fmt::print("  {} =l add {}, {}\n", src_ptr.Emit(), src_ptr.Emit(), align);
+      fmt::print("  {} =l add {}, {}\n", dst_ptr.Emit(), dst_ptr.Emit(), align);
     }
-
-    fmt::print("  {} =l sub {}, {}\n", src.Emit(), src.Emit(), size);
-    fmt::print("  {} =l sub {}, {}\n", dst.Emit(), dst.Emit(), size);
   }
 
   uint8_t GetTypeSize(types::Type* t) {
@@ -142,11 +190,6 @@ class IrEmitter : public ReturnVisitor<Value> {
     fmt::print(")\n");
   }
 
-  auto SizeAlign(Expression* node) {
-    auto ty = node->GetType();
-    return std::pair(GetTypeSize(ty), measure_.MeasureAlignment(ty));
-  }
-
   void CheckAssertion(Expression* cond) {
     auto true_id = id_ += 1;
     auto false_id = id_ += 1;
@@ -163,12 +206,19 @@ class IrEmitter : public ReturnVisitor<Value> {
     fmt::print("  jmp @join.{}    \n", join_id);
 
     fmt::print("@false.{}         \n", false_id);
-    CallAbort();
+    CallAbort(cond);
 
     fmt::print("@join.{}          \n", join_id);
   }
 
-  void CallAbort() {
+  void CallAbort(Expression* cond) {
+    error_msg_storage_.push_back(
+        fmt::format("Abort at {}\\n", cond->GetLocation().Format()));
+
+    string_literals_.push_back(error_msg_storage_.back());
+
+    fmt::print("  call $printf (l $strdata.{}, ..., ) \n",
+               string_literals_.size() - 1);
     fmt::print("  call $abort ()  \n");
   }
 
@@ -201,7 +251,7 @@ class IrEmitter : public ReturnVisitor<Value> {
   std::unordered_map<std::string_view, Value> named_values_;
 
   std::vector<std::string_view> string_literals_;
-  std::vector<types::Type*> types_;
+  std::vector<std::string> error_msg_storage_;
 
   detail::SizeMeasure measure_;
 };

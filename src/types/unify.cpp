@@ -42,6 +42,7 @@ void Unify(Type* a, Type* b, std::deque<Trait>& fill_queue) {
     return;
   }
 
+  fmt::print("{} ~! {}\n", la->Format(), lb->Format());
   throw "Inference error: Tag mismatch";
 }
 
@@ -100,12 +101,12 @@ void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue) {
     case TypeTag::TY_APP: {
       if (a->as_tyapp.name.GetName() != b->as_tyapp.name) {
         while (auto new_a = ApplyTyconsLazy(a)) {
-          fmt::print(stderr,"a ~ {}\n", FormatType(*new_a));
+          fmt::print(stderr, "a ~ {}\n", FormatType(*new_a));
           a = new_a;
         }
 
         while (auto new_b = ApplyTyconsLazy(b)) {
-          fmt::print(stderr,"b ~ {}\n", FormatType(*new_b));
+          fmt::print(stderr, "b ~ {}\n", FormatType(*new_b));
           b = new_b;
         }
 

@@ -166,6 +166,7 @@ void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue);
 void Generalize(Type* ty);
 
 Type* ApplyTyconsLazy(Type* ty);
+Type* TypeStorage(Type* t);
 
 using KnownParams = std::unordered_map<Type*, Type*>;
 Type* Instantinate(Type* ty, KnownParams& map);

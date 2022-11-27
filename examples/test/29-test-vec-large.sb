@@ -1,0 +1,78 @@
+
+type Vec a = struct {
+  data: *a,
+  size: Int,
+  capacity: Int,
+};
+
+
+of _ -> Vec(_)
+fun makeVec size = {
+    .data = new [size] _,
+    .size = 0,
+    .capacity = size,
+  };
+
+
+fun memcpy src dst i = {
+  if i == 0 { return; };
+  *dst = *src;
+  return memcpy(src + 1, dst + 1, i - 1);
+};
+
+
+of *Vec(_) -> _
+fun extend_cap v = {
+  assert(v->size == v->capacity);
+
+  var newcap = v->capacity + 2;
+
+  var v2 = new [newcap] _;
+  memcpy(v2, v->data, v->size);
+
+  v->data = v2;
+  v->capacity = newcap;
+};
+
+
+of *Vec(_) -> _ -> _
+fun append v val = {
+  if v->capacity == v->size {
+     extend_cap(v);
+  };
+
+  v->data[v->size] = val;
+  v->size = v->size + 1;
+};
+
+
+of *Vec(_) -> _ -> _
+fun at v i = {
+  assert(v->size > i);
+  v->data + i
+};
+
+
+type Large = struct {
+  i: Int,
+  b: Bool,
+  p: *Int,
+};
+
+
+fun main = {
+  var v = makeVec(4);
+  append(&v, { .i = 123,
+               .b = true,
+               .p = unit ~> _ });
+
+  at(&v, 0)->i = 124;
+
+  of Large var elem = *at(&v, 0);
+
+  assert(elem.i == 124);
+  assert(elem.b == true);
+  assert(elem.p == unit ~> _);
+};
+
+
