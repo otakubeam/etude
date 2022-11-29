@@ -1,0 +1,21 @@
+
+fun main = {
+    of Vec(_) var v = ...;
+
+    append(v, 234);    <<<---- here it doesn't make sense to copy
+                               I want a reference (like & in C++)
+                               but without really specifing it in
+                               function signature. Instead, user
+                               have to specify that he *doesn't*
+                               need a reference instead
+
+                               Ok I feel this also has connections 
+                               to virtual dispatch. The idea is that
+                               I write a dyn before `fun` and the 
+                               function automatically becomes virtual
+                               (I just again take a references at the
+                               call site, which doesn't require user
+                               intervention)
+
+                               Need to think about it more
+};

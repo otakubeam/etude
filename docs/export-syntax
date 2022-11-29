@@ -1,0 +1,59 @@
+std;
+
+std::io;
+
+.:functional::this;
+
+extern {
+
+
+    ## When linked with the the glibc this allows for reading user input.
+    of String -> ... -> Int
+    fun scnaf;
+
+    of String static CPATH;
+
+
+};
+
+// Functions that we define in this module (module is a file)
+// imports inside a module are resolved using DFS (this is easy)
+
+// How are imports resolved between modules?
+// (This is not so easy) Can build SCC on the modules and so that
+// one scc is something like a compilation unit.
+
+export {
+
+    // Of course types should also be exported
+    type Vec a = struct {
+        data: *a;
+    };
+
+    ## Appends the item to the end of the vector
+
+    // How about such syntax? Mut here basically means `not a reference`
+    // But this allows me to use dynamic dispatch on the call site
+
+    of copy Vec(a) -> mut a 
+    -> Unit
+    requires Ord a, 
+             Index a,
+        @ track-caller 
+        @ symbol = 'push_back'
+        @
+    fun append vector item;
+
+
+    /// Removes and returns the last element of the vector
+
+    of mut Vec(a) -> a
+    fun pop vector;
+
+};
+
+of mut Vec(a) -> a
+fun pop v = {
+    v.size -= 1;
+    return v.data[v.size];
+};
