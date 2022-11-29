@@ -1,9 +1,12 @@
 #pragma once
 
 #include <ast/scope/symbol.hpp>
+#include
 
 #include <unordered_map>
 #include <deque>
+
+class CompilationDriver;
 
 namespace ast::scope {
 
@@ -28,12 +31,18 @@ struct Context {
 
   Context* parent = nullptr;
 
+  CompilationDriver* driver = nullptr;
+
   std::vector<Context*> children{};
 
   void Print();
 
   Context* Find(std::string_view name);
+
   Symbol* RetrieveSymbol(std::string_view name);
+
+  Symbol* FindLocalSymbol(std::string_view name);
+  Symbol* FindFromExported(std::string_view name);
 
   Symbol* RetrieveFromChild(std::string_view name);
 

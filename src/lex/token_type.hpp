@@ -26,6 +26,8 @@ enum class TokenType {
   DIV_EQ, // /=
 
   ATTRIBUTE,
+  EXPORT,
+  EXTERN,
 
   ASSIGN,
   EQUALS,

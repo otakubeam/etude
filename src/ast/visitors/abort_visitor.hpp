@@ -25,6 +25,10 @@ class AbortVisitor : public Visitor {
     std::abort();
   }
 
+  virtual void VisitTraitDecl(TraitDeclaration*) override {
+    std::abort();
+  }
+
   virtual void VisitAssignment(AssignmentStatement*) override {
     std::abort();
   }

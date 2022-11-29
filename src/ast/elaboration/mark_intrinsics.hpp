@@ -17,6 +17,7 @@ class MarkIntrinsics : public ReturnVisitor<TreeNode*> {
   void VisitTypeDecl(TypeDeclStatement* node);
   void VisitVarDecl(VarDeclStatement* node);
   void VisitFunDecl(FunDeclStatement* node);
+  void VisitTraitDecl(TraitDeclaration* node);
 
   void VisitComparison(ComparisonExpression* node);
   void VisitBinary(BinaryExpression* node);

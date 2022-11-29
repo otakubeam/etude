@@ -1,3 +1,4 @@
+#include <driver/compil_driver.hpp>
 #include <ast/scope/context.hpp>
 #include <types/type.hpp>
 
@@ -25,10 +26,26 @@ Context* Context::Find(std::string_view name) {
 //////////////////////////////////////////////////////////////////////
 
 Symbol* Context::RetrieveSymbol(std::string_view name) {
+  if (auto f = FindLocalSymbol(name)) {
+    return f;
+  }
+  return FindFromExported(name);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+Symbol* Context::FindLocalSymbol(std::string_view name) {
   if (bindings.symbol_map.contains(name)) {
     return bindings.symbol_map.at(name);
   }
   return parent == nullptr ? nullptr : parent->RetrieveSymbol(name);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+Symbol* Context::FindFromExported(std::string_view name) {
+  auto mod = driver->GetModuleOf(name);
+  return mod->GetExportedSymbol(name);
 }
 
 //////////////////////////////////////////////////////////////////////

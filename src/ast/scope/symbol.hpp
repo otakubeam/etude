@@ -56,6 +56,11 @@ struct Symbol {
     return name;
   }
 
+  FunDeclStatement* GetFunctionDefinition() {
+    FMT_ASSERT(sym_type == SymbolType::FUN, "Not a function symbol");
+    return as_fn_sym.def;
+  }
+
   types::Type* GetType();
 
   //////////////////////////////////////////////////////////////////////

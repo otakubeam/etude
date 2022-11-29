@@ -1,6 +1,6 @@
 #include <ast/scope/context_builder.hpp>
 
-#include <ast/expressions.hpp>
+#include <ast/declarations.hpp>
 #include <ast/statements.hpp>
 
 namespace ast::scope {
@@ -18,8 +18,8 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
     std::abort();
   }
 
-  current_context_ = current_context_->MakeNewScopeLayer(node->GetLocation(),
-                                                         node->GetStructName());
+  current_context_ =
+      current_context_->MakeNewScopeLayer(node->GetLocation(), node->GetName());
 
   // Replicate * `size` times
 
@@ -36,12 +36,12 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
                                      .body = node->body_,
                                      .kind = kind}};
 
-  // Accessible from parent
   types::SetTyContext(ty, current_context_);
 
+  // Accessible from parent
   current_context_->parent->bindings.InsertSymbol(Symbol{
       .sym_type = SymbolType::TYPE,
-      .name = node->GetStructName(),
+      .name = node->GetName(),
       .as_type = {.type = ty},
       .declared_at = node->GetLocation(),
   });
@@ -74,7 +74,7 @@ void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
 
   current_context_->bindings.InsertSymbol({
       .sym_type = SymbolType::VAR,
-      .name = node->GetVarName(),
+      .name = node->GetName(),
       .as_varbind = {.type = inst_ty},
       .declared_at = node->GetLocation(),
   });
@@ -94,7 +94,7 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
 
   current_context_->bindings.InsertSymbol({
       .sym_type = SymbolType::FUN,
-      .name = node->GetFunctionName(),
+      .name = node->GetName(),
       .as_fn_sym =
           {
               .argnum = node->formals_.size(),
@@ -105,11 +105,11 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
   });
 
   if (node->body_) {
-    auto symbol = current_context_->RetrieveSymbol(node->GetFunctionName());
+    auto symbol = current_context_->RetrieveSymbol(node->GetName());
     symbol->as_fn_sym.def = node;
 
     current_context_ = current_context_->MakeNewScopeLayer(
-        node->body_->GetLocation(), node->GetFunctionName());
+        node->body_->GetLocation(), node->GetName());
 
     node->layer_ = current_context_;
 
@@ -126,7 +126,7 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
 
     {
       auto fn = current_fn_;  // For return
-      current_fn_ = node->GetFunctionName();
+      current_fn_ = node->GetName();
 
       node->body_->Accept(this);
       current_fn_ = fn;

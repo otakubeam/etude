@@ -4,10 +4,6 @@
 ///////////////////////////////////////////////////////////////////
 
 Statement* Parser::ParseStatement() {
-  if (auto decl_statement = ParseDeclaration()) {
-    return decl_statement;
-  }
-
   if (auto return_statement = ParseReturnStatement()) {
     return return_statement;
   }
@@ -107,3 +103,5 @@ AssignmentStatement* Parser::ParseAssignment(LvalueExpression* target) {
   Consume(lex::TokenType::SEMICOLON);
   return new AssignmentStatement{assignment_loc, target, value};
 }
+
+///////////////////////////////////////////////////////////////////

@@ -22,13 +22,15 @@ class IrEmitter : public ReturnVisitor<Value> {
   friend class GenAddr;
   friend class GenAt;
 
-  virtual void VisitVarDecl(VarDeclStatement* node) override;
   virtual void VisitAssignment(AssignmentStatement* node) override;
-  virtual void VisitFunDecl(FunDeclStatement* node) override;
-  virtual void VisitTypeDecl(TypeDeclStatement* node) override;
   virtual void VisitReturn(ReturnStatement* node) override;
   virtual void VisitYield(YieldStatement* node) override;
   virtual void VisitExprStatement(ExprStatement* node) override;
+
+  virtual void VisitVarDecl(VarDeclStatement* node) override;
+  virtual void VisitFunDecl(FunDeclStatement* node) override;
+  virtual void VisitTypeDecl(TypeDeclStatement* node) override;
+  virtual void VisitTraitDecl(TraitDeclaration* node) override;
 
   virtual void VisitDeref(DereferenceExpression* node) override;
   virtual void VisitAddressof(AddressofExpression* node) override;

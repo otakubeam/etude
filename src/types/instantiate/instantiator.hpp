@@ -7,8 +7,7 @@
 
 #include <ast/visitors/template_visitor.hpp>
 
-#include <ast/expressions.hpp>
-#include <ast/statements.hpp>
+#include <ast/declarations.hpp>
 
 #include <queue>
 
@@ -78,8 +77,8 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
     }
   }
 
-  TemplateInstantiator(FunDeclStatement* main) {
-    StartUp(main);
+  TemplateInstantiator(Declaration* main) {
+    StartUp(main->as<FunDeclStatement>());
 
     fmt::print(stderr, "Finished processing main\n");
 
@@ -91,7 +90,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
     std::vector<FunDeclStatement*> result;
 
     for (auto& mono : mono_items_) {
-      fmt::print(stderr, "name: {} type: {}\n", mono.second->GetFunctionName(),
+      fmt::print(stderr, "name: {} type: {}\n", mono.second->GetName(),
                  FormatType(*mono.second->type_));
 
       result.push_back(mono.second);
@@ -183,6 +182,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   void VisitTypeDecl(TypeDeclStatement* node);
   void VisitVarDecl(VarDeclStatement* node);
   void VisitFunDecl(FunDeclStatement* node);
+  void VisitTraitDecl(TraitDeclaration* node);
 
   void VisitComparison(ComparisonExpression* node);
   void VisitBinary(BinaryExpression* node);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ast/module.hpp>
+#include <driver/module.hpp>
 
 #include <lex/lexer.hpp>
 
@@ -8,9 +8,7 @@ class Parser {
  public:
   Parser(lex::Lexer& l);
 
-  // Top-level
-  // Parses all declarations in a file
-  auto ParseUnit() -> std::vector<Statement*>;
+  auto ParseModule() -> Module;
 
   ///////////////////////////////////////////////////////////////////
 
@@ -23,9 +21,10 @@ class Parser {
 
   ////////////////////////////////////////////////////////////////////
 
-  Statement* ParseDeclaration();
+  Declaration* ParseDeclaration();
 
-  TypeDeclStatement* ParseTypeDeclStatement(types::Type* hint);
+  TraitDeclaration* ParseTraitDeclaration();
+  TypeDeclStatement* ParseTypeDeclStatement();
   FunDeclStatement* ParseFunDeclStatement(types::Type* hint);
   VarDeclStatement* ParseVarDeclStatement(types::Type* hint);
 

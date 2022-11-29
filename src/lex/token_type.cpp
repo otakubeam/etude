@@ -22,6 +22,8 @@ namespace lex {
   code(STAR_EQ)             \
   code(DIV_EQ)              \
   code(ATTRIBUTE)           \
+  code(EXPORT)              \
+  code(EXTERN)              \
   code(ASSIGN)              \
   code(EQUALS)              \
   code(LT)                  \
