@@ -2,8 +2,7 @@
 
 #include <ast/elaboration/intrinsics.hpp>
 
-#include <ast/expressions.hpp>
-#include <ast/statements.hpp>
+#include <ast/declarations.hpp>
 
 #include <lex/token.hpp>
 
@@ -29,6 +28,13 @@ void MarkIntrinsics::VisitFunDecl(FunDeclStatement* node) {
     node->body_ = Eval(node->body_)->as<Expression>();
   }
   return_value = node;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void MarkIntrinsics::VisitTraitDecl(TraitDeclaration* node) {
+  std::abort();
+  (void)node;
 }
 
 //////////////////////////////////////////////////////////////////////

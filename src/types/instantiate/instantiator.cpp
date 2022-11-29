@@ -44,6 +44,13 @@ void TemplateInstantiator::VisitFunDecl(FunDeclStatement* node) {
 
 //////////////////////////////////////////////////////////////////////
 
+void TemplateInstantiator::VisitTraitDecl(TraitDeclaration* node) {
+  std::abort();
+  (void)node;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 void TemplateInstantiator::VisitYield(YieldStatement* node) {
   auto n = new YieldStatement{*node};
   n->yield_value_ = Eval(n->yield_value_)->as<Expression>();

@@ -23,10 +23,10 @@ void IrEmitter::GenAtAddress(Expression* what, Value where) {
 
 void IrEmitter::VisitVarDecl(VarDeclStatement* node) {
   auto address = GenTemporary();
-  named_values_.insert_or_assign(node->GetVarName(), address);
+  named_values_.insert_or_assign(node->GetName(), address);
 
   auto [size, alignment] = SizeAlign(node->value_);
-  fmt::print("# declare {}\n", node->GetVarName());
+  fmt::print("# declare {}\n", node->GetName());
   fmt::print("  {} =l alloc{} {}\n", address.Emit(), alignment, size);
 
   // Gen at address handles big structures itself!
@@ -54,9 +54,9 @@ void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
     return;
   }
 
-  auto mangled = std::string(node->GetFunctionName());
+  auto mangled = std::string(node->GetName());
 
-  if (!node->GetFunctionName().starts_with("main")) {
+  if (!node->GetName().starts_with("main")) {
     mangled += types::Mangle(*node->type_);
   }
 
@@ -437,8 +437,17 @@ void IrEmitter::VisitTypecast(TypecastExpression* node) {
   std::abort();  // Unreachable
 }
 
+////////////////////////////////////////////////////////////////////
+
 void IrEmitter::VisitTypeDecl(TypeDeclStatement*) {
   std::abort();  // Unreachable
+}
+
+////////////////////////////////////////////////////////////////////
+
+void IrEmitter::VisitTraitDecl(TraitDeclaration* node) {
+  std::abort();  // Unreachable
+  (void)node;
 }
 
 ////////////////////////////////////////////////////////////////////

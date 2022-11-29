@@ -23,6 +23,9 @@ class Parser {
 
   Declaration* ParseDeclaration();
 
+  Declaration* ParsePrototype(bool require_sigature = false);
+  FunDeclStatement* ParseFunPrototype(types::Type* hint);
+
   TraitDeclaration* ParseTraitDeclaration();
   TypeDeclStatement* ParseTypeDeclStatement();
   FunDeclStatement* ParseFunDeclStatement(types::Type* hint);

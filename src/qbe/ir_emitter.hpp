@@ -6,8 +6,7 @@
 
 #include <ast/visitors/template_visitor.hpp>
 
-#include <ast/expressions.hpp>
-#include <ast/statements.hpp>
+#include <ast/declarations.hpp>
 
 #include <unordered_map>
 #include <utility>

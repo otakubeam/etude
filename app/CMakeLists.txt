@@ -1,10 +1,10 @@
-add_executable(repl repl.cpp)
+add_executable(etc etc_cli.cpp)
 
-target_link_libraries(repl PUBLIC compiler)
+target_link_libraries(etc PUBLIC compiler)
 
-target_link_libraries(repl PUBLIC ubsan)
+target_link_libraries(etc PUBLIC ubsan)
 
-set_target_properties(repl PROPERTIES
+set_target_properties(etc PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/examples"
 )
 

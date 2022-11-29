@@ -1,7 +1,6 @@
 #pragma once
 
 #include <ast/scope/symbol.hpp>
-#include
 
 #include <unordered_map>
 #include <deque>

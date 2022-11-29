@@ -1,8 +1,7 @@
 #include <types/constraints/solver.hpp>
 #include <types/check/algorithm_w.hpp>
 
-#include <ast/expressions.hpp>
-#include <ast/statements.hpp>
+#include <ast/declarations.hpp>
 #include <lex/token.hpp>
 
 namespace types::check {
@@ -25,7 +24,7 @@ void AlgorithmW::VisitTypeDecl(TypeDeclStatement*) {
 //////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitVarDecl(VarDeclStatement* node) {
-  auto symbol = node->layer_->RetrieveSymbol(node->GetVarName());
+  auto symbol = node->layer_->RetrieveSymbol(node->GetName());
 
   auto ty = symbol->GetType();
 
@@ -53,7 +52,7 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
 
   // Make function type
 
-  auto fn_name = node->GetFunctionName();
+  auto fn_name = node->GetName();
   auto symbol = node->layer_->RetrieveSymbol(fn_name);
   auto ty = MakeFunType(std::move(param_pack), MakeTypeVar());
   SetTyContext(ty, node->layer_);
@@ -76,6 +75,14 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
   }
 
   node->type_ = return_value = ty;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void AlgorithmW::VisitTraitDecl(TraitDeclaration* node) {
+  std::abort();
+  // Is this a no-op?
+  (void)node;
 }
 
 //////////////////////////////////////////////////////////////////////

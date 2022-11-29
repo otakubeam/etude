@@ -6,8 +6,7 @@
 #include <vm/instr_translator.hpp>
 #include <vm/elf_file.hpp>
 
-#include <ast/expressions.hpp>
-#include <ast/statements.hpp>
+#include <ast/declarations.hpp>
 
 #include <utility>
 
@@ -22,16 +21,20 @@ class Compiler : public Visitor {
 
   ////////////////////////////////////////////////////////////////////
 
-  // virtual void VisitStatement(Statement* node) override;
-  virtual void VisitVarDecl(VarDeclStatement* node) override;
   virtual void VisitAssignment(AssignmentStatement* node) override;
-  virtual void VisitFunDecl(FunDeclStatement* node) override;
-  virtual void VisitTypeDecl(TypeDeclStatement* node) override;
   virtual void VisitReturn(ReturnStatement* node) override;
   virtual void VisitYield(YieldStatement* node) override;
   virtual void VisitExprStatement(ExprStatement* node) override;
 
-  // virtual void VisitExpression(Expression*) override;
+  ////////////////////////////////////////////////////////////////////
+
+  virtual void VisitVarDecl(VarDeclStatement* node) override;
+  virtual void VisitFunDecl(FunDeclStatement* node) override;
+  virtual void VisitTypeDecl(TypeDeclStatement* node) override;
+  virtual void VisitTraitDecl(TraitDeclaration* node) override;
+
+  ////////////////////////////////////////////////////////////////////
+
   virtual void VisitDeref(DereferenceExpression* node) override;
   virtual void VisitAddressof(AddressofExpression* node) override;
   virtual void VisitIf(IfExpression* node) override;

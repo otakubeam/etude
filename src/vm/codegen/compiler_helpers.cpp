@@ -14,7 +14,7 @@ Compiler::~Compiler() = default;
 
 auto Compiler::Compile(TreeNode* node) -> ElfFile {
   if (auto fn = node->as<FunDeclStatement>()) {
-    std::string mangled = std::string(fn->GetFunctionName());
+    std::string mangled = std::string(fn->GetName());
     mangled += types::Mangle(*fn->type_);
 
     translator_.emplace(InstrTranslator(std::move(mangled)));

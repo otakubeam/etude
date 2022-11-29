@@ -18,14 +18,14 @@ void Compiler::VisitVarDecl(VarDeclStatement* node) {
 
   debug::DebugInfo debug_info{
       .location = node->GetLocation(),
-      .dbg_instr = {{.var_name = std::string{node->GetVarName()},
+      .dbg_instr = {{.var_name = std::string{node->GetName()},
                      .type_name = node->value_->GetType()->Format()}}};
 
   translator_->LastDie() = std::move(debug_info);
 
   // Infrom FrameTranslator about this location
 
-  auto name = node->GetVarName();
+  auto name = node->GetName();
   auto size = GetValueSize(node->value_);
   current_frame_->AddLocal(name, size);
 }
@@ -56,7 +56,7 @@ void Compiler::VisitFunDecl(FunDeclStatement* node) {
   //
   current_frame_ = new FrameTranslator{node, measure_};
 
-  auto mangled = std::string(node->GetFunctionName());
+  auto mangled = std::string(node->GetName());
   mangled += types::Mangle(*node->type_);
 
   node->body_->Accept(this);
@@ -387,6 +387,12 @@ void Compiler::VisitTypecast(TypecastExpression* node) {
 }
 
 void Compiler::VisitTypeDecl(TypeDeclStatement*) {
+  std::abort();  // Unreachable
+}
+
+////////////////////////////////////////////////////////////////////
+
+void Compiler::VisitTraitDecl(TraitDeclaration* ) {
   std::abort();  // Unreachable
 }
 

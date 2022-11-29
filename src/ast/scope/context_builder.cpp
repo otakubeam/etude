@@ -138,6 +138,13 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
 
 //////////////////////////////////////////////////////////////////////
 
+void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
+  std::abort();
+  (void)node;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 void ContextBuilder::VisitYield(YieldStatement* node) {
   node->yield_value_->Accept(this);
 }
@@ -237,6 +244,7 @@ void ContextBuilder::VisitFieldAccess(FieldAccessExpression* node) {
 
 void ContextBuilder::VisitVarAccess(VarAccessExpression* node) {
   node->layer_ = current_context_;
+  fmt::print("{}\n", node->name_.GetName());
 }
 
 void ContextBuilder::VisitLiteral(LiteralExpression*) {

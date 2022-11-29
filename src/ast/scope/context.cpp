@@ -38,14 +38,17 @@ Symbol* Context::FindLocalSymbol(std::string_view name) {
   if (bindings.symbol_map.contains(name)) {
     return bindings.symbol_map.at(name);
   }
-  return parent == nullptr ? nullptr : parent->RetrieveSymbol(name);
+  return parent == nullptr ? nullptr : parent->FindLocalSymbol(name);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 Symbol* Context::FindFromExported(std::string_view name) {
-  auto mod = driver->GetModuleOf(name);
-  return mod->GetExportedSymbol(name);
+  if (auto mod = driver->GetModuleOf(name)) {
+    return mod->GetExportedSymbol(name);
+  }
+
+  throw std::runtime_error{fmt::format("No such symbol {}\n", name)};
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -56,6 +59,7 @@ Context* Context::MakeNewScopeLayer(lex::Location loc, std::string_view name) {
       .location = loc,
       .level = level + 1,
       .parent = this,
+      .driver = driver,
   };
   children.push_back(child);
   return child;

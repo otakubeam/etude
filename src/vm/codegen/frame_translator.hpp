@@ -4,7 +4,7 @@
 
 #include <vm/rt/primitive.hpp>
 
-#include <ast/statements.hpp>
+#include <ast/declarations.hpp>
 
 #include <optional>
 #include <utility>

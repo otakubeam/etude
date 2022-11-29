@@ -506,3 +506,5 @@ class TypecastExpression : public Expression {
 
   types::Type* type_ = nullptr;
 };
+
+//////////////////////////////////////////////////////////////////////

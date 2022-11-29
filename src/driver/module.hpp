@@ -13,13 +13,14 @@
 
 //////////////////////////////////////////////////////////////////////
 
+class CompilationDriver;
+
 class Module {
  public:
   friend class Parser;
 
-  // Declaration* Instantiate(std::string_view name, TySub subst) ;
-
-  void BuildContext() {
+  void BuildContext(CompilationDriver* driver) {
+    global_context.driver = driver;
     ast::scope::ContextBuilder ctx_builder{global_context};
     for (auto item : items_) item->Accept(&ctx_builder);
   }
@@ -52,7 +53,7 @@ class Module {
   std::vector<std::string_view> exported_;
 
   ast::scope::Symbol* GetExportedSymbol(std::string_view name) {
-    return global_context.RetrieveSymbol(name);
+    return global_context.FindLocalSymbol(name);
   }
 
   enum Type {

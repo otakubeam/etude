@@ -21,63 +21,92 @@ auto Parser::ParseModule() -> Module {
   // 2. Parse optional extern block
   // ------------------------------
 
-  auto ParseExternBlock = [this]() -> auto{
-    std::vector<Declaration*> externs;
-
+  auto ParseExternBlock = [ this, &result ]() -> auto{
     if (!Matches(lex::TokenType::EXTERN)) {
-      return externs;
+      return;
     }
 
     Consume(lex::TokenType::RIGHT_CBRACE);
 
     while (auto decl = ParseDeclaration()) {
-      externs.push_back(decl);
+      result.items_.push_back(decl);
+      decl->is_extern_ = true;
     }
 
     Consume(lex::TokenType::LEFT_CBRACE);
-
-    return externs;
   };
 
-  auto externs = ParseExternBlock();
+  ParseExternBlock();
 
   // 3. Parse export block
   // ---------------------
 
-  auto ParseExportBlock = [this]() -> auto{
-    std::unordered_map<std::string_view, Declaration*> exported;
+  auto ParseExportBlock = [ this, &result ]() -> auto{
+    std::vector<std::string_view> exported;
 
     if (!Matches(lex::TokenType::EXPORT)) {
       return exported;
     }
 
-    Consume(lex::TokenType::RIGHT_CBRACE);
-
-    while (auto decl = ParseDeclaration()) {
-      exported.insert({decl->GetName(), decl});
-    }
-
     Consume(lex::TokenType::LEFT_CBRACE);
+
+    while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
+      auto proto = ParsePrototype();
+      exported.push_back(proto->GetName());
+      result.items_.push_back(proto);
+      proto->is_exported_ = true;
+    }
 
     return exported;
   };
 
-  result.exported_syms_ = ParseExportBlock();
+  result.exported_ = ParseExportBlock();
 
   // 4. Parse the rest of definitions
   // --------------------------------
 
   auto declarations = std::vector<Declaration*>{};
 
-  while (auto declaration = ParseDeclaration()) {
+  while (!Matches(lex::TokenType::TOKEN_EOF)) {
+    auto declaration = ParseDeclaration();
     declarations.push_back(declaration);
   }
-
-  Consume(lex::TokenType::TOKEN_EOF);
 
   result.items_ = std::move(declarations);
 
   return result;
+}
+
+///////////////////////////////////////////////////////////////////
+
+Declaration* Parser::ParsePrototype(bool) {
+  if (auto type_declaration = ParseTypeDeclStatement()) {
+    return type_declaration;
+  }
+
+  Consume(lex::TokenType::OF);
+
+  auto hint = ParseFunctionType();
+
+  if (auto fun_proto = ParseFunPrototype(hint)) {
+    Consume(lex::TokenType::SEMICOLON);
+    return fun_proto;
+  }
+
+  std::abort();
+}
+
+FunDeclStatement* Parser::ParseFunPrototype(types::Type* hint) {
+  if (!Matches(lex::TokenType::FUN)) {
+    return nullptr;
+  }
+
+  auto fun_name = lexer_.Peek();
+  Consume(lex::TokenType::IDENTIFIER);
+
+  auto formals = ParseFormals();
+
+  return new FunDeclStatement{fun_name, std::move(formals), nullptr, hint};
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -106,30 +135,21 @@ Declaration* Parser::ParseDeclaration() {
 ///////////////////////////////////////////////////////////////////
 
 FunDeclStatement* Parser::ParseFunDeclStatement(types::Type* hint) {
-  if (!Matches(lex::TokenType::FUN)) {
-    return nullptr;
-  }
-
-  auto fun_name = lexer_.Peek();
-  Consume(lex::TokenType::IDENTIFIER);
-
-  auto formals = ParseFormals();
-
-  // Funtion prototype
+  auto proto = ParseFunPrototype(hint);
 
   if (Matches(lex::TokenType::SEMICOLON)) {
-    return new FunDeclStatement{fun_name, std::move(formals), nullptr, hint};
+    return proto;
   };
 
   // Funtion definition
 
   Consume(lex::TokenType::ASSIGN);
 
-  auto body = ParseExpression();
+  proto->body_ = ParseExpression();
 
   Consume(lex::TokenType::SEMICOLON);
 
-  return new FunDeclStatement{fun_name, std::move(formals), body, hint};
+  return proto;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -179,10 +199,11 @@ VarDeclStatement* Parser::ParseVarDeclStatement(types::Type* hint) {
   lex::Token type;
   switch (lexer_.Peek().type) {
     case lex::TokenType::VAR:
-      // case lex::TokenType::STATIC:
       lexer_.Advance();
       type = lexer_.GetPreviousToken();
       break;
+
+      // case lex::TokenType::STATIC:
 
     default:
       return nullptr;

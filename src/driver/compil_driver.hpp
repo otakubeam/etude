@@ -44,16 +44,18 @@ class CompilationDriver {
   }
 
   auto ParseAllModules() {
-    auto [main, lex] = ParseOneModule(OpenFile("main"));
+    auto [main, lex] = ParseOneModule(OpenFile("main.et"));
     modules_.reserve(16);
     std::unordered_map<std::string_view, walk_status> visited;
     TopSort(&main, modules_, visited);
+    lexers_.push_back(std::move(lex));
   }
 
   auto RegisterSymbols() {
     for (auto& m : modules_) {
       for (auto& exported_sym : m.exported_) {
         auto did_insert = module_of_.insert({exported_sym, &m}).second;
+        fmt::print("Inserting {}\n", exported_sym);
 
         // THINK: Is module import transitive?
 
@@ -76,7 +78,7 @@ class CompilationDriver {
     for (auto& m : node->imports_) {
       if (visited.contains(m)) {
         if (visited[m] == IN_PROGRESS) {
-          throw "Cycle in import higherarchy";
+          throw std::runtime_error{"Cycle in import higherarchy"};
         }
         continue;
       }
@@ -84,6 +86,7 @@ class CompilationDriver {
       visited.insert({m, IN_PROGRESS});
       auto [mod, lex] = ParseOneModule(OpenFile(m));
       TopSort(&mod, sort, visited);
+      lexers_.push_back(std::move(lex));
     }
 
     visited.insert_or_assign(node->GetName(), FINISHED);
@@ -92,7 +95,7 @@ class CompilationDriver {
 
   // All its dependencies have already been completed
   void ProcessModule(Module* one) {
-    one->BuildContext();
+    one->BuildContext(this);
     one->MarkIntrinsics();
     one->InferTypes();
   }
@@ -102,7 +105,8 @@ class CompilationDriver {
     RegisterSymbols();
 
     // Those in the end have the least dependencies (see TopSort(...))
-    for (size_t i = modules_.size() - 1; i >= 0; i -= 1) {
+    // for (int i = modules_.size() - 1; i >= 0; i -= 1) {
+    for (size_t i = 0; i < modules_.size(); i += 1) {
       ProcessModule(&modules_[i]);
     }
 
@@ -120,4 +124,5 @@ class CompilationDriver {
   std::unordered_map<std::string_view, Module*> module_of_;
 
   std::vector<Module> modules_;
+  std::vector<lex::Lexer> lexers_;
 };

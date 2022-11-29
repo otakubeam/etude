@@ -46,6 +46,12 @@ class Visitor {
 
   virtual void VisitReturn(ReturnStatement* node) = 0;
 
+  virtual void VisitAssignment(AssignmentStatement* node) = 0;
+
+  virtual void VisitExprStatement(ExprStatement* node) = 0;
+
+  // Declarations
+
   virtual void VisitTypeDecl(TypeDeclStatement* node) = 0;
 
   virtual void VisitVarDecl(VarDeclStatement* node) = 0;
@@ -53,10 +59,6 @@ class Visitor {
   virtual void VisitFunDecl(FunDeclStatement* node) = 0;
 
   virtual void VisitTraitDecl(TraitDeclaration* node) = 0;
-
-  virtual void VisitAssignment(AssignmentStatement* node) = 0;
-
-  virtual void VisitExprStatement(ExprStatement* node) = 0;
 
   // Expressions
 

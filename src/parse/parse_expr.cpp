@@ -107,8 +107,11 @@ Expression* Parser::ParseBlockExpression() {
 
   while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
     try {
-      auto stmt = ParseStatement();
-      stmts.push_back(stmt);
+      if (auto decl = ParseDeclaration()) {
+        stmts.push_back(decl);
+      } else if (auto stmt = ParseStatement()) {
+        stmts.push_back(stmt);
+      }
     } catch (ExprStatement* e) {
       final_expr = e->expr_;
       Consume(lex::TokenType::RIGHT_CBRACE);

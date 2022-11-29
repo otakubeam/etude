@@ -8,11 +8,14 @@
 
 //////////////////////////////////////////////////////////////////////
 
-class Declaration : public TreeNode {
+class Declaration : public Statement {
  public:
   virtual void Accept(Visitor* /* visitor */){};
 
   virtual std::string_view GetName() = 0;
+
+  bool is_extern_ = false;
+  bool is_exported_ = false;
 };
 
 //////////////////////////////////////////////////////////////////////
