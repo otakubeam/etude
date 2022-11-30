@@ -1,0 +1,48 @@
+
+export {
+
+    type Str = struct {
+        data: String,
+        size: Int,
+    };
+
+
+    of String -> Str fun mk_str raw_string;
+    #= Wraps a raw byte sequence into a string
+
+
+    of Str -> Int fun strlen str;
+    #= Returns the length of a string excluding the last byte '\0'
+
+
+    of Str -> Int -> Str fun cut_prefix str skip;
+    #= Returns a substring of str without first `skip` bytes;
+    #= the final length is >= 0
+
+
+    of Str -> Int -> Str fun cut_suffix str shrink;
+    #= Returns a shortened substring, the final length is >= 0
+
+}
+
+fun mk_str raw_string = { .data = raw_string, .size = -1, };
+
+
+fun strlen str = if str.size == -1
+        strlen_inner(str.data, 0)
+    else
+        str.size
+    ;
+
+fun strlen_inner s len = {
+  if len > 100 { print("Strlen too long!\n"); assert(false); };
+  if (*s) ~> Int == 0 { return len; };
+  strlen_inner(s + 1, len + 1)
+};
+
+
+fun cut_prefix str skip = {
+  .data = str.data + skip,
+  .size = { var len = strlen(str);
+            if len > skip { len - skip } else 0 }
+};

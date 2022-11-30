@@ -1,0 +1,100 @@
+
+memory;
+
+export {
+
+    type Vec a = struct {
+        data: *a,
+        size: Int,
+        capacity: Int,
+    };
+
+
+    of *Vec(_) -> _ -> Unit
+    fun append vector value;
+    #=# Appends the value to the end of a vector
+
+
+    of _ -> Int -> *Vec(_)
+    fun make_vec initial_value intial_size;
+    #=# Returns a pointer to the heap-allocated vector
+    #=# with the first size elements of init_val
+
+
+    of *Vec(_) -> Unit
+    fun print_vec vector;
+    #=# Prints the fields and contents of a vector
+
+
+    of *Vec(_) -> Int -> _
+    fun at vector index;
+    #=# Bounds-checked index access
+
+}
+
+
+
+fun make_vec initVal size = {
+  var vec = new Vec(_);
+
+  # Could also do
+
+  # of Vec(_) var vec = {
+  #     .data = new [size] _,
+  #     .size = size,
+  #     .capacity = size,
+  # };
+
+  vec->data = new [size] _;
+  replicate(vec->data, initVal, size);
+
+  vec->size = size;
+  vec->capacity = size;
+
+  vec
+};
+
+
+of *Vec(_) -> _
+fun extend_cap v = {
+  assert(v->size == v->capacity);
+
+  var newcap = v->capacity + 2;
+
+  var v2 = new [newcap] _;
+  memcpy(v2, v->data, v->size);
+
+  v->data = v2;
+  v->capacity = newcap;
+};
+
+
+fun append v val = {
+  if v->capacity == v->size {
+     extend_cap(v);
+  };
+
+  v->data[v->size] = val;
+  v->size = v->size + 1;
+};
+
+
+fun at v i = {
+  assert(v->size > i);
+  v->data[i]
+};
+
+
+fun print_vec v = {
+  print("Vec[ .data = 0x%.16zX, .size = %d, .capacity = %d, ]\n",
+                  v->data, v->size, v->capacity,);
+  print("Contents: "); print_contents(v, 0); print("\n");
+};
+
+
+fun print_contents vec i = {
+  if vec->size == i { return; };
+  print("[%d] = %d, ", i, vec->data[i]);
+  return print_contents(vec, i+1);
+};
+

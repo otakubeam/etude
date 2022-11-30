@@ -1,0 +1,12 @@
+
+mul;
+
+export {
+
+    of Int -> Int fun rand prev;
+    #= Given a previous state of RNG, generates a random number
+    #= using a linear congruential generator (LCG)
+
+}
+
+fun rand prev = mul(48271, prev);

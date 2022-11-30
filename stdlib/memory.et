@@ -1,0 +1,45 @@
+
+export {
+
+    of String -> Int -> Unit
+    fun raw_bytes mem size;
+    #= Print the `size` bytes from `mem` in hexadecimal format
+
+
+    # of *a -> *a -> Int -> Unit
+    of _ -> _ -> Int -> Unit
+    fun memcpy dst src count;
+    #= Does what you think it does (but notice generics)
+
+
+    # of *a -> a -> Int -> Unit
+    of _ -> _ -> Int -> Unit
+    fun replicate dst val count;
+    #= Copies `val` `count` times to the `dst`
+
+}
+
+fun raw_bytes mem size = {
+  print("Data at memory location 0x%zX:\n", mem);
+  return raw_bytes_inner(mem, size);
+};
+
+fun raw_bytes_inner mem size = {
+  if size == 0 { print("\n"); return; };
+  print("\t[%hX] = %hhx, \n", mem, *mem);
+  return raw_bytes_inner(mem + 1, size - 1);
+};
+
+
+fun memcpy dst src cnt = {
+  if cnt == 0 { return; };
+  *dst = *src;
+  return memcpy(dst + 1, src + 1, cnt - 1);
+};
+
+
+fun replicate dst val cnt = {
+  if cnt == 0 { return; };
+  *dst = val;
+  return replicate(dst + 1, val, cnt - 1);
+};

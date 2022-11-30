@@ -1,0 +1,16 @@
+export {
+
+    of Int -> Int -> Int fun mul x y;
+    # =
+
+}
+
+fun mul x y = mul_inner(x, y, 0);
+
+fun mul_inner x y acc = if x == 0
+         acc
+     else
+         # Here should be tail call
+         mul_inner(x - 1, y, acc + y)
+     ;
+

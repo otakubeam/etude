@@ -18,16 +18,34 @@
 
 #include <fmt/color.h>
 
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include <set>
 
 class CompilationDriver {
  public:
+  CompilationDriver(std::string_view main_mod = "main")
+      : main_module_{main_mod} {
+  }
+
   // 1. Searches in different places
   // 2. Opens the files and converts to ss
   std::stringstream OpenFile(std::string_view name) {
-    std::ifstream file(std::string{name} + ".et");
+    auto module_name = std::string{name} + ".et";
+
+    std::ifstream file(module_name);
+
+    if (!file.is_open()) {
+      auto path = std::getenv("ETUDE_STDLIB");
+      fmt::print(stderr, "{}\n", std::string{path});
+      std::filesystem::path stdlib{path};
+      file = std::ifstream(stdlib / module_name);
+    }
+
+    if (!file.is_open()) {
+      throw std::runtime_error{fmt::format("Could not open file {}", name)};
+    }
 
     // This is dumb! Lexer can take istream directly
 
@@ -123,6 +141,8 @@ class CompilationDriver {
   }
 
  private:
+  std::string_view main_module_;
+
   // For each import map `symbol_name -> module`
   std::unordered_map<std::string_view, Module*> module_of_;
 

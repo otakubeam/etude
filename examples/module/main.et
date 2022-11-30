@@ -12,7 +12,7 @@ fun main argc argv = {
   
   print("Extracted from Wrapper %d\n", extract(wrap(123)));
 
-  var t = mul(5, 10);
+  var t = mul(id(5), 10);
   print("5 * 10 = %d\n", t);
 
   var f = fact(5);
