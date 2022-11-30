@@ -1,0 +1,22 @@
+increment;
+fact;
+mul;
+
+export {
+   of Int -> *String -> Unit fun main; 
+   # =
+}
+
+of Int -> *String -> Unit
+fun main argc argv = {
+  
+  print("Extracted from Wrapper %d\n", extract(wrap(123)));
+
+  var t = mul(5, 10);
+  print("5 * 10 = %d\n", t);
+
+  var f = fact(5);
+  print("5! = %d\n", f);
+
+  print("%d arguments: %s\n", argc, argv[0]);
+};

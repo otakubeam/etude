@@ -69,10 +69,8 @@ auto Parser::ParseModule() -> Module {
 
   while (!Matches(lex::TokenType::TOKEN_EOF)) {
     auto declaration = ParseDeclaration();
-    declarations.push_back(declaration);
+    result.items_.push_back(declaration);
   }
-
-  result.items_ = std::move(declarations);
 
   return result;
 }
@@ -137,7 +135,7 @@ Declaration* Parser::ParseDeclaration() {
 FunDeclStatement* Parser::ParseFunDeclStatement(types::Type* hint) {
   auto proto = ParseFunPrototype(hint);
 
-  if (Matches(lex::TokenType::SEMICOLON)) {
+  if (!proto || Matches(lex::TokenType::SEMICOLON)) {
     return proto;
   };
 

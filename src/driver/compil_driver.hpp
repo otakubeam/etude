@@ -27,7 +27,7 @@ class CompilationDriver {
   // 1. Searches in different places
   // 2. Opens the files and converts to ss
   std::stringstream OpenFile(std::string_view name) {
-    std::ifstream file(std::string{name});
+    std::ifstream file(std::string{name} + ".et");
 
     // This is dumb! Lexer can take istream directly
 
@@ -36,15 +36,16 @@ class CompilationDriver {
     return std::stringstream{std::move(t)};
   }
 
-  auto ParseOneModule(std::stringstream source)
-      -> std::pair<Module, lex::Lexer> {
+  auto ParseOneModule(std::string_view name) -> std::pair<Module, lex::Lexer> {
+    auto source = OpenFile(name);
     auto l = lex::Lexer{source};
-    Parser p{l};
-    return {p.ParseModule(), std::move(l)};
+    auto mod = Parser{l}.ParseModule();
+    mod.SetName(name);
+    return {std::move(mod), std::move(l)};
   }
 
   auto ParseAllModules() {
-    auto [main, lex] = ParseOneModule(OpenFile("main.et"));
+    auto [main, lex] = ParseOneModule("main");
     modules_.reserve(16);
     std::unordered_map<std::string_view, walk_status> visited;
     TopSort(&main, modules_, visited);
@@ -55,7 +56,6 @@ class CompilationDriver {
     for (auto& m : modules_) {
       for (auto& exported_sym : m.exported_) {
         auto did_insert = module_of_.insert({exported_sym, &m}).second;
-        fmt::print("Inserting {}\n", exported_sym);
 
         // THINK: Is module import transitive?
 
@@ -84,7 +84,7 @@ class CompilationDriver {
       }
 
       visited.insert({m, IN_PROGRESS});
-      auto [mod, lex] = ParseOneModule(OpenFile(m));
+      auto [mod, lex] = ParseOneModule(m);
       TopSort(&mod, sort, visited);
       lexers_.push_back(std::move(lex));
     }
@@ -97,7 +97,6 @@ class CompilationDriver {
   void ProcessModule(Module* one) {
     one->BuildContext(this);
     one->MarkIntrinsics();
-    one->InferTypes();
   }
 
   void Compile() {
@@ -108,6 +107,10 @@ class CompilationDriver {
     // for (int i = modules_.size() - 1; i >= 0; i -= 1) {
     for (size_t i = 0; i < modules_.size(); i += 1) {
       ProcessModule(&modules_[i]);
+    }
+
+    for (auto& m : modules_) {
+      m.InferTypes();
     }
 
     auto inst_root = module_of_.at("main");

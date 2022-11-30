@@ -1,0 +1,15 @@
+mul;
+
+export {
+
+   of Int -> Int fun fact n; 
+   # =
+
+}
+
+fun fact n = if n == 0
+        1 
+    else 
+        mul(n, fact(n - 1))
+    ;
+

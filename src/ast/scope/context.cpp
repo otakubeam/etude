@@ -45,7 +45,9 @@ Symbol* Context::FindLocalSymbol(std::string_view name) {
 
 Symbol* Context::FindFromExported(std::string_view name) {
   if (auto mod = driver->GetModuleOf(name)) {
-    return mod->GetExportedSymbol(name);
+    if (auto sym = mod->GetExportedSymbol(name)) {
+      return sym;
+    }
   }
 
   throw std::runtime_error{fmt::format("No such symbol {}\n", name)};

@@ -1,0 +1,22 @@
+
+
+export {
+   of Int -> Int fun inc;
+   #= Increments its argument
+
+   of Wrapper -> Int fun extract;
+   #= Extracts the underlying type safely
+
+   of Int -> Wrapper fun wrap;
+   #= Wraps an integer in a type-safe wrapper
+
+   type Wrapper = struct {
+       i : Int,
+   };
+}
+
+fun extract nt = nt.i;
+
+fun wrap int = {.i = int};
+
+fun inc x = x + 1;

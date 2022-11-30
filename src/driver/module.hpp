@@ -19,6 +19,10 @@ class Module {
  public:
   friend class Parser;
 
+  void SetName(std::string_view name) {
+    name_ = name;
+  }
+
   void BuildContext(CompilationDriver* driver) {
     global_context.driver = driver;
     ast::scope::ContextBuilder ctx_builder{global_context};

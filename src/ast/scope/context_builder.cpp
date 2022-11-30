@@ -244,7 +244,6 @@ void ContextBuilder::VisitFieldAccess(FieldAccessExpression* node) {
 
 void ContextBuilder::VisitVarAccess(VarAccessExpression* node) {
   node->layer_ = current_context_;
-  fmt::print("{}\n", node->name_.GetName());
 }
 
 void ContextBuilder::VisitLiteral(LiteralExpression*) {
