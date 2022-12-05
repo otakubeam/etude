@@ -58,19 +58,6 @@ type VariantRecord T = sum {
    | (Int, Bool)
 };
 
-######################################################################
-
-of VariantRecord -> _
-fun use_pattern_matching arg = match arg {
-    s of String:
-        return s.size;
-
-    of (Int, true):
-        return arg.0;
-
-    e of Exception:
-        std::abort();
-} -> Int;
 
 ######################################################################
 

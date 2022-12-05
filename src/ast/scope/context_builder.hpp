@@ -15,6 +15,10 @@ class ContextBuilder : public AbortVisitor {
   virtual void VisitAssignment(AssignmentStatement* node) override;
   virtual void VisitExprStatement(ExprStatement* node) override;
 
+  virtual void VisitBindingPat(BindingPattern* node) override;
+  virtual void VisitLiteralPat(LiteralPattern* node) override;
+  virtual void VisitVariantPat(VariantPattern* node) override;
+
   virtual void VisitTypeDecl(TypeDeclStatement* node) override;
   virtual void VisitVarDecl(VarDeclStatement* node) override;
   virtual void VisitFunDecl(FunDeclStatement* node) override;
@@ -26,6 +30,7 @@ class ContextBuilder : public AbortVisitor {
   virtual void VisitDeref(DereferenceExpression* node) override;
   virtual void VisitAddressof(AddressofExpression* node) override;
   virtual void VisitIf(IfExpression* node) override;
+  virtual void VisitMatch(MatchExpression* node) override;
   virtual void VisitNew(NewExpression* node) override;
   virtual void VisitBlock(BlockExpression* node) override;
   virtual void VisitFnCall(FnCallExpression* node) override;

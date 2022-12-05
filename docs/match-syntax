@@ -1,0 +1,68 @@
+
+type VariantRecord T = sum {
+   Is: Vec(Int),
+   Bs: Vec(T),
+   str: String,
+   pair: (Int, Bool),
+};
+
+######################################################################
+
+of VariantRecord -> _
+fun use_pattern_matching arg = match arg {
+    .Is { .size = 0, .capacity } if capacity > 0:
+        # Do something 1;
+
+    .Is { .size, .data = &[1, 2, 3, ...], } if size > 3:
+        # Do something 2;
+
+    .str:
+        print_str(str);
+
+    .pair (2, true):
+        # Do something
+
+    .pair (x, true):
+        return x;
+  };
+
+######################################################################
+
+type Token = sum {
+   integer: Int,
+   float: Float,
+   string: Str,
+   identifier: Str,
+
+   unit, true, false,
+
+   plus, minus, div,
+
+   plus_eq, minus_eq, star_eq, div_eq,
+
+   attr, export, extern,
+
+   assign, equals,
+
+   lt, le,
+   gt, ge,
+
+   left_paren, right_paren,
+   left_cbrace, right_cbrace,
+   left_sbrace, right_sbrace,
+
+   not, addr, star, arrow, flow,
+
+   new, fun, var, type, of
+
+   dot, comma, colon, semicolon,
+
+   struct, union, enum,
+   ty_int, ty_bool, ty_unit, ty_string,
+
+   underscore,
+
+   if, else, for, return, yield,
+
+   eof,
+};

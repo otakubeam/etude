@@ -29,6 +29,24 @@ class AbortVisitor : public Visitor {
     std::abort();
   }
 
+  // Patterns
+
+  virtual void VisitBindingPat(BindingPattern*) override {
+    std::abort();
+  }
+
+  virtual void VisitLiteralPat(LiteralPattern*) override {
+    std::abort();
+  }
+
+  virtual void VisitStructPat(StructPattern*) override {
+    std::abort();
+  }
+
+  virtual void VisitVariantPat(VariantPattern*) override {
+    std::abort();
+  }
+
   virtual void VisitAssignment(AssignmentStatement*) override {
     std::abort();
   }
@@ -60,6 +78,10 @@ class AbortVisitor : public Visitor {
   }
 
   virtual void VisitIf(IfExpression*) override {
+    std::abort();
+  }
+
+  virtual void VisitMatch(MatchExpression*) override {
     std::abort();
   }
 

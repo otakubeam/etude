@@ -9,6 +9,7 @@ class UnaryExpression;
 class DereferenceExpression;
 class AddressofExpression;
 class IfExpression;
+class MatchExpression;
 class NewExpression;
 class BlockExpression;
 class FnCallExpression;
@@ -36,6 +37,13 @@ class FunDeclStatement;
 
 //////////////////////////////////////////////////////////////////////
 
+class BindingPattern;
+class LiteralPattern;
+class StructPattern;
+class VariantPattern;
+
+//////////////////////////////////////////////////////////////////////
+
 class Visitor {
  public:
   virtual ~Visitor() = default;
@@ -60,6 +68,16 @@ class Visitor {
 
   virtual void VisitTraitDecl(TraitDeclaration* node) = 0;
 
+  // Patterns
+
+  virtual void VisitBindingPat(BindingPattern* node) = 0;
+
+  virtual void VisitLiteralPat(LiteralPattern* node) = 0;
+
+  virtual void VisitStructPat(StructPattern* node) = 0;
+
+  virtual void VisitVariantPat(VariantPattern* node) = 0;
+
   // Expressions
 
   virtual void VisitComparison(ComparisonExpression* node) = 0;
@@ -73,6 +91,8 @@ class Visitor {
   virtual void VisitAddressof(AddressofExpression* node) = 0;
 
   virtual void VisitIf(IfExpression* node) = 0;
+
+  virtual void VisitMatch(MatchExpression* node) = 0;
 
   virtual void VisitNew(NewExpression* node) = 0;
 

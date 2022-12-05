@@ -45,6 +45,7 @@ namespace lex {
   code(VAR)                 \
   code(TYPE)                \
   code(STRUCT)              \
+  code(SUM)                 \
   code(UNION)               \
   code(OF)                  \
   code(UNDERSCORE)          \
@@ -53,6 +54,8 @@ namespace lex {
   code(TY_UNIT)             \
   code(TY_STRING)           \
   code(IF)                  \
+  code(MATCH)               \
+  code(BIT_OR)              \
   code(ELSE)                \
   code(FOR)                 \
   code(COLON)               \

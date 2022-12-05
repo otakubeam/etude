@@ -170,6 +170,8 @@ std::optional<TokenType> Lexer::MatchOperator() {
 
     case '&':
       return TokenType::ADDR;
+    case '|':
+      return TokenType::BIT_OR;
     case '!':
       return TokenType::NOT;
     case '(':

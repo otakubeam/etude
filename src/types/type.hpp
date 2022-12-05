@@ -27,6 +27,7 @@ enum class TypeTag {
   TY_BUILTIN,
 
   TY_PTR,
+  TY_SUM,
   TY_UNION,
   TY_STRUCT,
 

@@ -7,17 +7,20 @@
 #include <ast/visitors/template_visitor.hpp>
 
 #include <ast/declarations.hpp>
+#include <ast/patterns.hpp>
 
 #include <unordered_map>
 #include <utility>
 
 namespace qbe {
 
+class GenMatch;
 class GenAddr;
 class GenAt;
 
 class IrEmitter : public ReturnVisitor<Value> {
  public:
+  friend class GenMatch;
   friend class GenAddr;
   friend class GenAt;
 
@@ -31,9 +34,14 @@ class IrEmitter : public ReturnVisitor<Value> {
   virtual void VisitTypeDecl(TypeDeclStatement* node) override;
   virtual void VisitTraitDecl(TraitDeclaration* node) override;
 
+  virtual void VisitBindingPat(BindingPattern* node) override;
+  virtual void VisitLiteralPat(LiteralPattern* node) override;
+  virtual void VisitVariantPat(VariantPattern* node) override;
+
   virtual void VisitDeref(DereferenceExpression* node) override;
   virtual void VisitAddressof(AddressofExpression* node) override;
   virtual void VisitIf(IfExpression* node) override;
+  virtual void VisitMatch(MatchExpression* node) override;
   virtual void VisitNew(NewExpression* node) override;
   virtual void VisitBlock(BlockExpression* node) override;
   virtual void VisitComparison(ComparisonExpression* node) override;

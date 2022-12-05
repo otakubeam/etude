@@ -39,6 +39,13 @@ void MarkIntrinsics::VisitTraitDecl(TraitDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
+// No-op
+void MarkIntrinsics::VisitBindingPat(BindingPattern*){};
+void MarkIntrinsics::VisitLiteralPat(LiteralPattern*){};
+void MarkIntrinsics::VisitVariantPat(VariantPattern*){};
+
+//////////////////////////////////////////////////////////////////////
+
 void MarkIntrinsics::VisitYield(YieldStatement* node) {
   node->yield_value_ = Eval(node->yield_value_)->as<Expression>();
   return_value = node;
@@ -99,6 +106,16 @@ void MarkIntrinsics::VisitIf(IfExpression* node) {
   node->condition_ = Eval(node->condition_)->as<Expression>();
   node->true_branch_ = Eval(node->true_branch_)->as<Expression>();
   node->false_branch_ = Eval(node->false_branch_)->as<Expression>();
+
+  return_value = node;
+}
+
+void MarkIntrinsics::VisitMatch(MatchExpression* node) {
+  node->against_ = Eval(node->against_)->as<Expression>();
+
+  for (auto& [pat, expr] : node->patterns_) {
+    expr = Eval(expr)->as<Expression>();
+  }
 
   return_value = node;
 }

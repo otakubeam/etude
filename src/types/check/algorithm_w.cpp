@@ -2,6 +2,7 @@
 #include <types/check/algorithm_w.hpp>
 
 #include <ast/declarations.hpp>
+#include <ast/patterns.hpp>
 #include <lex/token.hpp>
 
 namespace types::check {
@@ -83,6 +84,22 @@ void AlgorithmW::VisitTraitDecl(TraitDeclaration* node) {
   std::abort();
   // Is this a no-op?
   (void)node;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void AlgorithmW::VisitBindingPat(BindingPattern* node) {
+  auto symbol = node->layer_->RetrieveSymbol(node->name_);
+  return_value = symbol->GetType();
+}
+
+void AlgorithmW::VisitLiteralPat(LiteralPattern* node) {
+  return_value = Eval(node->pat_);
+}
+
+void AlgorithmW::VisitVariantPat(VariantPattern*) {
+  std::abort();
+  // auto inner = Eval(node->inner_pat_);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -207,6 +224,18 @@ void AlgorithmW::VisitIf(IfExpression* node) {
   auto true_ty = Eval(node->true_branch_);
   PushEqual(true_ty, Eval(node->false_branch_));
   return_value = true_ty;
+}
+
+void AlgorithmW::VisitMatch(MatchExpression* node) {
+  auto result_ty = MakeTypeVar();
+  auto target_ty = Eval(node->against_);
+
+  for (auto& [pat, expr] : node->patterns_) {
+    PushEqual(target_ty, Eval(pat));
+    PushEqual(result_ty, Eval(expr));
+  }
+
+  return_value = result_ty;
 }
 
 void AlgorithmW::VisitNew(NewExpression* node) {

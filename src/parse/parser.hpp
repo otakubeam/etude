@@ -12,6 +12,13 @@ class Parser {
 
   ///////////////////////////////////////////////////////////////////
 
+  Pattern* ParsePattern();
+  Pattern* ParseLiteralPattern();
+  Pattern* ParseBindingPattern();
+  Pattern* ParseVariantPattern();
+
+  ///////////////////////////////////////////////////////////////////
+
   Statement* ParseStatement();
 
   ReturnStatement* ParseReturnStatement();
@@ -36,6 +43,7 @@ class Parser {
   Expression* ParseExpression();
 
   Expression* ParseIfExpression();
+  Expression* ParseMatchExpression();
   Expression* ParseNewExpression();
   Expression* ParseBlockExpression();
 

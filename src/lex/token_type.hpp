@@ -63,6 +63,7 @@ enum class TokenType {
   VAR,
   TYPE,
   STRUCT,
+  SUM,
   UNION,
   
   OF,
@@ -75,6 +76,8 @@ enum class TokenType {
   TY_STRING,
 
   IF,
+  MATCH,
+  BIT_OR,
   ELSE,
   FOR,
 

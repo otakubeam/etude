@@ -1,7 +1,7 @@
 #include <ast/scope/context_builder.hpp>
 
 #include <ast/declarations.hpp>
-#include <ast/statements.hpp>
+#include <ast/patterns.hpp>
 
 namespace ast::scope {
 
@@ -166,6 +166,33 @@ void ContextBuilder::VisitExprStatement(ExprStatement* node) {
 
 //////////////////////////////////////////////////////////////////////
 
+void ContextBuilder::VisitBindingPat(BindingPattern* node) {
+  node->layer_ = current_context_;
+  node->type_ = types::MakeTypeVar(current_context_);
+
+  current_context_->bindings.InsertSymbol({
+      .sym_type = SymbolType::VAR,
+      .name = node->name_,
+      // TODO: how do I know the type?
+      .as_varbind = {.type = node->type_},
+      .declared_at = node->GetLocation(),
+  });
+}
+
+void ContextBuilder::VisitLiteralPat(LiteralPattern*) {
+  // No-op
+}
+
+void ContextBuilder::VisitVariantPat(VariantPattern* node) {
+  node->layer_ = current_context_;
+
+  if (auto inner = node->inner_pat_) {
+    inner->Accept(this);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+
 void ContextBuilder::VisitComparison(ComparisonExpression* node) {
   node->left_->Accept(this);
   node->right_->Accept(this);
@@ -194,6 +221,20 @@ void ContextBuilder::VisitIf(IfExpression* node) {
   node->condition_->Accept(this);
   node->true_branch_->Accept(this);
   node->false_branch_->Accept(this);
+}
+
+void ContextBuilder::VisitMatch(MatchExpression* node) {
+  node->against_->Accept(this);
+
+  for (auto& [pat, expr] : node->patterns_) {
+    current_context_ =
+        current_context_->MakeNewScopeLayer(pat->GetLocation(), "Match scope");
+
+    pat->Accept(this);
+    expr->Accept(this);
+
+    PopScopeLayer();
+  }
 }
 
 void ContextBuilder::VisitNew(NewExpression* node) {

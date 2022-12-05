@@ -174,31 +174,36 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
     }
   }
 
-  void VisitYield(YieldStatement* node);
-  void VisitReturn(ReturnStatement* node);
-  void VisitAssignment(AssignmentStatement* node);
-  void VisitExprStatement(ExprStatement* node);
+  void VisitYield(YieldStatement* node) override;
+  void VisitReturn(ReturnStatement* node) override;
+  void VisitAssignment(AssignmentStatement* node) override;
+  void VisitExprStatement(ExprStatement* node) override;
 
-  void VisitTypeDecl(TypeDeclStatement* node);
-  void VisitVarDecl(VarDeclStatement* node);
-  void VisitFunDecl(FunDeclStatement* node);
-  void VisitTraitDecl(TraitDeclaration* node);
+  void VisitTypeDecl(TypeDeclStatement* node) override;
+  void VisitVarDecl(VarDeclStatement* node) override;
+  void VisitFunDecl(FunDeclStatement* node) override;
+  void VisitTraitDecl(TraitDeclaration* node) override;
 
-  void VisitComparison(ComparisonExpression* node);
-  void VisitBinary(BinaryExpression* node);
-  void VisitUnary(UnaryExpression* node);
-  void VisitDeref(DereferenceExpression* node);
-  void VisitAddressof(AddressofExpression* node);
-  void VisitIf(IfExpression* node);
-  void VisitNew(NewExpression* node);
-  void VisitBlock(BlockExpression* node);
-  void VisitFnCall(FnCallExpression* node);
-  void VisitIntrinsic(IntrinsicCall* node);
-  void VisitFieldAccess(FieldAccessExpression* node);
-  void VisitTypecast(TypecastExpression* node);
-  void VisitLiteral(LiteralExpression* node);
-  void VisitVarAccess(VarAccessExpression* node);
-  void VisitCompoundInitalizer(CompoundInitializerExpr* node);
+  void VisitBindingPat(BindingPattern* node) override;
+  void VisitLiteralPat(LiteralPattern* node) override;
+  void VisitVariantPat(VariantPattern* node) override;
+
+  void VisitComparison(ComparisonExpression* node) override;
+  void VisitBinary(BinaryExpression* node) override;
+  void VisitUnary(UnaryExpression* node) override;
+  void VisitDeref(DereferenceExpression* node) override;
+  void VisitAddressof(AddressofExpression* node) override;
+  void VisitIf(IfExpression* node) override;
+  void VisitMatch(MatchExpression* node) override;
+  void VisitNew(NewExpression* node) override;
+  void VisitBlock(BlockExpression* node) override;
+  void VisitFnCall(FnCallExpression* node) override;
+  void VisitIntrinsic(IntrinsicCall* node) override;
+  void VisitFieldAccess(FieldAccessExpression* node) override;
+  void VisitTypecast(TypecastExpression* node) override;
+  void VisitLiteral(LiteralExpression* node) override;
+  void VisitVarAccess(VarAccessExpression* node) override;
+  void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
 
  private:
   void MaybeSaveForIL(Type* ty) {

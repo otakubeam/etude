@@ -1,6 +1,8 @@
 #include <types/instantiate/instantiator.hpp>
 #include <types/constraints/solver.hpp>
 
+#include <ast/patterns.hpp>
+
 #include <lex/token.hpp>
 
 namespace types::check {
@@ -47,6 +49,30 @@ void TemplateInstantiator::VisitFunDecl(FunDeclStatement* node) {
 void TemplateInstantiator::VisitTraitDecl(TraitDeclaration* node) {
   std::abort();
   (void)node;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void TemplateInstantiator::VisitBindingPat(BindingPattern* node) {
+  auto n = new BindingPattern{*node};
+
+  n->type_ = Instantinate(FindLeader(node->type_), poly_to_mono_);
+  // node->type_ |> FindLeader |> Instantinate(poly_to_mono_);
+  SetTyContext(n->type_, node->layer_);
+
+  return_value = n;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void TemplateInstantiator::VisitLiteralPat(LiteralPattern* node) {
+  return_value = new LiteralPattern{*node};
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void TemplateInstantiator::VisitVariantPat(VariantPattern*) {
+  std::abort();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -139,6 +165,19 @@ void TemplateInstantiator::VisitIf(IfExpression* node) {
   n->condition_ = Eval(n->condition_)->as<Expression>();
   n->true_branch_ = Eval(n->true_branch_)->as<Expression>();
   n->false_branch_ = Eval(n->false_branch_)->as<Expression>();
+
+  return_value = n;
+}
+
+void TemplateInstantiator::VisitMatch(MatchExpression* node) {
+  auto n = new MatchExpression{*node};
+
+  n->against_ = Eval(n->against_)->as<Expression>();
+
+  for (auto& [pat, expr]: n->patterns_) {
+    pat = Eval(pat)->as<Pattern>();
+    expr = Eval(expr)->as<Expression>();
+  }
 
   return_value = n;
 }

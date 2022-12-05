@@ -13,6 +13,8 @@
 
 //////////////////////////////////////////////////////////////////////
 
+class Pattern;
+
 class Expression : public TreeNode {
  public:
   virtual void Accept(Visitor* /* visitor */){};
@@ -387,6 +389,38 @@ class IfExpression : public Expression {
   Expression* true_branch_;
   Expression* false_branch_;
 };
+
+//////////////////////////////////////////////////////////////////////
+
+class MatchExpression : public Expression {
+ public:
+  using Bind = std::pair<Pattern*, Expression*>;
+
+  MatchExpression(Expression* against, std::vector<Bind> patterns)
+      : against_(against), patterns_(std::move(patterns)) {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitMatch(this);
+  }
+
+  virtual types::Type* GetType() override {
+    return patterns_.at(0).second->GetType();
+  };
+
+  virtual lex::Location GetLocation() override {
+    return against_->GetLocation();
+  }
+
+  Expression* against_;
+
+  std::vector<Bind> patterns_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+// This is like a block but without braces in match
+class MatchArm : public Expression {};
 
 //////////////////////////////////////////////////////////////////////
 

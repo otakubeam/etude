@@ -1,5 +1,7 @@
 #include <qbe/ir_emitter.hpp>
 #include <qbe/qbe_types.hpp>
+
+#include <qbe/gen_match.hpp>
 #include <qbe/gen_addr.hpp>
 #include <qbe/gen_at.hpp>
 
@@ -335,6 +337,39 @@ void IrEmitter::VisitIf(IfExpression* node) {
 
 ////////////////////////////////////////////////////////////////////
 
+void IrEmitter::VisitMatch(MatchExpression* node) {
+  auto assign = ToQbeType(node->GetType());
+  auto target = Eval(node->against_);
+  auto out = GenTemporary();
+  auto end_id = id_ += 1;
+
+  auto match_arm = id_ += 1;
+  auto next_arm = id_ += 1;
+
+  for (auto& [pat, expr] : node->patterns_) {
+    auto lit = !measure_.IsStruct(node->against_->GetType());
+    GenMatch match{*this, target, next_arm, lit};
+
+    fmt::print("@match.{}          \n", match_arm);
+    pat->Accept(&match);
+
+    auto res = Eval(expr);
+    fmt::print("  {} = {} copy {}   \n", out.Emit(), assign, res.Emit());
+
+    fmt::print("  jmp @match_end.{}    \n", end_id);
+
+    match_arm = next_arm;
+    next_arm = id_ += 1;
+  }
+
+  fmt::print("@match.{}          \n", match_arm);
+  fmt::print("@match_end.{}    \n", end_id);
+
+  return_value = out;
+}
+
+////////////////////////////////////////////////////////////////////
+
 void IrEmitter::VisitNew(NewExpression* node) {
   auto out = GenTemporary();
   auto type_size = GetTypeSize(node->underlying_);
@@ -448,6 +483,17 @@ void IrEmitter::VisitTypeDecl(TypeDeclStatement*) {
 void IrEmitter::VisitTraitDecl(TraitDeclaration* node) {
   std::abort();  // Unreachable
   (void)node;
+}
+
+////////////////////////////////////////////////////////////////////
+
+void IrEmitter::VisitBindingPat(BindingPattern*) {
+}
+
+void IrEmitter::VisitLiteralPat(LiteralPattern*) {
+}
+
+void IrEmitter::VisitVariantPat(VariantPattern*) {
 }
 
 ////////////////////////////////////////////////////////////////////

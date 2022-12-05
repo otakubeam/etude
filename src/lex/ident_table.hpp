@@ -36,6 +36,7 @@ class IdentTable {
     map_.insert({"struct", TokenType::STRUCT});
     map_.insert({"export", TokenType::EXPORT});
     map_.insert({"extern", TokenType::EXTERN});
+    map_.insert({"match", TokenType::MATCH});
     map_.insert({"yield", TokenType::YIELD});
     map_.insert({"false", TokenType::FALSE});
     map_.insert({"else", TokenType::ELSE});
@@ -45,6 +46,7 @@ class IdentTable {
     map_.insert({"new", TokenType::NEW});
     map_.insert({"var", TokenType::VAR});
     map_.insert({"fun", TokenType::FUN});
+    map_.insert({"sum", TokenType::SUM});
     map_.insert({"for", TokenType::FOR});
     map_.insert({"if", TokenType::IF});
     map_.insert({"of", TokenType::OF});

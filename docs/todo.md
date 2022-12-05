@@ -1,9 +1,5 @@
 # TODO
 
-Tasks:
-
-- Translate input line by line for repl
-
 Language features:
 
 - honest-closures

@@ -8,6 +8,10 @@ Expression* Parser::ParseExpression() {
     return if_expr;
   }
 
+  if (auto match_expr = ParseMatchExpression()) {
+    return match_expr;
+  }
+
   if (auto block_expr = ParseBlockExpression()) {
     return block_expr;
   }
@@ -69,6 +73,31 @@ Expression* Parser::ParseIfExpression() {
   }
 
   return new IfExpression(condition, true_branch, false_branch);
+}
+
+////////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseMatchExpression() {
+  if (!Matches(lex::TokenType::MATCH)) {
+    return nullptr;
+  }
+
+  auto against = ParseExpression();
+
+  Consume(lex::TokenType::LEFT_CBRACE);
+
+  std::vector<MatchExpression::Bind> binds;
+
+  while (Matches(lex::TokenType::BIT_OR)) {
+    auto pat = ParsePattern();
+    Consume(lex::TokenType::COLON);
+    auto expression = ParseExpression();
+    binds.push_back({pat, expression});
+  }
+
+  Consume(lex::TokenType::RIGHT_CBRACE);
+
+  return new MatchExpression(against, std::move(binds));
 }
 
 ////////////////////////////////////////////////////////////////////
