@@ -51,10 +51,7 @@ Pattern* Parser::ParseVariantPattern() {
   Consume(lex::TokenType::IDENTIFIER);
   auto ident = lexer_.GetPreviousToken();
 
-  return new VariantPattern{ident,
-                            lexer_.Peek().type == lex::TokenType::COLON  //
-                                ? nullptr
-                                : ParsePattern()};
+  return new VariantPattern{ident, TagOnly() ? nullptr : ParsePattern()};
 }
 
 ///////////////////////////////////////////////////////////////////

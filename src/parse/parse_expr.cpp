@@ -16,6 +16,10 @@ Expression* Parser::ParseExpression() {
     return block_expr;
   }
 
+  if (auto comp_expr = ParseSignleFieldCompound()) {
+    return comp_expr;
+  }
+
   if (auto new_expr = ParseNewExpression()) {
     return new_expr;
   }
@@ -441,6 +445,29 @@ Expression* Parser::ParseCompoundInitializer(lex::Token curly) {
   Consume(lex::TokenType::RIGHT_CBRACE);
 
   return new CompoundInitializerExpr{curly, std::move(initializers)};
+}
+
+// Short-hand notation: .<Tag> <Expr>
+// e.g: .some 5
+Expression* Parser::ParseSignleFieldCompound() {
+  if (!Matches(lex::TokenType::DOT)) {
+    return nullptr;
+  }
+
+  auto dot = lexer_.GetPreviousToken();
+
+  Consume(lex::TokenType::IDENTIFIER);
+  auto ident = lexer_.GetPreviousToken();
+
+  return new CompoundInitializerExpr{
+      dot,
+      {
+          {
+              ident.GetName(),
+              TagOnly() ? nullptr : ParseExpression(),
+          },
+      },
+  };
 }
 
 ////////////////////////////////////////////////////////////////////

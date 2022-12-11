@@ -104,6 +104,19 @@ class ConstraintSolver {
         throw std::runtime_error{"No such field"};
       }
 
+      if (i.bound->tag == TypeTag::TY_SUM) {
+        auto pack = i.bound->as_sum.first;
+
+        for (auto& p : pack) {
+          if (p.field == i.has_field.field_name) {
+            Unify(p.ty, i.has_field.field_type, fill_queue);
+            return true;
+          }
+        }
+
+        throw std::runtime_error{"No such field"};
+      }
+
       if (i.bound->tag == TypeTag::TY_APP) {
         i.bound = ApplyTyconsLazy(i.bound);
         fmt::print(stderr, "Applied tycons {}\n", FormatType(*i.bound));

@@ -71,8 +71,17 @@ void TemplateInstantiator::VisitLiteralPat(LiteralPattern* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void TemplateInstantiator::VisitVariantPat(VariantPattern*) {
-  std::abort();
+void TemplateInstantiator::VisitVariantPat(VariantPattern* node) {
+  auto n = new VariantPattern{*node};
+
+  if (auto& inner = n->inner_pat_) {
+    inner = Eval(inner)->as<Pattern>();
+  }
+
+  n->type_ = Instantinate(FindLeader(node->type_), poly_to_mono_);
+  SetTyContext(n->type_, node->layer_);
+
+  return_value = n;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -174,7 +183,7 @@ void TemplateInstantiator::VisitMatch(MatchExpression* node) {
 
   n->against_ = Eval(n->against_)->as<Expression>();
 
-  for (auto& [pat, expr]: n->patterns_) {
+  for (auto& [pat, expr] : n->patterns_) {
     pat = Eval(pat)->as<Pattern>();
     expr = Eval(expr)->as<Expression>();
   }
@@ -253,7 +262,9 @@ void TemplateInstantiator::VisitCompoundInitalizer(
   auto n = new CompoundInitializerExpr{*node};
 
   for (auto& mem : n->initializers_) {
-    mem.init = Eval(mem.init)->as<Expression>();
+    if (mem.init) {
+      mem.init = Eval(mem.init)->as<Expression>();
+    }
   }
 
   n->type_ = Instantinate(node->type_, poly_to_mono_);

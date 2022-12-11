@@ -49,7 +49,7 @@ class GenAt : public AbortVisitor {
   virtual void VisitFnCall(FnCallExpression* node) override {
     auto call = parent_.Eval(node);
 
-    if (parent_.measure_.IsStruct(node->GetType())) {
+    if (parent_.measure_.IsCompound(node->GetType())) {
       auto [s, a] = parent_.SizeAlign(node);
       parent_.Copy(a, s, call, target_id_);
       return;
@@ -62,12 +62,20 @@ class GenAt : public AbortVisitor {
   virtual void VisitCompoundInitalizer(CompoundInitializerExpr* node) override {
     size_t previous_offset = 0;
 
+    auto& measure = parent_.measure_;
+    auto& field = node->initializers_[0].field;  // The only one!
+    auto underlying = types::TypeStorage(node->GetType());
+
+    if (underlying->tag == types::TypeTag::TY_SUM) {
+      auto discr = measure.SumDiscriminant(underlying, field);
+      fmt::print("  storew {}, {}\n", discr, target_id_.Emit());
+    }
+
     auto target = parent_.GenTemporary();
     fmt::print("  {} = l copy {}\n", target.Emit(), target_id_.Emit());
 
     for (auto& i : node->initializers_) {
-      auto offset =
-          parent_.measure_.MeasureFieldOffset(node->GetType(), i.field);
+      auto offset = measure.MeasureFieldOffset(node->GetType(), i.field);
 
       // Move the pointer
       fmt::print("  {} =l add {}, {}\n", target.Emit(), target.Emit(),
@@ -75,7 +83,9 @@ class GenAt : public AbortVisitor {
 
       previous_offset = offset;
 
-      parent_.GenAtAddress(i.init, target);
+      if (i.init) {
+        parent_.GenAtAddress(i.init, target);
+      }
     }
   }
 
@@ -128,7 +138,7 @@ class GenAt : public AbortVisitor {
   virtual void VisitVarAccess(VarAccessExpression* node) override {
     auto id = parent_.Eval(node);
 
-    if (parent_.measure_.IsStruct(node->GetType())) {
+    if (parent_.measure_.IsCompound(node->GetType())) {
       auto [s, a] = parent_.SizeAlign(node);
       parent_.Copy(a, s, id, target_id_);
       return;

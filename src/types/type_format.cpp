@@ -19,6 +19,22 @@ std::string FormatStruct(Type& type) {
 
 //////////////////////////////////////////////////////////////////////
 
+std::string FormatSum(Type& type) {
+  std::string result;
+  auto insert = std::back_inserter(result);
+  fmt::format_to(insert, "sum {{ ");
+
+  for (auto& a : type.as_sum.first) {
+    fmt::format_to(insert, "{}: {} | ", a.field,
+                   a.ty ? FormatType(*a.ty) : "!");
+  }
+
+  fmt::format_to(insert, "}}");
+  return result;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 std::string FormatApp(Type& type) {
   std::string result;
   auto insert = std::back_inserter(result);
@@ -83,11 +99,15 @@ std::string FormatTypeInner(Type& type) {
       return fmt::format("Char");
     case TypeTag::TY_UNIT:
       return fmt::format("Unit");
+    case TypeTag::TY_NEVER:
+      return "!";
 
     case TypeTag::TY_PTR:
       return FormatPtr(type);
     case TypeTag::TY_UNION:
       return FormatUnion(type);
+    case TypeTag::TY_SUM:
+      return FormatSum(type);
     case TypeTag::TY_STRUCT:
       return FormatStruct(type);
     case TypeTag::TY_FUN:
@@ -150,9 +170,7 @@ std::string Mangle(Type& type) {
       return MangleApp(type);
 
     case TypeTag::TY_STRUCT:
-      fmt::print("{}\n", FormatType(type));
-      // Unimplemented
-
+    case TypeTag::TY_SUM:
     case TypeTag::TY_UNION:
     case TypeTag::TY_VARIABLE:
     case TypeTag::TY_CONS:

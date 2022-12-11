@@ -34,7 +34,7 @@ export {
 
 
 
-fun make_vec initVal size = {
+fun make_vec initial_value size = {
   var vec = new Vec(_);
 
   # Could also do
@@ -46,7 +46,7 @@ fun make_vec initVal size = {
   # };
 
   vec->data = new [size] _;
-  replicate(vec->data, initVal, size);
+  replicate(vec->data, initial_value, size);
 
   vec->size = size;
   vec->capacity = size;

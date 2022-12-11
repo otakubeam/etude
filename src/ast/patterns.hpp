@@ -68,7 +68,12 @@ class VariantPattern : public Pattern {
     return name_.location;
   };
 
+  types::Type* GetType() const {
+    return types::FindLeader(type_);
+  }
+
   lex::Token name_;
+  types::Type* type_ = nullptr;
   Pattern* inner_pat_ = nullptr;
   ast::scope::Context* layer_ = nullptr;
 };

@@ -82,6 +82,25 @@ void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue) {
       break;
     }
 
+    case TypeTag::TY_SUM: {
+      auto& a_mem = a->as_sum.first;
+      auto& b_mem = b->as_sum.first;
+
+      if (a_mem.size() != b_mem.size()) {
+        throw std::runtime_error{"Inference error: struct size mismatch"};
+      }
+
+      // Also don't forget to check the names!
+      for (size_t i = 0; i < a_mem.size(); i++) {
+        if (a_mem[i].field != b_mem[i].field) {
+          throw std::runtime_error{"Inference error: sum field mismatch"};
+        }
+        PushEqual(a_mem[i].ty, b_mem[i].ty, fill_queue);
+      }
+
+      break;
+    }
+
     case TypeTag::TY_FUN: {
       auto& pack = a->as_fun.param_pack;
       auto& pack2 = b->as_fun.param_pack;
@@ -156,6 +175,20 @@ Type* SubstituteParameters(
       }
 
       return MakeStructType(std::move(result));
+    }
+
+    case TypeTag::TY_SUM: {
+      std::vector<Member> result;
+      auto& pack = subs->as_sum.first;
+
+      for (auto& p : pack) {
+        result.push_back(Member{.field = p.field,
+                                .ty = p.ty  //
+                                          ? SubstituteParameters(p.ty, map)
+                                          : nullptr});
+      }
+
+      return MakeSumType(std::move(result));
     }
 
     case TypeTag::TY_FUN: {
@@ -245,6 +278,12 @@ void Generalize(Type* ty) {
 
     case TypeTag::TY_STRUCT:
       for (auto& mem : l->as_struct.first) {
+        Generalize(mem.ty);
+      }
+      break;
+
+    case TypeTag::TY_SUM:
+      for (auto& mem : l->as_sum.first) {
         Generalize(mem.ty);
       }
       break;
@@ -340,6 +379,20 @@ Type* Instantinate(Type* ty, KnownParams& map) {
       }
 
       return MakeStructType(std::move(args));
+    }
+
+    case TypeTag::TY_SUM: {
+      std::vector<Member> args;
+      auto& pack = l->as_sum.first;
+
+      for (auto& p : pack) {
+        args.push_back(Member{
+            .field = p.field,
+            .ty = Instantinate(p.ty, map),
+        });
+      }
+
+      return MakeSumType(std::move(args));
     }
 
     case TypeTag::TY_CONS:

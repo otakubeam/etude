@@ -97,9 +97,19 @@ void AlgorithmW::VisitLiteralPat(LiteralPattern* node) {
   return_value = Eval(node->pat_);
 }
 
-void AlgorithmW::VisitVariantPat(VariantPattern*) {
-  std::abort();
-  // auto inner = Eval(node->inner_pat_);
+void AlgorithmW::VisitVariantPat(VariantPattern* node) {
+  auto inner = node->inner_pat_  //
+                   ? Eval(node->inner_pat_)
+                   : MakeTypeVar(node->layer_);
+
+  node->type_ = MakeTypeVar(node->layer_);
+  deferred_checks_.push_back(Trait{.tag = TraitTags::HAS_FIELD,
+                                   .bound = node->type_,
+                                   .has_field = {
+                                       .field_name = node->name_,
+                                       .field_type = inner,
+                                   }});
+  return_value = node->type_;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -338,11 +348,13 @@ void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   node->type_ = MakeTypeVar(node->layer_);
 
   for (auto& mem : node->initializers_) {
+    auto field_type = mem.init ? Eval(mem.init) : &builtin_never;
+
     deferred_checks_.push_back(Trait{.tag = TraitTags::HAS_FIELD,
                                      .bound = node->type_,
                                      .has_field = {
                                          .field_name = mem.field,
-                                         .field_type = Eval(mem.init),
+                                         .field_type = field_type,
                                      }});
   }
 

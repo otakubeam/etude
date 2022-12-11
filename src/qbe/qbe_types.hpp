@@ -25,6 +25,24 @@ inline std::string ToQbeType(types::Type* type) {
   }
 }
 
+inline std::string CopySuf(types::Type* type) {
+  switch (type->tag) {
+    case types::TypeTag::TY_INT:
+    case types::TypeTag::TY_CHAR:
+    case types::TypeTag::TY_UNIT:
+    case types::TypeTag::TY_BOOL:
+      return "w";
+
+    case types::TypeTag::TY_PTR:
+    case types::TypeTag::TY_APP:
+      return "l";
+
+    default:
+      std::abort();
+  }
+}
+
+
 inline std::string_view LoadSuf(types::Type* ty) {
   switch (ty->tag) {
     case types::TypeTag::TY_INT:

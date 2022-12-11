@@ -10,7 +10,6 @@ struct Value {
     NONE,  // For debug
     PARAM,
     GLOBAL,
-    STRUCT,
     TEMPORARY,
     CONST_INT,
   } tag;
@@ -24,7 +23,6 @@ struct Value {
       case GLOBAL:
         return fmt::format("${}", name);
       case TEMPORARY:
-      case STRUCT:
       case PARAM:
         return fmt::format("%.{}", id);
       case CONST_INT:

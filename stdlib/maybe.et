@@ -1,0 +1,27 @@
+
+
+
+export {
+
+
+    type Maybe a = sum {
+        | some: a
+        | none
+    };
+
+
+    of Maybe(Maybe(_)) -> Maybe(_) 
+    fun flatten mbmb; #=
+
+
+}
+
+type BoolInt = struct {
+    int : Int,
+    bool: Bool,
+};
+
+fun flatten mbmb = match mbmb {
+                   | .some mb: mb
+                   | otherwise: .none
+                   };

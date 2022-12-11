@@ -38,7 +38,7 @@ types::Type* Parser::ParsePointerType() {
 
 types::Type* Parser::ParseStructType() {
   if (!Matches(lex::TokenType::STRUCT)) {
-    return ParsePrimitiveType();
+    return ParseSumType();
   }
 
   Consume(lex::TokenType::LEFT_CBRACE);
@@ -69,6 +69,45 @@ types::Type* Parser::ParseStructType() {
   return types::MakeStructType(std::move(fields));
 }
 
+///////////////////////////////////////////////////////////////////
+
+types::Type* Parser::ParseSumType() {
+  if (!Matches(lex::TokenType::SUM)) {
+    return ParsePrimitiveType();
+  }
+
+  Consume(lex::TokenType::LEFT_CBRACE);
+
+  // The first `|` is optional
+  Matches(lex::TokenType::BIT_OR);
+
+  // 2. Parse struct fields
+
+  std::vector<types::Member> fields;
+
+  do {
+    Consume(lex::TokenType::IDENTIFIER);
+
+    fields.push_back(types::Member{
+        .field = lexer_.GetPreviousToken().GetName(),
+    });
+
+    if (Matches(lex::TokenType::COLON)) {
+      if (auto type = ParseFunctionType()) {
+        fields.back().ty = type;
+      } else {
+        throw parse::errors::ParseTypeError{FormatLocation()};
+      }
+    } else {
+      fields.back().ty = &types::builtin_never;
+    }
+
+  } while (Matches(lex::TokenType::BIT_OR));
+
+  Consume(lex::TokenType::RIGHT_CBRACE);
+
+  return types::MakeSumType(std::move(fields));
+}
 ///////////////////////////////////////////////////////////////////
 
 types::Type* Parser::ParsePrimitiveType() {

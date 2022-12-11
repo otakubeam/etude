@@ -158,7 +158,9 @@ void MarkIntrinsics::VisitIntrinsic(IntrinsicCall*) {
 
 void MarkIntrinsics::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   for (auto& mem : node->initializers_) {
-    mem.init = Eval(mem.init)->as<Expression>();
+    if (auto& init = mem.init) {
+      init = Eval(init)->as<Expression>();
+    }
   }
 
   return_value = node;

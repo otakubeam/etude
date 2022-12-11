@@ -36,23 +36,53 @@ class GenMatch : public AbortVisitor {
     auto eq_type = ToQbeType(ty);
     auto load_suf = LoadSuf(ty);
 
+    auto target = target_id_;
+
     if (!literal_) {
       auto load = parent_.GenTemporary();
       fmt::print("  {} = {} load{} {}  \n",  //
-                 load.Emit(), eq_type, load_suf, against.Emit());
-      against = load;
+                 load.Emit(), eq_type, load_suf, target_id_.Emit());
+      target = load;
     }
 
     auto condition = parent_.GenTemporary();
 
     fmt::print("  {} =w ceq{} {}, {}\n",  //
-               condition.Emit(), eq_type, target_id_.Emit(), against.Emit());
+               condition.Emit(), eq_type, target.Emit(), against.Emit());
     fmt::print("  jnz {}, @match.{}.check.{}, @match.{}\n",  //
                condition.Emit(), next_arm_ - 1, check++, next_arm_);
     fmt::print("@match.{}.check.{}\n", next_arm_ - 1, check - 1);
   }
 
-  void VisitVariantPat(VariantPattern*) {
+  void VisitVariantPat(VariantPattern* node) {
+    auto out = parent_.GenTemporary();
+
+    auto ty = node->GetType();
+    auto discr_pat =
+        parent_.GenConstInt(parent_.measure_.SumDiscriminant(ty, node->name_));
+
+    auto memory = parent_.GenTemporary();
+    fmt::print("  {} =w loadsw {}  \n", memory.Emit(), target_id_.Emit());
+
+    auto condition = parent_.GenTemporary();
+    fmt::print("  {} =w ceqw {}, {}\n",  //
+               condition.Emit(), discr_pat.Emit(), memory.Emit());
+
+    fmt::print("  jnz {}, @match.{}.check.{}, @match.{}\n",  //
+               condition.Emit(), next_arm_ - 1, check++, next_arm_);
+
+    fmt::print("@match.{}.check.{}\n", next_arm_ - 1, check - 1);
+
+    if (auto& inner = node->inner_pat_) {
+      auto new_addr = parent_.GenTemporary();
+
+      fmt::print("  {} = l add {}, {}  \n",  //
+                 new_addr.Emit(), target_id_.Emit(), 4);
+
+      target_id_ = new_addr;
+
+      inner->Accept(this);
+    }
   }
 
  private:

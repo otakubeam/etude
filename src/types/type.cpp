@@ -235,6 +235,16 @@ Type* MakeStructType(std::vector<Member> fields) {
 
 //////////////////////////////////////////////////////////////////////
 
+Type* MakeSumType(std::vector<Member> fields) {
+  Type::type_store.push_back(Type{
+      .tag = types::TypeTag::TY_SUM,
+      .as_sum = {std::move(fields)},
+  });
+  return &Type::type_store.back();
+};
+
+//////////////////////////////////////////////////////////////////////
+
 void SetTyContext(types::Type* ty, ast::scope::Context* typing_context) {
   FMT_ASSERT(typing_context, "Not null");
   ty->typing_context_ = typing_context;
@@ -247,6 +257,14 @@ void SetTyContext(types::Type* ty, ast::scope::Context* typing_context) {
     case TypeTag::TY_STRUCT:
       for (auto& member : ty->as_struct.first) {
         SetTyContext(member.ty, typing_context);
+      }
+      break;
+
+    case TypeTag::TY_SUM:
+      for (auto& member : ty->as_sum.first) {
+        if (member.ty) {
+          SetTyContext(member.ty, typing_context);
+        }
       }
       break;
 

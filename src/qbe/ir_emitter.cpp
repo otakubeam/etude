@@ -173,7 +173,7 @@ void IrEmitter::VisitExprStatement(ExprStatement* node) {
 void IrEmitter::VisitDeref(DereferenceExpression* node) {
   auto src = Eval(node->operand_);
 
-  if (measure_.IsStruct(node->GetType())) {
+  if (measure_.IsCompound(node->GetType())) {
     return_value = src;
     return;
   }
@@ -321,7 +321,7 @@ void IrEmitter::VisitIf(IfExpression* node) {
 
   fmt::print("@true.{}          \n", true_id);
   auto true_v = Eval(node->true_branch_);
-  auto assign = ToQbeType(node->GetType());
+  auto assign = CopySuf(node->GetType());
 
   fmt::print("  {} = {} copy {}   \n", out.Emit(), assign, true_v.Emit());
   fmt::print("  jmp @join.{}    \n", join_id);
@@ -338,7 +338,7 @@ void IrEmitter::VisitIf(IfExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void IrEmitter::VisitMatch(MatchExpression* node) {
-  auto assign = ToQbeType(node->GetType());
+  auto assign = CopySuf(node->GetType());
   auto target = Eval(node->against_);
   auto out = GenTemporary();
   auto end_id = id_ += 1;
@@ -347,7 +347,7 @@ void IrEmitter::VisitMatch(MatchExpression* node) {
   auto next_arm = id_ += 1;
 
   for (auto& [pat, expr] : node->patterns_) {
-    auto lit = !measure_.IsStruct(node->against_->GetType());
+    auto lit = !measure_.IsCompound(node->against_->GetType());
     GenMatch match{*this, target, next_arm, lit};
 
     fmt::print("@match.{}          \n", match_arm);
@@ -363,6 +363,7 @@ void IrEmitter::VisitMatch(MatchExpression* node) {
   }
 
   fmt::print("@match.{}          \n", match_arm);
+  CallAbort(node);
   fmt::print("@match_end.{}    \n", end_id);
 
   return_value = out;
@@ -412,7 +413,7 @@ void IrEmitter::VisitBlock(BlockExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void IrEmitter::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
-  auto out = GenStruct();
+  auto out = GenTemporary();
 
   auto [size, alignment] = SizeAlign(node);
   fmt::print("  {} =l alloc{} {}\n", out.Emit(), alignment, size);
@@ -428,7 +429,7 @@ void IrEmitter::VisitFieldAccess(FieldAccessExpression* node) {
 
   GenAddress(node, addr);
 
-  if (measure_.IsStruct(node->GetType())) {
+  if (measure_.IsCompound(node->GetType())) {
     return_value = addr;
     return;
   }
@@ -542,7 +543,7 @@ void IrEmitter::VisitVarAccess(VarAccessExpression* node) {
   auto out = GenTemporary();
   auto location = named_values_.at(node->GetName());
 
-  if (measure_.IsStruct(node->GetType())) {
+  if (measure_.IsCompound(node->GetType())) {
     return_value = location;
     return;
   }

@@ -77,24 +77,43 @@ class IrEmitter : public ReturnVisitor<Value> {
       return;
     }
 
-    if (storage->tag != types::TypeTag::TY_STRUCT) {
-      fmt::print("{}\n", types::FormatType(*storage));
-      std::abort();  // TODO
+    switch (storage->tag) {
+      case types::TypeTag::TY_STRUCT: {
+        auto& members = storage->as_struct.first;
+
+        for (auto& mem : members) {
+          EmitType(mem.ty);
+        }
+
+        fmt::print("type :{} = {{ ", Mangle(*ty));
+
+        for (auto& mem : members) {
+          fmt::print("{} {}, ", ToQbeType(mem.ty), 1);
+        }
+
+        fmt::print("}}\n");
+        break;
+      }
+
+      case types::TypeTag::TY_SUM: {
+        auto& members = storage->as_sum.first;
+
+        for (auto& mem : members) {
+          EmitType(mem.ty);
+        }
+
+        fmt::print("type :{} = {{ w 1, ", Mangle(*ty));
+
+        auto size = measure_.MeasureSum(storage);
+        fmt::print(" w {} ", size / 4 - 1);
+
+        fmt::print("}}\n");
+        break;
+      }
+
+      default:
+        std::abort();
     }
-
-    auto& members = storage->as_struct.first;
-
-    for (auto& mem : members) {
-      EmitType(mem.ty);
-    }
-
-    fmt::print("type :{} = {{ ", Mangle(*ty));
-
-    for (auto& mem : members) {
-      fmt::print("{} {}, ", ToQbeType(mem.ty), 1);
-    }
-
-    fmt::print("}}\n");
   }
 
   void EmitTypes(std::vector<types::Type*> types) {
@@ -237,10 +256,6 @@ class IrEmitter : public ReturnVisitor<Value> {
 
   Value GenTemporary() {
     return {.tag = Value::TEMPORARY, .id = id_ += 1};
-  }
-
-  Value GenStruct() {
-    return {.tag = Value::STRUCT, .id = id_ += 1};
   }
 
   Value GenConstInt(int value) {

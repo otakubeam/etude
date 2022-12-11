@@ -23,6 +23,7 @@ enum class TypeTag {
   TY_BOOL,
   TY_CHAR,
   TY_UNIT,
+  TY_NEVER,
 
   TY_BUILTIN,
 
@@ -55,7 +56,7 @@ struct StructTy {
   std::vector<Member> first;
 };
 
-struct CoproductType {
+struct SumType {
   std::vector<Member> first;
 };
 
@@ -95,6 +96,7 @@ extern Type builtin_int;
 extern Type builtin_bool;
 extern Type builtin_char;
 extern Type builtin_unit;
+extern Type builtin_never;
 
 extern Type builtin_kind;
 
@@ -119,10 +121,10 @@ struct Type {
 
   PtrType as_ptr{};
   FunType as_fun{};
+  SumType as_sum{};
   StructTy as_struct{};
   TyAppType as_tyapp{};
   TyConsType as_tycons{};
-  CoproductType as_copro{};
   TypeVariable as_variable{};
 
   std::string Format() {
@@ -144,6 +146,7 @@ Type* MakeTyApp(lex::Token name, std::vector<Type*> param_pack);
 Type* MakeTyCons(lex::Token name, std::vector<lex::Token> params, Type* body,
                  Type* kind, ast::scope::Context* context);
 Type* MakeStructType(std::vector<Member> fields);
+Type* MakeSumType(std::vector<Member> fields);
 
 auto MakeKindParamPack(size_t size) -> std::vector<Type*>;
 

@@ -173,7 +173,6 @@ void ContextBuilder::VisitBindingPat(BindingPattern* node) {
   current_context_->bindings.InsertSymbol({
       .sym_type = SymbolType::VAR,
       .name = node->name_,
-      // TODO: how do I know the type?
       .as_varbind = {.type = node->type_},
       .declared_at = node->GetLocation(),
   });
@@ -274,7 +273,9 @@ void ContextBuilder::VisitFnCall(FnCallExpression* node) {
 
 void ContextBuilder::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   for (auto mem : node->initializers_) {
-    mem.init->Accept(this);
+    if (mem.init) {
+      mem.init->Accept(this);
+    }
   }
 }
 

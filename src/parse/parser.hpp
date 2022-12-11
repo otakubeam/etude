@@ -63,6 +63,7 @@ class Parser {
   Expression* ParseFnCallExpression(Expression* expr, lex::Token id);
 
   Expression* ParseCompoundInitializer(lex::Token id);
+  Expression* ParseSignleFieldCompound();
   Expression* ParsePrimary();
 
   ////////////////////////////////////////////////////////////////////
@@ -71,6 +72,7 @@ class Parser {
   types::Type* ParseFunctionType();
   types::Type* ParsePointerType();
   types::Type* ParseStructType();
+  types::Type* ParseSumType();
   types::Type* ParsePrimitiveType();
 
   ////////////////////////////////////////////////////////////////////
@@ -84,6 +86,7 @@ class Parser {
   bool Matches(lex::TokenType type);
   bool MatchesComparisonSign(lex::TokenType type);
   void Consume(lex::TokenType type);
+  bool TagOnly();
 
   std::string FormatLocation();
 

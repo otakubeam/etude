@@ -1,0 +1,54 @@
+str;
+mul;
+
+export {
+
+    # It would have been better use make a trait
+    # Something like "Parsed":
+    # type Parsed = trait {
+    #     of Str -> Self fun parse str;
+    # };
+
+    of Str -> Int
+    fun parse_num str;
+    #= Parses the decimal string into an integer
+
+}
+
+of String -> Bool
+fun is_digit char = {
+    of Int var val = (*char) ~> _;
+    var min_ascii_num = (*"0") ~> _;
+    var max_ascii_num = (*"9") ~> _;
+
+    if val >= min_ascii_num {
+        if val <= max_ascii_num {
+            return true;
+        };
+    };
+
+    false
+};
+
+
+of String -> Int
+fun parse_digit char = {
+    var val = (*char) ~> _;
+    var min_ascii_num = (*"0") ~> _;
+
+    val - min_ascii_num
+};
+
+
+fun parse_num str = parse_num_inner(str.data, 0);
+
+
+fun parse_num_inner str acc = if is_digit(str) {
+        print("Acc is %d\n", acc);
+        var new_acc = mul(10, acc) + parse_digit(str);
+        parse_num_inner(str + 1, new_acc)
+    } else
+        acc
+    ;
+
+

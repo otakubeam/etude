@@ -36,6 +36,24 @@ void Parser::Consume(lex::TokenType type) {
   }
 }
 
+// Checks whether `.none` is a tag-only value
+// as opposed to `.some <expr>`
+bool Parser::TagOnly() {
+  auto next_token = lexer_.Peek().type;
+  switch (next_token) {
+    case lex::TokenType::RIGHT_PAREN:
+    case lex::TokenType::RIGHT_CBRACE:
+    case lex::TokenType::RIGHT_SBRACE:
+    case lex::TokenType::COMMA:
+    case lex::TokenType::COLON:
+    case lex::TokenType::SEMICOLON:
+      return true;
+
+    default:
+      return false;
+  }
+}
+
 std::string Parser::FormatLocation() {
   return lexer_.GetPreviousToken().location.Format();
 }

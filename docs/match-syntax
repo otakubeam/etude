@@ -66,3 +66,20 @@ type Token = sum {
 
    eof,
 };
+
+################################################################################
+
+type State = sum ( initial | have_callback | have_result | final );
+type Event = sum ( got_callback | got_result );
+
+fun switch_state state event = match (state, event) {
+                               | (.initial, _): match event {
+                                                | .got_callback: .have_callback
+                                                | .got_result: .have_result
+                                                }
+                               | (.have_callback, .got_result): .final
+                               | (.have_result, .got_callback): .final
+                               | (_, _): assert(false)
+                               };
+
+################################################################################
