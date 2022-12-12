@@ -6,7 +6,6 @@ type VariantRecord T = sum {
    pair: (Int, Bool),
 };
 
-######################################################################
 
 of VariantRecord -> _
 fun use_pattern_matching arg = match arg {
@@ -26,7 +25,22 @@ fun use_pattern_matching arg = match arg {
         return x;
   };
 
-######################################################################
+################################################################################
+
+type State = sum ( initial | have_callback | have_result | final );
+type Event = sum ( got_callback | got_result );
+
+fun switch_state state event = match (state, event) {
+                               | (.initial, _): match event {
+                                                | .got_callback: .have_callback
+                                                | .got_result: .have_result
+                                                }
+                               | (.have_callback, .got_result): .final
+                               | (.have_result, .got_callback): .final
+                               | (_, _): assert(false)
+                               };
+
+################################################################################
 
 type Token = sum {
    integer: Int,
@@ -53,7 +67,6 @@ type Token = sum {
 
    not, addr, star, arrow, flow,
 
-   new, fun, var, type, of
 
    dot, comma, colon, semicolon,
 
@@ -64,22 +77,9 @@ type Token = sum {
 
    if, else, for, return, yield,
 
+   new, fun, var, type, of
+
    eof,
 };
-
-################################################################################
-
-type State = sum ( initial | have_callback | have_result | final );
-type Event = sum ( got_callback | got_result );
-
-fun switch_state state event = match (state, event) {
-                               | (.initial, _): match event {
-                                                | .got_callback: .have_callback
-                                                | .got_result: .have_result
-                                                }
-                               | (.have_callback, .got_result): .final
-                               | (.have_result, .got_callback): .final
-                               | (_, _): assert(false)
-                               };
 
 ################################################################################

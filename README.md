@@ -13,7 +13,13 @@ Currently the compiler can run some basic programs but hopelessly lacking in
 other ways. Sometimes in non-obvious ways. I do intend to fix all these
 imperfections eventually, if the god is willing. Until then, have fun!
 
----
+## Hosting
+
+1. [Sourcehut](https://sr.ht/~orazov_ae/Etude/)
+   - [Tickets for the compiler](https://todo.sr.ht/~orazov_ae/etude-compiler)
+   - [Mailing list](https://lists.sr.ht/~orazov_ae/public-inbox)
+   - [Source code](https://git.sr.ht/~orazov_ae/etude/refs)
+2. [Other site](https://github.com/otakubeam/etude/)
 
 ## First steps
 
@@ -26,6 +32,13 @@ imperfections eventually, if the god is willing. Until then, have fun!
      cmake -B build
      cd build
      make -j8
+     ```
+   - Add the path to stdlib to your environment
+
+     The author does this:
+     ```
+     export ETUDE_STDLIB="$HOME/.cache/etude"
+     ln -s $ETUDE_STDLIB ./stdlib
      ```
    - Run the tests (if they fail, try different commit)
      ``` sh

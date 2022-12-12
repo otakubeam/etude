@@ -17,34 +17,12 @@ bold() {
 
 ######################################################################
 
-runtest() {
-  local _testname=$1
-  # https://stackoverflow.com/questions/34964332
-  $(timeout 0.5 ./examples/repl $_testname &> /dev/null)
-}
-
 runtest_native() {
   local _testname=$1
   # https://stackoverflow.com/questions/34964332
-  $(timeout 0.5 ./examples/repl $_testname --native 2> /dev/null \
-    | qbe | as -o out && gcc out)
+  $(timeout 0.5 ./etc $_testname 2> /dev/null | qbe | as -o out && gcc out)
   $(timeout 0.5 ./a.out &> /dev/null)
 }
-
-collect_debug_artifacts() {
-  local _testname=$(basename -s .sb $1)
-  local _dirname="artifacts/$_testname"
-  bold $blue "Debug artifacts in '$(bold $white $_dirname)'\n"
-  mkdir -p "$_dirname/dots"
-  (
-    local _base=$(pwd)
-    cd $_dirname
-    $(timeout 0.5 $_base/examples/repl $_base/$1 --debug &> log)
-  )
-  cp graph.sh $_dirname
-}
-
-######################################################################
 
 report_test() {
   local f=$1
@@ -61,7 +39,7 @@ report_test() {
 
 ######################################################################
 
-tests=$(find . -regextype "egrep" -iregex ".*-test-.*sb" | sort)
+tests=$(find . -regextype "egrep" -iregex ".*-test-.*et" | sort)
 
 for f in $tests; do
   report_test $f

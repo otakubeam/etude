@@ -9,11 +9,6 @@
 #include <parse/parse_error.hpp>
 #include <parse/parser.hpp>
 
-#include <vm/codegen/compiler.hpp>
-#include <vm/debug/disassember.hpp>
-#include <vm/debug/debugger.hpp>
-#include <vm/elf_file.hpp>
-
 #include <qbe/ir_emitter.hpp>
 
 #include <fmt/color.h>
