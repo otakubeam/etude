@@ -27,6 +27,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   }
 
   void StartUp(FunDeclStatement* main) {
+    call_context_ = main->layer_;
     auto main_fn = Eval(main)->as<FunDeclStatement>();
     mono_items_.insert({main_fn->name_, main_fn});
   }
@@ -38,10 +39,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
       return;
     }
 
-    fmt::print(stderr, "[!] Symbol\n");
     auto symbol = i->layer_->RetrieveSymbol(i->fn_name_);
-
-    fmt::print(stderr, "[!] Symbol\n");
 
     // 2) Enter context
 
@@ -56,6 +54,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
     // 3) Find definition
 
     auto definition = symbol->as_fn_sym.def;
+    call_context_ = i->layer_;
 
     // 4) Evaluate
 
@@ -207,6 +206,8 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
 
  private:
   void MaybeSaveForIL(Type* ty) {
+    CheckTypes();
+
     if (ty->tag != TypeTag::TY_APP) {
       return;
     }
@@ -224,6 +225,8 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   std::unordered_map<Type*, Type*> poly_to_mono_;
 
   std::deque<FnCallExpression*> instantiation_quque_;
+
+  ast::scope::Context* call_context_ = nullptr;
 
   std::vector<Type*> types_to_gen_;
 

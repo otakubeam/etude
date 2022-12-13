@@ -50,6 +50,7 @@ Symbol* Context::FindFromExported(std::string_view name) {
     }
   }
 
+  Print();
   throw std::runtime_error{fmt::format("No such symbol {}\n", name)};
 }
 

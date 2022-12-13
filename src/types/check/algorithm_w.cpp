@@ -283,7 +283,7 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
   }
 
   auto ty = symbol->GetType();
-  auto ctx = ty->typing_context_;
+  auto ctx = node->layer_;
 
   // Get new fresh variables for all type parameters
 

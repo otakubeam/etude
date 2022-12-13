@@ -16,11 +16,6 @@ export {
 
 }
 
-type BoolInt = struct {
-    int : Int,
-    bool: Bool,
-};
-
 fun flatten mbmb = match mbmb {
                    | .some mb: mb
                    | otherwise: .none

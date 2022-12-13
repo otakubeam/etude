@@ -134,10 +134,18 @@ void CheckTypes() {
   auto& store = Type::type_store;
   fmt::print(stderr, "[!] Type store\n\n");
   for (auto& t : store) {
-    if (t.tag == TypeTag::TY_APP && !t.typing_context_) {
-      fmt::print(stderr, "id:{} \t context:{:<20} \t\t\t type:{} \n", t.id,
-                 (void*)t.typing_context_, FormatType(t));
-      std::abort();
+    if (t.tag == TypeTag::TY_APP) {
+      if (!t.typing_context_) {
+        fmt::print(stderr, "id:{} \t context:{:<20} \t\t\t type:{} \n", t.id,
+                   (void*)t.typing_context_, FormatType(t));
+        std::abort();
+      } else if (!t.typing_context_->RetrieveSymbol(t.as_tyapp.name)) {
+        fmt::print(stderr, "Could not find type locally\n");
+        t.typing_context_->Print();
+        fmt::print(stderr, "id:{} \t context:{:<20} \t\t\t type:{} \n", t.id,
+                   (void*)t.typing_context_, FormatType(t));
+        std::abort();
+      }
     }
   }
 }
