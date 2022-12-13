@@ -148,6 +148,19 @@ class GenAt : public AbortVisitor {
                target_id_.Emit());
   }
 
+  virtual void VisitMatch(MatchExpression* node) override {
+    auto id = parent_.Eval(node);
+
+    if (parent_.measure_.IsCompound(node->GetType())) {
+      auto [s, a] = parent_.SizeAlign(node);
+      parent_.Copy(a, s, id, target_id_);
+      return;
+    }
+
+    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
+               target_id_.Emit());
+  }
+
   virtual void VisitLiteral(LiteralExpression* node) override {
     auto id = parent_.Eval(node);
     fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
