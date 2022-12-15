@@ -1,16 +1,24 @@
+
+export {
+    of Int -> String -> Int
+    fun main argc argv;
+}
+
+
 fun fib n = {
-  if n == 0 {
-    return 0;
-  };
+    if n == 0 {
+        return 0;
+    };
 
-  if n == 1 {
-    return 1;
-  };
+    if n == 1 {
+        return 1;
+    };
 
-  fib(n-1) + fib(n-2)
+    fib(n-1) + fib(n-2)
 };
 
-fun main = {
-  fib(40);
+fun main argc argv = {
+    fib(40);
+    0
 };
 

@@ -1,3 +1,7 @@
+export {
+    of Int -> String -> Int
+    fun main argc argv;
+}
 
 type Vec a = struct {
   data: *a,
@@ -60,7 +64,7 @@ type Large = struct {
 };
 
 
-fun main = {
+fun main argc argv = {
   var v = makeVec(4);
   append(&v, { .i = 123,
                .b = true,
@@ -73,6 +77,8 @@ fun main = {
   assert(elem.i == 124);
   assert(elem.b == true);
   assert(elem.p == unit ~> _);
+
+  0
 };
 
 

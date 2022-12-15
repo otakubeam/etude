@@ -1,3 +1,8 @@
+export {
+    of Int -> String -> Int
+    fun main argc argv;
+}
+
 ######################################################################
 
 fun swap a b = {
@@ -117,7 +122,7 @@ fun sort v = {
   sort(l);
 };
 
-fun main = {
+fun main argc argv = {
   var v1 = new [10] _;
 
   var vec = new Vec(_);
@@ -149,4 +154,6 @@ fun main = {
   assert(v1[7] == 7);
   assert(v1[8] == 8);
   assert(v1[9] == 9);
+
+  0
 };

@@ -1,4 +1,10 @@
-fun main = {
-  assert(1 == 2);
+export {
+    of Int -> String -> Int
+    fun main argc argv;
+}
+
+fun main argc argv = {
+    assert(1 == 2);
+    0
 };
 

@@ -1,10 +1,14 @@
+export {
+    of Int -> String -> Int
+    fun main argc argv;
+}
 fun swap a b = {
   var t = *a;
   *a = *b;
   *b = t;
 };
 
-fun main = {
+fun main argc argv = {
   var x = 3; var y = 5;
   print("Orignal: %d %d\n", x, y);
 
@@ -13,4 +17,6 @@ fun main = {
 
   assert(x == 5);
   assert(y == 3);
+
+  0
 };

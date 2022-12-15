@@ -1,3 +1,7 @@
+export {
+    of Int -> String -> Int
+    fun main argc argv;
+}
 
 type Tree = struct {
    left: *Tree,
@@ -68,7 +72,7 @@ fun bytes_backwards mem i = {
 
 fun compute x = {};
 
-fun main = {
+fun main argc argv = {
     var tr1 = new Tree;
 
     tr1->left = tr1;
@@ -123,5 +127,7 @@ fun main = {
     assert(tr3.left == &tr3);
     assert(tr3.right == tr1);
     assert(tr3.value == 1);
+
+    0
 };
 

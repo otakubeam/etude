@@ -1,3 +1,8 @@
+export {
+    of Int -> String -> Int
+    fun main argc argv;
+}
+
 type Size2 = struct {
   a: Int,
   b: *Size2,
@@ -20,7 +25,7 @@ type ManyBools = struct {
 };
 
 
-fun main = {
+fun main argc argv = {
   var p = new [2] Size2;
 
   var addrA = &(p->a);
@@ -49,5 +54,7 @@ fun main = {
   assert((mb ~> *Bool + 2 == (&mb->b3) ~> _));
   assert((mb ~> *Bool + 3 == (&mb->b4) ~> _));
   assert((mb ~> *Bool + 4 == (&mb->b5) ~> _));
+
+  0
 };
 

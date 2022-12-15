@@ -63,7 +63,7 @@ class Module {
   enum Type {
     Library,
     Executable,
-  } mod_ty;
+  } mod_ty = Executable;
 
  private:
   std::string_view name_;

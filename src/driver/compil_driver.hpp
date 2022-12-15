@@ -58,7 +58,7 @@ class CompilationDriver {
   }
 
   auto ParseAllModules() {
-    auto [main, lex] = ParseOneModule("main");
+    auto [main, lex] = ParseOneModule(main_module_);
     modules_.reserve(16);
     std::unordered_map<std::string_view, walk_status> visited;
     TopSort(&main, modules_, visited);

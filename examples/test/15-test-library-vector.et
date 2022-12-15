@@ -1,4 +1,9 @@
 
+export {
+    of Int -> String -> Int
+    fun main argc argv;
+}
+
 type Vec a = struct {
   data: *a,
   size: Int,
@@ -109,28 +114,30 @@ fun print_contents vec i = {
   return print_contents(vec, i+1);
 };
 
-fun main = {
-  var t1 = makeVec(1, 1);
-  populate(t1, 2, 4);
+fun main argc argv = {
+    var t1 = makeVec(1, 1);
+    populate(t1, 2, 4);
 
-  assert(at(t1, 0) == 1);
-  assert(at(t1, 1) == 2);
-  assert(at(t1, 2) == 3);
-  assert(at(t1, 3) == 4);
-  assert(at(t1, 4) == 5);
+    assert(at(t1, 0) == 1);
+    assert(at(t1, 1) == 2);
+    assert(at(t1, 2) == 3);
+    assert(at(t1, 3) == 4);
+    assert(at(t1, 4) == 5);
 
-  var t2 = makeVec(true, 3);
-  append(t2, false);
+    var t2 = makeVec(true, 3);
+    append(t2, false);
 
-  # print_vec(t2);
-  # raw_bytes(t2->data ~> _, 4);
+    # print_vec(t2);
+    # raw_bytes(t2->data ~> _, 4);
 
-  # print("%hhx %hx %x\n", at(t2, 0), at(t2, 0), at(t2, 0));
+    # print("%hhx %hx %x\n", at(t2, 0), at(t2, 0), at(t2, 0));
 
-  assert(at(t2, 0) == true);
-  assert(at(t2, 1) == true);
-  assert(at(t2, 2) == true);
-  assert(at(t2, 3) == false);
+    assert(at(t2, 0) == true);
+    assert(at(t2, 1) == true);
+    assert(at(t2, 2) == true);
+    assert(at(t2, 3) == false);
+
+    0
 };
 
 
