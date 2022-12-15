@@ -1,21 +1,23 @@
 
 export {
 
+    # Print the `size` bytes from `mem` in hexadecimal format
     of String -> Int -> Unit
     fun raw_bytes mem size;
-    #= Print the `size` bytes from `mem` in hexadecimal format
 
 
+    # TODO:
     # of *a -> *a -> Int -> Unit
     of _ -> _ -> Int -> Unit
     fun memcpy dst src count;
-    #= Does what you think it does (but notice generics)
+    # Does what you think it does (but notice generics)
+
 
 
     # of *a -> a -> Int -> Unit
     of _ -> _ -> Int -> Unit
+    # Copies `val` `count` times to the `dst`
     fun replicate dst val count;
-    #= Copies `val` `count` times to the `dst`
 
 }
 

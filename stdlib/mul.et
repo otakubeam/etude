@@ -1,7 +1,6 @@
 export {
 
     of Int -> Int -> Int fun mul x y;
-    # =
 
 }
 

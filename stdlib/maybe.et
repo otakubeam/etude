@@ -11,7 +11,7 @@ export {
 
 
     of Maybe(Maybe(_)) -> Maybe(_) 
-    fun flatten mbmb; #=
+    fun flatten mbmb;
 
 
 }

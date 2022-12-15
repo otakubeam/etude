@@ -4,8 +4,8 @@ mul;
 export {
 
     of Int -> Int fun rand prev;
-    #= Given a previous state of RNG, generates a random number
-    #= using a linear congruential generator (LCG)
+    # Given a previous state of RNG, generates a random number
+    # using a linear congruential generator (LCG)
 
 }
 
