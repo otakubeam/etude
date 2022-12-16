@@ -10,12 +10,14 @@ inline std::string ToQbeType(types::Type* type) {
   switch (type->tag) {
     case types::TypeTag::TY_INT:
     case types::TypeTag::TY_CHAR:
-    case types::TypeTag::TY_UNIT:
     case types::TypeTag::TY_BOOL:
       return "w";
 
     case types::TypeTag::TY_PTR:
       return "l";
+
+    case types::TypeTag::TY_UNIT:
+      return "";
 
     case types::TypeTag::TY_APP:
       return ":" + types::Mangle(*type);
@@ -25,7 +27,7 @@ inline std::string ToQbeType(types::Type* type) {
   }
 }
 
-inline std::string CopySuf(types::Type* type) {
+inline std::string_view CopySuf(types::Type* type) {
   switch (type->tag) {
     case types::TypeTag::TY_INT:
     case types::TypeTag::TY_CHAR:

@@ -20,6 +20,8 @@ struct Value {
 
   std::string Emit() const {
     switch (tag) {
+      case NONE:
+        return "";
       case GLOBAL:
         return fmt::format("${}", name);
       case TEMPORARY:

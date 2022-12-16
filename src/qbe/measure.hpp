@@ -12,6 +12,10 @@ class SizeMeasure {
            t->tag == types::TypeTag::TY_SUM;
   }
 
+  bool IsZST(types::Type* t) {
+    return MeasureSize(t) == 0;
+  }
+
   size_t MeasureAlignment(types::Type* t) {
     t = types::FindLeader(t);
 

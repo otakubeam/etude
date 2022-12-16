@@ -27,7 +27,7 @@ fun main argc argv = {
   of String var name = "Andrew";
 
   var name_len = strlen(name);
-  assert(name_len == 8);
+  assert(name_len == 7);
 
   memcpy(name, s, name_len);
 

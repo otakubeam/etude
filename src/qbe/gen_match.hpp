@@ -28,6 +28,10 @@ class GenMatch : public AbortVisitor {
   }
 
   void VisitLiteralPat(LiteralPattern* node) {
+    if (node->pat_->GetType()->tag == types::TypeTag::TY_UNIT) {
+      return;
+    }
+
     auto out = parent_.GenTemporary();
 
     auto against = parent_.Eval(node->pat_);

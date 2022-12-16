@@ -65,18 +65,20 @@ report_test() {
     printf $(bold $red "FAIL!") && echo
     collect_debug_artifacts $f
   fi
+
+  # Clean up
+  test -e out && rm out
+  test -e a.out && rm a.out
 }
 
 ######################################################################
 
-tests=$(find . -regextype "egrep" -iregex ".*-test-.*.et" | sort)
+tests=$(find . -regextype "egrep" -iregex ".*/test/.*-test-.*.et" | sort)
 
 for f in $tests; do
   report_test ${f%.et}
 done
 
-# test -e out a.out && \
-    rm out a.out
 
 bold $green "-----------------------------------------------------------"
 bold $green "All tests passed! (ideally)"

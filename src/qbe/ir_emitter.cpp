@@ -17,6 +17,9 @@ void IrEmitter::GenAddress(Expression* what, Value out) {
 };
 
 void IrEmitter::GenAtAddress(Expression* what, Value where) {
+  if (measure_.IsZST(what->GetType())) {
+    return;
+  }
   class GenAt gen_addr(*this, where);
   what->Accept(&gen_addr);
 };
@@ -72,6 +75,11 @@ void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
     auto t = GenParam();
     named_values_.insert_or_assign(formals[i].GetName(), t);
 
+    // Do not even mention zsts in the args
+    if (measure_.IsZST(arg_ty[i])) {
+      continue;
+    }
+
     fmt::print("{} {}, ", ToQbeType(arg_ty[i]), t.Emit());
   }
 
@@ -88,7 +96,7 @@ void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
 ////////////////////////////////////////////////////////////////////
 
 void IrEmitter::VisitFnCall(FnCallExpression* node) {
-  auto out = GenTemporary();
+  auto out = measure_.IsZST(node->GetType()) ? Value::None() : GenTemporary();
 
   // %out = call $rt.memset(l %binding.5, l 0, l 8)
   fmt::print("# call {}\n", node->GetFunctionName());
@@ -108,10 +116,17 @@ void IrEmitter::VisitFnCall(FnCallExpression* node) {
   auto mangled = std::string(node->GetFunctionName());
   mangled += types::Mangle(*node->callable_type_);
 
-  auto result_ty = ToQbeType(node->GetType());
-  fmt::print("  {} = {} call ${} ( ", out.Emit(), result_ty, mangled);
+  if (measure_.IsZST(node->GetType())) {
+    fmt::print("  call ${} ( ", mangled);
+  } else {
+    auto result_ty = ToQbeType(node->GetType());
+    fmt::print("  {} = {} call ${} ( ", out.Emit(), result_ty, mangled);
+  }
 
   for (auto& i : args) {
+    if (i.v.tag == Value::NONE) {
+      continue;
+    }
     fmt::print("{} {}, ", i.qbe_ty, i.v.Emit());
   }
 
@@ -175,6 +190,11 @@ void IrEmitter::VisitDeref(DereferenceExpression* node) {
 
   if (measure_.IsCompound(node->GetType())) {
     return_value = src;
+    return;
+  }
+
+  if (measure_.IsZST(node->GetType())) {
+    return_value = Value::None();
     return;
   }
 
@@ -307,12 +327,20 @@ void IrEmitter::VisitUnary(UnaryExpression* node) {
 
 ////////////////////////////////////////////////////////////////////
 
+void PrintCopyInstruction(Value out, Value res, std::string_view assign) {
+  if (res.tag != Value::NONE) {
+    fmt::print("  {} = {} copy {}   \n", out.Emit(), assign, res.Emit());
+  }
+}
+
+////////////////////////////////////////////////////////////////////
+
 void IrEmitter::VisitIf(IfExpression* node) {
   auto true_id = id_ += 1;
   auto false_id = id_ += 1;
   auto join_id = id_ += 1;
 
-  auto out = GenTemporary();
+  auto out = measure_.IsZST(node->GetType()) ? Value::None() : GenTemporary();
   auto condition = Eval(node->condition_);
 
   fmt::print("#if-start\n");
@@ -323,13 +351,13 @@ void IrEmitter::VisitIf(IfExpression* node) {
   auto true_v = Eval(node->true_branch_);
   auto assign = CopySuf(node->GetType());
 
-  fmt::print("  {} = {} copy {}   \n", out.Emit(), assign, true_v.Emit());
+  PrintCopyInstruction(out, true_v, assign);
   fmt::print("  jmp @join.{}    \n", join_id);
 
   fmt::print("@false.{}         \n", false_id);
   auto false_v = Eval(node->false_branch_);
 
-  fmt::print("  {} = {} copy {}   \n", out.Emit(), assign, false_v.Emit());
+  PrintCopyInstruction(out, false_v, assign);
   fmt::print("@join.{}          \n", join_id);
 
   return_value = out;
@@ -340,7 +368,7 @@ void IrEmitter::VisitIf(IfExpression* node) {
 void IrEmitter::VisitMatch(MatchExpression* node) {
   auto assign = CopySuf(node->GetType());
   auto target = Eval(node->against_);
-  auto out = GenTemporary();
+  auto out = measure_.IsZST(node->GetType()) ? Value::None() : GenTemporary();
   auto end_id = id_ += 1;
 
   auto match_arm = id_ += 1;
@@ -354,7 +382,7 @@ void IrEmitter::VisitMatch(MatchExpression* node) {
     pat->Accept(&match);
 
     auto res = Eval(expr);
-    fmt::print("  {} = {} copy {}   \n", out.Emit(), assign, res.Emit());
+    PrintCopyInstruction(out, res, assign);
 
     fmt::print("  jmp @match_end.{}    \n", end_id);
 
@@ -405,9 +433,7 @@ void IrEmitter::VisitBlock(BlockExpression* node) {
     return;
   }
 
-  // Here I need to return something else
-
-  return_value = Value{.tag = Value::CONST_INT, .value = 0};
+  return_value = Value::None();
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -426,6 +452,11 @@ void IrEmitter::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
 
 void IrEmitter::VisitFieldAccess(FieldAccessExpression* node) {
   auto addr = GenTemporary();
+
+  if (measure_.IsZST(node->GetType())) {
+    return_value = Value::None();
+    return;
+  }
 
   GenAddress(node, addr);
 
@@ -450,6 +481,12 @@ void IrEmitter::VisitTypecast(TypecastExpression* node) {
 
   if (GetTypeSize(original) == GetTypeSize(target)) {
     return_value = Eval(node->expr_);
+    return;
+  }
+
+  if (original->tag == types::TypeTag::TY_UNIT &&
+      target->tag == types::TypeTag::TY_PTR) {
+    return_value = GenConstInt(0);
     return;
   }
 
@@ -529,7 +566,7 @@ void IrEmitter::VisitLiteral(LiteralExpression* node) {
       break;
 
     case lex::TokenType::UNIT:
-      return_value = GenConstInt(0);
+      return_value = Value::None();
       break;
 
     default:
@@ -545,6 +582,11 @@ void IrEmitter::VisitVarAccess(VarAccessExpression* node) {
 
   if (measure_.IsCompound(node->GetType())) {
     return_value = location;
+    return;
+  }
+
+  if (measure_.IsZST(node->GetType())) {
+    return_value = Value::None();
     return;
   }
 
