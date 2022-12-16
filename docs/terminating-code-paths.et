@@ -1,0 +1,49 @@
+
+export {
+
+    of Int -> *String -> Int
+    fun main argc argv;
+
+}
+
+fun main argc argv = {
+
+    if something then -> here {
+
+        if other then {
+            yield -> here x ;   # <<<----- now under some cirumstances block can return typeof(x)
+        };
+
+        # So this branch is never-returning
+        return 0;
+
+    } else -> there {
+        # And this branch returns just ()
+        yield () -> there;
+    };
+
+    # As a whole if-expression should return ()
+
+    # When I enter some block or function, I push it on stack
+
+    # But what about this expression?
+    # I just want to say that
+    # 1) Function as a whole returns zero
+    # 2) Current block returns !
+
+    # Rules are roughly like this:
+    # - whenever you encounter a return statement
+    #   you should unify its return type with function return type
+    #   you should also discard the expressions following it in the block
+    #   the type of currently calculated block doesn't get any additional bounds
+    # - whenever you encounter an expression that results in !
+    #   that means you are free to discard everything following it
+
+    # The same rules also logically apply on the level of
+    # `yield` statements
+
+    return 0;
+
+    0  ## <<<------ currently need to write this
+};
+

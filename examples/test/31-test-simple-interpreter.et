@@ -1,0 +1,222 @@
+str;
+span;
+maybe;
+
+export {
+
+    # Do I want to export the Token type?
+
+    of Int -> String -> Int
+    fun main argc argv;
+
+    of *Span(Token) -> *AST
+    fun parse_expr token_stream;
+
+}
+
+type AST = sum {
+
+    | lit: LiteralExpression
+    | bin: BinaryExpression
+    | unary: UnaryExpression
+
+};
+
+type LiteralExpression = struct {
+    tok: Token,
+};
+
+type BinaryExpression = struct {
+    op: Token,
+    left: *AST,
+    right: *AST,
+};
+
+type UnaryExpression = struct {
+    op: Token,
+    operand: *AST,
+};
+
+type Token = sum {
+   | integer: Int
+   | string: Str
+   | identifier: Str
+   # | float: Float
+
+   # unit_, true_, false_,
+
+   | plus | minus
+   # div,
+
+   # plus_eq, minus_eq, star_eq, div_eq,
+
+   # attr, export_, extern_,
+
+   # assign, equals,
+
+   # lt, le,
+   # gt, ge,
+
+   # left_paren,  right_paren,
+   # left_cbrace, right_cbrace,
+   # left_sbrace, right_sbrace,
+
+   # not, addr, star, arrow, flow,
+
+
+   # dot, comma, colon, semicolon,
+
+   # struct_, union_, enum_,
+   # ty_int, ty_bool, ty_unit, ty_string,
+
+   # underscore,
+
+   # if_, else_, for_, return_, yield_,
+
+   # new_, fun_, var_, type_, of_, #=
+
+   # eof,
+};
+
+# I want some function for tokenization
+# Well, a lexer!
+
+of String -> Maybe(Token)
+fun tokenize cursor = {
+    (.none)
+};
+
+
+fun parse_expr tk_span = match parse_binary(tk_span) {
+    | .some x: x
+    | .none: unit ~> _
+    };
+
+
+of *Span(Token) -> Maybe(*AST)
+fun parse_binary tk_span = {
+
+    var left = match parse_unary(tk_span) {
+    | .some s: s
+    | .none: { return .none; unit ~> _ }
+    };
+
+    match peek_first(*tk_span) {
+    | .some tok: {
+
+        match tok {
+        | .plus: {}
+        | .minus: {}
+        | otherwise: { return .some left; }
+        };
+
+        eat_first(tk_span);
+
+        match parse_unary(tk_span) {
+        | .some unary: {
+            var ast = new AST;
+            *ast = .bin { .op = tok,
+                          .left = left,
+                          .right = unary, };
+            .some ast
+        }
+
+        | .none: .none # panic or something
+        }
+
+    }
+    | otherwise: .some left
+    }
+};
+
+of *Span(Token) -> Maybe(*AST)
+fun parse_unary tk_span = match peek_first(*tk_span) {
+    | .some.minus: {
+
+        eat_first(tk_span);
+
+        match parse_literal(tk_span) {
+        | .some literal: {
+            var ast = new AST;
+            *ast = .unary { .op = .minus,
+                            .operand = literal, };
+            .some ast
+        }
+
+        | .none: .none
+        }
+
+    }
+    | otherwise: parse_literal(tk_span)
+    };
+
+
+# of Span(Token) -> (Maybe(*AST), Span(Token))
+# of in _ -> inout _ -> out _
+
+of *Span(Token) -> Maybe(*AST)
+fun parse_literal tk_span = match peek_first(*tk_span) {
+    | .some.integer x: {
+        eat_first(tk_span);
+
+        var ast = new AST;
+        *ast = .lit.tok.integer x;
+        .some ast
+    }
+    | otherwise: .none
+    };
+
+
+of *Token -> *Span(Token) -> Bool
+fun try_match token span = match peek_first(*span) {
+        | .some first:
+            get_discriminant(token) == get_discriminant(&first)
+        | .none: false
+    };
+
+
+of *Token -> Int
+fun get_discriminant token = *(token ~> *Int);
+
+
+of *AST -> Int 
+fun interpret ast = match *ast {
+    | .lit literal: literal.tok.integer
+    | .unary unary: -interpret(unary.operand)
+    | .bin binary:  {
+        var left = interpret(binary.left);
+        var right = interpret(binary.right);
+
+        match binary.op {
+        | .plus: left + right
+        | .minus: left - right
+        }
+    }
+    };
+
+
+fun main argc argv = {
+
+    var data = new [10] Token;
+
+    data[0] = .minus;
+    data[1] = .integer 3;
+    data[2] = .plus;
+    data[3] = .minus;
+    data[4] = .integer 5;
+
+    of Vec(Token)
+    var tokens = { .data = data,
+                   .size = 10,
+                   .capacity = 10, };
+
+    var span = make_span(&tokens);
+
+
+    var ast = parse_expr(&span);
+
+    assert(interpret(ast) == -8);
+
+    0
+};
+

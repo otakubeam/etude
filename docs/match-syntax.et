@@ -9,19 +9,19 @@ type VariantRecord T = sum {
 
 of VariantRecord -> _
 fun use_pattern_matching arg = match arg {
-    .Is { .size = 0, .capacity } if capacity > 0:
+  | .Is { .size = 0, .capacity } if capacity > 0:
         # Do something 1;
 
-    .Is { .size, .data = &[1, 2, 3, ...], } if size > 3:
+  | .Is { .size, .data = &[1, 2, 3, ...], } if size > 3:
         # Do something 2;
 
-    .str:
+  | .str:
         print_str(str);
 
-    .pair (2, true):
+  | .pair (2, true):
         # Do something
 
-    .pair (x, true):
+  | .pair (x, true):
         return x;
   };
 
