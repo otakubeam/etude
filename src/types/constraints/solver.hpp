@@ -80,7 +80,7 @@ class ConstraintSolver {
 
     if (i.tag == TraitTags::ORD) {
       i.bound = FindLeader(i.bound);
-      if (i.bound->tag == TypeTag::TY_INT) {
+      if (i.bound->tag <= TypeTag::TY_CHAR) {
         return true;
       } else {
         fill_queue.push_back(i);

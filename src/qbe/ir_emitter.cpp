@@ -538,6 +538,7 @@ void IrEmitter::VisitVariantPat(VariantPattern*) {
 
 void IrEmitter::VisitLiteral(LiteralExpression* node) {
   switch (node->token_.type) {
+    case lex::TokenType::CHAR:
     case lex::TokenType::NUMBER:
       return_value = GenConstInt(std::get<int>(node->token_.sem_info));
       break;

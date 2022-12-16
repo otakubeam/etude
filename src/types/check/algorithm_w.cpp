@@ -403,6 +403,10 @@ void AlgorithmW::VisitLiteral(LiteralExpression* node) {
       return_value = MakeTypePtr(&builtin_char);
       break;
 
+    case lex::TokenType::CHAR:
+      return_value = &builtin_char;
+      break;
+
     case lex::TokenType::UNIT:
       return_value = &builtin_unit;
       break;

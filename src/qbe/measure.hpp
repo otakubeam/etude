@@ -67,6 +67,9 @@ class SizeMeasure {
 
   // How much to add to offset to get aligned address?
   size_t AddForAlignment(size_t align, size_t offset) {
+    if (align == 0) {
+      return 0;
+    }
     //      3    =   4   - (  5    %  4 )
     auto unused = (align - (offset % align)) % align;
     return unused;

@@ -29,6 +29,7 @@ class IdentTable {
   void Populate() {
     map_.insert({"String", TokenType::TY_STRING});
     map_.insert({"Bool", TokenType::TY_BOOL});
+    map_.insert({"Char", TokenType::TY_CHAR});
     map_.insert({"Unit", TokenType::TY_UNIT});
     map_.insert({"Int", TokenType::TY_INT});
 

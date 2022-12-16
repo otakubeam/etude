@@ -43,6 +43,8 @@ class Lexer {
 
   std::optional<Token> MatchStringLiteral();
 
+  std::optional<Token> MatchCharLiteral();
+
   std::optional<Token> MatchWords();
 
   ////////////////////////////////////////////////////////////////////

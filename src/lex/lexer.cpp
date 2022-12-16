@@ -212,11 +212,60 @@ std::optional<Token> Lexer::MatchLiterls() {
     return num_token;
   }
 
+  if (auto char_token = MatchCharLiteral()) {
+    return char_token;
+  }
+
   if (auto string_token = MatchStringLiteral()) {
     return string_token;
   }
 
   return std::nullopt;
+}
+
+////////////////////////////////////////////////////////////////////
+
+int MatchEscapeSymbol(char sym) {
+  auto value = 0;
+  switch (sym) {
+    case '0':
+      value = 0;
+      break;
+    case 'n':
+      value = '\n';
+      break;
+    case 't':
+      value = '\t';
+      break;
+    default:
+      std::abort();
+  }
+  return value;
+}
+
+std::optional<Token> Lexer::MatchCharLiteral() {
+  if (scanner_.CurrentSymbol() != '\'') {
+    return std::nullopt;
+  }
+
+  // Consume staring '
+  scanner_.MoveRight();
+
+  char value = 0;
+
+  if (scanner_.CurrentSymbol() == '\\') {
+    scanner_.MoveRight();
+    value = MatchEscapeSymbol(scanner_.CurrentSymbol());
+    scanner_.MoveRight();
+  } else {
+    value = scanner_.CurrentSymbol() - '0';
+    scanner_.MoveRight();
+  }
+
+  // Consume enclosing '
+  scanner_.MoveRight();
+
+  return Token{TokenType::CHAR, scanner_.GetLocation(), {value}};
 }
 
 ////////////////////////////////////////////////////////////////////

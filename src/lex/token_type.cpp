@@ -9,6 +9,7 @@ namespace lex {
 // clang-format off
 #define AST_NODE_LIST(code) \
   code(NUMBER)              \
+  code(CHAR)                \
   code(STRING)              \
   code(IDENTIFIER)          \
   code(UNIT)                \
@@ -51,6 +52,7 @@ namespace lex {
   code(UNDERSCORE)          \
   code(TY_INT)              \
   code(TY_BOOL)             \
+  code(TY_CHAR)             \
   code(TY_UNIT)             \
   code(TY_STRING)           \
   code(IF)                  \

@@ -143,6 +143,9 @@ types::Type* Parser::ParsePrimitiveType() {
     case lex::TokenType::TY_BOOL:
       return &types::builtin_bool;
 
+    case lex::TokenType::TY_CHAR:
+      return types::MakeTypePtr(&types::builtin_char);
+
     case lex::TokenType::TY_STRING:
       return types::MakeTypePtr(&types::builtin_char);
 

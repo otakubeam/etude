@@ -403,6 +403,7 @@ Expression* Parser::ParsePrimary() {
     case lex::TokenType::NUMBER:
     case lex::TokenType::STRING:
     case lex::TokenType::FALSE:
+    case lex::TokenType::CHAR:
     case lex::TokenType::TRUE:
     case lex::TokenType::UNIT:
       lexer_.Advance();

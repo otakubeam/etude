@@ -8,6 +8,7 @@ namespace lex {
 
 enum class TokenType {
   NUMBER,
+  CHAR,
   STRING,
   IDENTIFIER,
 
@@ -72,6 +73,7 @@ enum class TokenType {
 
   TY_INT,
   TY_BOOL,
+  TY_CHAR,
   TY_UNIT,
   TY_STRING,
 
