@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fmt/core.h>
+#include <lex/location.hpp>
 
 #include <string_view>
 #include <string>
@@ -58,6 +59,8 @@ struct Trait {
     TypesEqual types_equal;
     UserDefinedTrait* user;
   };
+
+  lex::Location location;
 };
 
 std::string FormatTrait(Trait& trait);

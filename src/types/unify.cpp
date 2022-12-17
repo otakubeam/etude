@@ -7,16 +7,17 @@ namespace types {
 
 //////////////////////////////////////////////////////////////////////
 
-void PushEqual(Type* a, Type* b, std::deque<Trait>& fill_queue) {
+void PushEqual(lex::Location loc, Type* a, Type* b, std::deque<Trait>& fill_queue) {
   fill_queue.push_back(Trait{
       .tag = TraitTags::TYPES_EQ,
       .types_equal = {.a = a, .b = b},
+      .location = loc,
   });
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void Unify(Type* a, Type* b, std::deque<Trait>& fill_queue) {
+void Unify(lex::Location loc, Type* a, Type* b, std::deque<Trait>& fill_queue) {
   auto la = FindLeader(a);
   auto lb = FindLeader(b);
 
@@ -38,7 +39,7 @@ void Unify(Type* a, Type* b, std::deque<Trait>& fill_queue) {
   }
 
   if (la->tag == lb->tag) {
-    UnifyUnderlyingTypes(la, lb, fill_queue);
+    UnifyUnderlyingTypes(loc, la, lb, fill_queue);
     return;
   }
 
@@ -58,11 +59,11 @@ Type* FindLeader(Type* a) {
 
 //////////////////////////////////////////////////////////////////////
 
-void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue) {
+void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b, std::deque<Trait>& fill_queue) {
   // assert(la->tag == lb->tag);
   switch (a->tag) {
     case TypeTag::TY_PTR:
-      PushEqual(a->as_ptr.underlying, b->as_ptr.underlying, fill_queue);
+      PushEqual(loc, a->as_ptr.underlying, b->as_ptr.underlying, fill_queue);
       break;
 
     case TypeTag::TY_STRUCT: {
@@ -76,7 +77,7 @@ void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue) {
       for (size_t i = 0; i < a_mem.size(); i++) {
         // Here I only look at the types
         // Should I also look at the field names?
-        PushEqual(a_mem[i].ty, b_mem[i].ty, fill_queue);
+        PushEqual(loc, a_mem[i].ty, b_mem[i].ty, fill_queue);
       }
 
       break;
@@ -95,7 +96,7 @@ void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue) {
         if (a_mem[i].field != b_mem[i].field) {
           throw std::runtime_error{"Inference error: sum field mismatch"};
         }
-        PushEqual(a_mem[i].ty, b_mem[i].ty, fill_queue);
+        PushEqual(loc, a_mem[i].ty, b_mem[i].ty, fill_queue);
       }
 
       break;
@@ -110,10 +111,10 @@ void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue) {
       }
 
       for (size_t i = 0; i < pack.size(); i++) {
-        PushEqual(pack[i], pack2[i], fill_queue);
+        PushEqual(loc, pack[i], pack2[i], fill_queue);
       }
 
-      PushEqual(a->as_fun.result_type, b->as_fun.result_type, fill_queue);
+      PushEqual(loc, a->as_fun.result_type, b->as_fun.result_type, fill_queue);
       break;
     }
 
@@ -129,7 +130,7 @@ void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue) {
           b = new_b;
         }
 
-        PushEqual(a, b, fill_queue);
+        PushEqual(loc, a, b, fill_queue);
         return;
 
         throw std::runtime_error{"Different type constructors"};
@@ -139,7 +140,7 @@ void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue) {
       auto& b_pack = b->as_tyapp.param_pack;
 
       for (size_t i = 0; i < a_pack.size(); i++) {
-        PushEqual(a_pack[i], b_pack[i], fill_queue);
+        PushEqual(loc, a_pack[i], b_pack[i], fill_queue);
       }
 
       break;

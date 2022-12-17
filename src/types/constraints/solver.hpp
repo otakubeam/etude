@@ -18,7 +18,12 @@ class ConstraintSolver {
     CheckTypes();
 
     if (i.tag == TraitTags::TYPES_EQ) {
-      Unify(i.types_equal.a, i.types_equal.b, fill_queue);
+      try {
+        Unify(i.location, i.types_equal.a, i.types_equal.b, fill_queue);
+      } catch (...) {
+        errors.push_back(i);
+      }
+
       return true;
     }
 
@@ -96,7 +101,7 @@ class ConstraintSolver {
 
         for (auto& p : pack) {
           if (p.field == i.has_field.field_name) {
-            Unify(p.ty, i.has_field.field_type, fill_queue);
+            Unify(i.location, p.ty, i.has_field.field_type, fill_queue);
             return true;
           }
         }
@@ -109,7 +114,7 @@ class ConstraintSolver {
 
         for (auto& p : pack) {
           if (p.field == i.has_field.field_name) {
-            Unify(p.ty, i.has_field.field_type, fill_queue);
+            Unify(i.location, p.ty, i.has_field.field_type, fill_queue);
             return true;
           }
         }
@@ -151,6 +156,16 @@ class ConstraintSolver {
     if (work_queue.size()) {
       PrintQueue();
       throw std::runtime_error{"Residual constraints remain!"};
+    } else if (errors.size()) {
+      FlushErrors();
+      throw std::runtime_error{"Final unification error"};
+    }
+  }
+
+  void FlushErrors() {
+    for (auto& error : errors) {
+      fmt::print("Cannot satisfy bound {} arising from {}\n",
+                 FormatTrait(error), error.location.Format());
     }
   }
 
@@ -164,6 +179,8 @@ class ConstraintSolver {
  private:
   std::deque<Trait> work_queue;
   std::deque<Trait> fill_queue;
+
+  std::deque<Trait> errors;
 };
 
 }  // namespace types::constraints

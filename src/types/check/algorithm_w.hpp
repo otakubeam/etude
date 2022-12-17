@@ -48,7 +48,7 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
 
  private:
-  void PushEqual(Type* a, Type* b);
+  void PushEqual(lex::Location loc, Type* a, Type* b);
 
  private:
   std::deque<Trait> deferred_checks_;

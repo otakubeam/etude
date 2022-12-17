@@ -164,8 +164,9 @@ std::string FormatFun(Type& type);
 Type* FindLeader(Type* a);
 
 struct Trait;
-void Unify(Type* a, Type* b, std::deque<Trait>& fill_queue);
-void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue);
+void Unify(lex::Location, Type* a, Type* b, std::deque<Trait>& fill_queue);
+void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b,
+                          std::deque<Trait>& fill_queue);
 
 void Generalize(Type* ty);
 

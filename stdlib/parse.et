@@ -13,22 +13,23 @@ export {
     fun parse_num str;
     # Parses the decimal string into an integer
 
+    of Str -> Str
+    fun parse_word str;
+
 }
 
 of String -> Bool
 fun is_digit char = {
     of Int var val = (*char) ~> _;
-    var min_ascii_num = '0' ~> _;
-    var max_ascii_num = '9' ~> _;
-
-    if val >= min_ascii_num {
-        if val <= max_ascii_num {
-            return true;
-        };
-    };
-
-    false
+    within_bounds(val, '0' ~> _, '9' ~> _)
 };
+
+of Int -> Int -> Int -> Bool
+fun within_bounds val left right = if val >= left
+        val <= right
+    else
+        false
+    ;
 
 
 of String -> Int
@@ -52,3 +53,31 @@ fun parse_num_inner str acc = if is_digit(str) {
     ;
 
 
+of String -> Bool
+fun is_alpha char = {
+    of Int var val = (*char) ~> _;
+
+    if within_bounds(val, 'a' ~> _, 'z' ~> _)
+        true
+    else
+        within_bounds(val, 'A' ~> _, 'Z' ~> _)
+};
+
+
+fun is_alnum char = if is_digit(char)
+        true
+    else
+        is_alpha(char)
+    ;
+
+fun parse_word str = {
+    of Str var word = { .data = str.data, .size = 0 };
+    parse_word_inner(str.data, &word);
+    word
+};
+
+
+fun parse_word_inner str word = if is_alnum(str) {
+        word->size = word->size + 1;
+        parse_word_inner(str + 1, word);
+    };
