@@ -45,7 +45,6 @@ fun parse_num str = parse_num_inner(str.data, 0);
 
 
 fun parse_num_inner str acc = if is_digit(str) {
-        # print("Acc is %d\n", acc);
         var new_acc = mul(10, acc) + parse_digit(str);
         parse_num_inner(str + 1, new_acc)
     } else

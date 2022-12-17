@@ -25,7 +25,12 @@ export {
 
 }
 
-fun mk_str raw_string = { .data = raw_string, .size = -1, };
+fun mk_str raw_string = {
+    of Str var s = { .data = raw_string,
+                     .size = -1, };
+    s.size = strlen(s);
+    s
+};
 
 
 fun strlen str = if str.size == -1

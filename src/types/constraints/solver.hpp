@@ -13,17 +13,20 @@ class ConstraintSolver {
   ConstraintSolver(std::deque<Trait> work) : work_queue{std::move(work)} {
   }
 
+  void Unify(Trait i) {
+    try {
+      types::Unify(i.location, i.types_equal.a, i.types_equal.b, fill_queue);
+    } catch (...) {
+      errors.push_back(i);
+    }
+  }
+
   bool TrySolveConstraint(Trait i) {
     fmt::print(stderr, "Solving constraint {}\n", FormatTrait(i));
     CheckTypes();
 
     if (i.tag == TraitTags::TYPES_EQ) {
-      try {
-        Unify(i.location, i.types_equal.a, i.types_equal.b, fill_queue);
-      } catch (...) {
-        errors.push_back(i);
-      }
-
+      Unify(i);
       return true;
     }
 
@@ -101,7 +104,11 @@ class ConstraintSolver {
 
         for (auto& p : pack) {
           if (p.field == i.has_field.field_name) {
-            Unify(i.location, p.ty, i.has_field.field_type, fill_queue);
+            fill_queue.push_back(Trait{
+                .tag = TraitTags::TYPES_EQ,
+                .types_equal = {.a = p.ty, .b = i.has_field.field_type},
+                .location = i.location,
+            });
             return true;
           }
         }
@@ -114,7 +121,11 @@ class ConstraintSolver {
 
         for (auto& p : pack) {
           if (p.field == i.has_field.field_name) {
-            Unify(i.location, p.ty, i.has_field.field_type, fill_queue);
+            fill_queue.push_back(Trait{
+                .tag = TraitTags::TYPES_EQ,
+                .types_equal = {.a = p.ty, .b = i.has_field.field_type},
+                .location = i.location,
+            });
             return true;
           }
         }
