@@ -1,0 +1,22 @@
+export {
+
+    of Int -> *String -> Int
+    fun main argc argv;
+
+}
+
+of Unit -> Bool
+fun mistery u = true;
+
+fun main argc argv = {
+
+    of struct { int: Int, bool: Bool, str: String, }
+    var r = if mistery({}) { .int = 3 } 
+    else if mistery({}) { .int = 5 } 
+    else { .bool = true, .str = *argv };
+
+    assert(r.int == 3);
+
+    0
+};
+

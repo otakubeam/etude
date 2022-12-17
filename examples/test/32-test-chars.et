@@ -1,0 +1,26 @@
+export {
+
+    of Int -> String -> Int
+    fun main argc argv;
+
+}
+
+fun main argc argv = {
+    assert(match '0' {
+    | '0': true
+    |  x: false
+    });
+
+    assert('\0' ~> _ == 0);
+    assert('\n' ~> _ == 10);
+
+    assert('\n' == '\n');
+    assert('a' == 'a');
+
+    var ch = "char";
+    assert(match *ch {
+    | 'c': true
+    });
+
+    0
+};
