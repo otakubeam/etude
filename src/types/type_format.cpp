@@ -151,6 +151,17 @@ std::string MangleApp(Type& type) {
   return result;
 }
 
+std::string MangleStruct(Type& type) {
+  std::string result;
+  auto ins = std::back_inserter(result);
+  fmt::format_to(ins, "struct");
+  for (auto& t : type.as_struct.first) {
+    fmt::format_to(ins, "{}", Mangle(*t.ty));
+  }
+  return result;
+}
+
+
 std::string Mangle(Type& type) {
   switch (type.tag) {
     case TypeTag::TY_INT:
@@ -170,6 +181,8 @@ std::string Mangle(Type& type) {
       return MangleApp(type);
 
     case TypeTag::TY_STRUCT:
+      return MangleStruct(type);
+
     case TypeTag::TY_SUM:
     case TypeTag::TY_UNION:
     case TypeTag::TY_VARIABLE:

@@ -67,7 +67,8 @@ class IrEmitter : public ReturnVisitor<Value> {
 
  public:
   void EmitType(types::Type* ty) {
-    if (ty->tag != types::TypeTag::TY_APP) {
+    if (ty->tag != types::TypeTag::TY_APP &&
+        ty->tag != types::TypeTag::TY_STRUCT) {
       return;
     }
 

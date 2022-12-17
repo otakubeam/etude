@@ -208,7 +208,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   void MaybeSaveForIL(Type* ty) {
     CheckTypes();
 
-    if (ty->tag != TypeTag::TY_APP) {
+    if (ty->tag != TypeTag::TY_APP && ty->tag != TypeTag::TY_STRUCT) {
       return;
     }
 

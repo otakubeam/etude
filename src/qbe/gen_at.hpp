@@ -29,7 +29,7 @@ class GenAt : public AbortVisitor {
     if (parent_.measure_.IsZST(node->GetType())) {
       return;
     }
-    
+
     auto addr = parent_.Eval(node->operand_);
     auto [s, a] = parent_.SizeAlign(node);
     parent_.Copy(a, s, addr, target_id_);
@@ -119,6 +119,12 @@ class GenAt : public AbortVisitor {
 
   virtual void VisitIf(IfExpression* node) override {
     auto id = parent_.Eval(node);
+
+    if (parent_.measure_.IsCompound(node->GetType())) {
+      auto [s, a] = parent_.SizeAlign(node);
+      parent_.Copy(a, s, id, target_id_);
+      return;
+    }
 
     if (parent_.measure_.IsZST(node->GetType())) {
       return;

@@ -20,6 +20,7 @@ inline std::string ToQbeType(types::Type* type) {
       return "";
 
     case types::TypeTag::TY_APP:
+    case types::TypeTag::TY_STRUCT:
       return ":" + types::Mangle(*type);
 
     default:
@@ -37,13 +38,13 @@ inline std::string_view CopySuf(types::Type* type) {
 
     case types::TypeTag::TY_PTR:
     case types::TypeTag::TY_APP:
+    case types::TypeTag::TY_STRUCT:
       return "l";
 
     default:
       std::abort();
   }
 }
-
 
 inline std::string_view LoadSuf(types::Type* ty) {
   switch (ty->tag) {
