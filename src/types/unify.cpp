@@ -162,8 +162,14 @@ void UnifyUnderlyingTypes(Type* a, Type* b, std::deque<Trait>& fill_queue) {
 Type* SubstituteParameters(
     Type* subs, const std::unordered_map<std::string_view, Type*>& map) {
   switch (subs->tag) {
-    case TypeTag::TY_PTR:
-      return MakeTypePtr(SubstituteParameters(subs->as_ptr.underlying, map));
+    case TypeTag::TY_PTR: {
+      auto underlying = SubstituteParameters(subs->as_ptr.underlying, map);
+
+      auto ptr = MakeTypePtr(underlying);
+      ptr->typing_context_ = subs->typing_context_;
+
+      return ptr;
+    }
 
     case TypeTag::TY_STRUCT: {
       std::vector<Member> result;
@@ -174,7 +180,10 @@ Type* SubstituteParameters(
             Member{.field = p.field, .ty = SubstituteParameters(p.ty, map)});
       }
 
-      return MakeStructType(std::move(result));
+      auto ty = MakeStructType(std::move(result));
+      ty->typing_context_ = subs->typing_context_;
+
+      return ty;
     }
 
     case TypeTag::TY_SUM: {
@@ -188,7 +197,10 @@ Type* SubstituteParameters(
                                           : nullptr});
       }
 
-      return MakeSumType(std::move(result));
+      auto ty = MakeSumType(std::move(result));
+      ty->typing_context_ = subs->typing_context_;
+
+      return ty;
     }
 
     case TypeTag::TY_FUN: {
@@ -200,7 +212,11 @@ Type* SubstituteParameters(
       }
 
       Type* result = SubstituteParameters(subs->as_fun.result_type, map);
-      return MakeFunType(std::move(args), result);
+
+      auto ty = MakeFunType(std::move(args), result);
+      ty->typing_context_ = subs->typing_context_;
+
+      return ty;
     }
 
     case TypeTag::TY_APP: {
@@ -219,7 +235,10 @@ Type* SubstituteParameters(
         result.push_back(SubstituteParameters(p, map));
       }
 
-      return MakeTyApp(subs->as_tyapp.name, std::move(result));
+      auto ty = MakeTyApp(subs->as_tyapp.name, std::move(result));
+      ty->typing_context_ = subs->typing_context_;
+
+      return ty;
     }
 
     case TypeTag::TY_CONS:
@@ -261,7 +280,7 @@ Type* ApplyTyconsLazy(Type* ty) {
   }
 
   auto subs = SubstituteParameters(symbol->GetType()->as_tycons.body, map);
-  SetTyContext(subs, ty->typing_context_);
+  // SetTyContext(subs, ty->typing_context_);
 
   return subs;
 }
@@ -333,8 +352,12 @@ Type* Instantinate(Type* ty, KnownParams& map) {
     case TypeTag::TY_VARIABLE:
       return l;  // TODO: idk, when should I instantiate in recursive defs?
 
-    case TypeTag::TY_PTR:
-      return MakeTypePtr(Instantinate(l->as_ptr.underlying, map));
+    case TypeTag::TY_PTR: {
+      auto i = Instantinate(l->as_ptr.underlying, map);
+      auto ptr = MakeTypePtr(i);
+      ptr->typing_context_ = l->typing_context_;
+      return ptr;
+    }
 
     case TypeTag::TY_PARAMETER:
       if (map.contains(l)) {
@@ -351,7 +374,10 @@ Type* Instantinate(Type* ty, KnownParams& map) {
         args.push_back(Instantinate(pack[i], map));
       }
 
-      return MakeTyApp(l->as_tyapp.name, std::move(args));
+      auto app = MakeTyApp(l->as_tyapp.name, std::move(args));
+      app->typing_context_ = l->typing_context_;
+
+      return app;
     }
 
     case TypeTag::TY_FUN: {
@@ -363,8 +389,11 @@ Type* Instantinate(Type* ty, KnownParams& map) {
         args.push_back(Instantinate(pack[i], map));
       }
 
-      return MakeFunType(std::move(args),
-                         Instantinate(l->as_fun.result_type, map));
+      auto fun = MakeFunType(std::move(args),
+                             Instantinate(l->as_fun.result_type, map));
+      fun->typing_context_ = l->typing_context_;
+
+      return fun;
     }
 
     case TypeTag::TY_STRUCT: {
@@ -378,7 +407,9 @@ Type* Instantinate(Type* ty, KnownParams& map) {
         });
       }
 
-      return MakeStructType(std::move(args));
+      auto ty = MakeStructType(std::move(args));
+      ty->typing_context_ = l->typing_context_;
+      return ty;
     }
 
     case TypeTag::TY_SUM: {
@@ -392,7 +423,9 @@ Type* Instantinate(Type* ty, KnownParams& map) {
         });
       }
 
-      return MakeSumType(std::move(args));
+      auto ty = MakeSumType(std::move(args));
+      ty->typing_context_ = l->typing_context_;
+      return ty;
     }
 
     case TypeTag::TY_CONS:

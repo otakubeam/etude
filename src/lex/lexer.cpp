@@ -258,7 +258,7 @@ std::optional<Token> Lexer::MatchCharLiteral() {
     value = MatchEscapeSymbol(scanner_.CurrentSymbol());
     scanner_.MoveRight();
   } else {
-    value = scanner_.CurrentSymbol() - '0';
+    value = scanner_.CurrentSymbol();
     scanner_.MoveRight();
   }
 

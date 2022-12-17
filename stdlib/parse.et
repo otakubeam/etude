@@ -18,8 +18,8 @@ export {
 of String -> Bool
 fun is_digit char = {
     of Int var val = (*char) ~> _;
-    var min_ascii_num = (*"0") ~> _;
-    var max_ascii_num = (*"9") ~> _;
+    var min_ascii_num = '0' ~> _;
+    var max_ascii_num = '9' ~> _;
 
     if val >= min_ascii_num {
         if val <= max_ascii_num {
@@ -34,7 +34,7 @@ fun is_digit char = {
 of String -> Int
 fun parse_digit char = {
     var val = (*char) ~> _;
-    var min_ascii_num = (*"0") ~> _;
+    var min_ascii_num = '0' ~> Int;
 
     val - min_ascii_num
 };

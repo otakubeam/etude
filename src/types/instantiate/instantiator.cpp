@@ -13,8 +13,6 @@ void TemplateInstantiator::VisitTypeDecl(TypeDeclStatement* node) {
   auto n = new TypeDeclStatement{*node};
   n->body_ = Instantinate(n->body_, poly_to_mono_);
 
-  SetTyContext(n->body_, call_context_);
-
   return_value = n;
 }
 
@@ -24,8 +22,6 @@ void TemplateInstantiator::VisitVarDecl(VarDeclStatement* node) {
   auto n = new VarDeclStatement{*node};
 
   n->annotation_ = Instantinate(n->annotation_, poly_to_mono_);
-  SetTyContext(n->annotation_, call_context_);
-
   n->value_ = Eval(n->value_)->as<Expression>();
 
   return_value = n;
@@ -36,8 +32,6 @@ void TemplateInstantiator::VisitVarDecl(VarDeclStatement* node) {
 void TemplateInstantiator::VisitFunDecl(FunDeclStatement* node) {
   auto n = new FunDeclStatement{*node};
   n->type_ = Instantinate(n->type_, poly_to_mono_);
-  SetTyContext(n->type_, call_context_);
-
   if (n->body_) {
     n->body_ = Eval(n->body_)->as<Expression>();
   }
@@ -59,7 +53,6 @@ void TemplateInstantiator::VisitBindingPat(BindingPattern* node) {
 
   n->type_ = Instantinate(FindLeader(node->type_), poly_to_mono_);
   // node->type_ |> FindLeader |> Instantinate(poly_to_mono_);
-  SetTyContext(n->type_, call_context_);
 
   return_value = n;
 }
@@ -80,7 +73,6 @@ void TemplateInstantiator::VisitVariantPat(VariantPattern* node) {
   }
 
   n->type_ = Instantinate(FindLeader(node->type_), poly_to_mono_);
-  SetTyContext(n->type_, call_context_);
 
   return_value = n;
 }
@@ -135,7 +127,6 @@ void TemplateInstantiator::VisitBinary(BinaryExpression* node) {
   n->right_ = Eval(n->right_)->as<Expression>();
 
   n->type_ = n->left_->GetType();
-  // SetTyContext(n->type_, FindLeader(node->type_)->typing_context_);
 
   return_value = n;
 }
@@ -151,7 +142,6 @@ void TemplateInstantiator::VisitDeref(DereferenceExpression* node) {
   auto n = new DereferenceExpression{*node};
 
   n->type_ = Instantinate(n->type_, poly_to_mono_);
-  SetTyContext(n->type_, call_context_);
 
   n->operand_ = Eval(n->operand_)->as<Expression>();
 
@@ -162,7 +152,6 @@ void TemplateInstantiator::VisitAddressof(AddressofExpression* node) {
   auto n = new AddressofExpression{*node};
 
   n->type_ = Instantinate(n->type_, poly_to_mono_);
-  SetTyContext(n->type_, call_context_);
 
   n->operand_ = Eval(n->operand_)->as<Expression>();
 
@@ -196,10 +185,8 @@ void TemplateInstantiator::VisitNew(NewExpression* node) {
   auto n = new NewExpression{*node};
 
   n->type_ = Instantinate(node->type_, poly_to_mono_);
-  SetTyContext(n->type_, call_context_);
 
   n->underlying_ = Instantinate(node->underlying_, poly_to_mono_);
-  SetTyContext(n->underlying_, call_context_);
 
   if (auto alloc = n->allocation_size_) {
     alloc = Eval(n->allocation_size_)->as<Expression>();
@@ -237,8 +224,7 @@ void TemplateInstantiator::VisitFnCall(FnCallExpression* node) {
 
   n->callable_type_ = Instantinate(node->callable_type_, poly_to_mono_);
 
-  SetTyContext(n->callable_type_, call_context_);
-  n->layer_ = call_context_;
+  //  n->layer_ = call_context_;
 
   MaybeSaveForIL(n->GetType());
 
@@ -269,7 +255,6 @@ void TemplateInstantiator::VisitCompoundInitalizer(
   }
 
   n->type_ = Instantinate(node->type_, poly_to_mono_);
-  SetTyContext(n->type_, call_context_);
 
   return_value = n;
 }
@@ -279,7 +264,6 @@ void TemplateInstantiator::VisitFieldAccess(FieldAccessExpression* node) {
   n->struct_expression_ = Eval(node->struct_expression_)->as<Expression>();
 
   n->type_ = Instantinate(node->type_, poly_to_mono_);
-  SetTyContext(n->type_, call_context_);
 
   return_value = n;
 }
@@ -288,7 +272,6 @@ void TemplateInstantiator::VisitVarAccess(VarAccessExpression* node) {
   auto n = new VarAccessExpression{*node};
 
   n->type_ = Instantinate(node->GetType(), poly_to_mono_);
-  SetTyContext(n->type_, call_context_);
 
   return_value = n;
 }
@@ -301,7 +284,6 @@ void TemplateInstantiator::VisitTypecast(TypecastExpression* node) {
   auto n = new TypecastExpression{*node};
 
   n->type_ = Instantinate(node->type_, poly_to_mono_);
-  SetTyContext(n->type_, call_context_);
 
   return_value = n;
 }
