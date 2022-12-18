@@ -110,6 +110,14 @@ std::optional<TokenType> Lexer::MatchOperator() {
         return TokenType::ASSIGN;
       }
 
+    case '!':
+      if (scanner_.PeekNextSymbol() == '=') {
+        scanner_.MoveRight();
+        return TokenType::NOT_EQ;
+      } else {
+        return TokenType::NOT;
+      }
+
     case '<':
       if (scanner_.PeekNextSymbol() == '=') {
         scanner_.MoveRight();
@@ -172,8 +180,6 @@ std::optional<TokenType> Lexer::MatchOperator() {
       return TokenType::ADDR;
     case '|':
       return TokenType::BIT_OR;
-    case '!':
-      return TokenType::NOT;
     case '(':
       return TokenType::LEFT_PAREN;
     case ')':

@@ -32,6 +32,7 @@ enum class TokenType {
 
   ASSIGN,
   EQUALS,
+  NOT_EQ,
   LT,
   LE,
   GT,

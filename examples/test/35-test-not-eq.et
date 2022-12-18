@@ -1,0 +1,17 @@
+
+export {
+
+    of Int -> *String -> Int
+    fun main argc argv;
+
+}
+
+fun main argc argv = {
+
+    assert(true != false);
+    assert('a' != '\0');
+    assert(3 != 4);
+
+    0
+};
+

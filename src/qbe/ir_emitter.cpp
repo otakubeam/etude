@@ -226,6 +226,12 @@ void IrEmitter::VisitComparison(ComparisonExpression* node) {
                  right.Emit());
       break;
 
+    case lex::TokenType::NOT_EQ:
+      fmt::print("  {} =w cne{} {}, {}\n",  //
+                 out.Emit(), ToQbeType(node->left_->GetType()), left.Emit(),
+                 right.Emit());
+      break;
+
     case lex::TokenType::LT:
       fmt::print("  {} =w csltw {}, {}\n",  //
                  out.Emit(), left.Emit(), right.Emit());

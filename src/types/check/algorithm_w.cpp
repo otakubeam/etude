@@ -153,6 +153,7 @@ void AlgorithmW::VisitComparison(ComparisonExpression* node) {
   auto e2 = Eval(node->right_);
 
   switch (node->operator_.type) {
+    case lex::TokenType::NOT_EQ:
     case lex::TokenType::EQUALS:
       deferred_checks_.push_back({.tag = TraitTags::EQ,
                                   .bound = e,

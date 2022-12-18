@@ -174,7 +174,8 @@ Expression* Parser::ParseComparison() {
   if (MatchesComparisonSign(token.type)) {
     auto second = ParseBinary();
     first = new ComparisonExpression(first, token, second);
-  } else if (Matches(lex::TokenType::EQUALS)) {
+  } else if (Matches(lex::TokenType::EQUALS) ||
+             Matches(lex::TokenType::NOT_EQ)) {
     // TODO: move out to separate function
     auto second = ParseBinary();
     first = new ComparisonExpression(first, token, second);
