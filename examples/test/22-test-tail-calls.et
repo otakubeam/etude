@@ -1,7 +1,7 @@
 
 export {
-    of Int -> String -> Int
-    fun main argc argv;
+    of Int -> *String -> Int
+    @nomangle fun main argc argv;
 }
 
 fun cycle i last ret = {

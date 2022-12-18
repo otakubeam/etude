@@ -81,6 +81,7 @@ enum class TokenType {
   IF,
   MATCH,
   BIT_OR,
+  THEN,
   ELSE,
   FOR,
 

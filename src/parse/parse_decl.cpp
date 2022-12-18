@@ -77,6 +77,20 @@ auto Parser::ParseModule() -> Module {
 
 ///////////////////////////////////////////////////////////////////
 
+Attribute* Parser::ParseAttributes() {
+  Attribute* attr = nullptr;
+
+  while (Matches(lex::TokenType::ATTRIBUTE)) {
+    Consume(lex::TokenType::IDENTIFIER);
+    auto value = lexer_.GetPreviousToken();
+    attr ? attr->next : attr = new Attribute{value.GetName()};
+  }
+
+  return attr;
+}
+
+///////////////////////////////////////////////////////////////////
+
 Declaration* Parser::ParsePrototype(bool) {
   if (auto type_declaration = ParseTypeDeclStatement()) {
     return type_declaration;
@@ -86,8 +100,11 @@ Declaration* Parser::ParsePrototype(bool) {
 
   auto hint = ParseFunctionType();
 
+  auto attrs = ParseAttributes();
+
   if (auto fun_proto = ParseFunPrototype(hint)) {
     Consume(lex::TokenType::SEMICOLON);
+    fun_proto->attributes = attrs;
     return fun_proto;
   }
 

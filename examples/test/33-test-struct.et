@@ -1,7 +1,7 @@
 export {
 
     of Int -> *String -> Int
-    fun main argc argv;
+    @nomangle fun main argc argv;
 
 }
 

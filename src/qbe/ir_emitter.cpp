@@ -54,14 +54,19 @@ void IrEmitter::VisitAssignment(AssignmentStatement* node) {
 
 ////////////////////////////////////////////////////////////////////
 
+bool IsNomangle(Attribute* attr) {
+  return attr && (attr->value == "nomangle" || IsNomangle(attr->next));
+}
+
 void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
   if (!node->body_) {
     return;
   }
 
   auto mangled = std::string(node->GetName());
+  auto symbol = node->layer_->RetrieveSymbol(node->GetName());
 
-  if (!node->GetName().starts_with("main")) {
+  if (!IsNomangle(symbol->as_fn_sym.attrs)) {
     mangled += types::Mangle(*node->type_);
   }
 
@@ -114,7 +119,11 @@ void IrEmitter::VisitFnCall(FnCallExpression* node) {
   // If there are struct args, I need to allocate space for them and copy there
 
   auto mangled = std::string(node->GetFunctionName());
-  mangled += types::Mangle(*node->callable_type_);
+  auto symbol = node->layer_->RetrieveSymbol(node->GetFunctionName());
+
+  if (!IsNomangle(symbol->as_fn_sym.attrs)) {
+    mangled += types::Mangle(*node->callable_type_);
+  }
 
   if (measure_.IsZST(node->GetType())) {
     fmt::print("  call ${} ( ", mangled);

@@ -40,6 +40,7 @@ class IdentTable {
     map_.insert({"match", TokenType::MATCH});
     map_.insert({"yield", TokenType::YIELD});
     map_.insert({"false", TokenType::FALSE});
+    map_.insert({"then", TokenType::THEN});
     map_.insert({"else", TokenType::ELSE});
     map_.insert({"true", TokenType::TRUE});
     map_.insert({"unit", TokenType::UNIT});

@@ -30,6 +30,7 @@ class Parser {
 
   Declaration* ParseDeclaration();
 
+  Attribute* ParseAttributes();
   Declaration* ParsePrototype(bool require_sigature = false);
   FunDeclStatement* ParseFunPrototype(types::Type* hint);
 

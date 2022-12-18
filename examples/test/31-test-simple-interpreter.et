@@ -6,8 +6,8 @@ export {
 
     # Do I want to export the Token type?
 
-    of Int -> String -> Int
-    fun main argc argv;
+    of Int -> *String -> Int
+    @nomangle fun main argc argv;
 
     of *Span(Token) -> *AST
     fun parse_expr token_stream;

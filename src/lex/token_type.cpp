@@ -27,6 +27,7 @@ namespace lex {
   code(EXTERN)              \
   code(ASSIGN)              \
   code(EQUALS)              \
+  code(NOT_EQ)              \
   code(LT)                  \
   code(LEFT_PAREN)          \
   code(RIGHT_PAREN)         \
@@ -58,6 +59,7 @@ namespace lex {
   code(IF)                  \
   code(MATCH)               \
   code(BIT_OR)              \
+  code(THEN)                \
   code(ELSE)                \
   code(FOR)                 \
   code(COLON)               \

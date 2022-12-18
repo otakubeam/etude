@@ -63,6 +63,10 @@ Expression* Parser::ParseIfExpression() {
   auto location_token = lexer_.GetPreviousToken();
 
   auto condition = ParseExpression();
+
+  // Optionally consume then keyword
+  Matches(lex::TokenType::THEN);
+
   auto true_branch = ParseExpression();
 
   if (!condition || !true_branch) {

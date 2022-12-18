@@ -149,6 +149,8 @@ class FunDeclStatement : public Declaration {
 
   bool exported_ = false;
 
+  Attribute* attributes = nullptr;
+
   types::Type* type_ = nullptr;
 
   std::vector<lex::Token> formals_;
