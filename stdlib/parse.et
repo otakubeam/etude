@@ -45,17 +45,12 @@ fun parse_digit char = {
 };
 
 
-of Str -> struct { val: Int, len: Int }
 fun parse_num_with_len str = parse_num_inner(str.data, 0, 0);
 
 
-fun parse_num str = {
-    var ret = parse_num_inner(str.data, 0, 0);
-    ret.val
-};
+fun parse_num str = parse_num_inner(str.data, 0, 0).val;
 
 
-of _ -> _ -> _ -> struct { val: Int, len: Int }
 fun parse_num_inner str acc len = if is_digit(str) {
         var new_acc = mul(10, acc) + parse_digit(str);
         parse_num_inner(str + 1, new_acc, len + 1)

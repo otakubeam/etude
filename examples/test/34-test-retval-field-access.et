@@ -1,0 +1,24 @@
+
+export {
+
+    of Int -> *String -> Int
+    fun main argc argv;
+
+}
+
+
+type Struct = struct {
+    int: Int,
+    b: Bool,
+};
+
+of _ -> Struct
+fun ret_struct a = {.int = 3, .b = true};
+
+
+fun main argc argv = {
+
+    assert(ret_struct({}).b == true);
+
+    0
+};
