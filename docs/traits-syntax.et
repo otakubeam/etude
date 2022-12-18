@@ -27,7 +27,7 @@ type Deref T = trait {
 
 };
 
-impl<T> Iterable for Vec(T) {
+impl Iterable T for Vec(T) {
 
     type Item = T;
 
@@ -35,6 +35,6 @@ impl<T> Iterable for Vec(T) {
     fun deref self idx = {
         self->data[idx]
     };
-   
+
 };
 

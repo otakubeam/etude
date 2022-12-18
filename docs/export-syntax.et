@@ -2,14 +2,12 @@ std;
 
 std::io;
 
-.:functional::this;
-
 extern {
 
 
     ## When linked with the the glibc this allows for reading user input.
     of String -> ... -> Int
-    fun scnaf;
+    fun scnaf format args;
 
     of String static CPATH;
 
