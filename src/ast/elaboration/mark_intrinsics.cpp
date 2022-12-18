@@ -124,6 +124,10 @@ void MarkIntrinsics::VisitNew(NewExpression* node) {
   if (node->allocation_size_) {
     node->allocation_size_ = Eval(node->allocation_size_)->as<Expression>();
   }
+  
+  if (node->initial_value_) {
+    node->initial_value_ = Eval(node->initial_value_)->as<Expression>();
+  }
 
   return_value = node;
 }

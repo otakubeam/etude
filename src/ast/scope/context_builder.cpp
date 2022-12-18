@@ -241,6 +241,10 @@ void ContextBuilder::VisitNew(NewExpression* node) {
     node->allocation_size_->Accept(this);
   }
 
+  if (node->initial_value_) {
+    node->initial_value_->Accept(this);
+  }
+
   // Handle stuff like `new [10] Vec(_)`
   types::SetTyContext(node->underlying_, current_context_);
 

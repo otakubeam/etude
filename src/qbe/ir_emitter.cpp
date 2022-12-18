@@ -414,6 +414,10 @@ void IrEmitter::VisitNew(NewExpression* node) {
 
   fmt::print("  {} =l call $malloc (w {})\n", out.Emit(), size.Emit());
 
+  if (node->initial_value_) {
+    GenAtAddress(node->initial_value_, out);
+  }
+
   return_value = out;
 }
 

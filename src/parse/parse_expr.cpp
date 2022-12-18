@@ -113,13 +113,22 @@ Expression* Parser::ParseNewExpression() {
 
   auto new_tok = lexer_.GetPreviousToken();
 
-  if (!Matches(lex::TokenType::LEFT_SBRACE)) {
-    return new NewExpression{new_tok, nullptr, ParseFunctionType()};
+  Expression* size = nullptr;
+
+  if (Matches(lex::TokenType::LEFT_SBRACE)) {
+    size = ParseExpression();
+    Consume(lex::TokenType::RIGHT_SBRACE);
   }
 
-  auto size = ParseExpression();
-  Consume(lex::TokenType::RIGHT_SBRACE);
-  return new NewExpression{new_tok, size, ParseFunctionType()};
+  auto type = ParseFunctionType();
+
+  Expression* intial_value = nullptr;
+  if (Matches(lex::TokenType::LEFT_CBRACE)) {
+    intial_value = ParseExpression();
+    Consume(lex::TokenType::RIGHT_CBRACE);
+  }
+
+  return new NewExpression{new_tok, size, intial_value, type};
 }
 
 ////////////////////////////////////////////////////////////////////

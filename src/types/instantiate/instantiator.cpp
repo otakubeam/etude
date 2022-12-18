@@ -188,8 +188,12 @@ void TemplateInstantiator::VisitNew(NewExpression* node) {
 
   n->underlying_ = Instantinate(node->underlying_, poly_to_mono_);
 
-  if (auto alloc = n->allocation_size_) {
-    alloc = Eval(n->allocation_size_)->as<Expression>();
+  if (auto& alloc = n->allocation_size_) {
+    alloc = Eval(alloc)->as<Expression>();
+  }
+
+  if (auto& init = node->initial_value_) {
+    init = Eval(init)->as<Expression>();
   }
 
   return_value = n;

@@ -262,6 +262,11 @@ void AlgorithmW::VisitNew(NewExpression* node) {
     PushEqual(node->GetLocation(), Eval(node->allocation_size_), &builtin_int);
   }
 
+  if (node->initial_value_) {
+    PushEqual(node->GetLocation(), Eval(node->initial_value_),
+              node->underlying_);
+  }
+
   return_value = node->type_;
 }
 

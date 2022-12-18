@@ -427,9 +427,10 @@ class MatchArm : public Expression {};
 class NewExpression : public LvalueExpression {
  public:
   NewExpression(lex::Token new_token, Expression* allocation_size,
-                types::Type* underlying)
+                Expression* initial_value, types::Type* underlying)
       : new_token_{new_token},
         allocation_size_{allocation_size},
+        initial_value_{initial_value},
         underlying_{underlying} {
   }
 
@@ -449,6 +450,8 @@ class NewExpression : public LvalueExpression {
   lex::Token new_token_{};
 
   Expression* allocation_size_ = nullptr;
+
+  Expression* initial_value_ = nullptr;
 
   types::Type* underlying_ = nullptr;
 
