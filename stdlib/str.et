@@ -19,11 +19,19 @@ export {
     # Returns a substring of str without first `skip` bytes;
     # the final length is >= 0
 
+    of *Str -> Unit fun print_str;
+
 
     of Str -> Int -> Str fun cut_suffix str shrink;
     # Returns a shortened substring, the final length is >= 0
 
 }
+
+
+fun print_str id = {
+    print("%.*s\n", id->size, id->data);
+};
+
 
 fun mk_str raw_string = {
     of Str var s = { .data = raw_string,

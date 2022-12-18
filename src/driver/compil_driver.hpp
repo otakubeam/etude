@@ -74,7 +74,8 @@ class CompilationDriver {
 
         if (!did_insert) {
           // Be conservative for now
-          throw "Conflicting exported symbols";
+          throw std::runtime_error{
+              fmt::format("Conflicting exported symbols {}", exported_sym)};
         }
       }
     }
