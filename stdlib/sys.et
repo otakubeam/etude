@@ -1,0 +1,58 @@
+
+export {
+
+
+    of Int -> String -> Int -> Int
+    @nomangle fun write fd buf count;
+
+    of Int -> String -> Int -> Int
+    @nomangle fun read fd buf count;
+
+    of String -> String
+    @nomangle fun getenv name;
+
+    of Unit -> Int
+    @nomangle fun fork void;
+
+    of Int -> Int
+    @nomangle fun sleep secs;
+
+    of Int -> *Int -> Int -> Int
+    @nomangle fun waitpid child_pid wstatus flags;
+
+    type C_FILE = struct {
+    };
+
+    of Int -> String -> *C_FILE
+    @nomangle fun fdopen fd mode;
+
+    of *C_FILE -> String -> Unit
+    @nomangle fun setbuf stream buf;
+
+    of *C_FILE -> String -> _ -> Int
+    @nomangle fun fprintf stream format;
+
+    of *C_FILE -> Int
+    @nomangle fun fflush stream;
+
+    type C_FD_SET = struct {
+    };
+
+    type C_timeval = struct {
+        tv_sec: Int,
+        tv_usec: Int,
+    };
+
+    of Int -> *C_FD_SET -> *C_FD_SET -> *C_FD_SET -> *C_timeval
+    -> Int
+    @nomangle
+    fun select nfds readfds writefds exceptfds timeout;
+
+    of *_ -> Int
+    @nomangle fun fileno stream;
+
+    of String -> Int -> *C_FILE -> String
+    @nomangle fun fgets s size stream;
+
+
+}

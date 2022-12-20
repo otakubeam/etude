@@ -1,3 +1,4 @@
+memory;
 
 export {
 
@@ -11,6 +12,10 @@ export {
     # Wraps a raw byte sequence into a string
 
 
+    of Str -> String fun to_zero_terminated span;
+    # Copies the string and terminates it with '\0'
+
+
     of Str -> Int fun strlen str;
     # Returns the length of a string excluding the last byte '\0'
 
@@ -21,6 +26,8 @@ export {
 
     of *Str -> Unit fun print_str;
 
+    of Str -> Int -> Str
+    fun get_suffix str size;
 
     of Str -> Int -> Str fun cut_suffix str shrink;
     # Returns a shortened substring, the final length is >= 0
@@ -28,9 +35,7 @@ export {
 }
 
 
-fun print_str id = {
-    print("%.*s\n", id->size, id->data);
-};
+fun print_str id = print("%.*s\n", id->size, id->data);
 
 
 fun mk_str raw_string = {
@@ -41,6 +46,15 @@ fun mk_str raw_string = {
 };
 
 
+fun to_zero_terminated span = {
+    var size = strlen(span);
+    var result = (new [size + 1] Char) ~> _;
+    memcpy(result, span.data, size);
+    result[size] = '\0';
+    result
+};
+
+
 fun strlen str = if str.size == -1
         strlen_inner(str.data, 0)
     else
@@ -48,14 +62,25 @@ fun strlen str = if str.size == -1
     ;
 
 fun strlen_inner s len = {
-  if len > 100 { print("Strlen too long!\n"); assert(false); };
-  if (*s) ~> Int == 0 { return len; };
-  strlen_inner(s + 1, len + 1)
+    if len > 100 { print("Strlen too long!\n"); assert(false); };
+    if (*s) ~> Int == 0 { return len; };
+    strlen_inner(s + 1, len + 1)
 };
 
 
 fun cut_prefix str skip = {
-  .data = str.data + skip,
-  .size = { var len = strlen(str);
-            if len > skip { len - skip } else 0 }
-};
+    .data = str.data + skip,
+    .size = { var len = strlen(str);
+              if len > skip { len - skip } else 0 }
+    };
+
+
+fun get_suffix str size = cut_suffix(str, strlen(str) - size);
+
+
+fun cut_suffix str shrink = {
+    .data = str.data,
+    .size = { var len = strlen(str);
+              if len > shrink then len - shrink else 0 }
+    };
+

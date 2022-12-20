@@ -1,5 +1,6 @@
 str;
 mul;
+maybe;
 
 export {
 
@@ -19,6 +20,9 @@ export {
 
     of Str -> Str
     fun parse_word str;
+
+    of Str -> Maybe(Str)
+    fun maybe_parse_word str;
 
 }
 
@@ -75,6 +79,15 @@ fun is_alnum char = if is_digit(char)
     else
         is_alpha(char)
     ;
+
+
+fun maybe_parse_word str = {
+    var result = parse_word(str);
+    if result.size == 0 then
+        (.none)
+    else
+        .some result
+};
 
 fun parse_word str = {
     of Str var word = { .data = str.data, .size = 0 };
