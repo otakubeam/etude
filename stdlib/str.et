@@ -62,8 +62,7 @@ fun strlen str = if str.size == -1
     ;
 
 fun strlen_inner s len = {
-    if len > 100 { print("Strlen too long!\n"); assert(false); };
-    if (*s) ~> Int == 0 { return len; };
+    if *s == '\0' { return len; };
     strlen_inner(s + 1, len + 1)
 };
 
