@@ -1,0 +1,26 @@
+sys;
+
+export {
+
+    of Int -> *String -> Int
+    @nomangle fun main argc argv;
+
+}
+
+fun main argc argv = {
+
+    match fork({}) {
+    | 0: {
+        sleep(1);
+        print("I am the child\n");
+        return 0;
+    }
+    | otherwise: {
+        waitpid(otherwise, unit ~> _, 0);
+        print("I am the parent\n");
+    }
+    };
+
+    0
+};
+
