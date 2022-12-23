@@ -18,6 +18,12 @@ struct Value {
     return {.tag = NONE};
   }
 
+  Value AsPattern() {
+    auto res = *this;
+    res.tag = PARAM;
+    return res;
+  }
+
   std::string Emit() const {
     switch (tag) {
       case NONE:

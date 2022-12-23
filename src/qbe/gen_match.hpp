@@ -24,7 +24,8 @@ class GenMatch : public AbortVisitor {
   }
 
   void VisitBindingPat(BindingPattern* node) {
-    parent_.named_values_.insert_or_assign(node->name_, target_id_);
+    parent_.named_values_.insert_or_assign(
+        node->name_, literal_ ? target_id_.AsPattern() : target_id_);
   }
 
   void VisitLiteralPat(LiteralPattern* node) {
@@ -93,7 +94,7 @@ class GenMatch : public AbortVisitor {
   IrEmitter& parent_;
 
   Value target_id_;
-  bool literal_ = false;  // For those tarigets that are not held in memory
+  bool literal_ = false;  // For those targets that are not held in memory
 
   int next_arm_ = -1;
   int check = 0;

@@ -382,7 +382,15 @@ void IrEmitter::VisitIf(IfExpression* node) {
 
 void IrEmitter::VisitMatch(MatchExpression* node) {
   auto assign = CopySuf(node->GetType());
+
   auto target = Eval(node->against_);
+
+  // Materialize the value (see test match 36)
+  auto materialized = GenTemporary();
+  PrintCopyInstruction(materialized, target,
+                       CopySuf(node->against_->GetType()));
+  target = materialized;
+
   auto out = measure_.IsZST(node->GetType()) ? Value::None() : GenTemporary();
   auto end_id = id_ += 1;
 
@@ -532,7 +540,6 @@ void IrEmitter::VisitTypecast(TypecastExpression* node) {
 ////////////////////////////////////////////////////////////////////
 
 void IrEmitter::VisitTypeDecl(TypeDeclStatement*) {
-  std::abort();  // Unreachable
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -613,6 +620,7 @@ void IrEmitter::VisitVarAccess(VarAccessExpression* node) {
   switch (location.tag) {
     // Don't need to load params
     case Value::PARAM:
+    case Value::CONST_INT:
       return_value = location;
       return;
 

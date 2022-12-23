@@ -10,11 +10,9 @@ export {
 fun main argc argv = {
 
     match fork({}) {
-    | 0: {
-        sleep(1);
-        print("I am the child\n");
-        return 0;
-    }
+    | 0:
+        print("I am the child\n")
+
     | otherwise: {
         waitpid(otherwise, unit ~> _, 0);
         print("I am the parent\n");
