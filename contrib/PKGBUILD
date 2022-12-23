@@ -1,0 +1,43 @@
+# TODO Maintainer: Your Name <youremail@domain.com>
+pkgname=etude-git
+pkgver=r168.3fed98f
+pkgrel=1
+pkgdesc="Lower-ish level programming language designed for educational purposes"
+arch=(x86_64)
+url="https://sr.ht/~orazov_ae/Etude/"
+license=('GPL3')
+depends=(fmt qbe)
+makedepends=(git cmake ninja)
+checkdepends=(catch2)  # TODO: fix sources
+provides=("${pkgname%-git}")
+conflicts=("${pkgname%-git}")
+options=()
+#install=# TODO
+source=('git+https://git.sr.ht/~orazov_ae/etude' 'some-fixes.patch')
+sha256sums=('SKIP' 'SKIP')
+
+pkgver() {
+	cd "$srcdir/${pkgname%-git}"
+	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+prepare() {
+	cd "$srcdir/${pkgname%-git}"
+	patch -p1 -i "$srcdir/some-fixes.patch"
+}
+
+build() {
+	cmake -G Ninja -S "$srcdir/${pkgname%-git}" -B build \
+		-D CMAKE_BUILD_TYPE=None \
+		-D CMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+check() {
+	cd "$srcdir/${pkgname%-git}"
+	# TODO
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}

@@ -1,0 +1,34 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4938edf..76ff087 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -9,12 +9,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
+ 
+ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+ 
+-add_compile_options(-Wall -Wextra -fno-omit-frame-pointer -fsanitize=undefined)
++add_compile_options(-Wall -Wextra)
+ 
+ # --------------------------------------------------------------------
+ 
+ find_package(fmt REQUIRED)
+-find_package(Catch2 2 REQUIRED)
++#find_package(Catch2 2 REQUIRED)
+ 
+ # --------------------------------------------------------------------
+ 
+diff --git a/app/CMakeLists.txt b/app/CMakeLists.txt
+index 63ec40e..363add6 100644
+--- a/app/CMakeLists.txt
++++ b/app/CMakeLists.txt
+@@ -2,9 +2,4 @@ add_executable(etc etc_cli.cpp)
+ 
+ target_link_libraries(etc PUBLIC compiler)
+ 
+-target_link_libraries(etc PUBLIC ubsan)
+-
+-set_target_properties(etc PROPERTIES
+-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}"
+-)
+-
++install(TARGETS etc)
