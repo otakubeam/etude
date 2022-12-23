@@ -84,6 +84,16 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
     ProcessQueue();
   }
 
+  TemplateInstantiator(std::vector<FunDeclStatement*>& tests) {
+    for (auto& test : tests) {
+      StartUp(test->as<FunDeclStatement>());
+    }
+
+    fmt::print(stderr, "Finished processing tests n");
+
+    ProcessQueue();
+  }
+
   auto Flush()
       -> std::pair<std::vector<FunDeclStatement*>, std::vector<Type*>> {
     std::vector<FunDeclStatement*> result;

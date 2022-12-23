@@ -127,8 +127,17 @@ class CompilationDriver {
       m.InferTypes();
     }
 
+    if (test_build) {
+      if (modules_.back().GetName() != main_module_) {
+        throw;
+      }
+      modules_.back().Compile(nullptr);  // CompileTests
+      return;
+    }
+
     auto inst_root = module_of_.at("main");
     auto main_sym = inst_root->GetExportedSymbol("main");
+
     inst_root->Compile(main_sym->GetFunctionDefinition());
   }
 
@@ -144,4 +153,6 @@ class CompilationDriver {
 
   std::vector<Module> modules_;
   std::vector<lex::Lexer> lexers_;
+
+  bool test_build = true;
 };

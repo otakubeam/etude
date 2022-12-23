@@ -55,7 +55,11 @@ void IrEmitter::VisitAssignment(AssignmentStatement* node) {
 ////////////////////////////////////////////////////////////////////
 
 bool IsNomangle(Attribute* attr) {
-  return attr && (attr->value == "nomangle" || IsNomangle(attr->next));
+  return attr && attr->FindAttr("nomangle");
+}
+
+bool IsTest(Attribute* attr) {
+  return attr && attr->FindAttr("test");
 }
 
 void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
@@ -66,7 +70,8 @@ void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
   auto mangled = std::string(node->GetName());
   auto symbol = node->layer_->RetrieveSymbol(node->GetName());
 
-  if (!IsNomangle(symbol->as_fn_sym.attrs)) {
+  if (!IsNomangle(symbol->as_fn_sym.attrs) &&
+      !IsTest(symbol->as_fn_sym.attrs)) {
     mangled += types::Mangle(*node->type_);
   }
 
@@ -96,6 +101,10 @@ void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
   fmt::print("@ret\n");
   fmt::print("  ret {}\n", out.Emit());
   fmt::print("}}\n\n");
+
+  if (IsTest(symbol->as_fn_sym.attrs)) {
+    test_functions_.push_back(node->GetName());
+  }
 }
 
 ////////////////////////////////////////////////////////////////////

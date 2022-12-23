@@ -9,6 +9,10 @@
 struct Attribute {
   std::string_view value;
   Attribute* next = nullptr;
+
+  bool FindAttr(std::string_view attr) {
+    return attr == value || (next && next->FindAttr(attr));
+  }
 };
 
 //////////////////////////////////////////////////////////////////////

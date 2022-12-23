@@ -147,8 +147,6 @@ class FunDeclStatement : public Declaration {
 
   lex::Token name_;
 
-  bool exported_ = false;
-
   Attribute* attributes = nullptr;
 
   types::Type* type_ = nullptr;

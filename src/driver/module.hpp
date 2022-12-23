@@ -39,9 +39,20 @@ class Module {
     for (auto r : items_) r->Accept(&infer);
   }
 
-  void Compile(Declaration* main) {
+  auto CompileMain(Declaration* main) {
     types::check::TemplateInstantiator inst(main);
-    auto [funs, gen_ty_list] = inst.Flush();
+    return inst.Flush();
+  }
+
+  auto CompileTests() {
+    types::check::TemplateInstantiator inst(tests_);
+    return inst.Flush();
+  }
+
+  void Compile(Declaration* main) {
+    auto [funs, gen_ty_list] = [&]() {
+      return main ? CompileMain(main) : CompileTests();
+    }();
 
     qbe::IrEmitter ir;
     ir.EmitTypes(std::move(gen_ty_list));
@@ -74,7 +85,7 @@ class Module {
   std::vector<Declaration*> items_;
 
   // Functions that are marked #[test]
-  std::vector<Declaration*> tests_;
+  std::vector<FunDeclStatement*> tests_;
 };
 
 //////////////////////////////////////////////////////////////////////

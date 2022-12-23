@@ -124,13 +124,26 @@ class IrEmitter : public ReturnVisitor<Value> {
   }
 
   ~IrEmitter() {
-    // data $strdata.0 = { b "hello", b 0 }
+      EmitTestArray();
+      EmitStringLiterals();
+  }
 
+  void EmitStringLiterals() {
     for (size_t i = 0; i < string_literals_.size(); i++) {
       fmt::print("data $strdata.{} = {{ b \"{}\", b 0 }}", i,
                  string_literals_[i]);
       fmt::print("\n");
     }
+  }
+
+  void EmitTestArray() {
+    fmt::print("data $et_test_array = {{ ");
+
+    for (size_t i = 0; i < test_functions_.size(); i++) {
+      fmt::print("l ${}, ", test_functions_[i]);
+    }
+
+    fmt::print(" }}\n");
   }
 
  private:
@@ -273,9 +286,12 @@ class IrEmitter : public ReturnVisitor<Value> {
 
  private:
   int id_ = 0;
+
   std::unordered_map<std::string_view, Value> named_values_;
 
   std::vector<std::string_view> string_literals_;
+  std::vector<std::string_view> test_functions_;
+
   std::vector<std::string> error_msg_storage_;
 
   detail::SizeMeasure measure_;

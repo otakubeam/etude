@@ -70,6 +70,11 @@ auto Parser::ParseModule() -> Module {
   while (!Matches(lex::TokenType::TOKEN_EOF)) {
     auto declaration = ParseDeclaration();
     result.items_.push_back(declaration);
+    if (auto fun = declaration->as<FunDeclStatement>()) {
+      if (fun->attributes && fun->attributes->FindAttr("test")) {
+        result.tests_.push_back(fun);
+      }
+    }
   }
 
   return result;
@@ -150,11 +155,15 @@ Declaration* Parser::ParseDeclaration() {
 ///////////////////////////////////////////////////////////////////
 
 FunDeclStatement* Parser::ParseFunDeclStatement(types::Type* hint) {
+  auto attrs = ParseAttributes();
+
   auto proto = ParseFunPrototype(hint);
 
   if (!proto || Matches(lex::TokenType::SEMICOLON)) {
     return proto;
   };
+
+  proto->attributes = attrs;
 
   // Funtion definition
 
