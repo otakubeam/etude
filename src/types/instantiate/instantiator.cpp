@@ -277,6 +277,10 @@ void TemplateInstantiator::VisitVarAccess(VarAccessExpression* node) {
 
   n->type_ = Instantinate(node->GetType(), poly_to_mono_);
 
+  if (n->type_->tag == TypeTag::TY_FUN) {
+    function_ptrs_.push_back(n);
+  }
+
   return_value = n;
 }
 

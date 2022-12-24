@@ -41,6 +41,10 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
 
     auto symbol = i->layer_->RetrieveSymbol(i->fn_name_);
 
+    if (symbol->sym_type != ast::scope::SymbolType::FUN) {
+      return;
+    }
+
     // 2) Enter context
 
     auto poly = symbol->GetType();
@@ -235,6 +239,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   std::unordered_map<Type*, Type*> poly_to_mono_;
 
   std::deque<FnCallExpression*> instantiation_quque_;
+  std::deque<VarAccessExpression*> function_ptrs_;
 
   ast::scope::Context* call_context_ = nullptr;
 

@@ -14,6 +14,7 @@ inline std::string ToQbeType(types::Type* type) {
       return "w";
 
     case types::TypeTag::TY_PTR:
+    case types::TypeTag::TY_FUN:
       return "l";
 
     case types::TypeTag::TY_UNIT:

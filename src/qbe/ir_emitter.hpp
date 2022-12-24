@@ -137,13 +137,13 @@ class IrEmitter : public ReturnVisitor<Value> {
   }
 
   void EmitTestArray() {
-    fmt::print("data $et_test_array = {{ ");
+    fmt::print("export data $et_test_array = {{ ");
 
     for (size_t i = 0; i < test_functions_.size(); i++) {
       fmt::print("l ${}, ", test_functions_[i]);
     }
 
-    fmt::print(" }}\n");
+    fmt::print("l 0 }}\n");
   }
 
  private:

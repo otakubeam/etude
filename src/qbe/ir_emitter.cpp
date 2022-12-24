@@ -109,6 +109,10 @@ void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
 
 ////////////////////////////////////////////////////////////////////
 
+char GlobalFun(ast::scope::Symbol* symbol) {
+  return symbol->sym_type == ast::scope::SymbolType::FUN ? '$' : ' ';
+}
+
 void IrEmitter::VisitFnCall(FnCallExpression* node) {
   auto out = measure_.IsZST(node->GetType()) ? Value::None() : GenTemporary();
 
@@ -130,15 +134,19 @@ void IrEmitter::VisitFnCall(FnCallExpression* node) {
   auto mangled = std::string(node->GetFunctionName());
   auto symbol = node->layer_->RetrieveSymbol(node->GetFunctionName());
 
-  if (!IsNomangle(symbol->as_fn_sym.attrs)) {
+  if (symbol->sym_type != ast::scope::SymbolType::FUN) {
+    mangled = named_values_[mangled].Emit();
+  } else if (!IsNomangle(symbol->as_fn_sym.attrs) &&
+             !IsTest(symbol->as_fn_sym.attrs)) {
     mangled += types::Mangle(*node->callable_type_);
   }
 
   if (measure_.IsZST(node->GetType())) {
-    fmt::print("  call ${} ( ", mangled);
+    fmt::print("  call {}{} ( ", GlobalFun(symbol), mangled);
   } else {
     auto result_ty = ToQbeType(node->GetType());
-    fmt::print("  {} = {} call ${} ( ", out.Emit(), result_ty, mangled);
+    fmt::print("  {} = {} call {}{} ( ", out.Emit(), result_ty,
+               GlobalFun(symbol), mangled);
   }
 
   for (auto& i : args) {
@@ -614,6 +622,14 @@ void IrEmitter::VisitLiteral(LiteralExpression* node) {
 
 void IrEmitter::VisitVarAccess(VarAccessExpression* node) {
   auto out = GenTemporary();
+
+  if (!named_values_.contains(node->GetName())) {
+    out.name = node->GetName();
+    out.tag = Value::GLOBAL;
+    return_value = out;
+    return;
+  }
+
   auto location = named_values_.at(node->GetName());
 
   if (measure_.IsCompound(node->GetType())) {
