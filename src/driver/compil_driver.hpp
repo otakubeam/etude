@@ -113,6 +113,14 @@ class CompilationDriver {
     one->MarkIntrinsics();
   }
 
+  void SetTestBuild() {
+    test_build = true;
+  }
+
+  void SetMainModule(const char* mod) {
+    main_module_ = mod;
+  }
+
   void Compile() {
     ParseAllModules();
     RegisterSymbols();
@@ -154,5 +162,5 @@ class CompilationDriver {
   std::vector<Module> modules_;
   std::vector<lex::Lexer> lexers_;
 
-  bool test_build = true;
+  bool test_build = false;
 };

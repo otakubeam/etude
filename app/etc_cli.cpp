@@ -6,12 +6,29 @@
 #include <fstream>
 #include <string>
 
-int main(int argc, char** argv) {
-  if (argc > 2) {
-    fmt::print("Too many files!\n");
-    std::exit(0);
+void ParseOptions(CompilationDriver& driver, int argc, char** argv) {
+  auto opt = '\0';
+  while ((opt = getopt(argc, argv, "tm:")) != -1) {
+    switch (opt) {
+      case 't':
+        driver.SetTestBuild();
+        break;
+      case 'm':
+        driver.SetMainModule(optarg);
+        break;
+      default: /* '?' */
+        fprintf(stderr, "Usage: %s [-m] module [-t] \n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
   }
+}
 
-  auto path = argc == 2 ? std::string{argv[1]} : "main";
-  CompilationDriver{path}.Compile();
+int main(int argc, char** argv) {
+  CompilationDriver driver;
+
+  ParseOptions(driver, argc, argv);
+
+  driver.Compile();
+
+  return 0;
 }

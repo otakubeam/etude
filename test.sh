@@ -21,7 +21,7 @@ runtest_native() {
   local _testname=$1
   # https://stackoverflow.com/questions/34964332
   $(timeout 0.5                          \
-      ./etc $_testname    2> /dev/null   \
+      ./etc -m $_testname 2> /dev/null   \
         | qbe             2> /dev/null   \
         | as -o out       2> /dev/null   \
         && gcc out        2> /dev/null)  \
@@ -44,7 +44,7 @@ collect_debug_artifacts() {
     cp $_base/$1.et .
 
     $(timeout 0.5                         \
-        $_base/etc $_base/$1    2>> log   \
+        $_base/etc -m $_base/$1 2>> log   \
           | qbe                 2>> log   \
           | as -o out           2>> log   \
           && gcc out            2>> log)  \
