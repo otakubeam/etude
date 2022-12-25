@@ -18,6 +18,14 @@ Expression* Parser::ParseExpression() {
 ///////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseKeywordExpresssion() {
+  if (auto return_statement = ParseReturnStatement()) {
+    return return_statement;
+  }
+
+  if (auto yield_statement = ParseYieldStatement()) {
+    return yield_statement;
+  }
+
   if (auto if_expr = ParseIfExpression()) {
     return if_expr;
   }
@@ -417,7 +425,12 @@ Expression* Parser::ParsePrimary() {
   // Try parsing grouping first
 
   if (Matches(lex::TokenType::LEFT_PAREN)) {
-    return ParseGrouping();
+    if (!Matches(lex::TokenType::RIGHT_PAREN)) {
+      return ParseGrouping();
+    }
+
+    auto loc = lexer_.GetPreviousToken().location;
+    return new LiteralExpression{lex::Token::UnitToken(loc)};
   }
 
   // Then all the base cases
@@ -497,3 +510,31 @@ Expression* Parser::ParseSignleFieldCompound() {
 }
 
 ////////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseReturnStatement() {
+  if (!Matches(lex::TokenType::RETURN)) {
+    return nullptr;
+  }
+
+  auto return_token = lexer_.GetPreviousToken();
+
+  Expression* ret_expr = ParseExpression();
+
+  return new ReturnStatement{return_token, ret_expr};
+}
+
+///////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseYieldStatement() {
+  if (!Matches(lex::TokenType::YIELD)) {
+    return nullptr;
+  }
+
+  auto location_token = lexer_.GetPreviousToken();
+
+  Expression* yield_value = ParseExpression();
+
+  return new YieldStatement{location_token, yield_value};
+}
+
+///////////////////////////////////////////////////////////////////

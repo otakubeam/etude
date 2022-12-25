@@ -120,7 +120,7 @@ void AlgorithmW::VisitVariantPat(VariantPattern* node) {
 
 void AlgorithmW::VisitYield(YieldStatement* node) {
   Eval(node->yield_value_);
-  return_value = &builtin_unit;
+  return_value = &builtin_never;
 }
 
 void AlgorithmW::VisitReturn(ReturnStatement* node) {
@@ -136,7 +136,7 @@ void AlgorithmW::VisitReturn(ReturnStatement* node) {
 
   PushEqual(node->GetLocation(), find->GetType(), ty);
 
-  return_value = &builtin_unit;
+  return_value = &builtin_never;
 }
 
 void AlgorithmW::VisitAssignment(AssignmentStatement* node) {
@@ -244,10 +244,13 @@ void AlgorithmW::VisitAddressof(AddressofExpression* node) {
 }
 
 void AlgorithmW::VisitIf(IfExpression* node) {
+  auto result_ty = MakeTypeVar();
+
   PushEqual(node->GetLocation(), Eval(node->condition_), &builtin_bool);
-  auto true_ty = Eval(node->true_branch_);
-  PushEqual(node->GetLocation(), true_ty, Eval(node->false_branch_));
-  return_value = true_ty;
+  PushEqual(node->GetLocation(), result_ty, Eval(node->true_branch_));
+  PushEqual(node->GetLocation(), result_ty, Eval(node->false_branch_));
+
+  node->type_ = return_value = result_ty;
 }
 
 void AlgorithmW::VisitMatch(MatchExpression* node) {
@@ -258,8 +261,8 @@ void AlgorithmW::VisitMatch(MatchExpression* node) {
     PushEqual(node->GetLocation(), target_ty, Eval(pat));
     PushEqual(node->GetLocation(), result_ty, Eval(expr));
   }
-
-  return_value = result_ty;
+  
+  node->type_ = return_value = result_ty;
 }
 
 void AlgorithmW::VisitNew(NewExpression* node) {

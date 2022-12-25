@@ -20,6 +20,10 @@ struct Token {
       : type{type}, location{start}, sem_info{sem_info} {
   }
 
+  static Token UnitToken(Location loc) {
+    return Token(TokenType::UNIT, loc);
+  }
+
   Token() = default;
 
   operator std::string_view() {

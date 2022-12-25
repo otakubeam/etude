@@ -33,7 +33,6 @@ inline std::string_view CopySuf(types::Type* type) {
   switch (type->tag) {
     case types::TypeTag::TY_INT:
     case types::TypeTag::TY_CHAR:
-    case types::TypeTag::TY_UNIT:
     case types::TypeTag::TY_BOOL:
       return "w";
 
@@ -41,6 +40,10 @@ inline std::string_view CopySuf(types::Type* type) {
     case types::TypeTag::TY_APP:
     case types::TypeTag::TY_STRUCT:
       return "l";
+
+    case types::TypeTag::TY_UNIT:
+    case types::TypeTag::TY_NEVER:
+      return "";
 
     default:
       std::abort();

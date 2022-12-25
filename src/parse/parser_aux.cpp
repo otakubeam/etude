@@ -46,7 +46,10 @@ bool Parser::TagOnly() {
     case lex::TokenType::RIGHT_SBRACE:
     case lex::TokenType::COMMA:
     case lex::TokenType::COLON:
+    case lex::TokenType::BIT_OR:
+    case lex::TokenType::ELSE:
     case lex::TokenType::SEMICOLON:
+    case lex::TokenType::VAR:
       return true;
 
     default:

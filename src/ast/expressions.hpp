@@ -378,7 +378,7 @@ class IfExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    return true_branch_->GetType();
+    return types::FindLeader(type_);
   };
 
   virtual lex::Location GetLocation() override {
@@ -386,6 +386,9 @@ class IfExpression : public Expression {
   }
 
   Expression* condition_;
+
+  types::Type* type_ = nullptr;
+
   Expression* true_branch_;
   Expression* false_branch_;
 };
@@ -405,7 +408,7 @@ class MatchExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    return patterns_.at(0).second->GetType();
+    return types::FindLeader(type_);
   };
 
   virtual lex::Location GetLocation() override {
@@ -414,13 +417,9 @@ class MatchExpression : public Expression {
 
   Expression* against_;
 
+  types::Type* type_ = nullptr;
   std::vector<Bind> patterns_;
 };
-
-//////////////////////////////////////////////////////////////////////
-
-// This is like a block but without braces in match
-class MatchArm : public Expression {};
 
 //////////////////////////////////////////////////////////////////////
 
@@ -542,6 +541,57 @@ class TypecastExpression : public Expression {
   lex::Token flowy_arrow_;
 
   types::Type* type_ = nullptr;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class ReturnStatement : public Expression {
+ public:
+  ReturnStatement(lex::Token return_token, Expression* return_value)
+      : return_token_{return_token}, return_value_{return_value} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitReturn(this);
+  }
+
+  virtual types::Type* GetType() override {
+    return &types::builtin_never;
+  }
+
+  virtual lex::Location GetLocation() override {
+    return return_token_.location;
+  }
+
+  lex::Token return_token_;
+  Expression* return_value_;
+
+  std::string_view this_fun;
+  ast::scope::Context* layer_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class YieldStatement : public Expression {
+ public:
+  YieldStatement(lex::Token yield_token, Expression* yield_value)
+      : yield_token_{yield_token}, yield_value_{yield_value} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitYield(this);
+  }
+
+  virtual types::Type* GetType() override {
+    return &types::builtin_never;
+  }
+
+  virtual lex::Location GetLocation() override {
+    return yield_token_.location;
+  }
+
+  lex::Token yield_token_;
+  Expression* yield_value_;
 };
 
 //////////////////////////////////////////////////////////////////////

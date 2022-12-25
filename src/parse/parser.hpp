@@ -22,8 +22,6 @@ class Parser {
 
   Statement* ParseStatement();
 
-  ReturnStatement* ParseReturnStatement();
-  YieldStatement* ParseYieldStatement();
   Statement* ParseExprStatement();
   AssignmentStatement* ParseAssignment(LvalueExpression* target);
 
@@ -46,9 +44,12 @@ class Parser {
 
   Expression* ParseKeywordExpresssion();
 
+  Expression* ParseReturnStatement();
+  Expression* ParseYieldStatement();
   Expression* ParseIfExpression();
   Expression* ParseMatchExpression();
   Expression* ParseNewExpression();
+
   Expression* ParseBlockExpression();
 
   Expression* ParseComparison();

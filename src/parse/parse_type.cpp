@@ -112,6 +112,10 @@ types::Type* Parser::ParseSumType() {
 
 types::Type* Parser::ParsePrimitiveType() {
   if (Matches(lex::TokenType::LEFT_PAREN)) {
+    if (Matches(lex::TokenType::RIGHT_PAREN)) {
+      return &types::builtin_unit;
+    }
+
     auto type = ParseFunctionType();
     Consume(lex::TokenType::RIGHT_PAREN);
     return type;

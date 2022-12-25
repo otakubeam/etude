@@ -113,7 +113,8 @@ class ConstraintSolver {
           }
         }
 
-        throw std::runtime_error{"No such field"};
+        errors.push_back(i);
+        return true;
       }
 
       if (i.bound->tag == TypeTag::TY_SUM) {
@@ -130,7 +131,8 @@ class ConstraintSolver {
           }
         }
 
-        throw std::runtime_error{"No such field"};
+        errors.push_back(i);
+        return true;
       }
 
       if (i.bound->tag == TypeTag::TY_APP) {
@@ -141,8 +143,8 @@ class ConstraintSolver {
       }
 
       if (i.bound->tag != TypeTag::TY_VARIABLE) {
-        fmt::print(stderr, "{}\n", FormatType(*i.bound));
-        throw std::runtime_error{"Not a variable"};
+        errors.push_back(i);
+        return true;
       }
     }
 
@@ -151,10 +153,11 @@ class ConstraintSolver {
   }
 
   void Solve() {
+    PrintQueue();
+
     bool once_more = true;
 
     while (std::exchange(once_more, false)) {
-      // PrintQueue();
       while (work_queue.size()) {
         auto i = std::move(work_queue.front());
         once_more |= TrySolveConstraint(std::move(i));

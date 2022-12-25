@@ -147,6 +147,7 @@ class SizeMeasure {
         return MeasureSum(t);
 
       default:
+        fmt::print("Type {}\n", t->Format());
         FMT_ASSERT(false, "Unreachable!");
     }
   }

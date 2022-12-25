@@ -1,5 +1,6 @@
 
 vec;
+maybe;
 
 export {
 
@@ -25,13 +26,13 @@ export {
 fun make_span from_vec = { .data = from_vec->data,
                            .size = from_vec->size, };
 
-fun eat_first span = { 
+fun eat_first span = {
     span->data = span->data + 1;
     span->size = span->size - 1;
 };
 
 fun peek_first span = match span.size {
-    | 0: (.none)
+    | 0: .none
     | x: .some span.data[0]
     };
 

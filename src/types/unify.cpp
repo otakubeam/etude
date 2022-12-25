@@ -19,6 +19,10 @@ void PushEqual(lex::Location loc, Type* a, Type* b,
 //////////////////////////////////////////////////////////////////////
 
 void Unify(lex::Location loc, Type* a, Type* b, std::deque<Trait>& fill_queue) {
+  if (a->tag == TypeTag::TY_NEVER || b->tag == TypeTag::TY_NEVER) {
+    return;  // Unify never with any type
+  }
+
   auto la = FindLeader(a);
   auto lb = FindLeader(b);
 
@@ -150,6 +154,7 @@ void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b,
 
     case TypeTag::TY_CONS:
     case TypeTag::TY_KIND:
+    case TypeTag::TY_NEVER:
     case TypeTag::TY_VARIABLE:
     case TypeTag::TY_PARAMETER:
     case TypeTag::TY_UNION:

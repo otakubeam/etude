@@ -168,6 +168,8 @@ void TemplateInstantiator::VisitAddressof(AddressofExpression* node) {
 void TemplateInstantiator::VisitIf(IfExpression* node) {
   auto n = new IfExpression{*node};
 
+  n->type_ = Instantinate(node->type_, poly_to_mono_);
+
   n->condition_ = Eval(n->condition_)->as<Expression>();
   n->true_branch_ = Eval(n->true_branch_)->as<Expression>();
   n->false_branch_ = Eval(n->false_branch_)->as<Expression>();
@@ -179,6 +181,7 @@ void TemplateInstantiator::VisitMatch(MatchExpression* node) {
   auto n = new MatchExpression{*node};
 
   n->against_ = Eval(n->against_)->as<Expression>();
+  n->type_ = Instantinate(node->type_, poly_to_mono_);
 
   for (auto& [pat, expr] : n->patterns_) {
     pat = Eval(pat)->as<Pattern>();

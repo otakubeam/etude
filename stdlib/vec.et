@@ -35,66 +35,66 @@ export {
 
 
 fun make_vec initial_value size = {
-  var vec = new Vec(_);
+    var vec = new Vec(_);
 
-  # Could also do
+    # Could also do
 
-  # of Vec(_) var vec = {
-  #     .data = new [size] _,
-  #     .size = size,
-  #     .capacity = size,
-  # };
+    # of Vec(_) var vec = {
+    #         .data = new [size] _,
+    #         .size = size,
+    #         .capacity = size,
+    # };
 
-  vec->data = new [size] _;
-  replicate(vec->data, initial_value, size);
+    vec->data = new [size] _;
+    replicate(vec->data, initial_value, size);
 
-  vec->size = size;
-  vec->capacity = size;
+    vec->size = size;
+    vec->capacity = size;
 
-  vec
+    vec
 };
 
 
 of *Vec(_) -> _
 fun extend_cap v = {
-  assert(v->size == v->capacity);
+    assert(v->size == v->capacity);
 
-  var newcap = v->capacity + 2;
+    var newcap = v->capacity + 2;
 
-  var v2 = new [newcap] _;
-  memcpy(v2, v->data, v->size);
+    var v2 = new [newcap] _;
+    memcpy(v2, v->data, v->size);
 
-  v->data = v2;
-  v->capacity = newcap;
+    v->data = v2;
+    v->capacity = newcap;
 };
 
 
 fun append v val = {
-  if v->capacity == v->size {
-     extend_cap(v);
-  };
+    if v->capacity == v->size {
+         extend_cap(v);
+    };
 
-  v->data[v->size] = val;
-  v->size = v->size + 1;
+    v->data[v->size] = val;
+    v->size = v->size + 1;
 };
 
 
 fun at v i = {
-  assert(v->size > i);
-  v->data[i]
+    assert(v->size > i);
+    v->data[i]
 };
 
 
 fun print_vec v = {
-  print("Vec[ .data = 0x%.16zX, .size = %d, .capacity = %d, ]\n",
-                  v->data, v->size, v->capacity,);
-  print("Contents: "); print_contents(v, 0); print("\n");
+    print("Vec[ .data = 0x%.16zX, .size = %d, .capacity = %d, ]\n",
+                v->data, v->size, v->capacity,);
+    print("Contents: "); print_contents(v, 0); print("\n");
 };
 
 
 fun print_contents vec i = {
-  if vec->size == i { return; };
-  print("[%d] = %d, ", i, vec->data[i]);
-  return print_contents(vec, i+1);
+    if vec->size == i then return ();
+    print("[%d] = %d, ", i, vec->data[i]);
+    return print_contents(vec, i+1);
 };
 

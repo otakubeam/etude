@@ -34,49 +34,6 @@ class ExprStatement : public Statement {
 
 //////////////////////////////////////////////////////////////////////
 
-class ReturnStatement : public Statement {
- public:
-  ReturnStatement(lex::Token return_token, Expression* return_value)
-      : return_token_{return_token}, return_value_{return_value} {
-  }
-
-  virtual void Accept(Visitor* visitor) override {
-    visitor->VisitReturn(this);
-  }
-
-  virtual lex::Location GetLocation() override {
-    return return_token_.location;
-  }
-
-  lex::Token return_token_;
-  Expression* return_value_;
-
-  std::string_view this_fun;
-  ast::scope::Context* layer_;
-};
-
-//////////////////////////////////////////////////////////////////////
-
-class YieldStatement : public Statement {
- public:
-  YieldStatement(lex::Token yield_token, Expression* yield_value)
-      : yield_token_{yield_token}, yield_value_{yield_value} {
-  }
-
-  virtual void Accept(Visitor* visitor) override {
-    visitor->VisitYield(this);
-  }
-
-  virtual lex::Location GetLocation() override {
-    return yield_token_.location;
-  }
-
-  lex::Token yield_token_;
-  Expression* yield_value_;
-};
-
-//////////////////////////////////////////////////////////////////////
-
 class AssignmentStatement : public Statement {
  public:
   AssignmentStatement(lex::Token assign, LvalueExpression* target,
