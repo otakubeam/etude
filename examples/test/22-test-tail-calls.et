@@ -5,7 +5,7 @@ export {
 }
 
 fun cycle i last ret = {
-    if i == 0 { *ret = *last; return; };
+    if i == 0 { *ret = *last; return (); };
     *last = *last + 1;
     return cycle(i - 1, last, ret);
 };

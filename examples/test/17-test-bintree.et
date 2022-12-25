@@ -26,9 +26,7 @@ fun insertNode tree node = {
     var nodeValue = tree->value;
     var val = node->value;
 
-    if nodeValue == val {
-        return;
-    };
+    if nodeValue == val return ();
 
     var candidate = if nodeValue < val {
         &tree->left
@@ -47,13 +45,11 @@ fun insertNode tree node = {
 
 of *Tree -> Int -> Bool
 fun binSearchInt tree val = {
-    if !tree ~> _ { return false; };
+    if !tree ~> _ then return false;
 
     var nodeValue = tree->value;
 
-    if nodeValue == val {
-        return true;
-    };
+    if nodeValue == val return true;
 
     var subtree = if nodeValue < val {
         tree->left
@@ -67,7 +63,7 @@ fun binSearchInt tree val = {
 
 of *Tree -> Int -> _
 fun print_walk tree d = {
-    if !tree ~> _ { return; };
+    if !tree ~> _ return ();
     print_walk(tree->left, d + 1);
 
     tabulate(d);
@@ -78,7 +74,7 @@ fun print_walk tree d = {
 
 
 fun tabulate d = {
-    if d == 0 { return; };
+    if d == 0 return ();
     print("\t");
     return tabulate(d - 1);
 };

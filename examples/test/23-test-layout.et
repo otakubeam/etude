@@ -4,57 +4,57 @@ export {
 }
 
 type Size2 = struct {
-  a: Int,
-  b: *Size2,
+    a: Int,
+    b: *Size2,
 };
 
 
 type Large = struct {
-  i: Int,
-  b: Bool,
-  p: *Int,
+    i: Int,
+    b: Bool,
+    p: *Int,
 };
 
 
 type ManyBools = struct {
-  b1: Bool,
-  b2: Bool,
-  b3: Bool,
-  b4: Bool,
-  b5: Bool,
+    b1: Bool,
+    b2: Bool,
+    b3: Bool,
+    b4: Bool,
+    b5: Bool,
 };
 
 
 fun main argc argv = {
-  var p = new [2] Size2;
+    var p = new [2] Size2;
 
-  var addrA = &(p->a);
-  var addrAManual = p;
+    var addrA = &(p->a);
+    var addrAManual = p;
 
-  var addrB = &(p->b);
-  var addrBManual = (addrA ~> *Int) + 2; # Alignment!
+    var addrB = &(p->b);
+    var addrBManual = (addrA ~> *Int) + 2; # Alignment!
 
-  var secondElem = &((p + 1)->a);
+    var secondElem = &((p + 1)->a);
 
-  assert((addrB ~> _ == addrA ) == false);
-  assert((addrB ~> _ == addrBManual));
-  assert((addrA ~> _ == addrAManual));
-  assert((addrB ~> _ == secondElem) == false);
+    assert((addrB ~> _ == addrA ) == false);
+    assert((addrB ~> _ == addrBManual));
+    assert((addrA ~> _ == addrAManual));
+    assert((addrB ~> _ == secondElem) == false);
 
-  var l = new Large;
+    var l = new Large;
 
-  assert((l ~> *Bool + 0 == (&l->i) ~> _));
-  assert((l ~> *Bool + 4 == (&l->b) ~> _));
-  assert((l ~> *Bool + 8 == (&l->p) ~> _));
+    assert((l ~> *Bool + 0 == (&l->i) ~> _));
+    assert((l ~> *Bool + 4 == (&l->b) ~> _));
+    assert((l ~> *Bool + 8 == (&l->p) ~> _));
 
-  var mb = new ManyBools;
+    var mb = new ManyBools;
 
-  assert((mb ~> *Bool + 0 == (&mb->b1) ~> _));
-  assert((mb ~> *Bool + 1 == (&mb->b2) ~> _));
-  assert((mb ~> *Bool + 2 == (&mb->b3) ~> _));
-  assert((mb ~> *Bool + 3 == (&mb->b4) ~> _));
-  assert((mb ~> *Bool + 4 == (&mb->b5) ~> _));
+    assert((mb ~> *Bool + 0 == (&mb->b1) ~> _));
+    assert((mb ~> *Bool + 1 == (&mb->b2) ~> _));
+    assert((mb ~> *Bool + 2 == (&mb->b3) ~> _));
+    assert((mb ~> *Bool + 3 == (&mb->b4) ~> _));
+    assert((mb ~> *Bool + 4 == (&mb->b5) ~> _));
 
-  0
+    0
 };
 

@@ -5,33 +5,34 @@ export {
 }
 
 fun memcpy src dest cnt = {
-  if cnt == 0 { return; };
-  *dest = *src;
-  return memcpy(src + 1, dest + 1, cnt - 1);
+    if cnt == 0 then return ();
+    *dest = *src;
+    return memcpy(src + 1, dest + 1, cnt - 1);
 };
 
 of String -> Int
 fun strlen s = strlen_inner(s, 0);
 
 of String -> Int -> Int
-fun strlen_inner s acc = {
-  if (*s) ~> Int == 0 { return acc + 1; };
-  strlen_inner(s + 1, acc + 1)
-};
+fun strlen_inner s acc = if (*s) ~> Int == 0 then
+        return acc + 1
+    else
+        strlen_inner(s + 1, acc + 1)
+    ;
 
 fun main argc argv = {
-  of String var s = new [10] _;
+    of String var s = new [10] _;
 
-  of String var lit = "Hello user %s!\n";
+    of String var lit = "Hello user %s!\n";
 
-  of String var name = "Andrew";
+    of String var name = "Andrew";
 
-  var name_len = strlen(name);
-  assert(name_len == 7);
+    var name_len = strlen(name);
+    assert(name_len == 7);
 
-  memcpy(name, s, name_len);
+    memcpy(name, s, name_len);
 
-  print(lit, s);
+    print(lit, s);
 
-  0
+    0
 };

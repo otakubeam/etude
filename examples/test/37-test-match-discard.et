@@ -1,0 +1,34 @@
+sys;
+str;
+
+export {
+
+    of Int -> *String -> Int
+    @nomangle fun main argc argv;
+
+}
+
+type Token = sum {
+   | integer: Int
+   | string: Str
+   | plus
+};
+
+fun main argc argv = {
+
+    match fork({}) {
+    | 0: print("I am the child\n")
+    | _: print("I am the parent\n")
+    };
+
+    of Token var token = .integer 5;
+
+    assert(5 == match token {
+    | .plus: 2
+    | .string _: 1
+    | .integer i: i
+    });
+
+    0
+};
+
