@@ -178,6 +178,8 @@ void ContextBuilder::VisitBindingPat(BindingPattern* node) {
   });
 }
 
+void ContextBuilder::VisitDiscardingPat(DiscardingPattern*){};
+
 void ContextBuilder::VisitLiteralPat(LiteralPattern*) {
   // No-op
 }

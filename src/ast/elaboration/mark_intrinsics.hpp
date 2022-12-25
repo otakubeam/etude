@@ -20,6 +20,7 @@ class MarkIntrinsics : public ReturnVisitor<TreeNode*> {
   void VisitTraitDecl(TraitDeclaration* node) override;
 
   void VisitBindingPat(BindingPattern* node) override;
+  void VisitDiscardingPat(DiscardingPattern* node) override;
   void VisitLiteralPat(LiteralPattern* node) override;
   void VisitVariantPat(VariantPattern* node) override;
 

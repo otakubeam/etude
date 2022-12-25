@@ -59,6 +59,17 @@ void TemplateInstantiator::VisitBindingPat(BindingPattern* node) {
 
 //////////////////////////////////////////////////////////////////////
 
+void TemplateInstantiator::VisitDiscardingPat(DiscardingPattern* node) {
+  auto n = new DiscardingPattern{*node};
+
+  n->type_ = Instantinate(FindLeader(node->type_), poly_to_mono_);
+  // node->type_ |> FindLeader() |> Instantinate(poly_to_mono_);
+
+  return_value = n;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 void TemplateInstantiator::VisitLiteralPat(LiteralPattern* node) {
   return_value = new LiteralPattern{*node};
 }

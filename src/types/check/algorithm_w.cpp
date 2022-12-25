@@ -94,6 +94,10 @@ void AlgorithmW::VisitBindingPat(BindingPattern* node) {
   return_value = symbol->GetType();
 }
 
+void AlgorithmW::VisitDiscardingPat(DiscardingPattern* node) {
+  return_value = MakeTypeVar(node->layer_);  // No type information
+}
+
 void AlgorithmW::VisitLiteralPat(LiteralPattern* node) {
   return_value = Eval(node->pat_);
 }

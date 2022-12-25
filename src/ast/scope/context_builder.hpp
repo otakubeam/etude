@@ -16,6 +16,7 @@ class ContextBuilder : public AbortVisitor {
   virtual void VisitExprStatement(ExprStatement* node) override;
 
   virtual void VisitBindingPat(BindingPattern* node) override;
+  virtual void VisitDiscardingPat(DiscardingPattern*) override;
   virtual void VisitLiteralPat(LiteralPattern* node) override;
   virtual void VisitVariantPat(VariantPattern* node) override;
 

@@ -41,6 +41,7 @@ void MarkIntrinsics::VisitTraitDecl(TraitDeclaration* node) {
 
 // No-op
 void MarkIntrinsics::VisitBindingPat(BindingPattern*){};
+void MarkIntrinsics::VisitDiscardingPat(DiscardingPattern*){};
 void MarkIntrinsics::VisitLiteralPat(LiteralPattern*){};
 void MarkIntrinsics::VisitVariantPat(VariantPattern*){};
 
@@ -124,7 +125,7 @@ void MarkIntrinsics::VisitNew(NewExpression* node) {
   if (node->allocation_size_) {
     node->allocation_size_ = Eval(node->allocation_size_)->as<Expression>();
   }
-  
+
   if (node->initial_value_) {
     node->initial_value_ = Eval(node->initial_value_)->as<Expression>();
   }

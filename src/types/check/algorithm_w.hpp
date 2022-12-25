@@ -27,6 +27,7 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   void VisitTraitDecl(TraitDeclaration* node) override;
 
   void VisitBindingPat(BindingPattern* node) override;
+  void VisitDiscardingPat(DiscardingPattern* node) override;
   void VisitLiteralPat(LiteralPattern* node) override;
   void VisitVariantPat(VariantPattern* node) override;
 

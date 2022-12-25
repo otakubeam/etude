@@ -35,6 +35,10 @@ class AbortVisitor : public Visitor {
     std::abort();
   }
 
+  virtual void VisitDiscardingPat(DiscardingPattern*) override {
+    std::abort();
+  }
+
   virtual void VisitLiteralPat(LiteralPattern*) override {
     std::abort();
   }
