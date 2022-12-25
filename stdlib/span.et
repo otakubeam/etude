@@ -33,6 +33,6 @@ fun eat_first span = {
 
 fun peek_first span = match span.size {
     | 0: .none
-    | x: .some span.data[0]
+    | _: .some span.data[0]
     };
 

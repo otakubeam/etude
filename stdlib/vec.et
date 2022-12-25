@@ -10,7 +10,7 @@ export {
     };
 
 
-    of *Vec(_) -> _ -> Unit
+    of *Vec(_) -> _ -> ()
     fun append vector value;
     # Appends the value to the end of a vector
 
@@ -21,7 +21,7 @@ export {
     # with the first size elements of init_val
 
 
-    of *Vec(_) -> Unit
+    of *Vec(_) -> ()
     fun print_vec vector;
     # Prints the fields and contents of a vector
 
@@ -55,7 +55,7 @@ fun make_vec initial_value size = {
 };
 
 
-of *Vec(_) -> _
+of *Vec(_) -> ()
 fun extend_cap v = {
     assert(v->size == v->capacity);
 
@@ -87,13 +87,14 @@ fun at v i = {
 
 fun print_vec v = {
     print("Vec[ .data = 0x%.16zX, .size = %d, .capacity = %d, ]\n",
-                v->data, v->size, v->capacity,);
-    print("Contents: "); print_contents(v, 0); print("\n");
+            v->data, v->size, v->capacity,);
+    print("Contents: "); 
+    print_contents(v, 0);
 };
 
 
 fun print_contents vec i = {
-    if vec->size == i then return ();
+    if vec->size == i then return print("\n");
     print("[%d] = %d, ", i, vec->data[i]);
     return print_contents(vec, i+1);
 };

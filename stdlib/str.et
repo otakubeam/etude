@@ -48,29 +48,30 @@ fun mk_str raw_string = {
 
 fun to_zero_terminated span = {
     var size = strlen(span);
-    var result = (new [size + 1] Char) ~> _;
+    var result = new [size + 1] Char;
     memcpy(result, span.data, size);
     result[size] = '\0';
     result
 };
 
 
-fun strlen str = if str.size == -1
+fun strlen str = if str.size <= -1
         strlen_inner(str.data, 0)
     else
         str.size
     ;
 
-fun strlen_inner s len = {
-    if *s == '\0' { return len; };
-    strlen_inner(s + 1, len + 1)
-};
+fun strlen_inner s len = if *s == '\0'
+        return len
+    else
+        strlen_inner(s + 1, len + 1)
+    ;
 
 
 fun cut_prefix str skip = {
-    .data = str.data + skip,
-    .size = { var len = strlen(str);
-              if len > skip { len - skip } else 0 }
+        .data = str.data + skip,
+        .size = { var len = strlen(str);
+                  if len > skip then len - skip else 0 }
     };
 
 
@@ -78,8 +79,8 @@ fun get_suffix str size = cut_suffix(str, strlen(str) - size);
 
 
 fun cut_suffix str shrink = {
-    .data = str.data,
-    .size = { var len = strlen(str);
-              if len > shrink then len - shrink else 0 }
+        .data = str.data,
+        .size = { var len = strlen(str);
+                  if len > shrink then len - shrink else 0 }
     };
 

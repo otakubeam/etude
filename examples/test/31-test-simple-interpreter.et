@@ -41,51 +41,8 @@ type Token = sum {
    | integer: Int
    | string: Str
    | identifier: Str
-   # | float: Float
-
-   # unit_, true_, false_,
-
    | plus | minus
-   # div,
-
-   # plus_eq, minus_eq, star_eq, div_eq,
-
-   # attr, export_, extern_,
-
-   # assign, equals,
-
-   # lt, le,
-   # gt, ge,
-
-   # left_paren,  right_paren,
-   # left_cbrace, right_cbrace,
-   # left_sbrace, right_sbrace,
-
-   # not, addr, star, arrow, flow,
-
-
-   # dot, comma, colon, semicolon,
-
-   # struct_, union_, enum_,
-   # ty_int, ty_bool, ty_unit, ty_string,
-
-   # underscore,
-
-   # if_, else_, for_, return_, yield_,
-
-   # new_, fun_, var_, type_, of_, #=
-
-   # eof,
 };
-
-# I want some function for tokenization
-# Well, a lexer!
-
-of String -> Maybe(Token)
-fun tokenize cursor = {
-    (.none)
-};
-
 
 fun parse_expr tk_span = match parse_binary(tk_span) {
     | .some x: x
@@ -97,17 +54,17 @@ of *Span(Token) -> Maybe(*AST)
 fun parse_binary tk_span = {
 
     var left = match parse_unary(tk_span) {
+    | .none: return .none
     | .some s: s
-    | .none: { return .none; unit ~> _ }
     };
 
     match peek_first(*tk_span) {
     | .some tok: {
 
         match tok {
-        | .plus: {}
-        | .minus: {}
-        | otherwise: { return .some left; }
+        | .plus: ()
+        | .minus: ()
+        | otherwise: return .some left
         };
 
         eat_first(tk_span);
@@ -151,17 +108,11 @@ fun parse_unary tk_span = match peek_first(*tk_span) {
     };
 
 
-# of Span(Token) -> (Maybe(*AST), Span(Token))
-# of in _ -> inout _ -> out _
-
 of *Span(Token) -> Maybe(*AST)
 fun parse_literal tk_span = match peek_first(*tk_span) {
     | .some.integer x: {
         eat_first(tk_span);
-
-        var ast = new AST;
-        *ast = .lit.tok.integer x;
-        .some ast
+        .some new AST {.lit.tok.integer x}
     }
     | otherwise: .none
     };

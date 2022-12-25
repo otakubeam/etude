@@ -6,8 +6,7 @@ export {
     fun raw_bytes mem size;
 
 
-    # TODO:
-    # of *a -> *a -> Int -> Unit
+    # TODO: of *a -> *a -> Int -> Unit
     of _ -> _ -> Int -> Unit
     fun memcpy dst src count;
     # Does what you think it does (but notice generics)
@@ -27,7 +26,7 @@ fun raw_bytes mem size = {
 };
 
 fun raw_bytes_inner mem size = {
-    if size == 0 { print("\n"); return (); };
+    if size == 0 return print("\n");
     print("\t[%hX] = %hhx, \n", mem, *mem);
     return raw_bytes_inner(mem + 1, size - 1);
 };
