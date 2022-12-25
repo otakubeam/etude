@@ -100,22 +100,22 @@ class SizeMeasure {
       }
     }
 
-    throw "Could not find field";
+    throw std::runtime_error{fmt::format("Could not find field {}", field)};
   }
 
-  int SumDiscriminant(types::Type* type, std::string_view name) {
+  int SumDiscriminant(types::Type* type, std::string_view field) {
     type = types::FindLeader(type);
     type = types::TypeStorage(type);
 
     FMT_ASSERT(type->tag == types::TypeTag::TY_SUM, "Discriminant failed");
 
     for (size_t i = 0; i < type->as_sum.first.size(); i++) {
-      if (type->as_sum.first[i].field == name) {
+      if (type->as_sum.first[i].field == field) {
         return i;
       }
     }
 
-    throw std::runtime_error{"No such field"};
+    throw std::runtime_error{fmt::format("Could not find field {}", field)};
   }
 
   size_t MeasureSize(types::Type* t) {

@@ -15,6 +15,7 @@ class Parser {
   Pattern* ParsePattern();
   Pattern* ParseLiteralPattern();
   Pattern* ParseBindingPattern();
+  Pattern* ParseDiscardingPattern();
   Pattern* ParseVariantPattern();
 
   ///////////////////////////////////////////////////////////////////

@@ -38,6 +38,7 @@ class FunDeclStatement;
 //////////////////////////////////////////////////////////////////////
 
 class BindingPattern;
+class DiscardingPattern;
 class LiteralPattern;
 class StructPattern;
 class VariantPattern;
@@ -71,6 +72,8 @@ class Visitor {
   // Patterns
 
   virtual void VisitBindingPat(BindingPattern* node) = 0;
+
+  virtual void VisitDiscardingPat(DiscardingPattern* node) = 0;
 
   virtual void VisitLiteralPat(LiteralPattern* node) = 0;
 

@@ -7,7 +7,8 @@ namespace types {
 
 //////////////////////////////////////////////////////////////////////
 
-void PushEqual(lex::Location loc, Type* a, Type* b, std::deque<Trait>& fill_queue) {
+void PushEqual(lex::Location loc, Type* a, Type* b,
+               std::deque<Trait>& fill_queue) {
   fill_queue.push_back(Trait{
       .tag = TraitTags::TYPES_EQ,
       .types_equal = {.a = a, .b = b},
@@ -44,7 +45,7 @@ void Unify(lex::Location loc, Type* a, Type* b, std::deque<Trait>& fill_queue) {
   }
 
   fmt::print("{} ~! {}\n", la->Format(), lb->Format());
-  throw "Inference error: Tag mismatch";
+  throw std::runtime_error{"Inference error: Tag mismatch"};
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -59,7 +60,8 @@ Type* FindLeader(Type* a) {
 
 //////////////////////////////////////////////////////////////////////
 
-void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b, std::deque<Trait>& fill_queue) {
+void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b,
+                          std::deque<Trait>& fill_queue) {
   // assert(la->tag == lb->tag);
   switch (a->tag) {
     case TypeTag::TY_PTR:
@@ -71,7 +73,7 @@ void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b, std::deque<Trait>
       auto& b_mem = b->as_struct.first;
 
       if (a_mem.size() != b_mem.size()) {
-        throw "Inference error: struct size mismatch";
+        throw std::runtime_error{"Inference error: struct size mismatch"};
       }
 
       for (size_t i = 0; i < a_mem.size(); i++) {
@@ -272,7 +274,7 @@ Type* ApplyTyconsLazy(Type* ty) {
   auto& pack = ty->as_tyapp.param_pack;
 
   if (pack.size() != names.size()) {
-    throw "Instantination size mismatch";
+    throw std::runtime_error("Instantination size mismatch");
   }
 
   std::unordered_map<std::string_view, Type*> map;
@@ -281,7 +283,6 @@ Type* ApplyTyconsLazy(Type* ty) {
   }
 
   auto subs = SubstituteParameters(symbol->GetType()->as_tycons.body, map);
-  // SetTyContext(subs, ty->typing_context_);
 
   return subs;
 }

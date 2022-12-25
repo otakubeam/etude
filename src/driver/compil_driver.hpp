@@ -136,9 +136,8 @@ class CompilationDriver {
     }
 
     if (test_build) {
-      if (modules_.back().GetName() != main_module_) {
-        throw;
-      }
+      FMT_ASSERT(modules_.back().GetName() == main_module_,
+                 "Last module should be the main one");
       modules_.back().Compile(nullptr);  // CompileTests
       return;
     }

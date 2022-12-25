@@ -25,7 +25,7 @@ Pattern* Parser::ParsePattern() {
 
 Pattern* Parser::ParseLiteralPattern() {
   if (lexer_.Peek().type == lex::TokenType::LEFT_PAREN) {
-    throw "Unexprected symbol";
+    throw std::runtime_error{"Unexprected symbol '(' matching against literal"};
   }
 
   auto lit = ParsePrimary()->as<LiteralExpression>();
@@ -39,6 +39,15 @@ Pattern* Parser::ParseBindingPattern() {
     return nullptr;
   }
   return new BindingPattern{lexer_.GetPreviousToken()};
+}
+
+///////////////////////////////////////////////////////////////////
+
+Pattern* Parser::ParseDiscardingPattern() {
+  if (!Matches(lex::TokenType::UNDERSCORE)) {
+    return nullptr;
+  }
+  return new DiscardingPattern{lexer_.GetPreviousToken()};
 }
 
 ///////////////////////////////////////////////////////////////////
