@@ -73,7 +73,7 @@ report_test() {
 
 ######################################################################
 
-tests=$(find . -regextype "egrep" -iregex ".*/test/.*-test-.*.et" | sort)
+tests=$(find . -regextype "egrep" -iregex ".*/test/.*-test-.*.et" | sort -r)
 
 for f in $tests; do
   report_test ${f%.et}

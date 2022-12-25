@@ -4,14 +4,6 @@
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseExpression() {
-  if (auto if_expr = ParseIfExpression()) {
-    return if_expr;
-  }
-
-  if (auto match_expr = ParseMatchExpression()) {
-    return match_expr;
-  }
-
   if (auto block_expr = ParseBlockExpression()) {
     return block_expr;
   }
@@ -20,11 +12,25 @@ Expression* Parser::ParseExpression() {
     return comp_expr;
   }
 
+  return ParseComparison();
+}
+
+///////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseKeywordExpresssion() {
+  if (auto if_expr = ParseIfExpression()) {
+    return if_expr;
+  }
+
+  if (auto match_expr = ParseMatchExpression()) {
+    return match_expr;
+  }
+
   if (auto new_expr = ParseNewExpression()) {
     return new_expr;
   }
 
-  return ParseComparison();
+  return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -402,6 +408,11 @@ Expression* Parser::ParsePrimary() {
     Consume(lex::TokenType::RIGHT_PAREN);
     return expr;
   };
+
+  if (auto kw_expr = ParseKeywordExpresssion()) {
+    // Theses are naturally delimited
+    return kw_expr;
+  }
 
   // Try parsing grouping first
 

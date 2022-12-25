@@ -14,6 +14,10 @@ Pattern* Parser::ParsePattern() {
     return binding_pat;
   }
 
+  if (auto discarding_pat = ParseDiscardingPattern()) {
+    return discarding_pat;
+  }
+
   if (auto literal_pat = ParseLiteralPattern()) {
     return literal_pat;
   }

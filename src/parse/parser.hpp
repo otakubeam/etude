@@ -44,6 +44,8 @@ class Parser {
 
   Expression* ParseExpression();
 
+  Expression* ParseKeywordExpresssion();
+
   Expression* ParseIfExpression();
   Expression* ParseMatchExpression();
   Expression* ParseNewExpression();
