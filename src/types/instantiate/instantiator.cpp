@@ -168,7 +168,7 @@ void TemplateInstantiator::VisitAddressof(AddressofExpression* node) {
 void TemplateInstantiator::VisitIf(IfExpression* node) {
   auto n = new IfExpression{*node};
 
-  n->type_ = Instantinate(node->type_, poly_to_mono_);
+  n->type_ = Instantinate(n->type_, poly_to_mono_);
 
   n->condition_ = Eval(n->condition_)->as<Expression>();
   n->true_branch_ = Eval(n->true_branch_)->as<Expression>();
@@ -181,7 +181,7 @@ void TemplateInstantiator::VisitMatch(MatchExpression* node) {
   auto n = new MatchExpression{*node};
 
   n->against_ = Eval(n->against_)->as<Expression>();
-  n->type_ = Instantinate(node->type_, poly_to_mono_);
+  n->type_ = Instantinate(n->type_, poly_to_mono_);
 
   for (auto& [pat, expr] : n->patterns_) {
     pat = Eval(pat)->as<Pattern>();
@@ -194,15 +194,15 @@ void TemplateInstantiator::VisitMatch(MatchExpression* node) {
 void TemplateInstantiator::VisitNew(NewExpression* node) {
   auto n = new NewExpression{*node};
 
-  n->type_ = Instantinate(node->type_, poly_to_mono_);
+  n->type_ = Instantinate(n->type_, poly_to_mono_);
 
-  n->underlying_ = Instantinate(node->underlying_, poly_to_mono_);
+  n->underlying_ = Instantinate(n->underlying_, poly_to_mono_);
 
   if (auto& alloc = n->allocation_size_) {
     alloc = Eval(alloc)->as<Expression>();
   }
 
-  if (auto& init = node->initial_value_) {
+  if (auto& init = n->initial_value_) {
     init = Eval(init)->as<Expression>();
   }
 

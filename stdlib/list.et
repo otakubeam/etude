@@ -1,0 +1,72 @@
+maybe;
+
+export {
+
+    type List a = sum {
+       | node: struct {
+           item: a,
+           next: *List(a),
+       }
+
+       | end
+    };
+
+
+    of *List(_) -> Maybe(_)
+    fun last_item list;
+
+
+    of *List(_) -> _ -> ()
+    fun append list item;
+
+
+    of *List(Int) -> ()     #   <<<----- TODO: Show typeclass
+    fun print_list list;
+
+
+}
+
+
+fun last_item list = match *list {
+    | .node.next next: match *next {
+                     | .end: .some list->node.item
+                     | _: last_item(next)
+                     }
+    | _: .none
+    };
+
+
+fun append list item = match *list {
+    | .node n: append(n.next, item)
+    | _: {
+        *list = .node { .item = item,
+                        .next = new _ {.end} };
+    }
+    };
+
+fun print_list list = match *list {
+    | .node n: {
+        print("%d -> ", n.item);
+        print_list(n.next);
+    }
+    | _: print("END \n")
+    };
+
+@test fun test_list = {
+
+    of *List(Int)
+    var list2 = new _ { .node { .item = 5,
+        .next = new _ { .node { .item = 4,
+        .next = new _ { .node { .item = 9,
+        .next = new _ { .end () } } } } } } };
+
+    assert(last_item(list2).some == 9);
+
+    append(list2, 11);
+
+    assert(last_item(list2).some == 11);
+
+    print_list(list2);
+
+    0
+};

@@ -1,0 +1,27 @@
+
+
+export {
+
+    of Int -> *String -> Int
+    @nomangle fun main argc argv;
+
+}
+
+of Unit -> Int
+@nomangle fun do_thing u = 0;
+
+# 1. This should not require @nomangle attribute!
+# 2. Syntax for defining functions without arguments
+# 3. Remove manual gen
+
+of (Unit -> Int) -> Int
+fun call_foo foo = foo({});
+
+fun main argc argv = {
+
+    # Gen
+    do_thing({});
+
+    call_foo(do_thing)
+};
+

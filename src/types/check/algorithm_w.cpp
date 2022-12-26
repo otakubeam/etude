@@ -261,7 +261,7 @@ void AlgorithmW::VisitMatch(MatchExpression* node) {
     PushEqual(node->GetLocation(), target_ty, Eval(pat));
     PushEqual(node->GetLocation(), result_ty, Eval(expr));
   }
-  
+
   node->type_ = return_value = result_ty;
 }
 
@@ -373,7 +373,7 @@ void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   node->type_ = MakeTypeVar(node->layer_);
 
   for (auto& mem : node->initializers_) {
-    auto field_type = mem.init ? Eval(mem.init) : &builtin_never;
+    auto field_type = mem.init ? Eval(mem.init) : &builtin_unit;
 
     deferred_checks_.push_back(Trait{
         .tag = TraitTags::HAS_FIELD,

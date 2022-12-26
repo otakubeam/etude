@@ -63,10 +63,31 @@ class GenMatch : public AbortVisitor {
     fmt::print("@match.{}.check.{}\n", next_arm_ - 1, check - 1);
   }
 
-  void VisitVariantPat(VariantPattern* node) {
-    auto out = parent_.GenTemporary();
+  // In the form `.some.next n`  <<---  parsed as VariantPattern
+  void VisitSingleStructPat(VariantPattern* node) {
+    if (auto& inner = node->inner_pat_) {
+      auto offset =
+          parent_.measure_.MeasureFieldOffset(node->type_, node->name_);
 
+      auto new_addr = parent_.GenTemporary();
+
+      fmt::print("  {} = l add {}, {}  \n",  //
+                 new_addr.Emit(), target_id_.Emit(), offset);
+
+      target_id_ = new_addr;
+
+      inner->Accept(this);
+    }
+  }
+
+  void VisitVariantPat(VariantPattern* node) {
     auto ty = node->GetType();
+
+    if (ty->tag == types::TypeTag::TY_STRUCT) {
+      VisitSingleStructPat(node);
+      return;
+    }
+
     auto discr_pat =
         parent_.GenConstInt(parent_.measure_.SumDiscriminant(ty, node->name_));
 

@@ -61,6 +61,7 @@ class SizeMeasure {
       }
 
       default:
+        fmt::print("Type was {}\n", t->Format());
         FMT_ASSERT(false, "Unreachable!");
     }
   }
