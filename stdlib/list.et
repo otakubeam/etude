@@ -17,7 +17,7 @@ export {
 
 
     of *List(_) -> _ -> ()
-    fun append list item;
+    fun appendl list item;
 
 
     of *List(Int) -> ()     #   <<<----- TODO: Show typeclass
@@ -36,8 +36,8 @@ fun last_item list = match *list {
     };
 
 
-fun append list item = match *list {
-    | .node n: append(n.next, item)
+fun appendl list item = match *list {
+    | .node n: appendl(n.next, item)
     | _: {
         *list = .node { .item = item,
                         .next = new _ {.end} };
@@ -62,7 +62,7 @@ fun print_list list = match *list {
 
     assert(last_item(list2).some == 9);
 
-    append(list2, 11);
+    appendl(list2, 11);
 
     assert(last_item(list2).some == 11);
 
