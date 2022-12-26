@@ -3,7 +3,6 @@ mul;
 export {
 
    of Int -> Int fun fact n; 
-   # =
 
 }
 
