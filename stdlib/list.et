@@ -24,23 +24,34 @@ export {
     fun print_list list;
 
 
+    of Maybe(_) -> List(_)
+    fun new_list item;
+
+
 }
 
 
-fun last_item list = match *list {
+fun last_item list =
+    match *list {
     | .node.next next: match *next {
-                     | .end: .some list->node.item
-                     | _: last_item(next)
-                     }
+                       | .end: .some list->node.item
+                       | _: last_item(next)
+                       }
     | _: .none
     };
 
 
+fun new_list item = match item {
+    | .none: .end
+    | .some item: .node { .item = item, 
+                          .next = new _ {.end} }
+    };
+
 fun appendl list item = match *list {
     | .node n: appendl(n.next, item)
-    | _: {
-        *list = .node { .item = item,
-                        .next = new _ {.end} };
+    | end: {
+        end = .node { .item = item,
+                      .next = new _ {.end} };
     }
     };
 

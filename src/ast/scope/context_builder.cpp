@@ -91,6 +91,7 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
   // e.g. Vec(_) -> Maybe(_)
 
   SetTyContext(fun_ty, current_context_);
+
   current_context_->bindings.InsertSymbol({
       .sym_type = SymbolType::FUN,
       .name = node->GetName(),
@@ -139,8 +140,12 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
 //////////////////////////////////////////////////////////////////////
 
 void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
-  std::abort();
-  (void)node;
+  current_context_->bindings.InsertSymbol({
+      .sym_type = SymbolType::TRAIT,
+      .name = node->GetName(),
+      .as_trait = {.decl = node},
+      .declared_at = node->GetLocation(),
+  });
 }
 
 //////////////////////////////////////////////////////////////////////

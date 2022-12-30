@@ -34,6 +34,7 @@ class Parser {
   FunDeclStatement* ParseFunPrototype(types::Type* hint);
 
   TraitDeclaration* ParseTraitDeclaration();
+  ImplDeclaration* ParseImplDeclaration();
   TypeDeclStatement* ParseTypeDeclStatement();
   FunDeclStatement* ParseFunDeclStatement(types::Type* hint);
   VarDeclStatement* ParseVarDeclStatement(types::Type* hint);

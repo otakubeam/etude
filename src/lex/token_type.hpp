@@ -64,11 +64,14 @@ enum class TokenType {
 
   VAR,
   TYPE,
+  TRAIT,
   STRUCT,
   SUM,
   UNION,
   
   OF,
+  FOR,
+  IMPL,
   UNDERSCORE,
 
 

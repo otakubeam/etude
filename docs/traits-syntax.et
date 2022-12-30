@@ -1,40 +1,25 @@
-type Ord T = trait {
 
-    _: trait Eq(T),
+    type Into b = trait {
+        of Self -> b fun into self;
+    }
 
-    of T -> T -> Bool
-    fun less a b;
+    trait Show {
 
-};
+        of Self -> String
+        fun show self = {
+            # Print sizeof a bytes
+        };
 
-######################################################################
+    }
 
-type Iterable T = trait {
+    impl Into Str for String  {
+        fun into string = mk_str(string);
+    }
 
-    type Item;
 
-    of T -> Item
-    fun next self;
+    impl Show for Str {
+        fun show self = to_zero_terminated(self);
+    }
 
-};
-
-type Deref T = trait {
-
-    type Item = T;
-
-    of T -> Int -> Item
-    fun deref self = 0;
-
-};
-
-impl Iterable T for Vec(T) {
-
-    type Item = T;
-
-    of *Vec(T) -> Int -> Item
-    fun deref self idx = {
-        self->data[idx]
-    };
-
-};
-
+    of *List(a) -> ()
+        where a : Show

@@ -6,6 +6,7 @@
 #include <vector>
 
 class FunDeclStatement;
+class TraitDeclaration;
 struct Attribute;
 
 namespace types {
@@ -16,6 +17,7 @@ namespace ast::scope {
 
 enum class SymbolType {
   STATIC,
+  TRAIT,
   TYPE,
   FUN,
   VAR,
@@ -30,6 +32,10 @@ struct FnSymbol {
   types::Type* type = nullptr;
   FunDeclStatement* def = nullptr;
   Attribute* attrs = nullptr;
+};
+
+struct TraitSymbol {
+  TraitDeclaration* decl;
 };
 
 struct VarbindSymbol {
@@ -47,6 +53,7 @@ struct Symbol {
 
   union {
     FnSymbol as_fn_sym{};
+    TraitSymbol as_trait;
     StructSymbol as_type;
     VarbindSymbol as_varbind;
   };

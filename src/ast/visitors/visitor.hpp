@@ -32,6 +32,7 @@ class AssignmentStatement;
 
 class TypeDeclStatement;
 class TraitDeclaration;
+class ImplDeclaration;
 class VarDeclStatement;
 class FunDeclStatement;
 
@@ -68,6 +69,8 @@ class Visitor {
   virtual void VisitFunDecl(FunDeclStatement* node) = 0;
 
   virtual void VisitTraitDecl(TraitDeclaration* node) = 0;
+
+  virtual void VisitImplDecl(ImplDeclaration* node) = 0;
 
   // Patterns
 

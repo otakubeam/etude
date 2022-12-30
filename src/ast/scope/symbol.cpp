@@ -12,6 +12,7 @@ types::Type* Symbol::GetType() {
     case SymbolType::TYPE:
       return types::FindLeader(as_type.type);
     case SymbolType::STATIC:
+    case SymbolType::TRAIT:
     default:
       std::abort();
   }

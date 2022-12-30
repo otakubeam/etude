@@ -46,10 +46,13 @@ namespace lex {
   code(COMMA)               \
   code(VAR)                 \
   code(TYPE)                \
+  code(TRAIT)               \
   code(STRUCT)              \
   code(SUM)                 \
   code(UNION)               \
   code(OF)                  \
+  code(FOR)                 \
+  code(IMPL)                \
   code(UNDERSCORE)          \
   code(TY_INT)              \
   code(TY_BOOL)             \

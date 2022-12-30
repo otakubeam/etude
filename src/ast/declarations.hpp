@@ -13,15 +13,19 @@ class Declaration : public Statement {
   virtual void Accept(Visitor* /* visitor */){};
 
   virtual std::string_view GetName() = 0;
-
-  bool is_extern_ = false;
-  bool is_exported_ = false;
 };
 
 //////////////////////////////////////////////////////////////////////
 
 class TraitDeclaration : public Declaration {
  public:
+  TraitDeclaration(lex::Token name, std::vector<lex::Token> params,
+                   std::vector<Declaration*> decls)
+      : name_{name},
+        parameters_{std::move(params)},
+        declarations_{std::move(decls)} {
+  }
+
   virtual void Accept(Visitor* visitor) override {
     visitor->VisitTraitDecl(this);
   }
@@ -34,9 +38,47 @@ class TraitDeclaration : public Declaration {
     return name_;
   }
 
-  // TODO: flesh out
-
   lex::Token name_;
+
+  std::vector<lex::Token> parameters_;
+
+  std::vector<Declaration*> declarations_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class ImplDeclaration : public Declaration {
+ public:
+  ImplDeclaration(lex::Token name, std::vector<types::Type*> params,
+                  std::vector<Declaration*> decls)
+      : trait_name_{name},
+        params_{std::move(params)},
+        declarations_{std::move(decls)} {
+  }
+
+  //  impl Into Str for String  {
+  //      fun into self = mk_str(self);
+  //  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitImplDecl(this);
+  }
+
+  virtual lex::Location GetLocation() override {
+    return trait_name_.location;
+  }
+
+  std::string_view GetName() override {
+    return trait_name_;
+  }
+
+  lex::Token trait_name_;
+
+  std::vector<types::Type*> params_;
+
+  types::Type* for_type_;
+
+  std::vector<Declaration*> declarations_;
 };
 
 //////////////////////////////////////////////////////////////////////

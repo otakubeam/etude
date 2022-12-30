@@ -30,7 +30,6 @@ auto Parser::ParseModule() -> Module {
 
     while (auto decl = ParseDeclaration()) {
       result.items_.push_back(decl);
-      decl->is_extern_ = true;
     }
 
     Consume(lex::TokenType::LEFT_CBRACE);
@@ -54,7 +53,6 @@ auto Parser::ParseModule() -> Module {
       auto proto = ParsePrototype();
       exported.push_back(proto->GetName());
       result.items_.push_back(proto);
-      proto->is_exported_ = true;
     }
 
     return exported;
@@ -174,6 +172,59 @@ FunDeclStatement* Parser::ParseFunDeclStatement(types::Type* hint) {
   Consume(lex::TokenType::SEMICOLON);
 
   return proto;
+}
+
+///////////////////////////////////////////////////////////////////
+
+ImplDeclaration* Parser::ParseImplDeclaration() {
+  if (!Matches(lex::TokenType::IMPL)) {
+    return nullptr;
+  }
+
+  auto trait_name = lexer_.Peek();
+  Consume(lex::TokenType::IDENTIFIER);
+
+  std::vector<types::Type*> type_params_;
+
+  while (!Matches(lex::TokenType::FOR)) {
+    type_params_.push_back(ParseType());
+  }
+
+  Consume(lex::TokenType::LEFT_CBRACE);
+
+  std::vector<Declaration*> definitions;
+  while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
+    definitions.push_back(ParseDeclaration());
+  }
+
+  return new ImplDeclaration(trait_name, std::move(type_params_),
+                             std::move(definitions));
+}
+
+///////////////////////////////////////////////////////////////////
+
+TraitDeclaration* Parser::ParseTraitDeclaration() {
+  if (!Matches(lex::TokenType::TRAIT)) {
+    return nullptr;
+  }
+
+  auto name = lexer_.Peek();
+  Consume(lex::TokenType::IDENTIFIER);
+
+  auto parameters = ParseFormals();
+
+  Consume(lex::TokenType::LEFT_CBRACE);
+
+  auto declarations = std::vector<Declaration*>();
+
+  while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
+    while (auto decl = ParseDeclaration()) {
+      declarations.push_back(decl);
+    }
+  }
+
+  return new TraitDeclaration{name, std::move(parameters),
+                              std::move(declarations)};
 }
 
 ///////////////////////////////////////////////////////////////////
