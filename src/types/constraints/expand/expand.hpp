@@ -11,9 +11,9 @@
 
 namespace types::check {
 
-class AlgorithmW : public ReturnVisitor<Type*> {
+class ExpandTypeVariables: public Visitor {
  public:
-  AlgorithmW() {
+  ExpandTypeVariables() {
   }
 
   void VisitYield(YieldStatement* node) override;
@@ -47,12 +47,6 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   void VisitLiteral(LiteralExpression* node) override;
   void VisitVarAccess(VarAccessExpression* node) override;
   void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
-
- private:
-  void PushEqual(lex::Location loc, Type* a, Type* b);
-
- private:
-  std::deque<Trait> deferred_checks_;
 };
 
 }  // namespace types::check

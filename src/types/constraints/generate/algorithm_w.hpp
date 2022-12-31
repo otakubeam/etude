@@ -1,27 +1,22 @@
 #pragma once
 
-#include <types/constraints/trait.hpp>
 #include <types/type.hpp>
+#include <types/constraints/trait.hpp>
+#include <types/constraints/solver.hpp>
 
 #include <ast/scope/context.hpp>
 
 #include <ast/visitors/template_visitor.hpp>
 
-#include <ast/declarations.hpp>
-
 #include <queue>
 
-namespace types::instantiate {
+namespace types::constraints::generate {
 
-class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
+class AlgorithmW : public ReturnVisitor<Type*> {
  public:
-  TemplateInstantiator(Declaration* main);
-
-  TemplateInstantiator(std::vector<FunDeclStatement*>& tests);
-
-  auto Flush() -> std::pair<std::vector<FunDeclStatement*>, std::vector<Type*>>;
-
-  // Visitor methods
+  AlgorithmW(std::deque<Trait>& work_queue, ConstraintSolver& solver)
+      : solver_{solver}, work_queue_{work_queue} {
+  }
 
   void VisitYield(YieldStatement* node) override;
   void VisitReturn(ReturnStatement* node) override;
@@ -32,6 +27,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   void VisitVarDecl(VarDeclStatement* node) override;
   void VisitFunDecl(FunDeclStatement* node) override;
   void VisitTraitDecl(TraitDeclaration* node) override;
+  void VisitImplDecl(ImplDeclaration* node) override;
 
   void VisitBindingPat(BindingPattern* node) override;
   void VisitDiscardingPat(DiscardingPattern* node) override;
@@ -56,34 +52,12 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
 
  private:
-  using Substitiution = std::unordered_map<Type*, Type*>;
-
-  void BuildSubstitution(Type* poly, Type* mono, Substitiution& subs);
-
-  bool TryFindInstantiation(FnCallExpression* i);
-
-  void ProcessQueueItem(FnCallExpression* i);
-
-  void StartUp(FunDeclStatement* main);
-
-  void MaybeSaveForIL(Type* ty);
-
-  void ProcessQueue();
+  void PushEqual(lex::Location loc, Type* a, Type* b);
 
  private:
-  std::deque<FnCallExpression*> instantiation_quque_;
-  std::deque<VarAccessExpression*> function_ptrs_;
+  ConstraintSolver& solver_;
 
-  ast::scope::Context* call_context_ = nullptr;
-
-  Substitiution current_substitution_;
-
-  std::vector<Type*> types_to_gen_;
-
-  // How do I prevent myself from instantiating something twice or more?
-  // A: place instantiated in map: name: string_view -> [](type, fun)
-
-  std::unordered_multimap<std::string_view, FunDeclStatement*> mono_items_;
+  std::deque<Trait>& work_queue_;
 };
 
-}  // namespace types::instantiate
+}  // namespace types::constraints::generate

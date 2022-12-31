@@ -7,6 +7,7 @@
 
 class FunDeclStatement;
 class TraitDeclaration;
+class ImplDeclaration;
 struct Attribute;
 
 namespace types {
@@ -16,8 +17,12 @@ struct Type;
 namespace ast::scope {
 
 enum class SymbolType {
-  STATIC,
+  GENERIC,  // <<<----- used in expand.hpp
+
+  TRAIT_METHOD,
   TRAIT,
+
+  STATIC,
   TYPE,
   FUN,
   VAR,

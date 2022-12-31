@@ -24,6 +24,7 @@ class ContextBuilder : public AbortVisitor {
   virtual void VisitVarDecl(VarDeclStatement* node) override;
   virtual void VisitFunDecl(FunDeclStatement* node) override;
   virtual void VisitTraitDecl(TraitDeclaration* node) override;
+  virtual void VisitImplDecl(ImplDeclaration* node) override;
 
   virtual void VisitComparison(ComparisonExpression* node) override;
   virtual void VisitBinary(BinaryExpression* node) override;

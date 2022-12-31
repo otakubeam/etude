@@ -1,20 +1,19 @@
 #include <types/constraints/solver.hpp>
-#include <types/check/algorithm_w.hpp>
+#include <types/constraints/generate/algorithm_w.hpp>
 
 #include <ast/declarations.hpp>
 #include <ast/patterns.hpp>
 #include <lex/token.hpp>
 
-namespace types::check {
+namespace types::constraints::generate {
 
 //////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::PushEqual(lex::Location loc, Type* a, Type* b) {
-  deferred_checks_.push_back(Trait{
-      .tag = TraitTags::TYPES_EQ,
-      .types_equal = {.a = a, .b = b},
-      .location = loc,
-  });
+  if (solver_.Unify(a, b)) {
+    return;  // If can unify right away, then do it
+  }
+  work_queue_.push_back(MakeTyEqTrait(a, b, loc));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -63,28 +62,27 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
 
   PushEqual(node->GetLocation(), Eval(node->body_), ty->as_fun.result_type);
 
-  // Resolve constraints
-
-  constraints::ConstraintSolver solver{std::move(deferred_checks_)};
-  deferred_checks_ = {};  // Empty checks
-  solver.Solve();
-
-  // Top-level: Generalize
-
-  if (node->layer_->level == 1) {
-    // Is this correct? What if some other type points at me as a leader?
-    Generalize(ty);
-  }
-
   node->type_ = return_value = ty;
 }
 
 //////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitTraitDecl(TraitDeclaration* node) {
-  std::abort();
-  // Is this a no-op?
-  (void)node;
+  // Defined Self
+
+  for (auto decl : node->methods_) {
+    decl->Accept(this);
+  }
+
+  // Undefined Self
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void AlgorithmW::VisitImplDecl(ImplDeclaration* node) {
+  for (auto decl : node->declarations_) {
+    decl->Accept(this);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -108,11 +106,11 @@ void AlgorithmW::VisitVariantPat(VariantPattern* node) {
                    : MakeTypeVar(node->layer_);
 
   node->type_ = MakeTypeVar(node->layer_);
-  deferred_checks_.push_back(
-      Trait{.tag = TraitTags::HAS_FIELD,
-            .bound = node->type_,
-            .has_field = {.field_name = node->name_, .field_type = inner},
-            .location = node->GetLocation()});
+
+  auto loc = node->GetLocation();
+  auto trait = MakeHasFieldTrait(node->type_, node->name_, inner, loc);
+  work_queue_.push_back(std::move(trait));
+
   return_value = node->type_;
 }
 
@@ -159,30 +157,18 @@ void AlgorithmW::VisitComparison(ComparisonExpression* node) {
   switch (node->operator_.type) {
     case lex::TokenType::NOT_EQ:
     case lex::TokenType::EQUALS:
-      deferred_checks_.push_back({.tag = TraitTags::EQ,
-                                  .bound = e,
-                                  .none = {},
-                                  .location = node->GetLocation()});
+      work_queue_.push_back(MakeEqTrait(e, node->GetLocation()));
       break;
 
     case lex::TokenType::LT:
     case lex::TokenType::GT:
-      deferred_checks_.push_back({.tag = TraitTags::ORD,
-                                  .bound = e,
-                                  .none = {},
-                                  .location = node->GetLocation()});
+      work_queue_.push_back(MakeOrdTrait(e, node->GetLocation()));
       break;
 
     case lex::TokenType::LE:
     case lex::TokenType::GE:
-      deferred_checks_.push_back({.tag = TraitTags::EQ,
-                                  .bound = e,
-                                  .none = {},
-                                  .location = node->GetLocation()});
-      deferred_checks_.push_back({.tag = TraitTags::ORD,
-                                  .bound = e,
-                                  .none = {},
-                                  .location = node->GetLocation()});
+      work_queue_.push_back(MakeEqTrait(e, node->GetLocation()));
+      work_queue_.push_back(MakeOrdTrait(e, node->GetLocation()));
       break;
 
     default:
@@ -190,6 +176,7 @@ void AlgorithmW::VisitComparison(ComparisonExpression* node) {
   }
 
   PushEqual(node->GetLocation(), e, e2);  // Do not implicitly convert types
+
   return_value = &builtin_bool;
 }
 
@@ -198,7 +185,7 @@ void AlgorithmW::VisitBinary(BinaryExpression* node) {
 
   node->type_ = return_value = Eval(node->left_);
 
-  deferred_checks_.push_back(Trait{
+  work_queue_.push_back(Trait{
       .tag = TraitTags::ADD,
       .bound = return_value,
       .none = {},
@@ -292,7 +279,7 @@ void AlgorithmW::VisitBlock(BlockExpression* node) {
 
 void AlgorithmW::VisitFnCall(FnCallExpression* node) {
   if (node->fn_name_.empty()) {
-    FMT_ASSERT(false, "Why are you here?");
+    FMT_ASSERT(false, "Unimplemented");
   }
 
   auto symbol = node->layer_->RetrieveSymbol(node->fn_name_);
@@ -327,7 +314,7 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
 
   // Constrain
 
-  deferred_checks_.push_back({
+  work_queue_.push_back({
       .tag = TraitTags::CALLABLE,
       .bound = ty,
       .none = {},
@@ -346,7 +333,6 @@ void AlgorithmW::VisitIntrinsic(IntrinsicCall* node) {
 
   switch (node->intrinsic) {
     case ast::elaboration::Intrinsic::PRINT:
-      // TODO: Show typeclass?
       PushEqual(node->GetLocation(), Eval(node->arguments_.at(0)),
                 MakeTypePtr(&builtin_char));
       return_value = &builtin_unit;
@@ -372,15 +358,12 @@ void AlgorithmW::VisitIntrinsic(IntrinsicCall* node) {
 void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   node->type_ = MakeTypeVar(node->layer_);
 
+  auto loc = node->GetLocation();
+
   for (auto& mem : node->initializers_) {
     auto field_type = mem.init ? Eval(mem.init) : &builtin_unit;
-
-    deferred_checks_.push_back(Trait{
-        .tag = TraitTags::HAS_FIELD,
-        .bound = node->type_,
-        .has_field = {.field_name = mem.field, .field_type = field_type},
-        .location = node->GetLocation(),
-    });
+    auto trait = MakeHasFieldTrait(node->type_, mem.field, field_type, loc);
+    work_queue_.push_back(std::move(trait));
   }
 
   return_value = node->type_;
@@ -390,15 +373,11 @@ void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
   auto e = Eval(node->struct_expression_);
 
   e = FindLeader(e);
+  auto loc = node->GetLocation();
+  auto trait = MakeHasFieldTrait(e, node->field_name_, node->type_, loc);
+  work_queue_.push_back(std::move(trait));
 
   return_value = node->type_ = MakeTypeVar();
-
-  deferred_checks_.push_back(Trait{
-      .tag = TraitTags::HAS_FIELD,
-      .bound = e,
-      .has_field = {.field_name = node->field_name_, .field_type = node->type_},
-      .location = node->GetLocation(),
-  });
 }
 
 void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
@@ -411,12 +390,10 @@ void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
     return_value = ty->tag == TypeTag::TY_FUN ? Instantinate(ty, p) : ty;
 
     return;
-  } else {
-    throw std::runtime_error{
-        fmt::format("Could not find {}", node->name_.GetName())};
   }
 
-  std::abort();
+  throw std::runtime_error{
+      fmt::format("Could not find {}", node->name_.GetName())};
 }
 
 void AlgorithmW::VisitLiteral(LiteralExpression* node) {
@@ -452,15 +429,16 @@ void AlgorithmW::VisitLiteral(LiteralExpression* node) {
 void AlgorithmW::VisitTypecast(TypecastExpression* node) {
   auto e = Eval(node->expr_);
 
-  FMT_ASSERT(node->type_, "Explicit cast must provide type");
-
-  deferred_checks_.push_back(Trait{
+  work_queue_.push_back(Trait{
       .tag = TraitTags::CONVERTIBLE_TO,
       .bound = FindLeader(e),
-      .convertible_to = {.to_type = node->type_},
+      .convertible_to = {.to_type = FindLeader(node->type_)},
       .location = node->GetLocation(),
   });
+
   return_value = node->type_;
 }
 
-}  // namespace types::check
+}  // namespace types::constraints::generate
+
+// namespace types::constraints::generate

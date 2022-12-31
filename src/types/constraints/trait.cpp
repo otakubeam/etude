@@ -1,7 +1,33 @@
-#include <types/trait.hpp>
+#include <types/constraints/trait.hpp>
 #include <types/type.hpp>
 
 namespace types {
+
+Trait MakeTyEqTrait(Type* a, Type* b, lex::Location loc) {
+  return Trait{.tag = TraitTags::TYPES_EQ,
+               .types_equal = {.a = a, .b = b},
+               .location = loc};
+}
+
+Trait MakeEqTrait(Type* bound, lex::Location loc) {
+  return Trait{
+      .tag = TraitTags::EQ, .bound = bound, .none = {}, .location = loc};
+}
+
+Trait MakeOrdTrait(Type* bound, lex::Location loc) {
+  return Trait{
+      .tag = TraitTags::ORD, .bound = bound, .none = {}, .location = loc};
+}
+
+Trait MakeHasFieldTrait(Type* bound, std::string_view name, Type* field_type,
+                        lex::Location loc) {
+  return Trait{
+      .tag = TraitTags::HAS_FIELD,
+      .bound = bound,
+      .has_field = {.field_name = name, .field_type = field_type},
+      .location = loc,
+  };
+}
 
 std::string FormatTrait(Trait& trait) {
   switch (trait.tag) {

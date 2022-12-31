@@ -1,7 +1,8 @@
 #pragma once
 
-#include <fmt/core.h>
 #include <lex/location.hpp>
+
+#include <fmt/core.h>
 
 #include <string_view>
 #include <string>
@@ -32,12 +33,12 @@ struct HasFieldTrait {
 };
 
 struct ConvertibleToTrait {
-  Type* to_type{};
+  Type* to_type = nullptr;
 };
 
 struct TypesEqual {
-  Type* a{};
-  Type* b{};
+  Type* a = nullptr;
+  Type* b = nullptr;
 };
 
 struct UserDefinedTrait {
@@ -47,7 +48,7 @@ struct UserDefinedTrait {
 struct None {};
 
 struct Trait {
-  TraitTags tag;
+  TraitTags tag = TraitTags::TYPES_EQ;
 
   Type* bound = nullptr;
 
@@ -62,6 +63,12 @@ struct Trait {
 
   lex::Location location;
 };
+
+Trait MakeTyEqTrait(Type* a, Type* b, lex::Location);
+Trait MakeEqTrait(Type* bound, lex::Location loc);
+Trait MakeOrdTrait(Type* bound, lex::Location loc);
+Trait MakeHasFieldTrait(Type* bound, std::string_view name, Type* field_type,
+                        lex::Location loc);
 
 std::string FormatTrait(Trait& trait);
 

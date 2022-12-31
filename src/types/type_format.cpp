@@ -26,7 +26,7 @@ std::string FormatSum(Type& type) {
 
   for (auto& a : type.as_sum.first) {
     fmt::format_to(insert, "{}: {} | ", a.field,
-                   a.ty ? FormatType(*a.ty) : "!");
+                   a.ty ? FormatType(*a.ty) : "()");
   }
 
   fmt::format_to(insert, "}}");
@@ -80,9 +80,9 @@ std::string FormatUnion(Type&) {
 
 std::string FormatCons(Type& type) {
   return fmt::format(
-      "Cons {} of {} of {}", type.as_tycons.name.GetName(),
-      type.as_tycons.kind ? FormatType(*type.as_tycons.kind) : "<kind>",
-      FormatType(*type.as_tycons.body));
+      "Cons {} of {} of {}", type.as_generic.name.GetName(),
+      type.as_generic.kind ? FormatType(*type.as_generic.kind) : "<kind>",
+      FormatType(*type.as_generic.body));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -161,7 +161,6 @@ std::string MangleStruct(Type& type) {
   return result;
 }
 
-
 std::string Mangle(Type& type) {
   switch (type.tag) {
     case TypeTag::TY_INT:
@@ -208,19 +207,12 @@ std::string FormatConstraints(Type& type) {
 std::string FormatType(Type& type) {
   if (FindLeader(&type) == &type) {
     return fmt::format("{}{}", FormatConstraints(type), FormatTypeInner(type));
-    // return fmt::format("{}{}@{:<3}", FormatConstraints(type),
-    //                    FormatTypeInner(type), (void*)type.typing_context_);
   }
 
   return fmt::format("({}{} => {}{})", FormatConstraints(type),
                      FormatTypeInner(type),
                      FormatConstraints(*FindLeader(&type)),
                      FormatTypeInner(*FindLeader(&type)));
-  // return fmt::format("({}{} => {}{}@{:<3})", FormatConstraints(type),
-  //                    FormatTypeInner(type),
-  //                    FormatConstraints(*FindLeader(&type)),
-  //                    FormatTypeInner(*FindLeader(&type)),
-  //                    (void*)FindLeader(&type)->typing_context_);
 }
 
 //////////////////////////////////////////////////////////////////////

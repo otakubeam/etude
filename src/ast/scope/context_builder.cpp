@@ -31,7 +31,7 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
 
   auto ty = new types::Type{
       .tag = types::TypeTag::TY_CONS,
-      .as_tycons = types::TyConsType{.name = node->name_,
+      .as_generic = types::TyConsType{.name = node->name_,
                                      .param_pack = node->parameters_,
                                      .body = node->body_,
                                      .kind = kind}};
@@ -92,18 +92,20 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
 
   SetTyContext(fun_ty, current_context_);
 
-  current_context_->bindings.InsertSymbol({
-      .sym_type = SymbolType::FUN,
-      .name = node->GetName(),
-      .as_fn_sym =
-          {
-              .argnum = node->formals_.size(),
-              .type = fun_ty,
-              .def = node,
-              .attrs = node->attributes,
-          },
-      .declared_at = node->GetLocation(),
-  });
+  if (!node->trait_method_) {
+    current_context_->bindings.InsertSymbol({
+        .sym_type = SymbolType::FUN,
+        .name = node->GetName(),
+        .as_fn_sym =
+            {
+                .argnum = node->formals_.size(),
+                .type = fun_ty,
+                .def = node,
+                .attrs = node->attributes,
+            },
+        .declared_at = node->GetLocation(),
+    });
+  }
 
   if (node->body_) {
     auto symbol = current_context_->RetrieveSymbol(node->GetName());
@@ -146,6 +148,57 @@ void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
       .as_trait = {.decl = node},
       .declared_at = node->GetLocation(),
   });
+
+  for (auto decl : node->methods_) {
+    current_context_->bindings.InsertSymbol({
+        .sym_type = SymbolType::TRAIT_METHOD,
+        .name = decl->GetName(),
+        .as_fn_sym = {.def = decl},
+        .declared_at = decl->GetLocation(),
+    });
+  }
+
+  current_context_ =
+      current_context_->MakeNewScopeLayer(node->GetLocation(), "Trait scope");
+
+  current_context_->bindings.InsertSymbol(Symbol{
+      .sym_type    = SymbolType::TYPE,
+      .name        = "Self",
+      .as_type     = {.type = types::HintedOrNew(nullptr)},
+      .declared_at = node->GetLocation(),
+  });
+
+  for (auto decl : node->methods_) {
+    decl->Accept(this);
+  }
+
+  PopScopeLayer();
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void ContextBuilder::VisitImplDecl(ImplDeclaration* node) {
+  auto trait = current_context_->RetrieveSymbol(node->trait_name_);
+  auto& impls = trait->as_trait.decl->impls_;
+
+  impls.push_back(node);
+
+  current_context_ =
+      current_context_->MakeNewScopeLayer(node->GetLocation(), "Impl scope");
+
+  current_context_->parent->bindings.InsertSymbol(Symbol{
+      .sym_type = SymbolType::TYPE,
+      .name = "Self",
+      .as_type = {.type = node->for_type_},
+      .declared_at = node->GetLocation(),
+  });
+
+  for (auto methods : node->trait_methods_) {
+    methods->trait_method_ = true;
+    methods->Accept(this);
+  }
+
+  PopScopeLayer();
 }
 
 //////////////////////////////////////////////////////////////////////

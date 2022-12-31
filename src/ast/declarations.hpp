@@ -20,10 +20,10 @@ class Declaration : public Statement {
 class TraitDeclaration : public Declaration {
  public:
   TraitDeclaration(lex::Token name, std::vector<lex::Token> params,
-                   std::vector<Declaration*> decls)
+                   std::vector<FunDeclStatement*> decls)
       : name_{name},
         parameters_{std::move(params)},
-        declarations_{std::move(decls)} {
+        methods_{std::move(decls)} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -42,7 +42,13 @@ class TraitDeclaration : public Declaration {
 
   std::vector<lex::Token> parameters_;
 
-  std::vector<Declaration*> declarations_;
+  std::vector<FunDeclStatement*> methods_;
+
+  std::vector<TypeDeclStatement*> assoc_types_;
+
+  // This is stupid, but I don't want to make Symbol not POD
+
+  std::vector<ImplDeclaration*> impls_;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -74,11 +80,13 @@ class ImplDeclaration : public Declaration {
 
   lex::Token trait_name_;
 
-  std::vector<types::Type*> params_;
-
   types::Type* for_type_;
 
-  std::vector<Declaration*> declarations_;
+  std::vector<types::Type*> params_;
+
+  std::vector<TypeDeclStatement*> assoc_types_;
+
+  std::vector<FunDeclStatement*> trait_methods_;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -186,6 +194,8 @@ class FunDeclStatement : public Declaration {
   }
 
   ///////////////////////////////////////////////////////////////////////
+
+  bool trait_method_ = false;
 
   lex::Token name_;
 

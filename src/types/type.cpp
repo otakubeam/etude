@@ -132,7 +132,6 @@ bool TypesEquivalent(Type* lhs, Type* rhs,
 
 void CheckTypes() {
   auto& store = Type::type_store;
-  fmt::print(stderr, "[!] Type store\n\n");
   for (auto& t : store) {
     if (t.tag == TypeTag::TY_APP) {
       if (!t.typing_context_) {
@@ -180,7 +179,7 @@ Type* MakeTyCons(lex::Token name, std::vector<lex::Token> params, Type* body,
   Type::type_store.push_back(Type{.id = Type::type_store.size(),
                                   .tag = TypeTag::TY_CONS,
                                   .typing_context_ = context,
-                                  .as_tycons = {
+                                  .as_generic = {
                                       .name = name,
                                       .param_pack = std::move(params),
                                       .body = body,
@@ -300,6 +299,144 @@ void SetTyContext(types::Type* ty, ast::scope::Context* typing_context) {
     default:
       break;
   }
+}
+
+//////////////////////////////////////////////////////////////////////
+
+Type* FindLeader(Type* a) {
+  if (a->leader) {
+    return a->leader = FindLeader(a->leader);
+  } else {
+    return a;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+
+using Map = std::unordered_map<std::string_view, Type*>;
+
+Type* SubstituteParameters(Type* subs, const Map& map) {
+  switch (subs->tag) {
+    case TypeTag::TY_PTR: {
+      auto underlying = SubstituteParameters(subs->as_ptr.underlying, map);
+
+      auto ptr = MakeTypePtr(underlying);
+      ptr->typing_context_ = subs->typing_context_;
+
+      return ptr;
+    }
+
+    case TypeTag::TY_STRUCT: {
+      std::vector<Member> result;
+      auto& pack = subs->as_struct.first;
+
+      for (auto& p : pack) {
+        result.push_back(
+            Member{.field = p.field, .ty = SubstituteParameters(p.ty, map)});
+      }
+
+      auto ty = MakeStructType(std::move(result));
+      ty->typing_context_ = subs->typing_context_;
+
+      return ty;
+    }
+
+    case TypeTag::TY_SUM: {
+      std::vector<Member> result;
+      auto& pack = subs->as_sum.first;
+
+      for (auto& p : pack) {
+        result.push_back(Member{.field = p.field,
+                                .ty = p.ty  //
+                                          ? SubstituteParameters(p.ty, map)
+                                          : nullptr});
+      }
+
+      auto ty = MakeSumType(std::move(result));
+      ty->typing_context_ = subs->typing_context_;
+
+      return ty;
+    }
+
+    case TypeTag::TY_FUN: {
+      std::vector<Type*> args;
+      auto& pack = subs->as_fun.param_pack;
+
+      for (size_t i = 0; i < pack.size(); i++) {
+        args.push_back(SubstituteParameters(pack[i], map));
+      }
+
+      Type* result = SubstituteParameters(subs->as_fun.result_type, map);
+
+      auto ty = MakeFunType(std::move(args), result);
+      ty->typing_context_ = subs->typing_context_;
+
+      return ty;
+    }
+
+    case TypeTag::TY_APP: {
+      // item: T             <<--- substitute
+
+      if (map.contains(subs->as_tyapp.name)) {
+        return map.at(subs->as_tyapp.name);
+      }
+
+      // next: List(T)       <<--- go inside
+
+      std::vector<Type*> result;
+      auto& pack = subs->as_tyapp.param_pack;
+
+      for (auto& p : pack) {
+        result.push_back(SubstituteParameters(p, map));
+      }
+
+      auto ty = MakeTyApp(subs->as_tyapp.name, std::move(result));
+      ty->typing_context_ = subs->typing_context_;
+
+      return ty;
+    }
+
+    case TypeTag::TY_CONS:
+    case TypeTag::TY_UNION:
+      std::abort();
+
+    case TypeTag::TY_INT:
+    case TypeTag::TY_BOOL:
+    case TypeTag::TY_CHAR:
+    case TypeTag::TY_UNIT:
+    case TypeTag::TY_BUILTIN:
+    case TypeTag::TY_VARIABLE:
+    case TypeTag::TY_PARAMETER:
+    case TypeTag::TY_KIND:
+    default:
+      return subs;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+
+Type* ApplyTyconsLazy(Type* ty) {
+  if (ty->tag != TypeTag::TY_APP) {
+    return nullptr;
+  }
+
+  auto symbol = ty->typing_context_->RetrieveSymbol(ty->as_tyapp.name);
+  auto& names = symbol->GetType()->as_generic.param_pack;
+
+  auto& pack = ty->as_tyapp.param_pack;
+
+  if (pack.size() != names.size()) {
+    throw std::runtime_error("Instantination size mismatch");
+  }
+
+  std::unordered_map<std::string_view, Type*> map;
+  for (size_t i = 0; i < pack.size(); i++) {
+    map.insert({names[i], pack[i]});
+  }
+
+  auto subs = SubstituteParameters(symbol->GetType()->as_generic.body, map);
+
+  return subs;
 }
 
 //////////////////////////////////////////////////////////////////////

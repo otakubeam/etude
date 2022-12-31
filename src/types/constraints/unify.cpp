@@ -1,33 +1,22 @@
-#include <types/type.hpp>
+#include <types/constraints/solver.hpp>
+#include <types/constraints/trait.hpp>
 
-#include <types/trait.hpp>
 #include <unordered_map>
 
-namespace types {
+namespace types::constraints {
 
 //////////////////////////////////////////////////////////////////////
 
-void PushEqual(lex::Location loc, Type* a, Type* b,
-               std::deque<Trait>& fill_queue) {
-  fill_queue.push_back(Trait{
-      .tag = TraitTags::TYPES_EQ,
-      .types_equal = {.a = a, .b = b},
-      .location = loc,
-  });
-}
-
-//////////////////////////////////////////////////////////////////////
-
-void Unify(lex::Location loc, Type* a, Type* b, std::deque<Trait>& fill_queue) {
+bool ConstraintSolver::Unify(Type* a, Type* b) {
   if (a->tag == TypeTag::TY_NEVER || b->tag == TypeTag::TY_NEVER) {
-    return;  // Unify never with any type
+    return true;  // Unify never with any type
   }
 
   auto la = FindLeader(a);
   auto lb = FindLeader(b);
 
   if (la == lb) {
-    return;
+    return true;
   }
 
   // Always make the la be be a variable
@@ -40,50 +29,35 @@ void Unify(lex::Location loc, Type* a, Type* b, std::deque<Trait>& fill_queue) {
 
     // Do not merge constraints here, but find leader in solver
 
-    return;
+    return true;
   }
 
   if (la->tag == lb->tag) {
-    UnifyUnderlyingTypes(loc, la, lb, fill_queue);
-    return;
+    return UnifyUnderlyingTypes(la, lb);
   }
 
-  fmt::print("{} ~! {}\n", la->Format(), lb->Format());
-  throw std::runtime_error{"Inference error: Tag mismatch"};
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////
 
-Type* FindLeader(Type* a) {
-  if (a->leader) {
-    return a->leader = FindLeader(a->leader);
-  } else {
-    return a;
-  }
-}
-
-//////////////////////////////////////////////////////////////////////
-
-void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b,
-                          std::deque<Trait>& fill_queue) {
-  // assert(la->tag == lb->tag);
+bool ConstraintSolver::UnifyUnderlyingTypes(Type* a, Type* b) {
   switch (a->tag) {
     case TypeTag::TY_PTR:
-      PushEqual(loc, a->as_ptr.underlying, b->as_ptr.underlying, fill_queue);
-      break;
+      return Unify(a->as_ptr.underlying, b->as_ptr.underlying);
 
     case TypeTag::TY_STRUCT: {
       auto& a_mem = a->as_struct.first;
       auto& b_mem = b->as_struct.first;
 
       if (a_mem.size() != b_mem.size()) {
-        throw std::runtime_error{"Inference error: struct size mismatch"};
+        return false;
       }
 
       for (size_t i = 0; i < a_mem.size(); i++) {
-        // Here I only look at the types
-        // Should I also look at the field names?
-        PushEqual(loc, a_mem[i].ty, b_mem[i].ty, fill_queue);
+        if (!Unify(a_mem[i].ty, b_mem[i].ty)) {
+          return false;
+        }
       }
 
       break;
@@ -98,11 +72,15 @@ void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b,
       }
 
       // Also don't forget to check the names!
+
       for (size_t i = 0; i < a_mem.size(); i++) {
         if (a_mem[i].field != b_mem[i].field) {
           throw std::runtime_error{"Inference error: sum field mismatch"};
         }
-        PushEqual(loc, a_mem[i].ty, b_mem[i].ty, fill_queue);
+
+        if (!Unify(a_mem[i].ty, b_mem[i].ty)) {
+          return false;
+        }
       }
 
       break;
@@ -113,15 +91,16 @@ void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b,
       auto& pack2 = b->as_fun.param_pack;
 
       if (pack.size() != pack2.size()) {
-        throw std::runtime_error{"Function unification size mismatch"};
+        return false;
       }
 
       for (size_t i = 0; i < pack.size(); i++) {
-        PushEqual(loc, pack[i], pack2[i], fill_queue);
+        if (!Unify(pack[i], pack2[i])) {
+          return false;
+        }
       }
 
-      PushEqual(loc, a->as_fun.result_type, b->as_fun.result_type, fill_queue);
-      break;
+      return Unify(a->as_fun.result_type, b->as_fun.result_type);
     }
 
     case TypeTag::TY_APP: {
@@ -136,17 +115,16 @@ void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b,
           b = new_b;
         }
 
-        PushEqual(loc, a, b, fill_queue);
-        return;
-
-        throw std::runtime_error{"Different type constructors"};
+        return Unify(a, b);
       }
 
-      auto& a_pack = a->as_tyapp.param_pack;
-      auto& b_pack = b->as_tyapp.param_pack;
+      auto& pack = a->as_tyapp.param_pack;
+      auto& pack2 = b->as_tyapp.param_pack;
 
-      for (size_t i = 0; i < a_pack.size(); i++) {
-        PushEqual(loc, a_pack[i], b_pack[i], fill_queue);
+      for (size_t i = 0; i < pack.size(); i++) {
+        if (!Unify(pack[i], pack2[i])) {
+          return false;
+        }
       }
 
       break;
@@ -163,138 +141,15 @@ void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b,
     default:
       break;
   }
+
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////
 
-Type* SubstituteParameters(
-    Type* subs, const std::unordered_map<std::string_view, Type*>& map) {
-  switch (subs->tag) {
-    case TypeTag::TY_PTR: {
-      auto underlying = SubstituteParameters(subs->as_ptr.underlying, map);
 
-      auto ptr = MakeTypePtr(underlying);
-      ptr->typing_context_ = subs->typing_context_;
 
-      return ptr;
-    }
-
-    case TypeTag::TY_STRUCT: {
-      std::vector<Member> result;
-      auto& pack = subs->as_struct.first;
-
-      for (auto& p : pack) {
-        result.push_back(
-            Member{.field = p.field, .ty = SubstituteParameters(p.ty, map)});
-      }
-
-      auto ty = MakeStructType(std::move(result));
-      ty->typing_context_ = subs->typing_context_;
-
-      return ty;
-    }
-
-    case TypeTag::TY_SUM: {
-      std::vector<Member> result;
-      auto& pack = subs->as_sum.first;
-
-      for (auto& p : pack) {
-        result.push_back(Member{.field = p.field,
-                                .ty = p.ty  //
-                                          ? SubstituteParameters(p.ty, map)
-                                          : nullptr});
-      }
-
-      auto ty = MakeSumType(std::move(result));
-      ty->typing_context_ = subs->typing_context_;
-
-      return ty;
-    }
-
-    case TypeTag::TY_FUN: {
-      std::vector<Type*> args;
-      auto& pack = subs->as_fun.param_pack;
-
-      for (size_t i = 0; i < pack.size(); i++) {
-        args.push_back(SubstituteParameters(pack[i], map));
-      }
-
-      Type* result = SubstituteParameters(subs->as_fun.result_type, map);
-
-      auto ty = MakeFunType(std::move(args), result);
-      ty->typing_context_ = subs->typing_context_;
-
-      return ty;
-    }
-
-    case TypeTag::TY_APP: {
-      // item: T             <<--- substitute
-
-      if (map.contains(subs->as_tyapp.name)) {
-        return map.at(subs->as_tyapp.name);
-      }
-
-      // next: List(T)       <<--- go inside
-
-      std::vector<Type*> result;
-      auto& pack = subs->as_tyapp.param_pack;
-
-      for (auto& p : pack) {
-        result.push_back(SubstituteParameters(p, map));
-      }
-
-      auto ty = MakeTyApp(subs->as_tyapp.name, std::move(result));
-      ty->typing_context_ = subs->typing_context_;
-
-      return ty;
-    }
-
-    case TypeTag::TY_CONS:
-    case TypeTag::TY_UNION:
-      std::abort();
-
-    case TypeTag::TY_INT:
-    case TypeTag::TY_BOOL:
-    case TypeTag::TY_CHAR:
-    case TypeTag::TY_UNIT:
-    case TypeTag::TY_BUILTIN:
-    case TypeTag::TY_VARIABLE:
-    case TypeTag::TY_PARAMETER:
-    case TypeTag::TY_KIND:
-    default:
-      return subs;
-  }
-}
-
-//////////////////////////////////////////////////////////////////////
-
-Type* ApplyTyconsLazy(Type* ty) {
-  if (ty->tag != TypeTag::TY_APP) {
-    return nullptr;
-  }
-
-  auto symbol = ty->typing_context_->RetrieveSymbol(ty->as_tyapp.name);
-  auto& names = symbol->GetType()->as_tycons.param_pack;
-
-  auto& pack = ty->as_tyapp.param_pack;
-
-  if (pack.size() != names.size()) {
-    throw std::runtime_error("Instantination size mismatch");
-  }
-
-  std::unordered_map<std::string_view, Type*> map;
-  for (size_t i = 0; i < pack.size(); i++) {
-    map.insert({names[i], pack[i]});
-  }
-
-  auto subs = SubstituteParameters(symbol->GetType()->as_tycons.body, map);
-
-  return subs;
-}
-
-//////////////////////////////////////////////////////////////////////
-
-void Generalize(Type* ty) {
+void ConstraintSolver::Generalize(Type* ty) {
   auto l = FindLeader(ty);
 
   switch (l->tag) {
@@ -352,7 +207,7 @@ void Generalize(Type* ty) {
 
 // Ty here is a type schema
 using KnownParams = std::unordered_map<Type*, Type*>;
-Type* Instantinate(Type* ty, KnownParams& map) {
+Type* ConstraintSolver::Instantinate(Type* ty, KnownParams& map) {
   auto l = FindLeader(ty);
 
   switch (l->tag) {
@@ -448,4 +303,4 @@ Type* Instantinate(Type* ty, KnownParams& map) {
 
 //////////////////////////////////////////////////////////////////////
 
-};  // namespace types
+};  // namespace types::constraints

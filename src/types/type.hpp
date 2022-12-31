@@ -1,7 +1,8 @@
 #pragma once
 
+#include <types/constraints/trait.hpp>
+
 #include <ast/scope/context.hpp>
-#include <types/trait.hpp>
 #include <lex/token.hpp>
 
 #include <fmt/format.h>
@@ -86,7 +87,7 @@ struct TyAppType {
   std::vector<Type*> param_pack;
 };
 
-struct TypeVariable {
+struct QualifiedGeneric {
   std::vector<Trait> constraints;
 };
 
@@ -125,7 +126,7 @@ struct Type {
   StructTy as_struct{};
   TyAppType as_tyapp{};
   TyConsType as_tycons{};
-  TypeVariable as_variable{};
+  QualifiedGeneric as_parameter{};
 
   std::string Format() {
     return FormatType(*this);
@@ -161,17 +162,9 @@ std::string FormatFun(Type& type);
 
 //////////////////////////////////////////////////////////////////////
 
-Type* FindLeader(Type* a);
-
-struct Trait;
-void Unify(lex::Location, Type* a, Type* b, std::deque<Trait>& fill_queue);
-void UnifyUnderlyingTypes(lex::Location loc, Type* a, Type* b,
-                          std::deque<Trait>& fill_queue);
-
-void Generalize(Type* ty);
-
+Type* FindLeader(Type* ty);
+Type* TypeStorage(Type* ty);
 Type* ApplyTyconsLazy(Type* ty);
-Type* TypeStorage(Type* t);
 
 using KnownParams = std::unordered_map<Type*, Type*>;
 Type* Instantinate(Type* ty, KnownParams& map);
