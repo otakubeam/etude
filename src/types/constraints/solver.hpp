@@ -18,7 +18,7 @@ class ConstraintSolver {
  public:
   ConstraintSolver();
 
-  void Solve();
+  void SolveBatch();
 
   void CollectConstraints();
 

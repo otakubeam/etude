@@ -255,10 +255,14 @@ void TemplateInstantiator::VisitFnCall(FnCallExpression* node) {
     MaybeSaveForIL(a->GetType());
   }
 
-  // Get result type
+  auto symbol = node->layer_->RetrieveSymbol(node->GetFunctionName());
 
-  // TODO: do I need this?
-  // n->callable_ = Eval(node->callable_)->as<Expression>();
+  if (symbol->sym_type == ast::scope::SymbolType::TRAIT_METHOD) {
+    for (auto impl : symbol->as_trait.decl->impls_) {
+        for (auto method: impl->trait_methods_) {
+        }
+    }
+  }
 
   n->callable_type_ = Instantinate(node->callable_type_, current_substitution_);
 

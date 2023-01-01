@@ -44,8 +44,6 @@ class ContextBuilder : public AbortVisitor {
 
  private:
   void PopScopeLayer() {
-    // debug_context_leafs_.push_back(current_context_);
-    // current_context_->Print();
     current_context_ = current_context_->parent;
   }
 

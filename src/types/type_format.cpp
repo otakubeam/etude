@@ -198,7 +198,7 @@ std::string Mangle(Type& type) {
 std::string FormatConstraints(Type& type) {
   std::string output;
   auto ins = std::back_inserter(output);
-  for (auto& cons : type.as_variable.constraints) {
+  for (auto& cons : type.as_parameter.constraints) {
     fmt::format_to(ins, "{}::", (int)cons.tag);
   }
   return output;

@@ -58,7 +58,11 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
  private:
   using Substitiution = std::unordered_map<Type*, Type*>;
 
-  void BuildSubstitution(Type* poly, Type* mono, Substitiution& subs);
+  bool BuildSubstitution(Type* poly, Type* mono, Substitiution& subs);
+
+  auto FindTraitMethod(auto symbol, Type* mono) -> FunDeclStatement*;
+
+  auto GetFunctionDef(auto symbol, Type* mono) -> FunDeclStatement*;
 
   bool TryFindInstantiation(FnCallExpression* i);
 

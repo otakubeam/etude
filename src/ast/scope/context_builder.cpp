@@ -31,7 +31,7 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
 
   auto ty = new types::Type{
       .tag = types::TypeTag::TY_CONS,
-      .as_generic = types::TyConsType{.name = node->name_,
+      .as_tycons = types::TyConsType{.name = node->name_,
                                      .param_pack = node->parameters_,
                                      .body = node->body_,
                                      .kind = kind}};
@@ -162,9 +162,9 @@ void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
       current_context_->MakeNewScopeLayer(node->GetLocation(), "Trait scope");
 
   current_context_->bindings.InsertSymbol(Symbol{
-      .sym_type    = SymbolType::TYPE,
-      .name        = "Self",
-      .as_type     = {.type = types::HintedOrNew(nullptr)},
+      .sym_type = SymbolType::TYPE,
+      .name = "Self",
+      .as_type = {.type = types::MakeTypeVar(current_context_)},
       .declared_at = node->GetLocation(),
   });
 

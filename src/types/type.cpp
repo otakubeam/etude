@@ -179,7 +179,7 @@ Type* MakeTyCons(lex::Token name, std::vector<lex::Token> params, Type* body,
   Type::type_store.push_back(Type{.id = Type::type_store.size(),
                                   .tag = TypeTag::TY_CONS,
                                   .typing_context_ = context,
-                                  .as_generic = {
+                                  .as_tycons = {
                                       .name = name,
                                       .param_pack = std::move(params),
                                       .body = body,
@@ -421,7 +421,7 @@ Type* ApplyTyconsLazy(Type* ty) {
   }
 
   auto symbol = ty->typing_context_->RetrieveSymbol(ty->as_tyapp.name);
-  auto& names = symbol->GetType()->as_generic.param_pack;
+  auto& names = symbol->GetType()->as_tycons.param_pack;
 
   auto& pack = ty->as_tyapp.param_pack;
 
@@ -434,7 +434,7 @@ Type* ApplyTyconsLazy(Type* ty) {
     map.insert({names[i], pack[i]});
   }
 
-  auto subs = SubstituteParameters(symbol->GetType()->as_generic.body, map);
+  auto subs = SubstituteParameters(symbol->GetType()->as_tycons.body, map);
 
   return subs;
 }

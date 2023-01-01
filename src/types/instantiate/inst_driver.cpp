@@ -9,6 +9,34 @@ namespace types::instantiate {
 
 //////////////////////////////////////////////////////////////////////
 
+auto TemplateInstantiator::FindTraitMethod(auto symbol, Type* mono)
+    -> FunDeclStatement* {
+  for (auto& impl : symbol->as_trait.decl->impls_) {
+    for (auto& def : impl->trait_methods_) {
+      if (def->GetName() == symbol->name) {
+        current_substitution_.clear();
+        if (BuildSubstitution(def->type_, mono, current_substitution_)) {
+          return def;
+        }
+      }
+    }
+  }
+
+  return nullptr;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+auto TemplateInstantiator::GetFunctionDef(auto symbol, Type* mono)
+    -> FunDeclStatement* {
+  auto poly = symbol->GetType();
+  current_substitution_.clear();
+  BuildSubstitution(poly, mono, current_substitution_);
+  return symbol->as_fn_sym.def;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 bool TemplateInstantiator::TryFindInstantiation(FnCallExpression* i) {
   auto range = mono_items_.equal_range(i->GetFunctionName());
 
@@ -39,7 +67,7 @@ void TemplateInstantiator::ProcessQueueItem(FnCallExpression* i) {
 
   auto symbol = i->layer_->RetrieveSymbol(i->fn_name_);
 
-  if (symbol->sym_type != ast::scope::SymbolType::FUN) {
+  if (symbol->sym_type == ast::scope::SymbolType::VAR) {
     return;
   }
 
@@ -51,13 +79,17 @@ void TemplateInstantiator::ProcessQueueItem(FnCallExpression* i) {
   fmt::print(stderr, "[!] Poly {}\n", FormatType(*poly));
   fmt::print(stderr, "[!] Mono {}\n", FormatType(*mono));
 
-  current_substitution_.clear();
-  BuildSubstitution(poly, mono, current_substitution_);
+  call_context_ = i->layer_;
 
   // 3) Find definition
 
-  auto definition = symbol->as_fn_sym.def;
-  call_context_ = i->layer_;
+  auto definition = [&]() {
+    if (symbol->sym_type != ast::scope::SymbolType::TRAIT_METHOD) {
+      return GetFunctionDef(symbol, mono);
+    } else {
+      return FindTraitMethod(symbol, mono);
+    }
+  }();
 
   // 4) Evaluate
 
@@ -91,8 +123,9 @@ TemplateInstantiator::TemplateInstantiator(Declaration* main) {
 
 //////////////////////////////////////////////////////////////////////
 
-TemplateInstantiator::TemplateInstantiator(
-    std::vector<FunDeclStatement*>& tests) {
+using Tests = std::vector<FunDeclStatement*>;
+
+TemplateInstantiator::TemplateInstantiator(Tests& tests) {
   for (auto& test : tests) {
     StartUp(test->as<FunDeclStatement>());
   }
@@ -121,31 +154,34 @@ auto TemplateInstantiator::Flush() -> Result {
 
 //////////////////////////////////////////////////////////////////////
 
-void TemplateInstantiator::BuildSubstitution(
-    Type* poly, Type* mono, std::unordered_map<Type*, Type*>& poly_to_mono) {
+using Substitiution = std::unordered_map<Type*, Type*>;
+
+bool TemplateInstantiator::BuildSubstitution(Type* poly, Type* mono,
+                                             Substitiution& poly_to_mono) {
   poly = FindLeader(poly);
   mono = FindLeader(mono);
 
   switch (poly->tag) {
     case TypeTag::TY_PTR:
       FMT_ASSERT(mono->tag == TypeTag::TY_PTR, "Mismatch");
-      BuildSubstitution(poly->as_ptr.underlying, mono->as_ptr.underlying,
-                        poly_to_mono);
-      break;
+      return BuildSubstitution(poly->as_ptr.underlying, mono->as_ptr.underlying,
+                               poly_to_mono);
 
     case TypeTag::TY_STRUCT: {
       auto& a_mem = poly->as_struct.first;
       auto& b_mem = mono->as_struct.first;
 
       if (a_mem.size() != b_mem.size()) {
-        throw std::runtime_error{"Inference error: struct size mismatch"};
+        return false;
       }
 
       for (size_t i = 0; i < a_mem.size(); i++) {
-        BuildSubstitution(a_mem[i].ty, b_mem[i].ty, poly_to_mono);
+        if (!BuildSubstitution(a_mem[i].ty, b_mem[i].ty, poly_to_mono)) {
+          return false;
+        }
       }
 
-      break;
+      return true;
     }
 
     case TypeTag::TY_FUN: {
@@ -157,34 +193,37 @@ void TemplateInstantiator::BuildSubstitution(
       }
 
       for (size_t i = 0; i < pack.size(); i++) {
-        BuildSubstitution(pack[i], pack2[i], poly_to_mono);
+        if (!BuildSubstitution(pack[i], pack2[i], poly_to_mono)) {
+          return false;
+        }
       }
 
-      BuildSubstitution(poly->as_fun.result_type, mono->as_fun.result_type,
-                        poly_to_mono);
-      break;
+      return BuildSubstitution(poly->as_fun.result_type,
+                               mono->as_fun.result_type, poly_to_mono);
     }
 
     case TypeTag::TY_APP: {
       if (poly->as_tyapp.name.GetName() != mono->as_tyapp.name) {
-        std::abort();
+        return false;
       }
 
       auto& a_pack = poly->as_tyapp.param_pack;
       auto& b_pack = mono->as_tyapp.param_pack;
 
       for (size_t i = 0; i < a_pack.size(); i++) {
-        BuildSubstitution(a_pack[i], b_pack[i], poly_to_mono);
+        if (!BuildSubstitution(a_pack[i], b_pack[i], poly_to_mono)) {
+          return false;
+        }
       }
 
-      break;
+      return true;
     }
 
       // G13 -> Int
     case TypeTag::TY_PARAMETER:
       // This function exists for this callback
       current_substitution_.insert({poly, mono});
-      break;
+      return true;
 
     case TypeTag::TY_CONS:
     case TypeTag::TY_KIND:
