@@ -129,6 +129,14 @@ FunDeclStatement* Parser::ParseFunPrototype(types::Type* hint) {
 
 ///////////////////////////////////////////////////////////////////
 
+FunDeclStatement* Parser::ParseFunDeclarationStandalone() {
+  Consume(lex::TokenType::OF);
+  auto hint = ParseFunctionType();
+  return ParseFunPrototype(hint);
+}
+
+///////////////////////////////////////////////////////////////////
+
 Declaration* Parser::ParseDeclaration() {
   types::Type* hint = nullptr;
   if (Matches(lex::TokenType::OF)) {
@@ -192,9 +200,9 @@ ImplDeclaration* Parser::ParseImplDeclaration() {
 
   Consume(lex::TokenType::LEFT_CBRACE);
 
-  std::vector<Declaration*> definitions;
+  std::vector<FunDeclStatement*> definitions;
   while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
-    definitions.push_back(ParseDeclaration());
+    definitions.push_back(ParseFunDeclStatement(nullptr));
   }
 
   return new ImplDeclaration(trait_name, std::move(type_params_),
@@ -215,16 +223,16 @@ TraitDeclaration* Parser::ParseTraitDeclaration() {
 
   Consume(lex::TokenType::LEFT_CBRACE);
 
-  auto declarations = std::vector<Declaration*>();
+  std::vector<FunDeclStatement*> trait_methods;
 
   while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
-    while (auto decl = ParseDeclaration()) {
-      declarations.push_back(decl);
+    while (auto method = ParseFunDeclarationStandalone()) {
+      trait_methods.push_back(method);
     }
   }
 
   return new TraitDeclaration{name, std::move(parameters),
-                              std::move(declarations)};
+                              std::move(trait_methods)};
 }
 
 ///////////////////////////////////////////////////////////////////

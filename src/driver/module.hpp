@@ -1,13 +1,15 @@
 #pragma once
 
+#include <types/constraints/generate/algorithm_w.hpp>
+#include <types/instantiate/instantiator.hpp>
+
 #include <ast/elaboration/mark_intrinsics.hpp>
 #include <ast/scope/context_builder.hpp>
-#include <types/instantiate/instantiator.hpp>
-#include <types/check/algorithm_w.hpp>
-#include <qbe/ir_emitter.hpp>
 
 #include <ast/visitors/visitor.hpp>
 #include <ast/declarations.hpp>
+
+#include <qbe/ir_emitter.hpp>
 
 #include <lex/location.hpp>
 
@@ -34,18 +36,17 @@ class Module {
     for (auto& r : items_) r = mark.Eval(r)->as<Declaration>();
   }
 
-  void InferTypes() {
-    types::check::AlgorithmW infer;
-    for (auto r : items_) r->Accept(&infer);
+  void InferTypes(types::constraints::ConstraintSolver& solver) {
+    solver.CollectAndSolve(items_);
   }
 
   auto CompileMain(Declaration* main) {
-    types::check::TemplateInstantiator inst(main);
+    types::instantiate::TemplateInstantiator inst(main);
     return inst.Flush();
   }
 
   auto CompileTests() {
-    types::check::TemplateInstantiator inst(tests_);
+    types::instantiate::TemplateInstantiator inst(tests_);
     return inst.Flush();
   }
 
@@ -70,11 +71,6 @@ class Module {
   ast::scope::Symbol* GetExportedSymbol(std::string_view name) {
     return global_context.FindLocalSymbol(name);
   }
-
-  enum Type {
-    Library,
-    Executable,
-  } mod_ty = Library;
 
  private:
   std::string_view name_;

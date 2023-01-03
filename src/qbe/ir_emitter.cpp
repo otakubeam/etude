@@ -556,29 +556,6 @@ void IrEmitter::VisitTypecast(TypecastExpression* node) {
 
 ////////////////////////////////////////////////////////////////////
 
-void IrEmitter::VisitTypeDecl(TypeDeclStatement*) {
-}
-
-////////////////////////////////////////////////////////////////////
-
-void IrEmitter::VisitTraitDecl(TraitDeclaration* node) {
-  std::abort();  // Unreachable
-  (void)node;
-}
-
-////////////////////////////////////////////////////////////////////
-
-void IrEmitter::VisitBindingPat(BindingPattern*) {
-}
-
-void IrEmitter::VisitLiteralPat(LiteralPattern*) {
-}
-
-void IrEmitter::VisitVariantPat(VariantPattern*) {
-}
-
-////////////////////////////////////////////////////////////////////
-
 void IrEmitter::VisitLiteral(LiteralExpression* node) {
   switch (node->token_.type) {
     case lex::TokenType::CHAR:

@@ -29,6 +29,10 @@ class AbortVisitor : public Visitor {
     std::abort();
   }
 
+  virtual void VisitImplDecl(ImplDeclaration*) override {
+    std::abort();
+  }
+
   // Patterns
 
   virtual void VisitBindingPat(BindingPattern*) override {

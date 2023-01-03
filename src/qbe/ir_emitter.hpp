@@ -31,12 +31,14 @@ class IrEmitter : public ReturnVisitor<Value> {
 
   virtual void VisitVarDecl(VarDeclStatement* node) override;
   virtual void VisitFunDecl(FunDeclStatement* node) override;
-  virtual void VisitTypeDecl(TypeDeclStatement* node) override;
-  virtual void VisitTraitDecl(TraitDeclaration* node) override;
 
-  virtual void VisitBindingPat(BindingPattern* node) override;
-  virtual void VisitLiteralPat(LiteralPattern* node) override;
-  virtual void VisitVariantPat(VariantPattern* node) override;
+  virtual void VisitTraitDecl(TraitDeclaration*) override{};
+  virtual void VisitTypeDecl(TypeDeclStatement*) override{};
+  virtual void VisitImplDecl(ImplDeclaration*) override{};
+
+  virtual void VisitBindingPat(BindingPattern*) override{};
+  virtual void VisitLiteralPat(LiteralPattern*) override{};
+  virtual void VisitVariantPat(VariantPattern*) override{};
 
   virtual void VisitDeref(DereferenceExpression* node) override;
   virtual void VisitAddressof(AddressofExpression* node) override;
@@ -124,8 +126,8 @@ class IrEmitter : public ReturnVisitor<Value> {
   }
 
   ~IrEmitter() {
-      EmitTestArray();
-      EmitStringLiterals();
+    EmitTestArray();
+    EmitStringLiterals();
   }
 
   void EmitStringLiterals() {

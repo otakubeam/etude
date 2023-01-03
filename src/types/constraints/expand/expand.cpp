@@ -9,7 +9,7 @@ namespace types::check {
 
 //////////////////////////////////////////////////////////////////////
 
-bool DefineGenerics(Type* ty) {
+void DefineGenerics(Type* ty) {
   if (ty->tag == TypeTag::TY_APP) {
     auto name = ty->as_tyapp.name;
 
@@ -21,6 +21,7 @@ bool DefineGenerics(Type* ty) {
     } else {
       ty->typing_context_->bindings.InsertSymbol({
           .sym_type = ast::scope::SymbolType::GENERIC,
+          .name = name,
           .as_type = {MakeTypeVar()},
       });
     }
@@ -37,6 +38,7 @@ void Traverse(Type* ty) {
       for (auto& a : ty->as_tyapp.param_pack) {
         Traverse(a);
       }
+      break;
 
     case TypeTag::TY_FUN:
       for (auto& a : ty->as_fun.param_pack) {
@@ -44,19 +46,23 @@ void Traverse(Type* ty) {
       }
 
       Traverse(ty->as_fun.result_type);
+      break;
 
     case TypeTag::TY_PTR:
       Traverse(ty->as_ptr.underlying);
+      break;
 
     case TypeTag::TY_STRUCT:
       for (auto& a : ty->as_struct.first) {
         Traverse(a.ty);
       }
+      break;
 
     case TypeTag::TY_SUM:
       for (auto& a : ty->as_sum.first) {
         Traverse(a.ty);
       }
+      break;
 
     case TypeTag::TY_VARIABLE:
     case TypeTag::TY_PARAMETER:
@@ -101,7 +107,7 @@ void ExpandTypeVariables::VisitFunDecl(FunDeclStatement* node) {
 //////////////////////////////////////////////////////////////////////
 
 void ExpandTypeVariables::VisitTraitDecl(TraitDeclaration* node) {
-  for (auto decl : node->declarations_) {
+  for (auto decl : node->methods_) {
     decl->Accept(this);
   }
 }

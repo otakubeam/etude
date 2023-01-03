@@ -18,6 +18,7 @@ class MarkIntrinsics : public ReturnVisitor<TreeNode*> {
   void VisitVarDecl(VarDeclStatement* node) override;
   void VisitFunDecl(FunDeclStatement* node) override;
   void VisitTraitDecl(TraitDeclaration* node) override;
+  void VisitImplDecl(ImplDeclaration* node) override;
 
   void VisitBindingPat(BindingPattern* node) override;
   void VisitDiscardingPat(DiscardingPattern* node) override;

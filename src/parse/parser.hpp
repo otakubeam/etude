@@ -32,6 +32,7 @@ class Parser {
   Attribute* ParseAttributes();
   Declaration* ParsePrototype(bool require_sigature = false);
   FunDeclStatement* ParseFunPrototype(types::Type* hint);
+  FunDeclStatement* ParseFunDeclarationStandalone();
 
   TraitDeclaration* ParseTraitDeclaration();
   ImplDeclaration* ParseImplDeclaration();

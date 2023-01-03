@@ -18,19 +18,21 @@ class ConstraintSolver {
  public:
   ConstraintSolver();
 
-  void SolveBatch();
+  void CollectAndSolve();
 
-  void CollectConstraints();
+  using SortedFuns = std::vector<Declaration*>;
+  void CollectAndSolve(SortedFuns& binding_group);
+
+  bool Unify(Type* a, Type* b);
 
  private:
+  void SolveBatch();
+
   void PrintQueue();
   void ReportErrors();
 
-  bool Unify(Type* a, Type* b);
-  bool UnifyUnderlyingTypes(Type* a, Type* b);
-
   void Generalize(Type* ty);
-  Type* Instantinate(Type* ty, KnownParams& map);
+  bool UnifyUnderlyingTypes(Type* a, Type* b);
 
   void ConstrainGenerics();
   bool TrySolveConstraint(Trait i);

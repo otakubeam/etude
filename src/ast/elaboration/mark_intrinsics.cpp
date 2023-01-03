@@ -33,8 +33,21 @@ void MarkIntrinsics::VisitFunDecl(FunDeclStatement* node) {
 //////////////////////////////////////////////////////////////////////
 
 void MarkIntrinsics::VisitTraitDecl(TraitDeclaration* node) {
-  std::abort();
-  (void)node;
+  for (auto& method : node->methods_) {
+    method = Eval(method)->as<FunDeclStatement>();
+  }
+
+  return_value = node;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void MarkIntrinsics::VisitImplDecl(ImplDeclaration* node) {
+  for (auto& method : node->trait_methods_) {
+    method = Eval(method)->as<FunDeclStatement>();
+  }
+
+  return_value = node;
 }
 
 //////////////////////////////////////////////////////////////////////

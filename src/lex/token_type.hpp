@@ -86,7 +86,6 @@ enum class TokenType {
   BIT_OR,
   THEN,
   ELSE,
-  FOR,
 
   COLON,
   SEMICOLON,

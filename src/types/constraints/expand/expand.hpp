@@ -1,17 +1,16 @@
 #pragma once
 
+#include <types/constraints/trait.hpp>
 #include <types/type.hpp>
-#include <types/trait.hpp>
 
+#include <ast/visitors/visitor.hpp>
 #include <ast/scope/context.hpp>
-
-#include <ast/visitors/template_visitor.hpp>
 
 #include <queue>
 
 namespace types::check {
 
-class ExpandTypeVariables: public Visitor {
+class ExpandTypeVariables : public Visitor {
  public:
   ExpandTypeVariables() {
   }

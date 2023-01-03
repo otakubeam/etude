@@ -1,10 +1,10 @@
 #pragma once
 
+#include <types/constraints/generate/algorithm_w.hpp>
+#include <types/instantiate/instantiator.hpp>
+
 #include <ast/elaboration/mark_intrinsics.hpp>
 #include <ast/scope/context_builder.hpp>
-
-#include <types/instantiate/instantiator.hpp>
-#include <types/check/algorithm_w.hpp>
 
 #include <parse/parse_error.hpp>
 #include <parse/parser.hpp>
@@ -125,14 +125,13 @@ class CompilationDriver {
     ParseAllModules();
     RegisterSymbols();
 
-    // Those in the end have the least dependencies (see TopSort(...))
-    // for (int i = modules_.size() - 1; i >= 0; i -= 1) {
+    // Those in the beginning have the least dependencies (see TopSort(...))
     for (size_t i = 0; i < modules_.size(); i += 1) {
       ProcessModule(&modules_[i]);
     }
 
     for (auto& m : modules_) {
-      m.InferTypes();
+      m.InferTypes(solver_);
     }
 
     if (test_build) {
@@ -162,4 +161,6 @@ class CompilationDriver {
   std::vector<lex::Lexer> lexers_;
 
   bool test_build = false;
+
+  types::constraints::ConstraintSolver solver_;
 };

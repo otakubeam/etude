@@ -41,9 +41,14 @@ void TemplateInstantiator::VisitFunDecl(FunDeclStatement* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void TemplateInstantiator::VisitTraitDecl(TraitDeclaration* node) {
+void TemplateInstantiator::VisitTraitDecl(TraitDeclaration*) {
   std::abort();
-  (void)node;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void TemplateInstantiator::VisitImplDecl(ImplDeclaration*) {
+  std::abort();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -253,15 +258,6 @@ void TemplateInstantiator::VisitFnCall(FnCallExpression* node) {
   for (auto& a : n->arguments_) {
     a = Eval(a)->as<Expression>();
     MaybeSaveForIL(a->GetType());
-  }
-
-  auto symbol = node->layer_->RetrieveSymbol(node->GetFunctionName());
-
-  if (symbol->sym_type == ast::scope::SymbolType::TRAIT_METHOD) {
-    for (auto impl : symbol->as_trait.decl->impls_) {
-        for (auto method: impl->trait_methods_) {
-        }
-    }
   }
 
   n->callable_type_ = Instantinate(node->callable_type_, current_substitution_);

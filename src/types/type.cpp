@@ -451,4 +451,99 @@ Type* TypeStorage(Type* t) {
 
 //////////////////////////////////////////////////////////////////////
 
+// Ty here is a type schema
+Type* Instantinate(Type* ty, KnownParams& map) {
+  auto l = FindLeader(ty);
+
+  switch (l->tag) {
+    case TypeTag::TY_VARIABLE:
+      return l;  // TODO: idk, when should I instantiate in recursive defs?
+
+    case TypeTag::TY_PTR: {
+      auto i = Instantinate(l->as_ptr.underlying, map);
+      auto ptr = MakeTypePtr(i);
+      ptr->typing_context_ = l->typing_context_;
+      return ptr;
+    }
+
+    case TypeTag::TY_PARAMETER:
+      if (map.contains(l)) {
+        return map.at(l);
+      }
+      return map[l] = MakeTypeVar();
+
+    case TypeTag::TY_APP: {
+      std::vector<Type*> args;
+
+      auto& pack = l->as_tyapp.param_pack;
+
+      for (size_t i = 0; i < pack.size(); i++) {
+        args.push_back(Instantinate(pack[i], map));
+      }
+
+      auto app = MakeTyApp(l->as_tyapp.name, std::move(args));
+      app->typing_context_ = l->typing_context_;
+
+      return app;
+    }
+
+    case TypeTag::TY_FUN: {
+      std::vector<Type*> args;
+
+      auto& pack = l->as_fun.param_pack;
+
+      for (size_t i = 0; i < pack.size(); i++) {
+        args.push_back(Instantinate(pack[i], map));
+      }
+
+      auto fun = MakeFunType(std::move(args),
+                             Instantinate(l->as_fun.result_type, map));
+      fun->typing_context_ = l->typing_context_;
+
+      return fun;
+    }
+
+    case TypeTag::TY_STRUCT: {
+      std::vector<Member> args;
+      auto& pack = l->as_struct.first;
+
+      for (auto& p : pack) {
+        args.push_back(Member{
+            .field = p.field,
+            .ty = Instantinate(p.ty, map),
+        });
+      }
+
+      auto ty = MakeStructType(std::move(args));
+      ty->typing_context_ = l->typing_context_;
+      return ty;
+    }
+
+    case TypeTag::TY_SUM: {
+      std::vector<Member> args;
+      auto& pack = l->as_sum.first;
+
+      for (auto& p : pack) {
+        args.push_back(Member{
+            .field = p.field,
+            .ty = Instantinate(p.ty, map),
+        });
+      }
+
+      auto ty = MakeSumType(std::move(args));
+      ty->typing_context_ = l->typing_context_;
+      return ty;
+    }
+
+    case TypeTag::TY_CONS:
+    case TypeTag::TY_UNION:
+      std::abort();
+      break;
+
+    case TypeTag::TY_KIND:
+    default:
+      return l;  // Int, Bool, Unit, etc
+  }
+}
+
 }  // namespace types

@@ -80,9 +80,9 @@ std::string FormatUnion(Type&) {
 
 std::string FormatCons(Type& type) {
   return fmt::format(
-      "Cons {} of {} of {}", type.as_generic.name.GetName(),
-      type.as_generic.kind ? FormatType(*type.as_generic.kind) : "<kind>",
-      FormatType(*type.as_generic.body));
+      "Cons {} of {} of {}", type.as_tycons.name.GetName(),
+      type.as_tycons.kind ? FormatType(*type.as_tycons.kind) : "<kind>",
+      FormatType(*type.as_tycons.body));
 }
 
 //////////////////////////////////////////////////////////////////////

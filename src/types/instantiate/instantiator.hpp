@@ -3,10 +3,8 @@
 #include <types/constraints/trait.hpp>
 #include <types/type.hpp>
 
-#include <ast/scope/context.hpp>
-
 #include <ast/visitors/template_visitor.hpp>
-
+#include <ast/scope/context.hpp>
 #include <ast/declarations.hpp>
 
 #include <queue>
@@ -32,6 +30,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   void VisitVarDecl(VarDeclStatement* node) override;
   void VisitFunDecl(FunDeclStatement* node) override;
   void VisitTraitDecl(TraitDeclaration* node) override;
+  void VisitImplDecl(ImplDeclaration* node) override;
 
   void VisitBindingPat(BindingPattern* node) override;
   void VisitDiscardingPat(DiscardingPattern* node) override;

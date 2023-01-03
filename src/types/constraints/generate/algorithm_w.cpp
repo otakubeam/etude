@@ -80,7 +80,7 @@ void AlgorithmW::VisitTraitDecl(TraitDeclaration* node) {
 //////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitImplDecl(ImplDeclaration* node) {
-  for (auto decl : node->declarations_) {
+  for (auto decl : node->trait_methods_) {
     decl->Accept(this);
   }
 }
@@ -99,6 +99,8 @@ void AlgorithmW::VisitDiscardingPat(DiscardingPattern* node) {
 void AlgorithmW::VisitLiteralPat(LiteralPattern* node) {
   return_value = Eval(node->pat_);
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitVariantPat(VariantPattern* node) {
   auto inner = node->inner_pat_  //
@@ -121,6 +123,8 @@ void AlgorithmW::VisitYield(YieldStatement* node) {
   return_value = &builtin_never;
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void AlgorithmW::VisitReturn(ReturnStatement* node) {
   auto find = node->layer_->RetrieveSymbol(node->this_fun);
 
@@ -137,11 +141,15 @@ void AlgorithmW::VisitReturn(ReturnStatement* node) {
   return_value = &builtin_never;
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void AlgorithmW::VisitAssignment(AssignmentStatement* node) {
   auto value_ty = Eval(node->value_);
   auto target_ty = Eval(node->target_);
   PushEqual(node->GetLocation(), value_ty, target_ty);
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitExprStatement(ExprStatement* node) {
   Eval(node->expr_);
@@ -180,6 +188,8 @@ void AlgorithmW::VisitComparison(ComparisonExpression* node) {
   return_value = &builtin_bool;
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void AlgorithmW::VisitBinary(BinaryExpression* node) {
   PushEqual(node->GetLocation(), Eval(node->right_), &builtin_int);
 
@@ -192,6 +202,8 @@ void AlgorithmW::VisitBinary(BinaryExpression* node) {
       .location = node->GetLocation(),
   });
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitUnary(UnaryExpression* node) {
   auto result = Eval(node->operand_);
@@ -212,6 +224,8 @@ void AlgorithmW::VisitUnary(UnaryExpression* node) {
   return_value = result;
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void AlgorithmW::VisitDeref(DereferenceExpression* node) {
   // An example:
   //
@@ -225,10 +239,14 @@ void AlgorithmW::VisitDeref(DereferenceExpression* node) {
   node->type_ = return_value = FindLeader(b);
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void AlgorithmW::VisitAddressof(AddressofExpression* node) {
   node->type_ = return_value = MakeTypePtr(Eval(node->operand_));
   SetTyContext(node->type_, node->layer_);
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitIf(IfExpression* node) {
   auto result_ty = MakeTypeVar();
@@ -239,6 +257,8 @@ void AlgorithmW::VisitIf(IfExpression* node) {
 
   node->type_ = return_value = result_ty;
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitMatch(MatchExpression* node) {
   auto result_ty = MakeTypeVar();
@@ -251,6 +271,8 @@ void AlgorithmW::VisitMatch(MatchExpression* node) {
 
   node->type_ = return_value = result_ty;
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitNew(NewExpression* node) {
   if (node->allocation_size_) {
@@ -265,6 +287,8 @@ void AlgorithmW::VisitNew(NewExpression* node) {
   return_value = node->type_;
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void AlgorithmW::VisitBlock(BlockExpression* node) {
   for (auto stmt : node->stmts_) {
     Eval(stmt);
@@ -276,6 +300,8 @@ void AlgorithmW::VisitBlock(BlockExpression* node) {
     return_value = &builtin_unit;
   }
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitFnCall(FnCallExpression* node) {
   if (node->fn_name_.empty()) {
@@ -326,6 +352,8 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
   return_value = result_ty;
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void AlgorithmW::VisitIntrinsic(IntrinsicCall* node) {
   for (auto a : node->arguments_) {
     Eval(a);
@@ -355,6 +383,8 @@ void AlgorithmW::VisitIntrinsic(IntrinsicCall* node) {
   }
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   node->type_ = MakeTypeVar(node->layer_);
 
@@ -369,6 +399,8 @@ void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   return_value = node->type_;
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
   auto e = Eval(node->struct_expression_);
 
@@ -379,6 +411,8 @@ void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
 
   return_value = node->type_ = MakeTypeVar();
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
   if (auto symbol = node->layer_->RetrieveSymbol(node->name_)) {
@@ -395,6 +429,8 @@ void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
   throw std::runtime_error{
       fmt::format("Could not find {}", node->name_.GetName())};
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitLiteral(LiteralExpression* node) {
   switch (node->token_.type) {
@@ -426,6 +462,8 @@ void AlgorithmW::VisitLiteral(LiteralExpression* node) {
   node->type_ = return_value;
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void AlgorithmW::VisitTypecast(TypecastExpression* node) {
   auto e = Eval(node->expr_);
 
@@ -438,6 +476,8 @@ void AlgorithmW::VisitTypecast(TypecastExpression* node) {
 
   return_value = node->type_;
 }
+
+//////////////////////////////////////////////////////////////////////
 
 }  // namespace types::constraints::generate
 

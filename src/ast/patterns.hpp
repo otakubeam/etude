@@ -56,26 +56,6 @@ class DiscardingPattern : public Pattern {
 
 //////////////////////////////////////////////////////////////////////
 
-class PointerPattern : public Pattern {
- public:
-  PointerPattern(lex::Token loc) : loc_{loc} {
-  }
-
-  virtual void Accept(Visitor* visitor){
-      // visitor->VisitDiscardingPat(this);
-  };
-
-  virtual lex::Location GetLocation() {
-    return loc_.location;
-  };
-
-  lex::Token loc_;
-  types::Type* type_ = nullptr;
-  ast::scope::Context* layer_ = nullptr;
-};
-
-//////////////////////////////////////////////////////////////////////
-
 class LiteralPattern : public Pattern {
  public:
   LiteralPattern(LiteralExpression* pat) : pat_(pat) {
@@ -117,9 +97,5 @@ class VariantPattern : public Pattern {
   Pattern* inner_pat_ = nullptr;
   ast::scope::Context* layer_ = nullptr;
 };
-
-//////////////////////////////////////////////////////////////////////
-
-class StructPattern;
 
 //////////////////////////////////////////////////////////////////////

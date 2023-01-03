@@ -64,7 +64,6 @@ namespace lex {
   code(BIT_OR)              \
   code(THEN)                \
   code(ELSE)                \
-  code(FOR)                 \
   code(COLON)               \
   code(SEMICOLON)           \
   code(RETURN)              \

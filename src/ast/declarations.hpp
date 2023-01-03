@@ -56,10 +56,10 @@ class TraitDeclaration : public Declaration {
 class ImplDeclaration : public Declaration {
  public:
   ImplDeclaration(lex::Token name, std::vector<types::Type*> params,
-                  std::vector<Declaration*> decls)
+                  std::vector<FunDeclStatement*> methods)
       : trait_name_{name},
         params_{std::move(params)},
-        declarations_{std::move(decls)} {
+        trait_methods_{std::move(methods)} {
   }
 
   //  impl Into Str for String  {

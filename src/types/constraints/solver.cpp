@@ -7,27 +7,17 @@ namespace types::constraints {
 ConstraintSolver::ConstraintSolver() {
 }
 
-void ConstraintSolver::ConstrainGenerics() {
-  while (work_queue_.size()) {
-    auto& q = work_queue_.front();
-
-    if (q.bound->tag != TypeTag::TY_PARAMETER) {
-      return;
+// Wrapper to give already sorted defs
+void ConstraintSolver::CollectAndSolve(SortedFuns& definitions) {
+  for (auto def : definitions) {
+    if (auto fun = def->as<FunDeclStatement>()) {
+      binding_groups_.push_back({fun});
     }
-
-    q.bound->as_parameter.constraints.push_back(q);
-
-    work_queue_.pop_front();
   }
+  CollectAndSolve();
 }
 
-void ConstraintSolver::GeneralizeBindingGroup(BindingGroup& group) {
-  for (auto def : group) {
-    Generalize(def->type_);
-  }
-}
-
-void ConstraintSolver::CollectConstraints() {
+void ConstraintSolver::CollectAndSolve() {
   generate::AlgorithmW generator(work_queue_, *this);
 
   while (binding_groups_.size()) {
@@ -49,6 +39,26 @@ void ConstraintSolver::CollectConstraints() {
     }
 
     binding_groups_.pop_back();
+  }
+}
+
+void ConstraintSolver::ConstrainGenerics() {
+  while (work_queue_.size()) {
+    auto& q = work_queue_.front();
+
+    if (q.bound->tag != TypeTag::TY_PARAMETER) {
+      return;
+    }
+
+    q.bound->as_parameter.constraints.push_back(q);
+
+    work_queue_.pop_front();
+  }
+}
+
+void ConstraintSolver::GeneralizeBindingGroup(BindingGroup& group) {
+  for (auto def : group) {
+    Generalize(def->type_);
   }
 }
 
@@ -78,6 +88,7 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
       if (i.bound->tag <= TypeTag::TY_PTR) {
         return true;
       }
+      return false;
 
     case TraitTags::CALLABLE:
       i.bound = FindLeader(i.bound);
@@ -124,6 +135,7 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
         // Always convert pointers, no questions asked
         return true;
       }
+      return false;
 
     case TraitTags::HAS_FIELD:
       i.bound = FindLeader(i.bound);
@@ -170,6 +182,10 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
         errors_.push_back(i);
         return true;
       }
+
+    case TraitTags::USER_DEFINED:
+    case TraitTags::NUM:
+      break;
   }
 
   fill_queue_.push_back(i);

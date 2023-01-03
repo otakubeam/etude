@@ -161,6 +161,10 @@ bool TemplateInstantiator::BuildSubstitution(Type* poly, Type* mono,
   poly = FindLeader(poly);
   mono = FindLeader(mono);
 
+  if (poly->tag != mono->tag && poly->tag != TypeTag::TY_PARAMETER) {
+    return false;
+  }
+
   switch (poly->tag) {
     case TypeTag::TY_PTR:
       FMT_ASSERT(mono->tag == TypeTag::TY_PTR, "Mismatch");
@@ -234,6 +238,8 @@ bool TemplateInstantiator::BuildSubstitution(Type* poly, Type* mono,
     default:
       break;
   }
+
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////
