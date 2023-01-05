@@ -36,12 +36,12 @@ struct Context {
 
   void Print();
 
-  Context* Find(std::string_view name);
+  Context* FindLayer(std::string_view name);
 
-  Symbol* RetrieveSymbol(std::string_view name);
+  Symbol* RetrieveSymbol(std::string_view name, bool nothrow = false);
 
   Symbol* FindLocalSymbol(std::string_view name);
-  Symbol* FindFromExported(std::string_view name);
+  Symbol* FindFromExported(std::string_view name, bool nothrow);
 
   Symbol* RetrieveFromChild(std::string_view name);
 

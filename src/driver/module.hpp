@@ -1,6 +1,7 @@
 #pragma once
 
 #include <types/constraints/generate/algorithm_w.hpp>
+#include <types/constraints/expand/expand.hpp>
 #include <types/instantiate/instantiator.hpp>
 
 #include <ast/elaboration/mark_intrinsics.hpp>
@@ -27,8 +28,14 @@ class Module {
 
   void BuildContext(CompilationDriver* driver) {
     global_context.driver = driver;
+
     ast::scope::ContextBuilder ctx_builder{global_context};
-    for (auto item : items_) item->Accept(&ctx_builder);
+    types::constraints::ExpandTypeVariables expand;
+
+    for (auto item : items_) {
+      item->Accept(&ctx_builder);
+      item->Accept(&expand);
+    }
   }
 
   void MarkIntrinsics() {

@@ -39,9 +39,16 @@ std::string FormatApp(Type& type) {
   std::string result;
   auto insert = std::back_inserter(result);
 
-  fmt::format_to(insert, "{}( ", type.as_tyapp.name.GetName());
+  auto& tyapp = type.as_tyapp;
 
-  for (auto& a : type.as_tyapp.param_pack) {
+  if (tyapp.param_pack.empty()) {
+    fmt::format_to(insert, "{}", tyapp.name.GetName());
+    return result;
+  }
+
+  fmt::format_to(insert, "{}( ", tyapp.name.GetName());
+
+  for (auto& a : tyapp.param_pack) {
     fmt::format_to(insert, "{}, ", FormatType(*a));
   }
 
@@ -205,6 +212,12 @@ std::string FormatConstraints(Type& type) {
 }
 
 std::string FormatType(Type& type) {
+  if (auto clean = true) {
+    auto& leader = *FindLeader(&type);
+    return fmt::format("{}{}", FormatConstraints(leader),
+                       FormatTypeInner(leader));
+  }
+
   if (FindLeader(&type) == &type) {
     return fmt::format("{}{}", FormatConstraints(type), FormatTypeInner(type));
   }

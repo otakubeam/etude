@@ -12,11 +12,11 @@ export {
     };
 
 
-    of *List(_) -> Maybe(_)
+    of *List(a) -> Maybe(a)
     fun last_item list;
 
 
-    of *List(_) -> _ -> ()
+    of *List(a) -> _ -> ()
     fun appendl list item;
 
 
@@ -24,7 +24,7 @@ export {
     fun print_list list;
 
 
-    of Maybe(_) -> List(_)
+    of Maybe(a) -> List(a)
     fun new_list item;
 
 

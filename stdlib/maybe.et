@@ -8,7 +8,7 @@ export {
     };
 
 
-    of Maybe(Maybe(_)) -> Maybe(_) 
+    of Maybe(Maybe(a)) -> Maybe(a) 
     fun flatten mbmb;
 
 

@@ -16,20 +16,20 @@ void ScopeLayer::InsertSymbol(Symbol symbol) {
 
 //////////////////////////////////////////////////////////////////////
 
-Context* Context::Find(std::string_view name) {
+Context* Context::FindLayer(std::string_view name) {
   if (bindings.symbol_map.contains(name)) {
     return this;
   }
-  return parent == nullptr ? nullptr : parent->Find(name);
+  return parent == nullptr ? nullptr : parent->FindLayer(name);
 }
 
 //////////////////////////////////////////////////////////////////////
 
-Symbol* Context::RetrieveSymbol(std::string_view name) {
+Symbol* Context::RetrieveSymbol(std::string_view name, bool nothrow) {
   if (auto f = FindLocalSymbol(name)) {
     return f;
   }
-  return FindFromExported(name);
+  return FindFromExported(name, nothrow);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -43,15 +43,19 @@ Symbol* Context::FindLocalSymbol(std::string_view name) {
 
 //////////////////////////////////////////////////////////////////////
 
-Symbol* Context::FindFromExported(std::string_view name) {
+Symbol* Context::FindFromExported(std::string_view name, bool nothrow = false) {
   if (auto mod = driver->GetModuleOf(name)) {
     if (auto sym = mod->GetExportedSymbol(name)) {
       return sym;
     }
   }
 
-  Print();
-  throw std::runtime_error{fmt::format("No such symbol {}\n", name)};
+  if (nothrow) {
+    return nullptr;
+  } else {
+    Print();
+    throw std::runtime_error{fmt::format("No such symbol {}\n", name)};
+  }
 }
 
 //////////////////////////////////////////////////////////////////////

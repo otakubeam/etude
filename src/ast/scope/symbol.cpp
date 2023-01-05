@@ -10,6 +10,7 @@ types::Type* Symbol::GetType() {
     case SymbolType::FUN:
       return types::FindLeader(as_fn_sym.type);
     case SymbolType::TYPE:
+    case SymbolType::GENERIC:
       return types::FindLeader(as_type.type);
     case SymbolType::STATIC:
     case SymbolType::TRAIT:

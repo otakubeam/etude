@@ -262,7 +262,6 @@ class IntrinsicCall : public FnCallExpression {
 class CompoundInitializerExpr : public Expression {
  public:
   struct Member {
-    // In this order!
     std::string_view field;
     Expression* init;
   };

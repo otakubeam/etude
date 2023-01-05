@@ -5,7 +5,7 @@
 #include <ast/patterns.hpp>
 #include <lex/token.hpp>
 
-namespace types::check {
+namespace types::constraints {
 
 //////////////////////////////////////////////////////////////////////
 
@@ -13,16 +13,19 @@ void DefineGenerics(Type* ty) {
   if (ty->tag == TypeTag::TY_APP) {
     auto name = ty->as_tyapp.name;
 
-    if (auto symbol = ty->typing_context_->FindLocalSymbol(name)) {
+    if (auto symbol = ty->typing_context_->RetrieveSymbol(name, true)) {
       if (symbol->sym_type == ast::scope::SymbolType::GENERIC) {
+        fmt::print(stderr, "Using generic {}\n", name.GetName());
         ty->leader = symbol->as_type.type;
       }
 
     } else {
+      fmt::print(stderr, "Defining generic {}\n", name.GetName());
+      ty->leader = MakeTypeVar(ty->typing_context_);
       ty->typing_context_->bindings.InsertSymbol({
           .sym_type = ast::scope::SymbolType::GENERIC,
           .name = name,
-          .as_type = {MakeTypeVar()},
+          .as_type = {ty->leader},
       });
     }
   }
@@ -31,6 +34,7 @@ void DefineGenerics(Type* ty) {
 //////////////////////////////////////////////////////////////////////
 
 void Traverse(Type* ty) {
+  ty = FindLeader(ty);
   DefineGenerics(ty);
 
   switch (ty->tag) {
@@ -100,8 +104,13 @@ void ExpandTypeVariables::VisitVarDecl(VarDeclStatement* node) {
 //////////////////////////////////////////////////////////////////////
 
 void ExpandTypeVariables::VisitFunDecl(FunDeclStatement* node) {
-  Traverse(node->type_);
-  node->body_->Accept(this);
+  if (node->type_) {
+    Traverse(node->type_);
+  }
+
+  if (node->body_) {
+    node->body_->Accept(this);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -114,16 +123,10 @@ void ExpandTypeVariables::VisitTraitDecl(TraitDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitBindingPat(BindingPattern*) {
-}
-
-void ExpandTypeVariables::VisitDiscardingPat(DiscardingPattern*) {
-}
-
-void ExpandTypeVariables::VisitLiteralPat(LiteralPattern*) {
-}
-
-void ExpandTypeVariables::VisitVariantPat(VariantPattern*) {
+void ExpandTypeVariables::VisitImplDecl(ImplDeclaration* node) {
+  for (auto decl : node->trait_methods_) {
+    decl->Accept(this);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -205,4 +208,4 @@ void ExpandTypeVariables::VisitTypecast(TypecastExpression* node) {
   node->expr_->Accept(this);
 }
 
-}  // namespace types::check
+}  // namespace types::constraints

@@ -10,15 +10,15 @@ export {
     };
 
 
-    of *Vec(_) -> Span(_)
+    of *Vec(a) -> Span(a)
     fun make_span from_vec;
 
 
-    of Span(_) -> Maybe(_)
+    of Span(a) -> Maybe(a)
     fun peek_first span;
 
 
-    of *Span(_) -> Unit
+    of *Span(a) -> ()
     fun eat_first span;
 
 }

@@ -10,23 +10,23 @@ export {
     };
 
 
-    of *Vec(_) -> _ -> ()
+    of *Vec(a) -> a -> ()
     fun append vector value;
     # Appends the value to the end of a vector
 
 
-    of _ -> Int -> *Vec(_)
+    of a -> Int -> *Vec(a)
     fun make_vec initial_value intial_size;
     # Returns a pointer to the heap-allocated vector
     # with the first size elements of init_val
 
 
-    of *Vec(_) -> ()
+    of *Vec(a) -> ()
     fun print_vec vector;
     # Prints the fields and contents of a vector
 
 
-    of *Vec(_) -> Int -> _
+    of *Vec(b) -> Int -> b
     fun at vector index;
     # Bounds-checked index access
 

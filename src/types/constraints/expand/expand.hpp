@@ -3,14 +3,14 @@
 #include <types/constraints/trait.hpp>
 #include <types/type.hpp>
 
-#include <ast/visitors/visitor.hpp>
+#include <ast/visitors/abort_visitor.hpp>
 #include <ast/scope/context.hpp>
 
 #include <queue>
 
-namespace types::check {
+namespace types::constraints {
 
-class ExpandTypeVariables : public Visitor {
+class ExpandTypeVariables : public AbortVisitor {
  public:
   ExpandTypeVariables() {
   }
@@ -20,15 +20,16 @@ class ExpandTypeVariables : public Visitor {
   void VisitAssignment(AssignmentStatement* node) override;
   void VisitExprStatement(ExprStatement* node) override;
 
-  void VisitTypeDecl(TypeDeclStatement* node) override;
   void VisitVarDecl(VarDeclStatement* node) override;
   void VisitFunDecl(FunDeclStatement* node) override;
+  void VisitTypeDecl(TypeDeclStatement* node) override;
   void VisitTraitDecl(TraitDeclaration* node) override;
+  void VisitImplDecl(ImplDeclaration* node) override;
 
-  void VisitBindingPat(BindingPattern* node) override;
-  void VisitDiscardingPat(DiscardingPattern* node) override;
-  void VisitLiteralPat(LiteralPattern* node) override;
-  void VisitVariantPat(VariantPattern* node) override;
+  void VisitBindingPat(BindingPattern*) override{};
+  void VisitLiteralPat(LiteralPattern*) override{};
+  void VisitVariantPat(VariantPattern*) override{};
+  void VisitDiscardingPat(DiscardingPattern*) override{};
 
   void VisitComparison(ComparisonExpression* node) override;
   void VisitBinary(BinaryExpression* node) override;
@@ -48,4 +49,4 @@ class ExpandTypeVariables : public Visitor {
   void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
 };
 
-}  // namespace types::check
+}  // namespace types::constraints

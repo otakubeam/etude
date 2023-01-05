@@ -402,14 +402,14 @@ void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
 //////////////////////////////////////////////////////////////////////
 
 void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
-  auto e = Eval(node->struct_expression_);
+  node->type_ = MakeTypeVar(node->layer_);
+  auto str = Eval(node->struct_expression_);
 
-  e = FindLeader(e);
   auto loc = node->GetLocation();
-  auto trait = MakeHasFieldTrait(e, node->field_name_, node->type_, loc);
+  auto trait = MakeHasFieldTrait(str, node->field_name_, node->type_, loc);
   work_queue_.push_back(std::move(trait));
 
-  return_value = node->type_ = MakeTypeVar();
+  return_value = node->type_;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -480,5 +480,3 @@ void AlgorithmW::VisitTypecast(TypecastExpression* node) {
 //////////////////////////////////////////////////////////////////////
 
 }  // namespace types::constraints::generate
-
-// namespace types::constraints::generate

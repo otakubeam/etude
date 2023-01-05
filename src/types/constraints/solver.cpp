@@ -1,5 +1,5 @@
 #include <types/constraints/solver.hpp>
-
+#include <types/constraints/expand/expand.hpp>
 #include <types/constraints/generate/algorithm_w.hpp>
 
 namespace types::constraints {
@@ -19,9 +19,8 @@ void ConstraintSolver::CollectAndSolve(SortedFuns& definitions) {
 
 void ConstraintSolver::CollectAndSolve() {
   generate::AlgorithmW generator(work_queue_, *this);
-
-  while (binding_groups_.size()) {
-    auto group = binding_groups_.back();
+  
+  for (auto& group : binding_groups_) {
 
     for (auto def : group) {
       def->Accept(&generator);
@@ -37,9 +36,9 @@ void ConstraintSolver::CollectAndSolve() {
       PrintQueue();
       throw std::runtime_error{"Residual constraints remain!"};
     }
-
-    binding_groups_.pop_back();
   }
+
+  binding_groups_.clear();
 }
 
 void ConstraintSolver::ConstrainGenerics() {
@@ -59,6 +58,8 @@ void ConstraintSolver::ConstrainGenerics() {
 void ConstraintSolver::GeneralizeBindingGroup(BindingGroup& group) {
   for (auto def : group) {
     Generalize(def->type_);
+    fmt::print(stderr, "[[Debug]] {} generalized type {}\n", def->GetName(),
+               def->type_->Format());
   }
 }
 
