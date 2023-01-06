@@ -12,8 +12,18 @@ void ConstraintSolver::CollectAndSolve(SortedFuns& definitions) {
   for (auto def : definitions) {
     if (auto fun = def->as<FunDeclStatement>()) {
       binding_groups_.push_back({fun});
-    } else if (auto impl = def->as<ImplDeclaration>()) {
+      continue;
+    }
+
+    if (auto impl = def->as<ImplDeclaration>()) {
       for (auto method : impl->trait_methods_) {
+        binding_groups_.push_back({method});
+      }
+      continue;
+    }
+
+    if (auto trait = def->as<TraitDeclaration>()) {
+      for (auto method : trait->methods_) {
         binding_groups_.push_back({method});
       }
     }

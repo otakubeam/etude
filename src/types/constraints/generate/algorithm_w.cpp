@@ -58,7 +58,14 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
   auto ty = MakeFunType(std::move(param_pack), MakeTypeVar());
   SetTyContext(ty, node->layer_);
 
-  PushEqual(node->GetLocation(), ty, symbol->GetType());
+  if (symbol->sym_type == ast::scope::SymbolType::TRAIT_METHOD) {
+    KnownParams map = {};
+    auto method_ty = Instantinate(symbol->GetType(), map);
+
+    PushEqual(node->GetLocation(), ty, method_ty);
+  } else {
+    PushEqual(node->GetLocation(), ty, symbol->GetType());
+  }
 
   PushEqual(node->GetLocation(), Eval(node->body_), ty->as_fun.result_type);
 
