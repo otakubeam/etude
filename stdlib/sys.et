@@ -1,6 +1,16 @@
 
 export {
 
+    type C_FILE = struct {
+    };
+
+    type C_FD_SET = struct {
+    };
+
+    type C_TIMEVAL = struct {
+        tv_sec: Int,
+        tv_usec: Int,
+    };
 
     of Int -> String -> Int -> Int
     @nomangle fun write fd buf count;
@@ -20,9 +30,6 @@ export {
     of Int -> *Int -> Int -> Int
     @nomangle fun waitpid child_pid wstatus flags;
 
-    type C_FILE = struct {
-    };
-
     of Int -> String -> *C_FILE
     @nomangle fun fdopen fd mode;
 
@@ -32,18 +39,13 @@ export {
     of *C_FILE -> String -> _ -> Int
     @nomangle fun fprintf stream format;
 
+    of String -> String -> _ -> Int
+    @nomangle fun sprintf buf format;
+
     of *C_FILE -> Int
     @nomangle fun fflush stream;
 
-    type C_FD_SET = struct {
-    };
-
-    type C_timeval = struct {
-        tv_sec: Int,
-        tv_usec: Int,
-    };
-
-    of Int -> *C_FD_SET -> *C_FD_SET -> *C_FD_SET -> *C_timeval
+    of Int -> *C_FD_SET -> *C_FD_SET -> *C_FD_SET -> *C_TIMEVAL
     -> Int
     @nomangle
     fun select nfds readfds writefds exceptfds timeout;
