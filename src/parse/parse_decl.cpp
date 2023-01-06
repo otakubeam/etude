@@ -53,6 +53,11 @@ auto Parser::ParseModule() -> Module {
       auto proto = ParsePrototype();
       exported.push_back(proto->GetName());
       result.items_.push_back(proto);
+      if (auto trait = proto->as<TraitDeclaration>()) {
+        for (auto method : trait->methods_) {
+          exported.push_back(method->GetName());
+        }
+      }
     }
 
     return exported;
@@ -99,6 +104,10 @@ Attribute* Parser::ParseAttributes() {
 Declaration* Parser::ParsePrototype(bool) {
   if (auto type_declaration = ParseTypeDeclStatement()) {
     return type_declaration;
+  }
+
+  if (auto trait_declaration = ParseTraitDeclaration()) {
+    return trait_declaration;
   }
 
   Consume(lex::TokenType::OF);

@@ -1,0 +1,37 @@
+
+str;
+vec;
+show;
+
+export {
+
+    of Int -> *String -> Int
+    @nomangle fun main argc argv;
+
+}
+
+
+fun main argc argv = {
+    print("%s\n", show(mk_str("Str overload")));
+
+    print("%s\n", show("String overload"));
+
+    of Vec(Char) var v = { .data = "Vec(Char) overload", 
+                           .size = 18, 
+                           .capacity = 5 };
+
+    print("%s\n", show(v));
+
+    0
+};
+
+
+
+
+
+
+
+
+
+
+

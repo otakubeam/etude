@@ -1,0 +1,35 @@
+
+export {
+
+    trait Show {
+        of a -> String fun show self;
+    }
+
+}
+
+
+impl Show for String {
+
+    fun show self = self;
+
+}
+
+
+impl Show for Vec(Char) {
+
+    of Vec(Char) -> _
+    fun show self = {
+        of Str var data = { .data = self.data,
+                            .size = self.size };
+        show(data)
+    };
+}
+
+
+impl Show for Str {
+
+    fun show self = to_zero_terminated(self);
+
+}
+
+
