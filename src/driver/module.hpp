@@ -34,6 +34,9 @@ class Module {
 
     for (auto item : items_) {
       item->Accept(&ctx_builder);
+    }
+
+    for (auto item : items_) {
       item->Accept(&expand);
     }
   }
