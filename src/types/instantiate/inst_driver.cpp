@@ -14,8 +14,13 @@ FunDeclStatement* TemplateInstantiator::FindTraitMethod(
   for (auto& impl : symbol->as_fn_sym.trait->impls_) {
     for (auto& def : impl->trait_methods_) {
       if (def->GetName() == symbol->name) {
+        fmt::print(stderr, "Searching method {} for {}\n", symbol->name,
+                   impl->for_type_->Format());
         current_substitution_.clear();
         if (BuildSubstitution(def->type_, mono, current_substitution_)) {
+          fmt::print(stderr, "Substitution suffices\n");
+          fmt::print(stderr, "Type: {}\n", def->type_->Format());
+
           return def;
         }
       }

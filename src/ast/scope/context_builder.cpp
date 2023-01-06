@@ -166,13 +166,6 @@ void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
   current_context_ =
       current_context_->MakeNewScopeLayer(node->GetLocation(), "Trait scope");
 
-  current_context_->bindings.InsertSymbol(Symbol{
-      .sym_type = SymbolType::TYPE,
-      .name = "Self",
-      .as_type = {.type = types::MakeTypeVar(current_context_)},
-      .declared_at = node->GetLocation(),
-  });
-
   for (auto decl : node->methods_) {
     decl->Accept(this);
   }
@@ -193,10 +186,15 @@ void ContextBuilder::VisitImplDecl(ImplDeclaration* node) {
   current_context_ =
       current_context_->MakeNewScopeLayer(node->GetLocation(), "Impl scope");
 
-  current_context_->parent->bindings.InsertSymbol(Symbol{
+  auto ty = new types::Type{.tag = types::TypeTag::TY_CONS,
+                            .as_tycons = types::TyConsType{
+                                .body = node->for_type_,
+                            }};
+
+  current_context_->bindings.InsertSymbol(Symbol{
       .sym_type = SymbolType::TYPE,
       .name = "Self",
-      .as_type = {.type = node->for_type_},
+      .as_type = {.type = ty},
       .declared_at = node->GetLocation(),
   });
 

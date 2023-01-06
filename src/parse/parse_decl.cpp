@@ -216,7 +216,13 @@ ImplDeclaration* Parser::ParseImplDeclaration() {
 
   std::vector<FunDeclStatement*> definitions;
   while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
-    definitions.push_back(ParseFunDeclStatement(nullptr));
+    types::Type* hint = nullptr;
+
+    if (Matches(lex::TokenType::OF)) {
+      hint = ParseFunctionType();
+    }
+
+    definitions.push_back(ParseFunDeclStatement(hint));
   }
 
   return new ImplDeclaration(trait_name, for_type, std::move(type_params_),

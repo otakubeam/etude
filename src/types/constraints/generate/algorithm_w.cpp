@@ -63,6 +63,9 @@ void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
     auto method_ty = Instantinate(symbol->GetType(), map);
 
     PushEqual(node->GetLocation(), ty, method_ty);
+    if (node->type_) {
+      PushEqual(node->GetLocation(), ty, node->type_);
+    }
   } else {
     PushEqual(node->GetLocation(), ty, symbol->GetType());
   }
