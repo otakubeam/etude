@@ -59,9 +59,9 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
 
   bool BuildSubstitution(Type* poly, Type* mono, Substitiution& subs);
 
-  auto FindTraitMethod(auto symbol, Type* mono) -> FunDeclStatement*;
+  FunDeclStatement* FindTraitMethod(ast::scope::Symbol* symbol, Type* mono);
 
-  auto GetFunctionDef(auto symbol, Type* mono) -> FunDeclStatement*;
+  FunDeclStatement* GetFunctionDef(ast::scope::Symbol* symbol, Type* mono);
 
   bool TryFindInstantiation(FnCallExpression* i);
 

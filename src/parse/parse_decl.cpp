@@ -67,7 +67,9 @@ auto Parser::ParseModule() -> Module {
 
   while (!Matches(lex::TokenType::TOKEN_EOF)) {
     auto declaration = ParseDeclaration();
+
     result.items_.push_back(declaration);
+
     if (auto fun = declaration->as<FunDeclStatement>()) {
       if (fun->attributes && fun->attributes->FindAttr("test")) {
         result.tests_.push_back(fun);
@@ -132,7 +134,9 @@ FunDeclStatement* Parser::ParseFunPrototype(types::Type* hint) {
 FunDeclStatement* Parser::ParseFunDeclarationStandalone() {
   Consume(lex::TokenType::OF);
   auto hint = ParseFunctionType();
-  return ParseFunPrototype(hint);
+  auto result = ParseFunPrototype(hint);
+  Consume(lex::TokenType::SEMICOLON);
+  return result;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -149,6 +153,14 @@ Declaration* Parser::ParseDeclaration() {
 
   if (auto var_declaration = ParseVarDeclStatement(hint)) {
     return var_declaration;
+  }
+
+  if (auto trait_declaration = ParseTraitDeclaration()) {
+    return trait_declaration;
+  }
+
+  if (auto impl_declaration = ParseImplDeclaration()) {
+    return impl_declaration;
   }
 
   if (auto fun_declaration = ParseFunDeclStatement(hint)) {
@@ -198,6 +210,8 @@ ImplDeclaration* Parser::ParseImplDeclaration() {
     type_params_.push_back(ParseType());
   }
 
+  auto for_type = ParseType();
+
   Consume(lex::TokenType::LEFT_CBRACE);
 
   std::vector<FunDeclStatement*> definitions;
@@ -205,7 +219,7 @@ ImplDeclaration* Parser::ParseImplDeclaration() {
     definitions.push_back(ParseFunDeclStatement(nullptr));
   }
 
-  return new ImplDeclaration(trait_name, std::move(type_params_),
+  return new ImplDeclaration(trait_name, for_type, std::move(type_params_),
                              std::move(definitions));
 }
 
@@ -226,7 +240,7 @@ TraitDeclaration* Parser::ParseTraitDeclaration() {
   std::vector<FunDeclStatement*> trait_methods;
 
   while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
-    while (auto method = ParseFunDeclarationStandalone()) {
+    if (auto method = ParseFunDeclarationStandalone()) {
       trait_methods.push_back(method);
     }
   }

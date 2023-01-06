@@ -109,8 +109,13 @@ void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
 
 ////////////////////////////////////////////////////////////////////
 
+bool IsFunctional(ast::scope::Symbol* symbol) {
+  return symbol->sym_type == ast::scope::SymbolType::FUN ||
+         symbol->sym_type == ast::scope::SymbolType::TRAIT_METHOD;
+}
+
 char GlobalFun(ast::scope::Symbol* symbol) {
-  return symbol->sym_type == ast::scope::SymbolType::FUN ? '$' : ' ';
+  return IsFunctional(symbol) ? '$' : ' ';
 }
 
 void IrEmitter::VisitFnCall(FnCallExpression* node) {
@@ -134,7 +139,7 @@ void IrEmitter::VisitFnCall(FnCallExpression* node) {
   auto mangled = std::string(node->GetFunctionName());
   auto symbol = node->layer_->RetrieveSymbol(node->GetFunctionName());
 
-  if (symbol->sym_type != ast::scope::SymbolType::FUN) {
+  if (!IsFunctional(symbol)) {
     mangled = named_values_[mangled].Emit();
   } else if (!IsNomangle(symbol->as_fn_sym.attrs) &&
              !IsTest(symbol->as_fn_sym.attrs)) {

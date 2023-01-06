@@ -9,9 +9,9 @@ namespace types::instantiate {
 
 //////////////////////////////////////////////////////////////////////
 
-auto TemplateInstantiator::FindTraitMethod(auto symbol, Type* mono)
-    -> FunDeclStatement* {
-  for (auto& impl : symbol->as_trait.decl->impls_) {
+FunDeclStatement* TemplateInstantiator::FindTraitMethod(
+    ast::scope::Symbol* symbol, Type* mono) {
+  for (auto& impl : symbol->as_fn_sym.trait->impls_) {
     for (auto& def : impl->trait_methods_) {
       if (def->GetName() == symbol->name) {
         current_substitution_.clear();
@@ -27,8 +27,8 @@ auto TemplateInstantiator::FindTraitMethod(auto symbol, Type* mono)
 
 //////////////////////////////////////////////////////////////////////
 
-auto TemplateInstantiator::GetFunctionDef(auto symbol, Type* mono)
-    -> FunDeclStatement* {
+FunDeclStatement* TemplateInstantiator::GetFunctionDef(
+    ast::scope::Symbol* symbol, Type* mono) {
   auto poly = symbol->GetType();
   current_substitution_.clear();
   BuildSubstitution(poly, mono, current_substitution_);

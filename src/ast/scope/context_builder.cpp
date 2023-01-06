@@ -153,7 +153,12 @@ void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
     current_context_->bindings.InsertSymbol({
         .sym_type = SymbolType::TRAIT_METHOD,
         .name = decl->GetName(),
-        .as_fn_sym = {.def = decl},
+        .as_fn_sym =
+            {
+                .type = decl->type_,
+                .def = decl,
+                .trait = node,
+            },
         .declared_at = decl->GetLocation(),
     });
   }
@@ -180,6 +185,8 @@ void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
 void ContextBuilder::VisitImplDecl(ImplDeclaration* node) {
   auto trait = current_context_->RetrieveSymbol(node->trait_name_);
   auto& impls = trait->as_trait.decl->impls_;
+
+  types::SetTyContext(node->for_type_, current_context_);
 
   impls.push_back(node);
 

@@ -71,5 +71,6 @@ Trait MakeHasFieldTrait(Type* bound, std::string_view name, Type* field_type,
                         lex::Location loc);
 
 std::string FormatTrait(Trait& trait);
+std::string FormatTraitNoType(Trait& trait);
 
 }  // namespace types

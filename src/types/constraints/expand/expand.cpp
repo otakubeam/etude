@@ -20,7 +20,8 @@ void DefineGenerics(Type* ty) {
       }
 
     } else {
-      fmt::print(stderr, "Defining generic {}\n", name.GetName());
+      fmt::print(stderr, "Defining generic {} at {}\n", name.GetName(),
+                 ty->typing_context_->location.Format());
       ty->leader = MakeTypeVar(ty->typing_context_);
       ty->typing_context_->bindings.InsertSymbol({
           .sym_type = ast::scope::SymbolType::GENERIC,

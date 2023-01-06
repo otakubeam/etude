@@ -8,6 +8,7 @@ types::Type* Symbol::GetType() {
     case SymbolType::VAR:
       return types::FindLeader(as_varbind.type);
     case SymbolType::FUN:
+    case SymbolType::TRAIT_METHOD:
       return types::FindLeader(as_fn_sym.type);
     case SymbolType::TYPE:
     case SymbolType::GENERIC:

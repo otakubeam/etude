@@ -55,9 +55,11 @@ class TraitDeclaration : public Declaration {
 
 class ImplDeclaration : public Declaration {
  public:
-  ImplDeclaration(lex::Token name, std::vector<types::Type*> params,
+  ImplDeclaration(lex::Token name, types::Type* for_type,
+                  std::vector<types::Type*> params,
                   std::vector<FunDeclStatement*> methods)
       : trait_name_{name},
+        for_type_{for_type},
         params_{std::move(params)},
         trait_methods_{std::move(methods)} {
   }

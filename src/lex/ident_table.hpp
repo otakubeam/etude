@@ -38,9 +38,11 @@ class IdentTable {
     map_.insert({"export", TokenType::EXPORT});
     map_.insert({"extern", TokenType::EXTERN});
     map_.insert({"match", TokenType::MATCH});
+    map_.insert({"trait", TokenType::TRAIT});
     map_.insert({"yield", TokenType::YIELD});
     map_.insert({"false", TokenType::FALSE});
     map_.insert({"then", TokenType::THEN});
+    map_.insert({"impl", TokenType::IMPL});
     map_.insert({"else", TokenType::ELSE});
     map_.insert({"true", TokenType::TRUE});
     map_.insert({"unit", TokenType::UNIT});

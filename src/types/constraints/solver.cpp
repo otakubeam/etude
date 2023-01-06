@@ -12,6 +12,10 @@ void ConstraintSolver::CollectAndSolve(SortedFuns& definitions) {
   for (auto def : definitions) {
     if (auto fun = def->as<FunDeclStatement>()) {
       binding_groups_.push_back({fun});
+    } else if (auto impl = def->as<ImplDeclaration>()) {
+      for (auto method : impl->trait_methods_) {
+        binding_groups_.push_back({method});
+      }
     }
   }
   CollectAndSolve();
@@ -19,9 +23,8 @@ void ConstraintSolver::CollectAndSolve(SortedFuns& definitions) {
 
 void ConstraintSolver::CollectAndSolve() {
   generate::AlgorithmW generator(work_queue_, *this);
-  
-  for (auto& group : binding_groups_) {
 
+  for (auto& group : binding_groups_) {
     for (auto def : group) {
       def->Accept(&generator);
     }
@@ -88,6 +91,7 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
       i.bound = FindLeader(i.bound);
       if (i.bound->tag <= TypeTag::TY_PTR) {
         return true;
+        fill_queue_.push_back(i);
       }
       return false;
 

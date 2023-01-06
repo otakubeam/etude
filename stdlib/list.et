@@ -16,7 +16,7 @@ export {
     fun last_item list;
 
 
-    of *List(a) -> _ -> ()
+    of *List(a) -> a -> ()
     fun appendl list item;
 
 

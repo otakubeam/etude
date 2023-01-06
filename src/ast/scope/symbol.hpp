@@ -36,6 +36,7 @@ struct FnSymbol {
   size_t argnum = 0;
   types::Type* type = nullptr;
   FunDeclStatement* def = nullptr;
+  TraitDeclaration* trait = nullptr;
   Attribute* attrs = nullptr;
 };
 

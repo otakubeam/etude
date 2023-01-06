@@ -206,7 +206,7 @@ std::string FormatConstraints(Type& type) {
   std::string output;
   auto ins = std::back_inserter(output);
   for (auto& cons : type.as_parameter.constraints) {
-    fmt::format_to(ins, "{}::", (int)cons.tag);
+    fmt::format_to(ins, "{}::", FormatTraitNoType(cons));
   }
   return output;
 }
