@@ -1,5 +1,7 @@
 #pragma once
 
+#include <driver/driver_errors.hpp>
+
 #include <types/constraints/generate/algorithm_w.hpp>
 #include <types/instantiate/instantiator.hpp>
 
@@ -32,10 +34,12 @@ class CompilationDriver {
     std::ifstream file(module_name);
 
     if (!file.is_open()) {
-      auto path = std::getenv("ETUDE_STDLIB");
-      fmt::print(stderr, "{}\n", std::string{path});
-      std::filesystem::path stdlib{path};
-      file = std::ifstream(stdlib / module_name);
+      if (auto path = std::getenv("ETUDE_STDLIB")) {
+        std::filesystem::path stdlib{path};
+        file = std::ifstream(stdlib / module_name);
+      } else {
+        throw NoStdlibError(name);
+      }
     }
 
     if (!file.is_open()) {
@@ -51,10 +55,12 @@ class CompilationDriver {
 
   auto ParseOneModule(std::string_view name) -> std::pair<Module, lex::Lexer> {
     auto source = OpenFile(name);
-    auto l = lex::Lexer{source};
-    auto mod = Parser{l}.ParseModule();
+    auto lexer = lex::Lexer{source};
+
+    auto mod = Parser{lexer}.ParseModule();
     mod.SetName(name);
-    return {std::move(mod), std::move(l)};
+
+    return {std::move(mod), std::move(lexer)};
   }
 
   auto ParseAllModules() {

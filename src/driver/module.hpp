@@ -90,7 +90,7 @@ class Module {
   // Actual code item from this module
   std::vector<Declaration*> items_;
 
-  // Functions that are marked #[test]
+  // Functions that are marked @test
   std::vector<FunDeclStatement*> tests_;
 };
 

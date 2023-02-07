@@ -79,7 +79,6 @@ namespace lex {
 
 ////////////////////////////////////////////////////////////////
 
-// There are just several places where this is used
 const char* FormatTokenType(TokenType type) {
   switch (type) {
     AST_NODE_LIST(DEFINE_TYPE_STRING)
