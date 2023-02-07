@@ -16,7 +16,16 @@ export {
     fun replicate dst val count;
     # Copies `val` `count` times to the `dst`
 
+    of *a -> *a -> ()
+    fun swap;
+
 }
+
+fun swap a b = {
+    var temp = *a;
+    *a = *b;
+    *b = temp;
+};
 
 fun raw_bytes mem size = {
     print("Data at memory location 0x%zX:\n", mem);
