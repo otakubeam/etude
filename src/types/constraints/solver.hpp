@@ -5,14 +5,12 @@
 
 #include <ast/declarations.hpp>
 
-#include <boost/container/small_vector.hpp>
-
 #include <utility>
 #include <queue>
 
 namespace types::constraints {
 
-using BindingGroup = boost::container::small_vector<FunDeclStatement*, 3>;
+using BindingGroup = std::vector<FunDeclStatement*>;
 
 class ConstraintSolver {
  public:
