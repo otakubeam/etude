@@ -47,7 +47,7 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
   });
 
   for (auto param : node->parameters_) {
-    current_context_->bindings.InsertSymbol({
+    current_context_->bindings.InsertSymbol(Symbol{
         .sym_type = SymbolType::TYPE,
         .name = param.GetName(),
         .as_type = {.type = &types::builtin_kind},  // Why?

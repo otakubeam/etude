@@ -27,6 +27,7 @@ void DefineGenerics(Type* ty) {
           .sym_type = ast::scope::SymbolType::GENERIC,
           .name = name,
           .as_type = {ty->leader},
+          .declared_at = ty->typing_context_->location,
       });
     }
   }

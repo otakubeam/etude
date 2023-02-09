@@ -211,13 +211,17 @@ std::string FormatConstraints(Type& type) {
   return output;
 }
 
-std::string FormatType(Type& type) {
-  if (auto clean = true) {
-    auto& leader = *FindLeader(&type);
-    return fmt::format("{}{}", FormatConstraints(leader),
-                       FormatTypeInner(leader));
-  }
+//////////////////////////////////////////////////////////////////////
 
+std::string FormatType(Type& type) {
+  auto& leader = *FindLeader(&type);
+  return fmt::format("{}{}", FormatConstraints(leader),
+                     FormatTypeInner(leader));
+}
+
+//////////////////////////////////////////////////////////////////////
+
+std::string FormatTypeDebug(Type& type) {
   if (FindLeader(&type) == &type) {
     return fmt::format("{}{}", FormatConstraints(type), FormatTypeInner(type));
   }

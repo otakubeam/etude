@@ -73,7 +73,7 @@ struct FunType {
 // This is like a function symbol
 
 struct TyConsType {
-  lex::Token name;
+  lex::Token name{};
   std::vector<lex::Token> param_pack{};
 
   Type* body = nullptr;
@@ -110,7 +110,6 @@ std::string Mangle(Type& type);
 
 struct Type {
   using Arena = std::deque<Type>;
-  inline static Arena type_store{};
 
   Type* leader = nullptr;  // For use in union find
 

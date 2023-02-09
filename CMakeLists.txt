@@ -14,7 +14,8 @@ add_compile_options(-Wall -Wextra -g -Og -fsanitize=undefined)
 # --------------------------------------------------------------------
 
 find_package(fmt REQUIRED)
-find_package(Catch2 2 REQUIRED)
+
+# find_package(Catch2 2 REQUIRED)
 
 # --------------------------------------------------------------------
 
