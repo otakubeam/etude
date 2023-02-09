@@ -25,7 +25,7 @@ imperfections eventually, if the god is willing. Until then, have fun!
 
 1. Look in the `examples/test` directory to get a feeling of the syntax
 2. Build the compiler:
-   - Dependencies: `catch2` and `fmt`.
+   - Dependencies: `fmt`, `qbe`.
    - Run `cmake` & `make`
 
      ``` sh
@@ -38,7 +38,7 @@ imperfections eventually, if the god is willing. Until then, have fun!
      The author does this:
      ```
      export ETUDE_STDLIB="$HOME/.cache/etude"
-     ln -s $ETUDE_STDLIB ./stdlib
+     ln -s $(realpath ./stdlib) $ETUDE_STDLIB
      ```
    - Run the tests (if they fail, try different commit)
      ``` sh
