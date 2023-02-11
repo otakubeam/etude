@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <getopt.h>
 
 void ParseOptions(CompilationDriver& driver, int argc, char** argv) {
   auto opt = '\0';
