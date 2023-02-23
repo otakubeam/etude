@@ -1,33 +1,32 @@
+str;
+vec;
+
+###############################################
 
 export {
 
     trait Show {
-        of a -> String 
+        of Self -> String 
         fun show self;
     }
 
 }
 
+###############################################
 
 impl Show for String {
-
     fun show self = self;
-
 }
 
-impl Ord for Vec(a) {
+###############################################
 
-    of Vec(a) -> Vec(a) -> Bool
-    fun less a b = if a[0] < b[0] then 
-                       true
-                   else if a[0] > b[0] then
-                       false
-                   else 
-
+impl Show for Str {
+    fun show self = to_zero_terminated(self);
 }
+
+###############################################
 
 impl Show for Vec(Char) {
-
     of Vec(Char) -> _
     fun show self = {
         of Str var data = { .data = self.data,
@@ -36,15 +35,5 @@ impl Show for Vec(Char) {
     };
 }
 
-
-impl Show for Str {
-
-    fun show self = to_zero_terminated(self);
-
-    std::string show (Str self) {
-      return to_zero_terminated(self);
-    }
-
-}
-
+###############################################
 

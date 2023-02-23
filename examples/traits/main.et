@@ -1,6 +1,5 @@
 
-str;
-vec;
+
 show;
 
 export {
