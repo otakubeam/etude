@@ -12,9 +12,54 @@ export {
     fun flatten mbmb;
 
 
+    of Maybe(a) -> (a -> Bool) -> Maybe(a)
+    fun filter mb cond;
+
+
+    of Maybe(a) -> (a -> b) -> Maybe(b)
+    fun map mb fn;
+
+
+    of Maybe(a) -> Bool fun is_some mb;
+    of Maybe(a) -> Bool fun is_none mb;
+
+
+    of Maybe(a) -> a
+    fun unwrap mb;
+
 }
 
 fun flatten mbmb = match mbmb {
                    | .some mb: mb
                    | otherwise: .none
                    };
+
+
+fun filter mb cond = match mb {
+    | .some a: if cond(a) then mb
+               else .none
+    | _: .none
+    };
+
+
+fun map mb fn = match mb {
+    | .some a: .some fn(a)
+    | .none: .none
+    };
+
+
+fun is_none mb = !is_some(mb);
+fun is_some mb = match mb {
+    | .some _: true
+    | .none: false
+    };
+    
+
+fun undef v = undef(v);
+
+
+fun unwrap mb = match mb {
+   | .some a: a
+   | .none: undef(assert(false))
+   };
+

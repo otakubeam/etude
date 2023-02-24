@@ -11,23 +11,21 @@ export {
     of String -> Str fun mk_str raw_string;
     # Wraps a raw byte sequence into a string
 
-
     of Str -> String fun to_zero_terminated span;
     # Copies the string and terminates it with '\0'
 
-
     of Str -> Int fun strlen str;
     # Returns the length of a string excluding the last byte '\0'
-
 
     of Str -> Int -> Str fun cut_prefix str skip;
     # Returns a substring of str without first `skip` bytes;
     # the final length is >= 0
 
     of *Str -> Unit fun print_str;
+    # Prints string to standart output
 
-    of Str -> Int -> Str
-    fun get_suffix str size;
+    of Str -> Int -> Str fun get_suffix str size;
+    # Cuts the first `size` bytes in a string
 
     of Str -> Int -> Str fun cut_suffix str shrink;
     # Returns a shortened substring, the final length is >= 0

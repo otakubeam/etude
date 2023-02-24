@@ -11,13 +11,13 @@ export {
     # Does what you think it does (but notice generics)
 
 
-
     of *a -> a -> Int -> ()
     fun replicate dst val count;
     # Copies `val` `count` times to the `dst`
 
     of *a -> *a -> ()
-    fun swap;
+    fun swap a b;
+    # Swaps data with copying
 
 }
 
