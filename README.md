@@ -1,11 +1,11 @@
 # The Etude Programming Language
 
+[Introductory presentation (ru)](https://docs.google.com/presentation/d/1-cX-We8JjWY1acmlQpa1fNFmzbg8XRDhK3XpFZlDmj0/edit?usp=sharing)
+
 ---
 
 Etude is lower-ish level programming language designed for educational
 purposes but with the aspirations of writing real-world software.
-
-Major features include HM-style global type inference.
 
 ---
 
@@ -15,11 +15,12 @@ imperfections eventually, if the god is willing. Until then, have fun!
 
 ## Hosting
 
-1. [Sourcehut](https://sr.ht/~orazov_ae/Etude/)
+1. [Github](https://github.com/otakubeam/etude/) ←  ⭐⭐⭐!
+2. [Sourcehut](https://sr.ht/~orazov_ae/Etude/)
    - [Tickets for the compiler](https://todo.sr.ht/~orazov_ae/etude-compiler)
    - [Mailing list](https://lists.sr.ht/~orazov_ae/public-inbox)
    - [Source code](https://git.sr.ht/~orazov_ae/etude/refs)
-2. [Other site](https://github.com/otakubeam/etude/)
+3. [Gitea with **syntax highlighing**](https://emptynessof.space/andrew/etude/src/branch/master) ← code *written in Étude*
 
 ## First steps
 
