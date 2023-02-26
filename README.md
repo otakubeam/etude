@@ -54,3 +54,6 @@ imperfections eventually, if the god is willing. Until then, have fun!
 Check out the `0.2.0` tag of the repository: it contains the bytecode compiler
 and interpreter as well as graphviz vizualizer.
 
+## Contributors
+
+- [Mark Ziganshin](https://github.com/loochek)
