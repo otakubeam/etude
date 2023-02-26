@@ -207,8 +207,8 @@ Expression* Parser::ParseComparison() {
 Expression* Parser::ParseBinary() {
   Expression* first = ParseUnary();
 
-  auto token = lexer_.Peek();
   while (Matches(lex::TokenType::PLUS) || Matches(lex::TokenType::MINUS)) {
+    auto token = lexer_.GetPreviousToken();
     auto second = ParseUnary();
     first = new BinaryExpression(first, token, second);
   }
