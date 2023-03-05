@@ -10,10 +10,11 @@ namespace lex {
 struct Location {
   size_t lineno = 0;
   size_t columnno = 0;
+  std::string_view filename;
 
   std::string Format() const {
-    return fmt::format("line = {}, column = {}",  //
-                       lineno + 1, columnno + 1);
+    return fmt::format("{}:line = {}, column = {}",  //
+                       filename, lineno + 1, columnno + 1);
   }
 };
 

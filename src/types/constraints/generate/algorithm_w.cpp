@@ -444,7 +444,7 @@ void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
 
 void AlgorithmW::VisitLiteral(LiteralExpression* node) {
   switch (node->token_.type) {
-    case lex::TokenType::NUMBER:
+    case lex::TokenType::INTEGER:
       return_value = &builtin_int;
       break;
 

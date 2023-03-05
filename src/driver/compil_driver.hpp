@@ -56,7 +56,7 @@ class CompilationDriver {
 
   auto ParseOneModule(std::string_view name) -> std::pair<Module, lex::Lexer> {
     auto source = OpenFile(name);
-    auto lexer = lex::Lexer{source};
+    auto lexer = lex::Lexer{name, source};
 
     auto mod = Parser{lexer}.ParseModule();
     mod.SetName(name);

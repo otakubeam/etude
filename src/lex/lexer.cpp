@@ -1,8 +1,10 @@
 #include <lex/lexer.hpp>
 
+#include <cstdlib>
+
 namespace lex {
 
-Lexer::Lexer(std::istream& source) : scanner_{source} {
+Lexer::Lexer(std::string_view filename, std::istream& source) : scanner_{filename, source} {
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -276,22 +278,51 @@ std::optional<Token> Lexer::MatchCharLiteral() {
 
 ////////////////////////////////////////////////////////////////////
 
-std::optional<Token> Lexer::MatchNumericLiteral() {
-  int result = 0, match_span = 0;
+std::size_t Lexer::MunchDigits() {
+    std::size_t match_span = 0;
 
   while (isdigit(scanner_.CurrentSymbol())) {
-    result *= 10;
-    result += scanner_.CurrentSymbol() - '0';
-
     scanner_.MoveRight();
     match_span += 1;
   }
 
-  if (match_span == 0) {
+  return match_span;
+}
+
+std::optional<Token> Lexer::MatchNumericLiteral() {
+  auto begin = scanner_.GetBufferPosition();
+
+  auto m1 = MunchDigits();
+
+  if (m1 == 0) {
     return std::nullopt;
   }
 
-  return Token{TokenType::NUMBER, scanner_.GetLocation(), {result}};
+  errno = 0;
+
+  if (scanner_.CurrentSymbol() == '.') {
+      scanner_.MoveRight();
+
+      MunchDigits();
+
+      double result = strtod(begin, nullptr);
+
+      if (errno) {
+          throw std::runtime_error{"Lex: error lexing double"};
+      }
+
+      return Token{TokenType::DOUBLE, scanner_.GetLocation(), {result}};
+
+  } else {
+
+      long long result = strtoll(begin, nullptr, 10);
+
+      if (errno) {
+          throw std::runtime_error{"Lex: error lexing integer"};
+      }
+
+      return Token{TokenType::INTEGER, scanner_.GetLocation(), {result}};
+  }
 }
 
 ////////////////////////////////////////////////////////////////////

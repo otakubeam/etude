@@ -8,7 +8,8 @@ namespace lex {
 
 // clang-format off
 #define AST_NODE_LIST(code) \
-  code(NUMBER)              \
+  code(INTEGER)              \
+  code(DOUBLE)              \
   code(CHAR)                \
   code(STRING)              \
   code(IDENTIFIER)          \

@@ -6,8 +6,8 @@
 #include <fmt/core.h>
 
 #include <string_view>
-#include <filesystem>
 #include <iostream>
+#include <sstream>
 #include <istream>
 #include <vector>
 #include <span>
@@ -18,28 +18,21 @@ namespace lex {
 
 class Scanner {
  public:
-  Scanner(std::istream& source) : source_{source} {
-    InitBuffer();
-    FetchNextSymbol();
-  }
+  Scanner(std::string_view filename, std::istream& source) {
+    location_.filename = filename;
 
-  void InitBuffer() {
-    constexpr size_t INITIAL_BUF_SIZE = 20000;
-    buffer_.reserve(INITIAL_BUF_SIZE);
+    std::stringstream ss;
+    ss << source.rdbuf();
+    buffer_ = ss.str();
   }
 
   void MoveRight() {
     switch (CurrentSymbol()) {
       case '\n':
-        location_.columnno = 0;
 
-        // Push the previous line to the vector
-        lines_.push_back(std::string_view{
-            PreviousLineEnd(),                // starting from the last line
-            std::string_view{buffer_}.end(),  // to the end of the buffer
-        });
-
+        CutLine();
         location_.lineno += 1;
+        location_.columnno = 0;
 
         break;
 
@@ -50,12 +43,12 @@ class Scanner {
         location_.columnno += 1;
     }
 
-    FetchNextSymbol();
+    offset_ += 1;
   }
 
   template <auto F>
   std::string_view ViewWhile() {
-    auto start_pos = buffer_.end() - 1;
+    auto start_pos = buffer_.c_str() + offset_;
 
     // For example:
     //   1. while not " char
@@ -65,11 +58,11 @@ class Scanner {
       MoveRight();
     }
 
-    return std::string_view(start_pos, buffer_.end() - 1);
+    return std::string_view(start_pos, buffer_.c_str() + offset_);
   }
 
   void MoveNextLine() {
-    while (CurrentSymbol() != '\n' && !source_.eof()) {
+    while (CurrentSymbol() != '\n' && buffer_.size() != offset_) {
       MoveRight();
     }
 
@@ -77,12 +70,27 @@ class Scanner {
     MoveRight();
   }
 
+  void CutLine() {
+    lines_.push_back(std::string_view{
+        PreviousLineEnd(),  // starting from the last line
+        std::string_view{buffer_}
+            .substr(0, offset_)
+            .end(),  // to the end of the already read buffer
+    });
+  }
+
   char CurrentSymbol() {
-    return symbol_;
+    return offset_ < buffer_.size() ? buffer_[offset_] : EOF;
   }
 
   char PeekNextSymbol() {
-    return source_.peek();
+    auto next_offset = offset_ + 1;
+    return next_offset < buffer_.size() ? buffer_[next_offset] : EOF;
+  }
+
+  // strtod, strtoll require buffer position
+  const char* GetBufferPosition() const {
+    return buffer_.c_str() + offset_;
   }
 
   Location GetLocation() const {
@@ -94,31 +102,18 @@ class Scanner {
   }
 
  private:
-  void FetchNextSymbol() {
-    if (source_.eof()) {
-      symbol_ = EOF;
-      return;
-    }
-
-    symbol_ = source_.get();
-
-    buffer_.push_back(symbol_);
-  }
-
   auto PreviousLineEnd() -> const char* {
     return lines_.empty() ? buffer_.begin().base() : lines_.back().end();
   }
 
  private:
-  std::istream& source_;
-
   std::vector<std::string_view> lines_;
+
+  std::size_t offset_ = 0;
 
   std::string buffer_;
 
   Location location_;
-
-  char symbol_;
 };
 
 //////////////////////////////////////////////////////////////////////

@@ -438,7 +438,7 @@ Expression* Parser::ParsePrimary() {
   auto token = lexer_.Peek();
 
   switch (token.type) {
-    case lex::TokenType::NUMBER:
+    case lex::TokenType::INTEGER:
     case lex::TokenType::STRING:
     case lex::TokenType::FALSE:
     case lex::TokenType::CHAR:

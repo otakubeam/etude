@@ -7,7 +7,8 @@ namespace lex {
 //////////////////////////////////////////////////////////////////////
 
 enum class TokenType {
-  NUMBER,
+  INTEGER,
+  DOUBLE,
   CHAR,
   STRING,
   IDENTIFIER,

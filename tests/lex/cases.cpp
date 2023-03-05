@@ -9,11 +9,11 @@
 
 TEST_CASE("Lexer: Just works", "[lex]") {
   std::stringstream source("1 + 2");
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
 
-  CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::INTEGER));
   CHECK(l.Matches(lex::TokenType::PLUS));
-  CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::INTEGER));
   CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
@@ -21,12 +21,12 @@ TEST_CASE("Lexer: Just works", "[lex]") {
 
 TEST_CASE("Braces", "[lex]") {
   std::stringstream source("1 + (1)");
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
 
-  CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::INTEGER));
   CHECK(l.Matches(lex::TokenType::PLUS));
   CHECK(l.Matches(lex::TokenType::LEFT_PAREN));
-  CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::INTEGER));
   CHECK(l.Matches(lex::TokenType::RIGHT_PAREN));
   CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
@@ -37,7 +37,7 @@ TEST_CASE("Keywords", "[lex]") {
   std::stringstream source(
       "var \nfun \nfor\n if\n else "
       "return yield true false");
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
   CHECK(l.Matches(lex::TokenType::VAR));
   CHECK(l.Matches(lex::TokenType::FUN));
   CHECK(l.Matches(lex::TokenType::FOR));
@@ -54,7 +54,7 @@ TEST_CASE("Keywords", "[lex]") {
 
 TEST_CASE("Consequent", "[lex]") {
   std::stringstream source("!true");
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
 
   CHECK(l.Matches(lex::TokenType::NOT));
   CHECK(l.Matches(lex::TokenType::TRUE));
@@ -69,10 +69,10 @@ TEST_CASE("Comments", "[lex]") {
       "# One more comment      \n"
       "1 # Token then comment  \n"  // <--- Token
       "# Comment with no newline\n");
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
 
   // parses to just `1`
-  CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::INTEGER));
   CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
 
@@ -80,12 +80,12 @@ TEST_CASE("Comments", "[lex]") {
 
 TEST_CASE("Statement", "[lex]") {
   std::stringstream source("var abc = 0;");
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
 
   CHECK(l.Matches(lex::TokenType::VAR));
   CHECK(l.Matches(lex::TokenType::IDENTIFIER));
   CHECK(l.Matches(lex::TokenType::ASSIGN));
-  CHECK(l.Matches(lex::TokenType::NUMBER));
+  CHECK(l.Matches(lex::TokenType::INTEGER));
   CHECK(l.Matches(lex::TokenType::SEMICOLON));
   CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
 }
@@ -94,7 +94,7 @@ TEST_CASE("Statement", "[lex]") {
 
 TEST_CASE("String literal", "[lex]") {
   std::stringstream source("\"Hello world\"");
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
 
   CHECK(l.Matches(lex::TokenType::STRING));
   CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
@@ -104,7 +104,7 @@ TEST_CASE("String literal", "[lex]") {
 
 TEST_CASE("Empty string literal", "[lex]") {
   std::stringstream source("\"\"");
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
 
   CHECK(l.Matches(lex::TokenType::STRING));
   CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
@@ -116,7 +116,7 @@ TEST_CASE("Funtion declaration args", "[lex]") {
   std::stringstream source("(a1, a2)");
   //                        -----     -------------  -------------
   //                        name          args       expr-statement
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
 
   CHECK(l.Matches(lex::TokenType::LEFT_PAREN));
   CHECK(l.Matches(lex::TokenType::IDENTIFIER));
@@ -130,7 +130,7 @@ TEST_CASE("Funtion declaration args", "[lex]") {
 
 TEST_CASE("Curly", "[lex]") {
   std::stringstream source("{ }");
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
 
   CHECK(l.Matches(lex::TokenType::LEFT_CBRACE));
   CHECK(l.Matches(lex::TokenType::RIGHT_CBRACE));
@@ -141,7 +141,7 @@ TEST_CASE("Curly", "[lex]") {
 
 TEST_CASE("Assign vs Equals", "[lex]") {
   std::stringstream source("== = == <= >= > <");
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
 
   CHECK(l.Matches(lex::TokenType::EQUALS));
   CHECK(l.Matches(lex::TokenType::ASSIGN));
@@ -157,7 +157,7 @@ TEST_CASE("Assign vs Equals", "[lex]") {
 
 TEST_CASE("Lex types", "[lex]") {
   std::stringstream source(": Int Bool String Unit:;");
-  lex::Lexer l{source};
+  lex::Lexer l{"test.et", source};
 
   CHECK(l.Matches(lex::TokenType::COLON));
 

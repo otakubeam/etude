@@ -12,7 +12,7 @@ namespace lex {
 
 class Lexer {
  public:
-  Lexer(std::istream& source);
+  Lexer(std::string_view filename, std::istream& source);
 
   Token GetNextToken();
 
@@ -46,6 +46,8 @@ class Lexer {
   std::optional<Token> MatchCharLiteral();
 
   std::optional<Token> MatchWords();
+
+  std::size_t MunchDigits();
 
   ////////////////////////////////////////////////////////////////////
 

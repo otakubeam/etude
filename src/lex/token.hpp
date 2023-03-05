@@ -13,7 +13,8 @@ struct Token {
   using SemInfo = std::variant<  //
       std::monostate,            //
       std::string_view,          //
-      int                        //
+      long long,                 //
+      double                     //
       >;
 
   Token(TokenType type, Location start, SemInfo sem_info = {})
