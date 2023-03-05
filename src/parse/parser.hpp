@@ -26,51 +26,68 @@ class Parser {
   AssignmentStatement* ParseAssignment(LvalueExpression* target);
 
   ////////////////////////////////////////////////////////////////////
+  //                        Declarations                            //
+  ////////////////////////////////////////////////////////////////////
 
   Declaration* ParseDeclaration();
+
+  TraitDeclaration* ParseTraitDeclaration();
+  ImplDeclaration* ParseImplDeclaration();
+  TypeDeclaration* ParseTypeDeclaration();
+  FunDeclaration* ParseFunDeclaration(types::Type* hint);
+  VarDeclaration* ParseVarDeclaration(types::Type* hint);
 
   Attribute* ParseAttributes();
   Declaration* ParsePrototype(bool require_sigature = false);
   FunDeclaration* ParseFunPrototype(types::Type* hint);
   FunDeclaration* ParseFunDeclarationStandalone();
 
-  TraitDeclaration* ParseTraitDeclaration();
-  ImplDeclaration* ParseImplDeclaration();
-  TypeDeclaration* ParseTypeDeclStatement();
-  FunDeclaration* ParseFunDeclStatement(types::Type* hint);
-  VarDeclaration* ParseVarDeclStatement(types::Type* hint);
-
   ////////////////////////////////////////////////////////////////////
+  //                        Expressions                             //
+  ////////////////////////////////////////////////////////////////////
+
+  // Top
 
   Expression* ParseExpression();
 
-  Expression* ParseKeywordExpresssion();
+  // Keywords
 
-  Expression* ParseReturnStatement();
-  Expression* ParseYieldStatement();
-  Expression* ParseIfExpression();
+  Expression* ParseKeywordExpresssion();
+  Expression* ParseReturnExpression();
+  Expression* ParseYieldExpression();
   Expression* ParseMatchExpression();
   Expression* ParseNewExpression();
+  Expression* ParseIfExpression();
 
-  Expression* ParseBlockExpression();
+  // Arithmetic
 
-  Expression* ParseComparison();
-  Expression* ParseBinary();
+  Expression* ParseComparison();      // == <= >= != < >
+  Expression* ParseAdditive();        // + -
+  Expression* ParseMultiplicative();  // * \ %
+  Expression* ParseUnary();           // ! -
+  Expression* ParseDeref();           // *
+  Expression* ParseAddressof();       // &
 
-  Expression* ParseUnary();
-  Expression* ParseDeref();
-  Expression* ParseAddressof();
+  // Postfix Expresssions
 
-  // Precedence 1
   Expression* ParsePostfixExpressions();
-  Expression* ParseFieldAccess(Expression* expr);
   Expression* ParseIndirectFieldAccess(Expression* expr);
   Expression* ParseIndexingExpression(Expression* expr);
-  Expression* ParseFnCallUnnamed(Expression* expr);
-  Expression* ParseFnCallExpression(Expression* expr, lex::Token id);
+  Expression* ParseFieldAccess(Expression* expr);
+  Expression* ParseFnCall(Expression* expr);
+  Expression* ParseCast(Expression* expr);
 
-  Expression* ParseCompoundInitializer(lex::Token id);
+  // Blocks / Grouping
+
+  Expression* ParseBlockExpression();  // ( <expr> ) and { ... }
+  Expression* ParseParentheses();      // ( <expr> )
+  Expression* ParseGrouping();         // { ... }
+
+  Expression* ParseCompoundInitializer(lex::Token curly_brace);
   Expression* ParseSignleFieldCompound();
+
+  // Bottom
+
   Expression* ParsePrimary();
 
   ////////////////////////////////////////////////////////////////////
@@ -87,11 +104,10 @@ class Parser {
  private:
   auto ParseCSV() -> std::vector<Expression*>;
   auto ParseFormals() -> std::vector<lex::Token>;
-  auto ParseDesignatedList()  //
-      -> std::vector<CompoundInitializerExpr::Member>;
+  auto ParseDesignatedList() -> std::vector<CompoundInitializerExpr::Member>;
 
-  bool Matches(lex::TokenType type);
   bool MatchesComparisonSign(lex::TokenType type);
+  bool Matches(lex::TokenType type);
   void Consume(lex::TokenType type);
   bool TagOnly();
 

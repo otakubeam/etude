@@ -102,7 +102,7 @@ Attribute* Parser::ParseAttributes() {
 ///////////////////////////////////////////////////////////////////
 
 Declaration* Parser::ParsePrototype(bool) {
-  if (auto type_declaration = ParseTypeDeclStatement()) {
+  if (auto type_declaration = ParseTypeDeclaration()) {
     return type_declaration;
   }
 
@@ -156,11 +156,11 @@ Declaration* Parser::ParseDeclaration() {
     hint = ParseFunctionType();
   }
 
-  if (auto type_declaration = ParseTypeDeclStatement()) {
+  if (auto type_declaration = ParseTypeDeclaration()) {
     return type_declaration;
   }
 
-  if (auto var_declaration = ParseVarDeclStatement(hint)) {
+  if (auto var_declaration = ParseVarDeclaration(hint)) {
     return var_declaration;
   }
 
@@ -172,7 +172,7 @@ Declaration* Parser::ParseDeclaration() {
     return impl_declaration;
   }
 
-  if (auto fun_declaration = ParseFunDeclStatement(hint)) {
+  if (auto fun_declaration = ParseFunDeclaration(hint)) {
     return fun_declaration;
   }
 
@@ -181,7 +181,7 @@ Declaration* Parser::ParseDeclaration() {
 
 ///////////////////////////////////////////////////////////////////
 
-FunDeclaration* Parser::ParseFunDeclStatement(types::Type* hint) {
+FunDeclaration* Parser::ParseFunDeclaration(types::Type* hint) {
   auto attrs = ParseAttributes();
 
   auto proto = ParseFunPrototype(hint);
@@ -231,7 +231,7 @@ ImplDeclaration* Parser::ParseImplDeclaration() {
       hint = ParseFunctionType();
     }
 
-    definitions.push_back(ParseFunDeclStatement(hint));
+    definitions.push_back(ParseFunDeclaration(hint));
   }
 
   return new ImplDeclaration(trait_name, for_type, std::move(type_params_),
@@ -266,7 +266,7 @@ TraitDeclaration* Parser::ParseTraitDeclaration() {
 
 ///////////////////////////////////////////////////////////////////
 
-TypeDeclaration* Parser::ParseTypeDeclStatement() {
+TypeDeclaration* Parser::ParseTypeDeclaration() {
   if (!Matches(lex::TokenType::TYPE)) {
     return nullptr;
   }
@@ -307,7 +307,7 @@ auto Parser::ParseFormals() -> std::vector<lex::Token> {
 
 ///////////////////////////////////////////////////////////////////
 
-VarDeclaration* Parser::ParseVarDeclStatement(types::Type* hint) {
+VarDeclaration* Parser::ParseVarDeclaration(types::Type* hint) {
   lex::Token type;
   switch (lexer_.Peek().type) {
     case lex::TokenType::VAR:

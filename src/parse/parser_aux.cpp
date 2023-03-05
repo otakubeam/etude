@@ -19,6 +19,8 @@ bool Parser::MatchesComparisonSign(lex::TokenType type) {
     case lex::TokenType::GT:
     case lex::TokenType::LE:
     case lex::TokenType::LT:
+    case lex::TokenType::EQUALS:
+    case lex::TokenType::NOT_EQ:
       lexer_.Advance();
       return true;
 
@@ -59,4 +61,19 @@ bool Parser::TagOnly() {
 
 std::string Parser::FormatLocation() {
   return lexer_.GetPreviousToken().location.Format();
+}
+
+// Assume non-empty
+std::vector<Expression*> Parser::ParseCSV() {
+  std::vector<Expression*> exprs;
+
+  while (auto expr = ParseExpression()) {
+    exprs.push_back(expr);
+    Matches(lex::TokenType::COMMA);
+    if (lexer_.Peek().type == lex::TokenType::RIGHT_PAREN) {
+      break;
+    }
+  }
+
+  return exprs;
 }

@@ -52,13 +52,13 @@ inline std::string_view CopySuf(types::Type* type) {
 
 inline std::string_view LoadSuf(types::Type* ty) {
   switch (ty->tag) {
-    case types::TypeTag::TY_INT:
-      return "sw";
-
     case types::TypeTag::TY_CHAR:
     case types::TypeTag::TY_UNIT:
     case types::TypeTag::TY_BOOL:
       return "ub";
+
+    case types::TypeTag::TY_INT:
+      return "w";
 
     case types::TypeTag::TY_PTR:
       return "l";

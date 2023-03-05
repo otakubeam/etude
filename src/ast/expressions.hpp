@@ -145,7 +145,7 @@ class AddressofExpression : public Expression {
  public:
   AddressofExpression(lex::Token ampersand, LvalueExpression* operand)
       : ampersand_{ampersand}, operand_{operand} {
-    // Transform &*unit -> unit (it works like that in C)
+    // Transform &*unit -> unit (like in C)
     if (auto op = dynamic_cast<DereferenceExpression*>(operand_)) {
       operand_ = op->operand_;
     }
@@ -177,19 +177,9 @@ class AddressofExpression : public Expression {
 
 class FnCallExpression : public Expression {
  public:
-  // No-name, e.g. vec[10]()
-  FnCallExpression(lex::Location call_site, Expression* callable,
+  FnCallExpression(lex::Token paren, Expression* callable,
                    std::vector<Expression*> arguments)
-      : call_site_(call_site), callable_{callable}, arguments_{arguments} {
-  }
-
-  // Named function call: foo(), struct.field(), etc...
-  FnCallExpression(lex::Token name, Expression* callable,
-                   std::vector<Expression*> arguments)
-      : call_site_(name.location),
-        fn_name_{name.GetName()},
-        callable_{callable},
-        arguments_{arguments} {
+      : paren_(paren), callable_{callable}, arguments_{arguments} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -207,10 +197,10 @@ class FnCallExpression : public Expression {
   };
 
   virtual lex::Location GetLocation() override {
-    return call_site_;
+    return paren_.location;
   }
 
-  lex::Location call_site_;
+  lex::Token paren_;
 
   // May be absent
   std::string_view fn_name_;
@@ -594,3 +584,28 @@ class YieldExpression : public Expression {
 };
 
 //////////////////////////////////////////////////////////////////////
+
+class IndexExpression : public Expression {
+ public:
+  IndexExpression(lex::Token bracket, Expression* indexed, Expression* index)
+      : indexed_expr_{indexed}, square_bracket_{bracket}, index_{index} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitIndex(this);
+  }
+
+  virtual types::Type* GetType() override {
+    return type_->leader;
+  }
+
+  virtual lex::Location GetLocation() override {
+    return square_bracket_.location;
+  }
+
+  Expression* indexed_expr_;
+  lex::Token square_bracket_;
+  Expression* index_;
+
+  types::Type* type_ = nullptr;
+};

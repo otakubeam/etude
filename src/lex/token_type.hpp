@@ -21,6 +21,7 @@ enum class TokenType {
   PLUS,
   MINUS,
   DIV,
+  MOD,
 
   PLUS_EQ,
   MINUS_EQ,

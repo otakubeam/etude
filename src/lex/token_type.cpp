@@ -19,6 +19,7 @@ namespace lex {
   code(PLUS)                \
   code(MINUS)               \
   code(DIV)                 \
+  code(MOD)                 \
   code(PLUS_EQ)             \
   code(MINUS_EQ)            \
   code(STAR_EQ)             \

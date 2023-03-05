@@ -9,21 +9,6 @@
 
 namespace qbe {
 
-////////////////////////////////////////////////////////////////////////////////
-
-void IrEmitter::GenAddress(Expression* what, Value out) {
-  GenAddr gen_addr(*this, out);
-  what->Accept(&gen_addr);
-};
-
-void IrEmitter::GenAtAddress(Expression* what, Value where) {
-  if (measure_.IsZST(what->GetType())) {
-    return;
-  }
-  class GenAt gen_addr(*this, where);
-  what->Accept(&gen_addr);
-};
-
 ////////////////////////////////////////////////////////////////////
 
 void IrEmitter::VisitVarDecl(VarDeclaration* node) {
@@ -62,11 +47,7 @@ bool IsTest(Attribute* attr) {
   return attr && attr->FindAttr("test");
 }
 
-void IrEmitter::VisitFunDecl(FunDeclaration* node) {
-  if (!node->body_) {
-    return;
-  }
-
+std::string MangledName(FunDeclStatement* node) {
   auto mangled = std::string(node->GetName());
   auto symbol = node->layer_->RetrieveSymbol(node->GetName());
 
@@ -75,33 +56,55 @@ void IrEmitter::VisitFunDecl(FunDeclaration* node) {
     mangled += types::Mangle(*node->type_);
   }
 
-  auto qbe_ty = ToQbeType(node->type_->as_fun.result_type);
-  fmt::print("export function {} ${} (", qbe_ty, mangled);
+  return mangled;
+}
 
-  auto& arg_ty = node->type_->as_fun.param_pack;
-  auto& formals = node->formals_;
+////////////////////////////////////////////////////////////////////
 
-  for (size_t i = 0; i < arg_ty.size(); i++) {
-    auto t = GenParam();
-    named_values_.insert_or_assign(formals[i].GetName(), t);
-
-    // Do not even mention zsts in the args
-    if (measure_.IsZST(arg_ty[i])) {
-      continue;
-    }
-
-    fmt::print("{} {}, ", ToQbeType(arg_ty[i]), t.Emit());
+void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
+  if (!node->body_) {
+    return;
   }
 
-  fmt::print(") {{ \n");
-  fmt::print("@start\n");
+  // void GenHeader(FunDeclStatement* node);
+  [](FunDeclStatement* node) {
+    auto mangled = MangledName(node);
+    auto qbe_ty = ToQbeType(node->type_->as_fun.result_type);
+    fmt::print("export function {} ${} (", qbe_ty, mangled);
+  }(node);
 
-  auto out = Eval(node->body_);
+  // void GenParameters(FunDeclStatement* node);
+  [this](FunDeclStatement* node) {
+    auto& arg_ty = node->type_->as_fun.param_pack;
+    auto& formals = node->formals_;
 
-  fmt::print("@ret\n");
-  fmt::print("  ret {}\n", out.Emit());
-  fmt::print("}}\n\n");
+    for (size_t i = 0; i < arg_ty.size(); i++) {
+      auto t = GenParam();
 
+      named_values_.insert_or_assign(formals[i].GetName(), t);
+
+      // Do not even mention zsts in the args
+      if (measure_.IsZST(arg_ty[i])) {
+        continue;
+      }
+
+      fmt::print("{} {}, ", ToQbeType(arg_ty[i]), t.Emit());
+    }
+  }(node);
+
+  // void GenFunctionBody(FunDeclStatement* node);
+  [this](FunDeclStatement* node) {
+    fmt::print(") {{ \n");
+    fmt::print("@start\n");
+
+    auto out = Eval(node->body_);
+
+    fmt::print("@ret\n");
+    fmt::print("  ret {}\n", out.Emit());
+    fmt::print("}}\n\n");
+  }(node);
+
+  auto symbol = node->layer_->RetrieveSymbol(node->GetName());
   if (IsTest(symbol->as_fn_sym.attrs)) {
     test_functions_.push_back(node->GetName());
   }
@@ -118,10 +121,11 @@ char GlobalFun(ast::scope::Symbol* symbol) {
   return IsFunctional(symbol) ? '$' : ' ';
 }
 
+////////////////////////////////////////////////////////////////////
+
 void IrEmitter::VisitFnCall(FnCallExpression* node) {
   auto out = measure_.IsZST(node->GetType()) ? Value::None() : GenTemporary();
 
-  // %out = call $rt.memset(l %binding.5, l 0, l 8)
   fmt::print("# call {}\n", node->GetFunctionName());
 
   struct Arg {
@@ -230,8 +234,16 @@ void IrEmitter::VisitDeref(DereferenceExpression* node) {
   }
 
   auto temp = GenTemporary();
-  fmt::print("  {} = {} load{} {}  \n", temp.Emit(), ToQbeType(node->GetType()),
-             LoadSuf(node->GetType()), src.Emit());
+
+  auto src_emit = src.Emit();
+  auto temp_emit = temp.Emit();
+
+  auto load_result = ToQbeType(node->GetType());
+  auto load_suffix = LoadSuf(node->GetType());
+
+  fmt::print("  {} = {} load{} {}  \n",  //
+             temp_emit, load_result, load_suffix, src_emit);
+
   return_value = temp;
 }
 
@@ -446,10 +458,11 @@ void IrEmitter::VisitMatch(MatchExpression* node) {
 
 void IrEmitter::VisitNew(NewExpression* node) {
   auto out = GenTemporary();
+  auto size = GenTemporary();
+  auto size_emit = size.Emit();
   auto type_size = GetTypeSize(node->underlying_);
 
-  auto size = GenTemporary();
-  fmt::print("  {} =w copy {}\n", size.Emit(), type_size);
+  fmt::print("  {} =w copy {}\n", size_emit, type_size);
 
   if (node->allocation_size_) {
     auto alloc_size = Eval(node->allocation_size_);
@@ -459,8 +472,10 @@ void IrEmitter::VisitNew(NewExpression* node) {
 
   fmt::print("  {} =l call $malloc (w {})\n", out.Emit(), size.Emit());
 
-  if (node->initial_value_) {
+  if (node->initial_value_ && !node->allocation_size_) {
     GenAtAddress(node->initial_value_, out);
+  } else {
+    std::abort();  // Unimplemented!
   }
 
   return_value = out;
@@ -502,12 +517,12 @@ void IrEmitter::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
 void IrEmitter::VisitFieldAccess(FieldAccessExpression* node) {
   auto addr = GenTemporary();
 
+  GenAddress(node, addr);
+
   if (measure_.IsZST(node->GetType())) {
     return_value = Value::None();
     return;
   }
-
-  GenAddress(node, addr);
 
   if (measure_.IsCompound(node->GetType())) {
     return_value = addr;
@@ -515,8 +530,15 @@ void IrEmitter::VisitFieldAccess(FieldAccessExpression* node) {
   }
 
   auto out = GenTemporary();
-  fmt::print("  {} = {} load{} {}  \n", out.Emit(), ToQbeType(node->GetType()),
-             LoadSuf(node->GetType()), addr.Emit());
+  auto out_emit = out.Emit();
+  auto addr_emit = addr.Emit();
+
+  auto load_suf = LoadSuf(node->GetType());
+  auto temp_type = ToQbeType(node->GetType());
+
+  fmt::print("  {} = {} load{} {}  \n",  //
+             out_emit, temp_type, load_suf, addr_emit);
+
   return_value = out;
 }
 
@@ -633,11 +655,14 @@ void IrEmitter::VisitVarAccess(VarAccessExpression* node) {
 
       // But do need to load locals
     case Value::TEMPORARY: {
-      auto eq_type = ToQbeType(node->GetType());
+      auto out_emit = out.Emit();
+      auto location_emit = location.Emit();
+
       auto load_suf = LoadSuf(node->GetType());
+      auto temp_type = ToQbeType(node->GetType());
 
       fmt::print("  {} = {} load{} {}\n",  //
-                 out.Emit(), eq_type, load_suf, location.Emit());
+                 out_emit, temp_type, load_suf, location_emit);
       break;
     }
 

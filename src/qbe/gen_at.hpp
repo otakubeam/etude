@@ -21,10 +21,6 @@ class GenAt : public AbortVisitor {
       : parent_{parent}, target_id_{target_id} {
   }
 
-  std::string Give() {
-    return result_;
-  }
-
   virtual void VisitDeref(DereferenceExpression* node) override {
     if (parent_.measure_.IsZST(node->GetType())) {
       return;
@@ -130,8 +126,11 @@ class GenAt : public AbortVisitor {
       return;
     }
 
-    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
-               target_id_.Emit());
+    auto store_suf = StoreSuf(node->GetType());
+    auto target_emit = target_id_.Emit();
+    auto id_emit = id.Emit();
+
+    fmt::print("  store{} {}, {}\n", store_suf, id_emit, target_emit);
   }
 
   virtual void VisitTypecast(TypecastExpression* node) override {
@@ -209,8 +208,8 @@ class GenAt : public AbortVisitor {
 
  private:
   IrEmitter& parent_;
+
   Value target_id_;
-  std::string result_;
 };
 
 }  // namespace qbe
