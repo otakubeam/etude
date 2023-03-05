@@ -10,8 +10,8 @@ class ContextBuilder : public AbortVisitor {
  public:
   ContextBuilder(Context& unit_context);
 
-  virtual void VisitYield(YieldStatement* node) override;
-  virtual void VisitReturn(ReturnStatement* node) override;
+  virtual void VisitYield(YieldExpression* node) override;
+  virtual void VisitReturn(ReturnExpression* node) override;
   virtual void VisitAssignment(AssignmentStatement* node) override;
   virtual void VisitExprStatement(ExprStatement* node) override;
 
@@ -20,9 +20,9 @@ class ContextBuilder : public AbortVisitor {
   virtual void VisitLiteralPat(LiteralPattern* node) override;
   virtual void VisitVariantPat(VariantPattern* node) override;
 
-  virtual void VisitTypeDecl(TypeDeclStatement* node) override;
-  virtual void VisitVarDecl(VarDeclStatement* node) override;
-  virtual void VisitFunDecl(FunDeclStatement* node) override;
+  virtual void VisitTypeDecl(TypeDeclaration* node) override;
+  virtual void VisitVarDecl(VarDeclaration* node) override;
+  virtual void VisitFunDecl(FunDeclaration* node) override;
   virtual void VisitTraitDecl(TraitDeclaration* node) override;
   virtual void VisitImplDecl(ImplDeclaration* node) override;
 

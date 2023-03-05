@@ -36,7 +36,7 @@ TEST_CASE("parser:vardecl", "[parser]") {
   Parser p{l};
 
   auto stmt = p.ParseDeclaration();
-  REQUIRE(typeid(*stmt) == typeid(VarDeclStatement));
+  REQUIRE(typeid(*stmt) == typeid(VarDeclaration));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -105,7 +105,7 @@ TEST_CASE("paser:fundecl", "[parser]") {
   Parser p{l};
 
   auto stmt = p.ParseDeclaration();
-  REQUIRE(typeid(*stmt) == typeid(FunDeclStatement));
+  REQUIRE(typeid(*stmt) == typeid(FunDeclaration));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ TEST_CASE("paser:fundecl-(II)", "[parser]") {
   Parser p{l};
 
   auto stmt = p.ParseDeclaration();
-  REQUIRE(typeid(*stmt) == typeid(FunDeclStatement));
+  REQUIRE(typeid(*stmt) == typeid(FunDeclaration));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -150,8 +150,8 @@ TEST_CASE("parser:block-statement", "[parser]") {
   auto& r3 = *block->stmts_[2];
 
   CHECK(typeid(r1) == typeid(ExprStatement));
-  CHECK(typeid(r2) == typeid(VarDeclStatement));
-  CHECK(typeid(r3) == typeid(FunDeclStatement));
+  CHECK(typeid(r2) == typeid(VarDeclaration));
+  CHECK(typeid(r3) == typeid(FunDeclaration));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -162,7 +162,7 @@ TEST_CASE("parser::access", "[parser]") {
   lex::Lexer l{"test.et", source};
   Parser p{l};
   auto stmt = p.ParseDeclaration();
-  REQUIRE(typeid(*stmt) == typeid(VarDeclStatement));
+  REQUIRE(typeid(*stmt) == typeid(VarDeclaration));
 
   auto expr = p.ParseExpression();
   REQUIRE(typeid(*expr) == typeid(VarAccessExpression));
@@ -230,7 +230,7 @@ TEST_CASE("parser:return-statement", "[parser]") {
   Parser p{l};
 
   auto stmt = p.ParseExpression();
-  REQUIRE(typeid(*stmt) == typeid(ReturnStatement));
+  REQUIRE(typeid(*stmt) == typeid(ReturnExpression));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -241,7 +241,7 @@ TEST_CASE("parser:yield", "[parser]") {
   Parser p{l};
 
   auto stmt = p.ParseExpression();
-  REQUIRE(typeid(*stmt) == typeid(YieldStatement));
+  REQUIRE(typeid(*stmt) == typeid(YieldExpression));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -263,8 +263,8 @@ TEST_CASE("parser:struct-decl", "[parser]") {
   Parser p{l};
 
   auto expr = p.ParseDeclaration();
-  auto expr2 = expr->as<TypeDeclStatement>()->body_;
-  REQUIRE(typeid(*expr) == typeid(TypeDeclStatement));
+  auto expr2 = expr->as<TypeDeclaration>()->body_;
+  REQUIRE(typeid(*expr) == typeid(TypeDeclaration));
   REQUIRE(expr2->tag == types::TypeTag::TY_STRUCT);
 }
 

@@ -89,13 +89,13 @@ void Traverse(Type* ty) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitTypeDecl(TypeDeclStatement*) {
+void ExpandTypeVariables::VisitTypeDecl(TypeDeclaration*) {
   // No-op
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitVarDecl(VarDeclStatement* node) {
+void ExpandTypeVariables::VisitVarDecl(VarDeclaration* node) {
   if (!node->annotation_) {
     return;
   }
@@ -105,7 +105,7 @@ void ExpandTypeVariables::VisitVarDecl(VarDeclStatement* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitFunDecl(FunDeclStatement* node) {
+void ExpandTypeVariables::VisitFunDecl(FunDeclaration* node) {
   if (node->type_) {
     Traverse(node->type_);
   }
@@ -133,11 +133,11 @@ void ExpandTypeVariables::VisitImplDecl(ImplDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitYield(YieldStatement* node) {
+void ExpandTypeVariables::VisitYield(YieldExpression* node) {
   node->yield_value_->Accept(this);
 }
 
-void ExpandTypeVariables::VisitReturn(ReturnStatement* node) {
+void ExpandTypeVariables::VisitReturn(ReturnExpression* node) {
   node->return_value_->Accept(this);
 }
 

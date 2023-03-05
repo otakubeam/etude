@@ -18,13 +18,13 @@ void AlgorithmW::PushEqual(lex::Location loc, Type* a, Type* b) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitTypeDecl(TypeDeclStatement*) {
+void AlgorithmW::VisitTypeDecl(TypeDeclaration*) {
   // No-op
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitVarDecl(VarDeclStatement* node) {
+void AlgorithmW::VisitVarDecl(VarDeclaration* node) {
   auto symbol = node->layer_->RetrieveSymbol(node->GetName());
 
   auto ty = symbol->GetType();
@@ -34,7 +34,7 @@ void AlgorithmW::VisitVarDecl(VarDeclStatement* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitFunDecl(FunDeclStatement* node) {
+void AlgorithmW::VisitFunDecl(FunDeclaration* node) {
   if (!node->body_) {
     return;
   }
@@ -128,14 +128,14 @@ void AlgorithmW::VisitVariantPat(VariantPattern* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitYield(YieldStatement* node) {
+void AlgorithmW::VisitYield(YieldExpression* node) {
   Eval(node->yield_value_);
   return_value = &builtin_never;
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitReturn(ReturnStatement* node) {
+void AlgorithmW::VisitReturn(ReturnExpression* node) {
   auto find = node->layer_->RetrieveSymbol(node->this_fun);
 
   std::vector<Type*> args;

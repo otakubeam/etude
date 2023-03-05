@@ -91,7 +91,7 @@ class Module {
   std::vector<Declaration*> items_;
 
   // Functions that are marked @test
-  std::vector<FunDeclStatement*> tests_;
+  std::vector<FunDeclaration*> tests_;
 };
 
 //////////////////////////////////////////////////////////////////////

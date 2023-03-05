@@ -10,20 +10,20 @@ namespace ast::elaboration {
 
 //////////////////////////////////////////////////////////////////////
 
-void MarkIntrinsics::VisitTypeDecl(TypeDeclStatement* node) {
+void MarkIntrinsics::VisitTypeDecl(TypeDeclaration* node) {
   return_value = node;
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void MarkIntrinsics::VisitVarDecl(VarDeclStatement* node) {
+void MarkIntrinsics::VisitVarDecl(VarDeclaration* node) {
   node->value_ = Eval(node->value_)->as<Expression>();
   return_value = node;
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void MarkIntrinsics::VisitFunDecl(FunDeclStatement* node) {
+void MarkIntrinsics::VisitFunDecl(FunDeclaration* node) {
   if (node->body_) {
     node->body_ = Eval(node->body_)->as<Expression>();
   }
@@ -34,7 +34,7 @@ void MarkIntrinsics::VisitFunDecl(FunDeclStatement* node) {
 
 void MarkIntrinsics::VisitTraitDecl(TraitDeclaration* node) {
   for (auto& method : node->methods_) {
-    method = Eval(method)->as<FunDeclStatement>();
+    method = Eval(method)->as<FunDeclaration>();
   }
 
   return_value = node;
@@ -44,7 +44,7 @@ void MarkIntrinsics::VisitTraitDecl(TraitDeclaration* node) {
 
 void MarkIntrinsics::VisitImplDecl(ImplDeclaration* node) {
   for (auto& method : node->trait_methods_) {
-    method = Eval(method)->as<FunDeclStatement>();
+    method = Eval(method)->as<FunDeclaration>();
   }
 
   return_value = node;
@@ -60,12 +60,12 @@ void MarkIntrinsics::VisitVariantPat(VariantPattern*){};
 
 //////////////////////////////////////////////////////////////////////
 
-void MarkIntrinsics::VisitYield(YieldStatement* node) {
+void MarkIntrinsics::VisitYield(YieldExpression* node) {
   node->yield_value_ = Eval(node->yield_value_)->as<Expression>();
   return_value = node;
 }
 
-void MarkIntrinsics::VisitReturn(ReturnStatement* node) {
+void MarkIntrinsics::VisitReturn(ReturnExpression* node) {
   node->return_value_ = Eval(node->return_value_)->as<Expression>();
   return_value = node;
 }

@@ -5,23 +5,23 @@
 
 class AbortVisitor : public Visitor {
  public:
-  virtual void VisitYield(YieldStatement*) override {
+  virtual void VisitYield(YieldExpression*) override {
     std::abort();
   }
 
-  virtual void VisitReturn(ReturnStatement*) override {
+  virtual void VisitReturn(ReturnExpression*) override {
     std::abort();
   }
 
-  virtual void VisitTypeDecl(TypeDeclStatement*) override {
+  virtual void VisitTypeDecl(TypeDeclaration*) override {
     std::abort();
   }
 
-  virtual void VisitVarDecl(VarDeclStatement*) override {
+  virtual void VisitVarDecl(VarDeclaration*) override {
     std::abort();
   }
 
-  virtual void VisitFunDecl(FunDeclStatement*) override {
+  virtual void VisitFunDecl(FunDeclaration*) override {
     std::abort();
   }
 

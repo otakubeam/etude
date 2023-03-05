@@ -24,17 +24,17 @@ class TypecastExpression;
 
 class Statement;
 class ExprStatement;
-class YieldStatement;
-class ReturnStatement;
+class YieldExpression;
+class ReturnExpression;
 class AssignmentStatement;
 
 //////////////////////////////////////////////////////////////////////
 
-class TypeDeclStatement;
+class TypeDeclaration;
 class TraitDeclaration;
 class ImplDeclaration;
-class VarDeclStatement;
-class FunDeclStatement;
+class VarDeclaration;
+class FunDeclaration;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -52,9 +52,9 @@ class Visitor {
 
   // Statements
 
-  virtual void VisitYield(YieldStatement* node) = 0;
+  virtual void VisitYield(YieldExpression* node) = 0;
 
-  virtual void VisitReturn(ReturnStatement* node) = 0;
+  virtual void VisitReturn(ReturnExpression* node) = 0;
 
   virtual void VisitAssignment(AssignmentStatement* node) = 0;
 
@@ -62,11 +62,11 @@ class Visitor {
 
   // Declarations
 
-  virtual void VisitTypeDecl(TypeDeclStatement* node) = 0;
+  virtual void VisitTypeDecl(TypeDeclaration* node) = 0;
 
-  virtual void VisitVarDecl(VarDeclStatement* node) = 0;
+  virtual void VisitVarDecl(VarDeclaration* node) = 0;
 
-  virtual void VisitFunDecl(FunDeclStatement* node) = 0;
+  virtual void VisitFunDecl(FunDeclaration* node) = 0;
 
   virtual void VisitTraitDecl(TraitDeclaration* node) = 0;
 

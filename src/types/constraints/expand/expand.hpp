@@ -15,14 +15,14 @@ class ExpandTypeVariables : public AbortVisitor {
   ExpandTypeVariables() {
   }
 
-  void VisitYield(YieldStatement* node) override;
-  void VisitReturn(ReturnStatement* node) override;
+  void VisitYield(YieldExpression* node) override;
+  void VisitReturn(ReturnExpression* node) override;
   void VisitAssignment(AssignmentStatement* node) override;
   void VisitExprStatement(ExprStatement* node) override;
 
-  void VisitVarDecl(VarDeclStatement* node) override;
-  void VisitFunDecl(FunDeclStatement* node) override;
-  void VisitTypeDecl(TypeDeclStatement* node) override;
+  void VisitVarDecl(VarDeclaration* node) override;
+  void VisitFunDecl(FunDeclaration* node) override;
+  void VisitTypeDecl(TypeDeclaration* node) override;
   void VisitTraitDecl(TraitDeclaration* node) override;
   void VisitImplDecl(ImplDeclaration* node) override;
 

@@ -15,20 +15,20 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
  public:
   TemplateInstantiator(Declaration* main);
 
-  TemplateInstantiator(std::vector<FunDeclStatement*>& tests);
+  TemplateInstantiator(std::vector<FunDeclaration*>& tests);
 
-  auto Flush() -> std::pair<std::vector<FunDeclStatement*>, std::vector<Type*>>;
+  auto Flush() -> std::pair<std::vector<FunDeclaration*>, std::vector<Type*>>;
 
   // Visitor methods
 
-  void VisitYield(YieldStatement* node) override;
-  void VisitReturn(ReturnStatement* node) override;
+  void VisitYield(YieldExpression* node) override;
+  void VisitReturn(ReturnExpression* node) override;
   void VisitAssignment(AssignmentStatement* node) override;
   void VisitExprStatement(ExprStatement* node) override;
 
-  void VisitTypeDecl(TypeDeclStatement* node) override;
-  void VisitVarDecl(VarDeclStatement* node) override;
-  void VisitFunDecl(FunDeclStatement* node) override;
+  void VisitTypeDecl(TypeDeclaration* node) override;
+  void VisitVarDecl(VarDeclaration* node) override;
+  void VisitFunDecl(FunDeclaration* node) override;
   void VisitTraitDecl(TraitDeclaration* node) override;
   void VisitImplDecl(ImplDeclaration* node) override;
 
@@ -59,15 +59,15 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
 
   bool BuildSubstitution(Type* poly, Type* mono, Substitiution& subs);
 
-  FunDeclStatement* FindTraitMethod(ast::scope::Symbol* symbol, Type* mono);
+  FunDeclaration* FindTraitMethod(ast::scope::Symbol* symbol, Type* mono);
 
-  FunDeclStatement* GetFunctionDef(ast::scope::Symbol* symbol, Type* mono);
+  FunDeclaration* GetFunctionDef(ast::scope::Symbol* symbol, Type* mono);
 
   bool TryFindInstantiation(FnCallExpression* i);
 
   void ProcessQueueItem(FnCallExpression* i);
 
-  void StartUp(FunDeclStatement* main);
+  void StartUp(FunDeclaration* main);
 
   void MaybeSaveForIL(Type* ty);
 
@@ -86,7 +86,7 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   // How do I prevent myself from instantiating something twice or more?
   // A: place instantiated in map: name: string_view -> [](type, fun)
 
-  std::unordered_multimap<std::string_view, FunDeclStatement*> mono_items_;
+  std::unordered_multimap<std::string_view, FunDeclaration*> mono_items_;
 };
 
 }  // namespace types::instantiate

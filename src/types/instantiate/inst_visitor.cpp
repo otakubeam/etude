@@ -9,8 +9,8 @@ namespace types::instantiate {
 
 //////////////////////////////////////////////////////////////////////
 
-void TemplateInstantiator::VisitTypeDecl(TypeDeclStatement* node) {
-  auto n = new TypeDeclStatement{*node};
+void TemplateInstantiator::VisitTypeDecl(TypeDeclaration* node) {
+  auto n = new TypeDeclaration{*node};
   n->body_ = Instantinate(n->body_, current_substitution_);
 
   return_value = n;
@@ -18,8 +18,8 @@ void TemplateInstantiator::VisitTypeDecl(TypeDeclStatement* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void TemplateInstantiator::VisitVarDecl(VarDeclStatement* node) {
-  auto n = new VarDeclStatement{*node};
+void TemplateInstantiator::VisitVarDecl(VarDeclaration* node) {
+  auto n = new VarDeclaration{*node};
 
   n->annotation_ = Instantinate(n->annotation_, current_substitution_);
   n->value_ = Eval(n->value_)->as<Expression>();
@@ -29,8 +29,8 @@ void TemplateInstantiator::VisitVarDecl(VarDeclStatement* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void TemplateInstantiator::VisitFunDecl(FunDeclStatement* node) {
-  auto n = new FunDeclStatement{*node};
+void TemplateInstantiator::VisitFunDecl(FunDeclaration* node) {
+  auto n = new FunDeclaration{*node};
   n->type_ = Instantinate(n->type_, current_substitution_);
   if (n->body_) {
     n->body_ = Eval(n->body_)->as<Expression>();
@@ -91,8 +91,8 @@ void TemplateInstantiator::VisitVariantPat(VariantPattern* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void TemplateInstantiator::VisitYield(YieldStatement* node) {
-  auto n = new YieldStatement{*node};
+void TemplateInstantiator::VisitYield(YieldExpression* node) {
+  auto n = new YieldExpression{*node};
   n->yield_value_ = Eval(n->yield_value_)->as<Expression>();
 
   return_value = n;
@@ -100,8 +100,8 @@ void TemplateInstantiator::VisitYield(YieldStatement* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void TemplateInstantiator::VisitReturn(ReturnStatement* node) {
-  auto n = new ReturnStatement{*node};
+void TemplateInstantiator::VisitReturn(ReturnExpression* node) {
+  auto n = new ReturnExpression{*node};
   n->return_value_ = Eval(n->return_value_)->as<Expression>();
 
   return_value = n;

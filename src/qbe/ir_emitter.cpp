@@ -26,7 +26,7 @@ void IrEmitter::GenAtAddress(Expression* what, Value where) {
 
 ////////////////////////////////////////////////////////////////////
 
-void IrEmitter::VisitVarDecl(VarDeclStatement* node) {
+void IrEmitter::VisitVarDecl(VarDeclaration* node) {
   auto address = GenTemporary();
   named_values_.insert_or_assign(node->GetName(), address);
 
@@ -62,7 +62,7 @@ bool IsTest(Attribute* attr) {
   return attr && attr->FindAttr("test");
 }
 
-void IrEmitter::VisitFunDecl(FunDeclStatement* node) {
+void IrEmitter::VisitFunDecl(FunDeclaration* node) {
   if (!node->body_) {
     return;
   }
@@ -189,7 +189,7 @@ void IrEmitter::VisitIntrinsic(IntrinsicCall* node) {
 
 ////////////////////////////////////////////////////////////////////
 
-void IrEmitter::VisitReturn(ReturnStatement* node) {
+void IrEmitter::VisitReturn(ReturnExpression* node) {
   auto returning = Eval(node->return_value_);
 
   fmt::print("  ret {}\n", returning.Emit());
@@ -200,7 +200,7 @@ void IrEmitter::VisitReturn(ReturnStatement* node) {
 
 ////////////////////////////////////////////////////////////////////
 
-void IrEmitter::VisitYield(YieldStatement*) {
+void IrEmitter::VisitYield(YieldExpression*) {
   FMT_ASSERT(false, "Unimplemented!");
 
   return_value = Value::None();

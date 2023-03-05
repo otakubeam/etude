@@ -9,7 +9,7 @@ namespace types::instantiate {
 
 //////////////////////////////////////////////////////////////////////
 
-FunDeclStatement* TemplateInstantiator::FindTraitMethod(
+FunDeclaration* TemplateInstantiator::FindTraitMethod(
     ast::scope::Symbol* symbol, Type* mono) {
   for (auto& impl : symbol->as_fn_sym.trait->impls_) {
     for (auto& def : impl->trait_methods_) {
@@ -32,7 +32,7 @@ FunDeclStatement* TemplateInstantiator::FindTraitMethod(
 
 //////////////////////////////////////////////////////////////////////
 
-FunDeclStatement* TemplateInstantiator::GetFunctionDef(
+FunDeclaration* TemplateInstantiator::GetFunctionDef(
     ast::scope::Symbol* symbol, Type* mono) {
   auto poly = symbol->GetType();
   current_substitution_.clear();
@@ -55,9 +55,9 @@ bool TemplateInstantiator::TryFindInstantiation(FnCallExpression* i) {
 
 //////////////////////////////////////////////////////////////////////
 
-void TemplateInstantiator::StartUp(FunDeclStatement* main) {
+void TemplateInstantiator::StartUp(FunDeclaration* main) {
   call_context_ = main->layer_;
-  auto main_fn = Eval(main)->as<FunDeclStatement>();
+  auto main_fn = Eval(main)->as<FunDeclaration>();
   mono_items_.insert({main_fn->name_, main_fn});
 }
 
@@ -98,7 +98,7 @@ void TemplateInstantiator::ProcessQueueItem(FnCallExpression* i) {
 
   // 4) Evaluate
 
-  auto mono_fun = Eval(definition)->as<FunDeclStatement>();
+  auto mono_fun = Eval(definition)->as<FunDeclaration>();
 
   // 5) Save result
   if (mono_fun->body_) {
@@ -119,7 +119,7 @@ void TemplateInstantiator::ProcessQueue() {
 //////////////////////////////////////////////////////////////////////
 
 TemplateInstantiator::TemplateInstantiator(Declaration* main) {
-  StartUp(main->as<FunDeclStatement>());
+  StartUp(main->as<FunDeclaration>());
 
   fmt::print(stderr, "Finished processing main\n");
 
@@ -128,11 +128,11 @@ TemplateInstantiator::TemplateInstantiator(Declaration* main) {
 
 //////////////////////////////////////////////////////////////////////
 
-using Tests = std::vector<FunDeclStatement*>;
+using Tests = std::vector<FunDeclaration*>;
 
 TemplateInstantiator::TemplateInstantiator(Tests& tests) {
   for (auto& test : tests) {
-    StartUp(test->as<FunDeclStatement>());
+    StartUp(test->as<FunDeclaration>());
   }
 
   fmt::print(stderr, "Finished processing tests n");
@@ -142,10 +142,10 @@ TemplateInstantiator::TemplateInstantiator(Tests& tests) {
 
 //////////////////////////////////////////////////////////////////////
 
-using Result = std::pair<std::vector<FunDeclStatement*>, std::vector<Type*>>;
+using Result = std::pair<std::vector<FunDeclaration*>, std::vector<Type*>>;
 
 auto TemplateInstantiator::Flush() -> Result {
-  std::vector<FunDeclStatement*> result;
+  std::vector<FunDeclaration*> result;
 
   for (auto& mono : mono_items_) {
     fmt::print(stderr, "name: {} type: {}\n",  //

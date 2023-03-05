@@ -20,7 +20,7 @@ class Declaration : public Statement {
 class TraitDeclaration : public Declaration {
  public:
   TraitDeclaration(lex::Token name, std::vector<lex::Token> params,
-                   std::vector<FunDeclStatement*> decls)
+                   std::vector<FunDeclaration*> decls)
       : name_{name},
         parameters_{std::move(params)},
         methods_{std::move(decls)} {
@@ -42,9 +42,9 @@ class TraitDeclaration : public Declaration {
 
   std::vector<lex::Token> parameters_;
 
-  std::vector<FunDeclStatement*> methods_;
+  std::vector<FunDeclaration*> methods_;
 
-  std::vector<TypeDeclStatement*> assoc_types_;
+  std::vector<TypeDeclaration*> assoc_types_;
 
   // This is stupid, but I don't want to make Symbol not POD
 
@@ -57,7 +57,7 @@ class ImplDeclaration : public Declaration {
  public:
   ImplDeclaration(lex::Token name, types::Type* for_type,
                   std::vector<types::Type*> params,
-                  std::vector<FunDeclStatement*> methods)
+                  std::vector<FunDeclaration*> methods)
       : trait_name_{name},
         for_type_{for_type},
         params_{std::move(params)},
@@ -86,16 +86,16 @@ class ImplDeclaration : public Declaration {
 
   std::vector<types::Type*> params_;
 
-  std::vector<TypeDeclStatement*> assoc_types_;
+  std::vector<TypeDeclaration*> assoc_types_;
 
-  std::vector<FunDeclStatement*> trait_methods_;
+  std::vector<FunDeclaration*> trait_methods_;
 };
 
 //////////////////////////////////////////////////////////////////////
 
-class TypeDeclStatement : public Declaration {
+class TypeDeclaration : public Declaration {
  public:
-  TypeDeclStatement(lex::Token name, std::vector<lex::Token> params,
+  TypeDeclaration(lex::Token name, std::vector<lex::Token> params,
                     types::Type* body)
       : name_{name}, parameters_{params}, body_{body} {
   }
@@ -129,9 +129,9 @@ class TypeDeclStatement : public Declaration {
 
 //////////////////////////////////////////////////////////////////////
 
-class VarDeclStatement : public Declaration {
+class VarDeclaration : public Declaration {
  public:
-  VarDeclStatement(VarAccessExpression* lvalue, Expression* value,
+  VarDeclaration(VarAccessExpression* lvalue, Expression* value,
                    types::Type* hint)
       : lvalue_{lvalue}, annotation_{hint}, value_{value} {
   }
@@ -166,9 +166,9 @@ class VarDeclStatement : public Declaration {
 
 //////////////////////////////////////////////////////////////////////
 
-class FunDeclStatement : public Declaration {
+class FunDeclaration : public Declaration {
  public:
-  FunDeclStatement(lex::Token name, std::vector<lex::Token> formals,
+  FunDeclaration(lex::Token name, std::vector<lex::Token> formals,
                    Expression* body, types::Type* hint)
       : name_{name}, type_{hint}, formals_{std::move(formals)}, body_{body} {
   }

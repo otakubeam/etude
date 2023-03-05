@@ -10,7 +10,7 @@
 
 namespace types::constraints {
 
-using BindingGroup = std::vector<FunDeclStatement*>;
+using BindingGroup = std::vector<FunDeclaration*>;
 
 class ConstraintSolver {
  public:

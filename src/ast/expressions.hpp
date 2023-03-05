@@ -544,9 +544,9 @@ class TypecastExpression : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
-class ReturnStatement : public Expression {
+class ReturnExpression : public Expression {
  public:
-  ReturnStatement(lex::Token return_token, Expression* return_value)
+  ReturnExpression(lex::Token return_token, Expression* return_value)
       : return_token_{return_token}, return_value_{return_value} {
   }
 
@@ -571,9 +571,9 @@ class ReturnStatement : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
-class YieldStatement : public Expression {
+class YieldExpression : public Expression {
  public:
-  YieldStatement(lex::Token yield_token, Expression* yield_value)
+  YieldExpression(lex::Token yield_token, Expression* yield_value)
       : yield_token_{yield_token}, yield_value_{yield_value} {
   }
 

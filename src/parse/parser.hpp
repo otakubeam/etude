@@ -31,14 +31,14 @@ class Parser {
 
   Attribute* ParseAttributes();
   Declaration* ParsePrototype(bool require_sigature = false);
-  FunDeclStatement* ParseFunPrototype(types::Type* hint);
-  FunDeclStatement* ParseFunDeclarationStandalone();
+  FunDeclaration* ParseFunPrototype(types::Type* hint);
+  FunDeclaration* ParseFunDeclarationStandalone();
 
   TraitDeclaration* ParseTraitDeclaration();
   ImplDeclaration* ParseImplDeclaration();
-  TypeDeclStatement* ParseTypeDeclStatement();
-  FunDeclStatement* ParseFunDeclStatement(types::Type* hint);
-  VarDeclStatement* ParseVarDeclStatement(types::Type* hint);
+  TypeDeclaration* ParseTypeDeclStatement();
+  FunDeclaration* ParseFunDeclStatement(types::Type* hint);
+  VarDeclaration* ParseVarDeclStatement(types::Type* hint);
 
   ////////////////////////////////////////////////////////////////////
 

@@ -10,7 +10,7 @@ ConstraintSolver::ConstraintSolver() {
 // Wrapper to give already sorted defs
 void ConstraintSolver::CollectAndSolve(SortedFuns& definitions) {
   for (auto def : definitions) {
-    if (auto fun = def->as<FunDeclStatement>()) {
+    if (auto fun = def->as<FunDeclaration>()) {
       binding_groups_.push_back({fun});
       continue;
     }

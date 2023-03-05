@@ -520,7 +520,7 @@ Expression* Parser::ParseReturnStatement() {
 
   Expression* ret_expr = ParseExpression();
 
-  return new ReturnStatement{return_token, ret_expr};
+  return new ReturnExpression{return_token, ret_expr};
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -534,7 +534,7 @@ Expression* Parser::ParseYieldStatement() {
 
   Expression* yield_value = ParseExpression();
 
-  return new YieldStatement{location_token, yield_value};
+  return new YieldExpression{location_token, yield_value};
 }
 
 ///////////////////////////////////////////////////////////////////

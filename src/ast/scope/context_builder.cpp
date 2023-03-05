@@ -13,7 +13,7 @@ ContextBuilder::ContextBuilder(Context& unit_context)
 
 //////////////////////////////////////////////////////////////////////
 
-void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
+void ContextBuilder::VisitTypeDecl(TypeDeclaration* node) {
   if (!node->body_) {
     std::abort();
   }
@@ -60,7 +60,7 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
+void ContextBuilder::VisitVarDecl(VarDeclaration* node) {
   if (node->value_) {
     node->value_->Accept(this);
   }
@@ -82,7 +82,7 @@ void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
+void ContextBuilder::VisitFunDecl(FunDeclaration* node) {
   node->layer_ = current_context_;
 
   auto fun_ty = types::HintedOrNew(node->type_);
@@ -208,11 +208,11 @@ void ContextBuilder::VisitImplDecl(ImplDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ContextBuilder::VisitYield(YieldStatement* node) {
+void ContextBuilder::VisitYield(YieldExpression* node) {
   node->yield_value_->Accept(this);
 }
 
-void ContextBuilder::VisitReturn(ReturnStatement* node) {
+void ContextBuilder::VisitReturn(ReturnExpression* node) {
   node->this_fun = current_fn_;
   node->layer_ = current_context_;
   node->return_value_->Accept(this);

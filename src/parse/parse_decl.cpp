@@ -75,7 +75,7 @@ auto Parser::ParseModule() -> Module {
 
     result.items_.push_back(declaration);
 
-    if (auto fun = declaration->as<FunDeclStatement>()) {
+    if (auto fun = declaration->as<FunDeclaration>()) {
       if (fun->attributes && fun->attributes->FindAttr("test")) {
         result.tests_.push_back(fun);
       }
@@ -125,7 +125,7 @@ Declaration* Parser::ParsePrototype(bool) {
   std::abort();
 }
 
-FunDeclStatement* Parser::ParseFunPrototype(types::Type* hint) {
+FunDeclaration* Parser::ParseFunPrototype(types::Type* hint) {
   if (!Matches(lex::TokenType::FUN)) {
     return nullptr;
   }
@@ -135,12 +135,12 @@ FunDeclStatement* Parser::ParseFunPrototype(types::Type* hint) {
 
   auto formals = ParseFormals();
 
-  return new FunDeclStatement{fun_name, std::move(formals), nullptr, hint};
+  return new FunDeclaration{fun_name, std::move(formals), nullptr, hint};
 }
 
 ///////////////////////////////////////////////////////////////////
 
-FunDeclStatement* Parser::ParseFunDeclarationStandalone() {
+FunDeclaration* Parser::ParseFunDeclarationStandalone() {
   Consume(lex::TokenType::OF);
   auto hint = ParseFunctionType();
   auto result = ParseFunPrototype(hint);
@@ -181,7 +181,7 @@ Declaration* Parser::ParseDeclaration() {
 
 ///////////////////////////////////////////////////////////////////
 
-FunDeclStatement* Parser::ParseFunDeclStatement(types::Type* hint) {
+FunDeclaration* Parser::ParseFunDeclStatement(types::Type* hint) {
   auto attrs = ParseAttributes();
 
   auto proto = ParseFunPrototype(hint);
@@ -223,7 +223,7 @@ ImplDeclaration* Parser::ParseImplDeclaration() {
 
   Consume(lex::TokenType::LEFT_CBRACE);
 
-  std::vector<FunDeclStatement*> definitions;
+  std::vector<FunDeclaration*> definitions;
   while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
     types::Type* hint = nullptr;
 
@@ -252,7 +252,7 @@ TraitDeclaration* Parser::ParseTraitDeclaration() {
 
   Consume(lex::TokenType::LEFT_CBRACE);
 
-  std::vector<FunDeclStatement*> trait_methods;
+  std::vector<FunDeclaration*> trait_methods;
 
   while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
     if (auto method = ParseFunDeclarationStandalone()) {
@@ -266,7 +266,7 @@ TraitDeclaration* Parser::ParseTraitDeclaration() {
 
 ///////////////////////////////////////////////////////////////////
 
-TypeDeclStatement* Parser::ParseTypeDeclStatement() {
+TypeDeclaration* Parser::ParseTypeDeclStatement() {
   if (!Matches(lex::TokenType::TYPE)) {
     return nullptr;
   }
@@ -279,7 +279,7 @@ TypeDeclStatement* Parser::ParseTypeDeclStatement() {
   // Type declaration
 
   if (Matches(lex::TokenType::SEMICOLON)) {
-    return new TypeDeclStatement{type_name, std::move(formals), nullptr};
+    return new TypeDeclaration{type_name, std::move(formals), nullptr};
   };
 
   // Typedefinition definition
@@ -290,7 +290,7 @@ TypeDeclStatement* Parser::ParseTypeDeclStatement() {
 
   Consume(lex::TokenType::SEMICOLON);
 
-  return new TypeDeclStatement{type_name, std::move(formals), body};
+  return new TypeDeclaration{type_name, std::move(formals), body};
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -307,7 +307,7 @@ auto Parser::ParseFormals() -> std::vector<lex::Token> {
 
 ///////////////////////////////////////////////////////////////////
 
-VarDeclStatement* Parser::ParseVarDeclStatement(types::Type* hint) {
+VarDeclaration* Parser::ParseVarDeclStatement(types::Type* hint) {
   lex::Token type;
   switch (lexer_.Peek().type) {
     case lex::TokenType::VAR:
@@ -334,7 +334,7 @@ VarDeclStatement* Parser::ParseVarDeclStatement(types::Type* hint) {
 
   Consume(lex::TokenType::SEMICOLON);
 
-  return new VarDeclStatement{lvalue, value, hint};
+  return new VarDeclaration{lvalue, value, hint};
 }
 
 ///////////////////////////////////////////////////////////////////

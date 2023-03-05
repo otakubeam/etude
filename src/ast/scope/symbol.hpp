@@ -5,7 +5,7 @@
 #include <string_view>
 #include <vector>
 
-class FunDeclStatement;
+class FunDeclaration;
 class TraitDeclaration;
 class ImplDeclaration;
 struct Attribute;
@@ -35,7 +35,7 @@ struct StructSymbol {
 struct FnSymbol {
   size_t argnum = 0;
   types::Type* type = nullptr;
-  FunDeclStatement* def = nullptr;
+  FunDeclaration* def = nullptr;
   TraitDeclaration* trait = nullptr;
   Attribute* attrs = nullptr;
 };
@@ -71,7 +71,7 @@ struct Symbol {
     return name;
   }
 
-  FunDeclStatement* GetFunctionDefinition() {
+  FunDeclaration* GetFunctionDefinition() {
     FMT_ASSERT(sym_type == SymbolType::FUN, "Not a function symbol");
     return as_fn_sym.def;
   }
