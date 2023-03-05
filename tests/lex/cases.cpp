@@ -19,6 +19,23 @@ TEST_CASE("Lexer: Just works", "[lex]") {
 
 //////////////////////////////////////////////////////////////////////
 
+TEST_CASE("Overflow", "[lex]") {
+  std::stringstream source("1999999999999999999999999999999999999");
+  lex::Lexer l{"test.et", source};
+  CHECK_THROWS(l.Matches(lex::TokenType::INTEGER));
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("Double", "[lex]") {
+  std::stringstream source("0.23424");
+  lex::Lexer l{"test.et", source};
+  CHECK(l.Matches(lex::TokenType::DOUBLE));
+  CHECK(std::get<double>(l.GetPreviousToken().sem_info) == 0.23424);
+}
+
+//////////////////////////////////////////////////////////////////////
+
 TEST_CASE("Braces", "[lex]") {
   std::stringstream source("1 + (1)");
   lex::Lexer l{"test.et", source};
