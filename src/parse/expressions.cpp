@@ -6,7 +6,7 @@ Expression* Parser::ParseExpression() {
   return ParseAssignment();
 }
 
-///////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseBlockExpression() {
   if (!Matches(lex::TokenType::LEFT_CBRACE)) {
@@ -34,6 +34,66 @@ Expression* Parser::ParseBlockExpression() {
   Consume(lex::TokenType::RIGHT_CBRACE);
 
   return new BlockExpression{curly_brace, seq};
+}
+
+///////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseCompoundInitializer(lex::Token curly) {
+  Consume(lex::TokenType::LEFT_CBRACE);
+
+  if (Matches(lex::TokenType::RIGHT_CBRACE)) {
+    return new CompoundInitializerExpr{curly, {}};
+  }
+
+  auto initializers = ParseDesignatedList();
+  Consume(lex::TokenType::RIGHT_CBRACE);
+
+  return new CompoundInitializerExpr{curly, std::move(initializers)};
+}
+
+////////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseSeqExpression() {
+  if (auto let = ParseLetExpression()) {
+    return let;  // Let is also a kind of `SeqExpression`
+  }
+
+  Expression* first = ParseAssignment();
+
+  auto token = lexer_.Peek();
+
+  if (Matches(lex::TokenType::SEMICOLON)) {
+    auto second = ParseSeqExpression();
+    return new SeqExpression(first, token, second);
+  }
+
+  return first;
+}
+
+////////////////////////////////////////////////////////////////////
+
+Expression* Parser::ParseLetExpression() {
+  if (!Matches(lex::TokenType::LET)) {
+    return nullptr;
+  }
+
+  auto let = lexer_.GetPreviousToken();
+
+  auto pat = ParsePattern();
+
+  Consume(lex::TokenType::ASSIGN);
+
+  auto value = ParseAssignment();
+
+  Consume(lex::TokenType::ELSE);
+
+  auto else_rest = ParseAssignment();
+
+  Consume(lex::TokenType::SEMICOLON);
+
+  auto rest = ParseSeqExpression();
+
+  return new LetExpression(let, pat, value, else_rest, rest);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -97,21 +157,6 @@ Expression* Parser::ParseGrouping() {
   }
 
   return nullptr;
-}
-
-////////////////////////////////////////////////////////////////////
-
-Expression* Parser::ParseCompoundInitializer(lex::Token curly) {
-  Consume(lex::TokenType::LEFT_CBRACE);
-
-  if (Matches(lex::TokenType::RIGHT_CBRACE)) {
-    return new CompoundInitializerExpr{curly, {}};
-  }
-
-  auto initializers = ParseDesignatedList();
-  Consume(lex::TokenType::RIGHT_CBRACE);
-
-  return new CompoundInitializerExpr{curly, std::move(initializers)};
 }
 
 ////////////////////////////////////////////////////////////////////

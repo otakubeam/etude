@@ -2,51 +2,6 @@
 
 ////////////////////////////////////////////////////////////////////
 
-Expression* Parser::ParseSeqExpression() {
-  if (auto let = ParseLetExpression()) {
-    return let;  // Let is also a kind of `SeqExpression`
-  }
-
-  Expression* first = ParseAssignment();
-
-  auto token = lexer_.Peek();
-
-  if (Matches(lex::TokenType::SEMICOLON)) {
-    auto second = ParseSeqExpression();
-    return new SeqExpression(first, token, second);
-  }
-
-  return first;
-}
-
-////////////////////////////////////////////////////////////////////
-
-Expression* Parser::ParseLetExpression() {
-  if (!Matches(lex::TokenType::LET)) {
-    return nullptr;
-  }
-
-  auto let = lexer_.GetPreviousToken();
-
-  auto pat = ParsePattern();
-
-  Consume(lex::TokenType::ASSIGN);
-
-  auto value = ParseAssignment();
-
-  Consume(lex::TokenType::ELSE);
-
-  auto else_rest = ParseAssignment();
-
-  Consume(lex::TokenType::SEMICOLON);
-
-  auto rest = ParseSeqExpression();
-
-  return new LetExpression(let, pat, value, else_rest, rest);
-}
-
-////////////////////////////////////////////////////////////////////
-
 Expression* Parser::ParseAssignment() {
   Expression* target = ParseComparison();
 
