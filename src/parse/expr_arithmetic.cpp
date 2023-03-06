@@ -1,9 +1,12 @@
 #include <parse/parser.hpp>
-#include <parse/parse_error.hpp>
 
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseSeqExpression() {
+  if (auto let = ParseLetExpression()) {
+    return let;  // Let is also a kind of `SeqExpression`
+  }
+
   Expression* first = ParseAssignment();
 
   auto token = lexer_.Peek();

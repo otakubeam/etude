@@ -1,5 +1,7 @@
 #pragma once
 
+#include <parse/parsing_errors.hpp>
+
 #include <driver/module.hpp>
 
 #include <lex/lexer.hpp>

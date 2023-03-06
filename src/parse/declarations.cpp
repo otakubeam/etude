@@ -1,5 +1,4 @@
 #include <parse/parser.hpp>
-#include <parse/parse_error.hpp>
 
 ///////////////////////////////////////////////////////////////////
 
@@ -7,7 +6,6 @@ auto Parser::ParseModule() -> Module {
   Module result;
 
   // 1. Parse imported modules;
-  // --------------------------
 
   auto ParseImports = [this, &result]() {
     while (Matches(lex::TokenType::IDENTIFIER)) {
@@ -19,7 +17,6 @@ auto Parser::ParseModule() -> Module {
   ParseImports();
 
   // 2. Parse optional extern block
-  // ------------------------------
 
   auto ParseExternBlock = [ this, &result ]() -> auto{
     if (!Matches(lex::TokenType::EXTERN)) {
