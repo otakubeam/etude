@@ -1,7 +1,11 @@
 #include <parse/parser.hpp>
 
+///////////////////////////////////////////////////////////////////
+
 Parser::Parser(lex::Lexer& l) : lexer_{l} {
 }
+
+///////////////////////////////////////////////////////////////////
 
 bool Parser::Matches(lex::TokenType type) {
   if (lexer_.Peek().type != type) {
@@ -11,6 +15,8 @@ bool Parser::Matches(lex::TokenType type) {
   lexer_.Advance();
   return true;
 }
+
+///////////////////////////////////////////////////////////////////
 
 bool Parser::MatchesAssignmentSign(lex::TokenType type) {
   switch (type) {
@@ -26,6 +32,8 @@ bool Parser::MatchesAssignmentSign(lex::TokenType type) {
       return false;
   }
 }
+
+///////////////////////////////////////////////////////////////////
 
 bool Parser::MatchesComparisonSign(lex::TokenType type) {
   switch (type) {
@@ -43,6 +51,8 @@ bool Parser::MatchesComparisonSign(lex::TokenType type) {
   }
 }
 
+///////////////////////////////////////////////////////////////////
+
 void Parser::Consume(lex::TokenType type) {
   if (!Matches(type)) {
     throw parse::errors::ParseTokenError{
@@ -51,6 +61,8 @@ void Parser::Consume(lex::TokenType type) {
     };
   }
 }
+
+///////////////////////////////////////////////////////////////////
 
 // Checks whether `.none` is a tag-only value
 // as opposed to `.some <expr>`
@@ -73,9 +85,13 @@ bool Parser::TagOnly() {
   }
 }
 
+///////////////////////////////////////////////////////////////////
+
 std::string Parser::FormatLocation() {
   return lexer_.GetPreviousToken().location.Format();
 }
+
+///////////////////////////////////////////////////////////////////
 
 // Assume non-empty
 std::vector<Expression*> Parser::ParseCSV() {
@@ -91,3 +107,17 @@ std::vector<Expression*> Parser::ParseCSV() {
 
   return exprs;
 }
+
+///////////////////////////////////////////////////////////////////
+
+auto Parser::ParseFormals() -> std::vector<lex::Token> {
+  std::vector<lex::Token> result;
+
+  while (Matches(lex::TokenType::IDENTIFIER)) {
+    result.push_back(lexer_.GetPreviousToken());
+  }
+
+  return result;
+}
+
+///////////////////////////////////////////////////////////////////

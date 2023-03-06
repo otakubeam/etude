@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ast/syntax_tree.hpp>
+
 #include <types/type.hpp>
 
 #include <lex/token.hpp>
@@ -21,10 +22,10 @@ class Declaration : public TreeNode {
 class TraitDeclaration : public Declaration {
  public:
   TraitDeclaration(lex::Token name, std::vector<lex::Token> params,
-                   std::vector<FunDeclaration*> decls)
+                   std::vector<Declaration*> items)
       : name_{name},
         parameters_{std::move(params)},
-        methods_{std::move(decls)} {
+        assoc_items_{std::move(items)} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -43,13 +44,7 @@ class TraitDeclaration : public Declaration {
 
   std::vector<lex::Token> parameters_;
 
-  std::vector<FunDeclaration*> methods_;
-
-  std::vector<TypeDeclaration*> assoc_types_;
-
-  // This is stupid, but I don't want to make Symbol not POD
-
-  std::vector<ImplDeclaration*> impls_;
+  std::vector<Declaration*> assoc_items_;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -58,11 +53,11 @@ class ImplDeclaration : public Declaration {
  public:
   ImplDeclaration(lex::Token name, types::Type* for_type,
                   std::vector<types::Type*> params,
-                  std::vector<FunDeclaration*> methods)
+                  std::vector<Declaration*> assoc_items)
       : trait_name_{name},
         for_type_{for_type},
         params_{std::move(params)},
-        trait_methods_{std::move(methods)} {
+        associated_items_{std::move(assoc_items)} {
   }
 
   //  impl Into Str for String  {
@@ -87,9 +82,7 @@ class ImplDeclaration : public Declaration {
 
   std::vector<types::Type*> params_;
 
-  std::vector<TypeDeclaration*> assoc_types_;
-
-  std::vector<FunDeclaration*> trait_methods_;
+  std::vector<Declaration*> associated_items_;
 };
 
 //////////////////////////////////////////////////////////////////////

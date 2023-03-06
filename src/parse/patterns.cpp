@@ -41,6 +41,7 @@ Pattern* Parser::ParseBindingPattern() {
   if (!Matches(lex::TokenType::IDENTIFIER)) {
     return nullptr;
   }
+
   return new BindingPattern{lexer_.GetPreviousToken()};
 }
 
@@ -50,6 +51,7 @@ Pattern* Parser::ParseDiscardingPattern() {
   if (!Matches(lex::TokenType::UNDERSCORE)) {
     return nullptr;
   }
+
   return new DiscardingPattern{lexer_.GetPreviousToken()};
 }
 

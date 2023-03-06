@@ -75,6 +75,7 @@ enum class TokenType {
   OF,
   FOR,
   IMPL,
+  WHERE,
   UNDERSCORE,
 
 

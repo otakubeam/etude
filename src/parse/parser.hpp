@@ -10,17 +10,27 @@ class Parser {
  public:
   Parser(lex::Lexer& l);
 
+  ////////////////////////////////////////////////////////////////////
+  //                            Module                              //
+  ////////////////////////////////////////////////////////////////////
+
+  class ModuleBuilder {
+   public:
+    ModuleBuilder(Parser& me) : me_(me) {
+    }
+
+    auto Run() -> Module;
+
+   private:
+    auto ParseImports() -> void;
+    auto ParseExportBlock() -> void;
+    auto ParseRestDefinitions() -> void;
+
+    Parser& me_;
+    Module result_;
+  };
+
   auto ParseModule() -> Module;
-
-  ////////////////////////////////////////////////////////////////////
-  //                           Patterns                             //
-  ////////////////////////////////////////////////////////////////////
-
-  Pattern* ParsePattern();
-  Pattern* ParseLiteralPattern();
-  Pattern* ParseBindingPattern();
-  Pattern* ParseDiscardingPattern();
-  Pattern* ParseVariantPattern();
 
   ////////////////////////////////////////////////////////////////////
   //                        Declarations                            //
@@ -28,14 +38,15 @@ class Parser {
 
   Declaration* ParseDeclaration();
 
-  TraitDeclaration* ParseTraitDeclaration();
-  ImplDeclaration* ParseImplDeclaration();
+  TraitDeclaration* ParseTraitDeclaration();  // trait
+  ImplDeclaration* ParseImplDeclaration();    // impl
+  Declaration* ParseAssociatedItems();        // fun | var | type
+
   TypeDeclaration* ParseTypeDeclaration();
-  FunDeclaration* ParseFunDeclaration(types::Type* hint);
   VarDeclaration* ParseVarDeclaration(types::Type* hint);
+  FunDeclaration* ParseFunDeclaration(types::Type* hint);
 
   Attribute* ParseAttributes();
-  Declaration* ParsePrototype(bool require_sigature = false);
   FunDeclaration* ParseFunPrototype(types::Type* hint);
   FunDeclaration* ParseFunDeclarationStandalone();
 
@@ -45,9 +56,18 @@ class Parser {
 
   // Top
 
-  Expression* ParseExpression();
+  Expression* ParseExpression();  // -> ParseAssignment();
 
+  // Sequencing:
+  //
+  // These expressions are somewhat special for they
+  // are only allowed inside `GroupingExpressions`.
+  //
+
+  // <expr> ; <expr>
   Expression* ParseSeqExpression();
+
+  // let <pat> = <expr> else <expr> ; <seq_expr>
   Expression* ParseLetExpression();
 
   // Arithmetic
@@ -63,11 +83,11 @@ class Parser {
   // Postfix Expresssions
 
   Expression* ParsePostfixExpressions();
-  Expression* ParseIndirectFieldAccess(Expression* expr);
-  Expression* ParseIndexingExpression(Expression* expr);
-  Expression* ParseFieldAccess(Expression* expr);
-  Expression* ParseFnCall(Expression* expr);
-  Expression* ParseCast(Expression* expr);
+  Expression* ParseFieldAccess(Expression* expr);  // .id
+  Expression* ParseArrow(Expression* expr);        // ->id
+  Expression* ParseIndexing(Expression* expr);     // [<expr>]
+  Expression* ParseCall(Expression* expr);         // ( <expr>,* )
+  Expression* ParseCast(Expression* expr);         // ~> <type>
 
   // Blocks / Grouping
 
@@ -90,6 +110,16 @@ class Parser {
   // Bottom
 
   Expression* ParsePrimary();
+
+  ////////////////////////////////////////////////////////////////////
+  //                           Patterns                             //
+  ////////////////////////////////////////////////////////////////////
+
+  Pattern* ParsePattern();
+  Pattern* ParseLiteralPattern();
+  Pattern* ParseBindingPattern();
+  Pattern* ParseDiscardingPattern();
+  Pattern* ParseVariantPattern();
 
   ////////////////////////////////////////////////////////////////////
 

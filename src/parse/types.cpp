@@ -107,6 +107,7 @@ types::Type* Parser::ParseSumType() {
 
   return types::MakeSumType(std::move(fields));
 }
+
 ///////////////////////////////////////////////////////////////////
 
 types::Type* Parser::ParsePrimitiveType() {
@@ -159,3 +160,5 @@ types::Type* Parser::ParsePrimitiveType() {
       throw parse::errors::ParseTypeError{FormatLocation()};
   }
 }
+
+///////////////////////////////////////////////////////////////////

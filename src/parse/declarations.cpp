@@ -2,84 +2,63 @@
 
 ///////////////////////////////////////////////////////////////////
 
-auto Parser::ParseModule() -> Module {
-  Module result;
-
-  // 1. Parse imported modules;
-
-  auto ParseImports = [this, &result]() {
-    while (Matches(lex::TokenType::IDENTIFIER)) {
-      result.imports_.push_back(lexer_.GetPreviousToken());
-      Consume(lex::TokenType::SEMICOLON);
-    }
-  };
-
-  ParseImports();
-
-  // 2. Parse optional extern block
-
-  auto ParseExternBlock = [ this, &result ]() -> auto{
-    if (!Matches(lex::TokenType::EXTERN)) {
-      return;
-    }
-
-    Consume(lex::TokenType::RIGHT_CBRACE);
-
-    while (auto decl = ParseDeclaration()) {
-      result.items_.push_back(decl);
-    }
-
-    Consume(lex::TokenType::LEFT_CBRACE);
-  };
-
-  ParseExternBlock();
-
-  // 3. Parse export block
-  // ---------------------
-
-  auto ParseExportBlock = [ this, &result ]() -> auto{
-    std::vector<std::string_view> exported;
-
-    if (!Matches(lex::TokenType::EXPORT)) {
-      return exported;
-    }
-
-    Consume(lex::TokenType::LEFT_CBRACE);
-
-    while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
-      auto proto = ParsePrototype();
-      exported.push_back(proto->GetName());
-      result.items_.push_back(proto);
-      if (auto trait = proto->as<TraitDeclaration>()) {
-        for (auto method : trait->methods_) {
-          exported.push_back(method->GetName());
-        }
-      }
-    }
-
-    return exported;
-  };
-
-  result.exported_ = ParseExportBlock();
-
-  // 4. Parse the rest of definitions
-  // --------------------------------
-
-  auto declarations = std::vector<Declaration*>{};
-
-  while (!Matches(lex::TokenType::TOKEN_EOF)) {
-    auto declaration = ParseDeclaration();
-
-    result.items_.push_back(declaration);
-
-    if (auto fun = declaration->as<FunDeclaration>()) {
-      if (fun->attributes && fun->attributes->FindAttr("test")) {
-        result.tests_.push_back(fun);
-      }
-    }
+Declaration* Parser::ParseDeclaration() {
+  if (auto assoc_declaration = ParseAssociatedItems()) {
+    return assoc_declaration;
   }
 
-  return result;
+  if (auto trait_declaration = ParseTraitDeclaration()) {
+    return trait_declaration;
+  }
+
+  if (auto impl_declaration = ParseImplDeclaration()) {
+    return impl_declaration;
+  }
+
+  return nullptr;
+}
+
+///////////////////////////////////////////////////////////////////
+
+Declaration* Parser::ParseAssociatedItems() {
+  types::Type* hint = nullptr;
+
+  if (Matches(lex::TokenType::OF)) {
+    hint = ParseFunctionType();
+  }
+
+  if (auto fun_declaration = ParseFunDeclaration(hint)) {
+    return fun_declaration;
+  }
+
+  if (auto var_declaration = ParseVarDeclaration(hint)) {
+    return var_declaration;
+  }
+
+  if (auto type_declaration = ParseTypeDeclaration()) {
+    return type_declaration;
+  }
+
+  return nullptr;
+}
+
+///////////////////////////////////////////////////////////////////
+
+FunDeclaration* Parser::ParseFunDeclaration(types::Type* hint) {
+  auto attrs = ParseAttributes();
+  auto proto = ParseFunPrototype(hint);
+
+  if (!proto || Matches(lex::TokenType::SEMICOLON)) {
+    return proto;
+  };
+
+  proto->attributes = attrs;  // TODO: flesh out attributes
+  Consume(lex::TokenType::ASSIGN);
+
+  proto->body_ = ParseExpression();
+  Consume(lex::TokenType::SEMICOLON);
+
+  return proto;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -98,30 +77,6 @@ Attribute* Parser::ParseAttributes() {
 
 ///////////////////////////////////////////////////////////////////
 
-Declaration* Parser::ParsePrototype(bool) {
-  if (auto type_declaration = ParseTypeDeclaration()) {
-    return type_declaration;
-  }
-
-  if (auto trait_declaration = ParseTraitDeclaration()) {
-    return trait_declaration;
-  }
-
-  Consume(lex::TokenType::OF);
-
-  auto hint = ParseFunctionType();
-
-  auto attrs = ParseAttributes();
-
-  if (auto fun_proto = ParseFunPrototype(hint)) {
-    Consume(lex::TokenType::SEMICOLON);
-    fun_proto->attributes = attrs;
-    return fun_proto;
-  }
-
-  std::abort();
-}
-
 FunDeclaration* Parser::ParseFunPrototype(types::Type* hint) {
   if (!Matches(lex::TokenType::FUN)) {
     return nullptr;
@@ -137,67 +92,20 @@ FunDeclaration* Parser::ParseFunPrototype(types::Type* hint) {
 
 ///////////////////////////////////////////////////////////////////
 
-FunDeclaration* Parser::ParseFunDeclarationStandalone() {
-  Consume(lex::TokenType::OF);
-  auto hint = ParseFunctionType();
-  auto result = ParseFunPrototype(hint);
-  Consume(lex::TokenType::SEMICOLON);
-  return result;
-}
-
-///////////////////////////////////////////////////////////////////
-
-Declaration* Parser::ParseDeclaration() {
-  types::Type* hint = nullptr;
-  if (Matches(lex::TokenType::OF)) {
-    hint = ParseFunctionType();
+VarDeclaration* Parser::ParseVarDeclaration(types::Type* hint) {
+  if (!Matches(lex::TokenType::VAR)) {
+    return nullptr;
   }
 
-  if (auto type_declaration = ParseTypeDeclaration()) {
-    return type_declaration;
-  }
+  Consume(lex::TokenType::IDENTIFIER);
 
-  if (auto var_declaration = ParseVarDeclaration(hint)) {
-    return var_declaration;
-  }
-
-  if (auto trait_declaration = ParseTraitDeclaration()) {
-    return trait_declaration;
-  }
-
-  if (auto impl_declaration = ParseImplDeclaration()) {
-    return impl_declaration;
-  }
-
-  if (auto fun_declaration = ParseFunDeclaration(hint)) {
-    return fun_declaration;
-  }
-
-  return nullptr;
-}
-
-///////////////////////////////////////////////////////////////////
-
-FunDeclaration* Parser::ParseFunDeclaration(types::Type* hint) {
-  auto attrs = ParseAttributes();
-
-  auto proto = ParseFunPrototype(hint);
-
-  if (!proto || Matches(lex::TokenType::SEMICOLON)) {
-    return proto;
-  };
-
-  proto->attributes = attrs;
-
-  // Funtion definition
-
+  auto name = lexer_.GetPreviousToken();
   Consume(lex::TokenType::ASSIGN);
 
-  proto->body_ = ParseExpression();
-
+  auto value = ParseExpression();
   Consume(lex::TokenType::SEMICOLON);
 
-  return proto;
+  return new VarDeclaration{name, value, hint};
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -206,6 +114,8 @@ ImplDeclaration* Parser::ParseImplDeclaration() {
   if (!Matches(lex::TokenType::IMPL)) {
     return nullptr;
   }
+
+  // Parse Impl Header
 
   auto trait_name = lexer_.Peek();
   Consume(lex::TokenType::IDENTIFIER);
@@ -218,17 +128,18 @@ ImplDeclaration* Parser::ParseImplDeclaration() {
 
   auto for_type = ParseType();
 
+  if (Matches(lex::TokenType::WHERE)) {
+    // Parse ImplWhere clause
+  }
+
   Consume(lex::TokenType::LEFT_CBRACE);
 
-  std::vector<FunDeclaration*> definitions;
+  // Parse Impl Definitions
+
+  std::vector<Declaration*> definitions;
+
   while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
-    types::Type* hint = nullptr;
-
-    if (Matches(lex::TokenType::OF)) {
-      hint = ParseFunctionType();
-    }
-
-    definitions.push_back(ParseFunDeclaration(hint));
+    definitions.push_back(ParseAssociatedItems());
   }
 
   return new ImplDeclaration(trait_name, for_type, std::move(type_params_),
@@ -246,19 +157,28 @@ TraitDeclaration* Parser::ParseTraitDeclaration() {
   Consume(lex::TokenType::IDENTIFIER);
 
   auto parameters = ParseFormals();
-
   Consume(lex::TokenType::LEFT_CBRACE);
 
-  std::vector<FunDeclaration*> trait_methods;
+  std::vector<Declaration*> trait_methods;
 
   while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
-    if (auto method = ParseFunDeclarationStandalone()) {
+    if (auto method = ParseAssociatedItems()) {
       trait_methods.push_back(method);
     }
   }
 
   return new TraitDeclaration{name, std::move(parameters),
                               std::move(trait_methods)};
+}
+
+///////////////////////////////////////////////////////////////////
+
+FunDeclaration* Parser::ParseFunDeclarationStandalone() {
+  Consume(lex::TokenType::OF);
+  auto hint = ParseFunctionType();
+  auto result = ParseFunPrototype(hint);
+  Consume(lex::TokenType::SEMICOLON);
+  return result;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -272,66 +192,12 @@ TypeDeclaration* Parser::ParseTypeDeclaration() {
   Consume(lex::TokenType::IDENTIFIER);
 
   auto formals = ParseFormals();
-
-  // Type declaration
-
-  if (Matches(lex::TokenType::SEMICOLON)) {
-    return new TypeDeclaration{type_name, std::move(formals), nullptr};
-  };
-
-  // Typedefinition definition
-
   Consume(lex::TokenType::ASSIGN);
 
   auto body = ParseFunctionType();
-
   Consume(lex::TokenType::SEMICOLON);
 
   return new TypeDeclaration{type_name, std::move(formals), body};
-}
-
-///////////////////////////////////////////////////////////////////
-
-auto Parser::ParseFormals() -> std::vector<lex::Token> {
-  std::vector<lex::Token> result;
-
-  while (Matches(lex::TokenType::IDENTIFIER)) {
-    result.push_back(lexer_.GetPreviousToken());
-  }
-
-  return result;
-}
-
-///////////////////////////////////////////////////////////////////
-
-VarDeclaration* Parser::ParseVarDeclaration(types::Type* hint) {
-  lex::Token type;
-  switch (lexer_.Peek().type) {
-    case lex::TokenType::VAR:
-      lexer_.Advance();
-      type = lexer_.GetPreviousToken();
-      break;
-
-      // case lex::TokenType::STATIC:
-
-    default:
-      return nullptr;
-  }
-
-  // 1. Get a name to assign to
-
-  Consume(lex::TokenType::IDENTIFIER);
-  auto lvalue = new VarAccessExpression{lexer_.GetPreviousToken()};
-
-  // 2. Get an expression to assign to
-
-  Consume(lex::TokenType::ASSIGN);
-
-  auto value = ParseExpression();
-
-  Consume(lex::TokenType::SEMICOLON);
-
-  return new VarDeclaration{lvalue, value, hint};
 }
 
 ///////////////////////////////////////////////////////////////////

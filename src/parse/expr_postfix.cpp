@@ -8,16 +8,16 @@ Expression* Parser::ParsePostfixExpressions() {
   while (true) {
     switch (lexer_.Peek().type) {
       case lex::TokenType::ARROW:
-        expr = ParseIndirectFieldAccess(expr);
+        expr = ParseArrow(expr);
 
       case lex::TokenType::LEFT_SBRACE:
-        expr = ParseIndexingExpression(expr);
+        expr = ParseIndexing(expr);
 
       case lex::TokenType::DOT:
         expr = ParseFieldAccess(expr);
 
       case lex::TokenType::LEFT_PAREN:
-        expr = ParseFnCall(expr);
+        expr = ParseCall(expr);
 
       case lex::TokenType::ARROW_CAST:
         expr = ParseCast(expr);
@@ -30,7 +30,7 @@ Expression* Parser::ParsePostfixExpressions() {
 
 ///////////////////////////////////////////////////////////////////
 
-Expression* Parser::ParseFnCall(Expression* expr) {
+Expression* Parser::ParseCall(Expression* expr) {
   Consume(lex::TokenType::LEFT_PAREN);
   auto loc = lexer_.GetPreviousToken();
 
@@ -55,7 +55,7 @@ Expression* Parser::ParseCast(Expression* expr) {
 
 ///////////////////////////////////////////////////////////////////
 
-Expression* Parser::ParseIndirectFieldAccess(Expression* expr) {
+Expression* Parser::ParseArrow(Expression* expr) {
   auto arrow = lexer_.Peek();
   Consume(lex::TokenType::ARROW);
 
@@ -78,7 +78,7 @@ Expression* Parser::ParseFieldAccess(Expression* expr) {
 
 ////////////////////////////////////////////////////////////////////
 
-Expression* Parser::ParseIndexingExpression(Expression* expr) {
+Expression* Parser::ParseIndexing(Expression* expr) {
   auto begin_idx = lexer_.Peek();
   Consume(lex::TokenType::LEFT_SBRACE);
 

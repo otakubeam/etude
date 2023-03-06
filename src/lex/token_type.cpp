@@ -56,6 +56,7 @@ namespace lex {
   code(OF)                  \
   code(FOR)                 \
   code(IMPL)                \
+  code(WHERE)               \
   code(UNDERSCORE)          \
   code(TY_INT)              \
   code(TY_BOOL)             \

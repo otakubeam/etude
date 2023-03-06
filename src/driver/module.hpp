@@ -26,6 +26,20 @@ class Module {
     name_ = name;
   }
 
+  void ExportTraitMethods() {
+    // Walk all items
+    for (auto item : items_) {
+      // Get traits
+      if (auto trait = item->as<TraitDeclaration>()) {
+        // Get their methods
+        for (auto method : trait->methods_) {
+          // And export them
+          exported_.push_back(method->GetName());
+        }
+      }
+    }
+  }
+
   void BuildContext(CompilationDriver* driver) {
     global_context.driver = driver;
 
@@ -75,12 +89,13 @@ class Module {
     return name_;
   }
 
-  std::vector<std::string_view> imports_;
-  std::vector<std::string_view> exported_;
-
   ast::scope::Symbol* GetExportedSymbol(std::string_view name) {
     return global_context.FindLocalSymbol(name);
   }
+
+ public:
+  std::vector<std::string_view> imports_;
+  std::vector<std::string_view> exported_;
 
  private:
   std::string_view name_;

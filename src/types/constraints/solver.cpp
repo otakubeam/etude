@@ -16,7 +16,7 @@ void ConstraintSolver::CollectAndSolve(SortedFuns& definitions) {
     }
 
     if (auto impl = def->as<ImplDeclaration>()) {
-      for (auto method : impl->trait_methods_) {
+      for (auto method : impl->associated_items_) {
         binding_groups_.push_back({method});
       }
       continue;

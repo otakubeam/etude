@@ -15,7 +15,7 @@ Expression* Parser::ParseBlockExpression() {
 
   auto curly_brace = lexer_.GetPreviousToken();
 
-  // Check Structure Initialization
+  // Check for Structure Initialization
 
   if (lexer_.Peek().type == lex::TokenType::DOT) {
     return ParseCompoundInitializer(curly_brace);
@@ -39,15 +39,8 @@ Expression* Parser::ParseBlockExpression() {
 ///////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseCompoundInitializer(lex::Token curly) {
-  Consume(lex::TokenType::LEFT_CBRACE);
-
-  if (Matches(lex::TokenType::RIGHT_CBRACE)) {
-    return new CompoundInitializerExpr{curly, {}};
-  }
-
   auto initializers = ParseDesignatedList();
   Consume(lex::TokenType::RIGHT_CBRACE);
-
   return new CompoundInitializerExpr{curly, std::move(initializers)};
 }
 
@@ -205,7 +198,7 @@ Expression* Parser::ParsePrimary() {
       return new VarAccessExpression{token};
 
     default:
-      throw parse::errors::ParsePrimaryError{token.location.Format()};
+      return nullptr;
   }
 }
 
