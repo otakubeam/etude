@@ -15,18 +15,13 @@
 
 class Pattern;
 
+//////////////////////////////////////////////////////////////////////
+
 class Expression : public TreeNode {
  public:
   virtual void Accept(Visitor* /* visitor */){};
 
   virtual types::Type* GetType() = 0;
-};
-
-//////////////////////////////////////////////////////////////////////
-
-// Identifier, Named entity
-class LvalueExpression : public Expression {
- public:
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -110,7 +105,7 @@ class UnaryExpression : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
-class DereferenceExpression : public LvalueExpression {
+class DereferenceExpression : public Expression {
  public:
   DereferenceExpression(lex::Token star, Expression* operand)
       : star_{star}, operand_{operand} {
@@ -143,7 +138,7 @@ class DereferenceExpression : public LvalueExpression {
 
 class AddressofExpression : public Expression {
  public:
-  AddressofExpression(lex::Token ampersand, LvalueExpression* operand)
+  AddressofExpression(lex::Token ampersand, Expression* operand)
       : ampersand_{ampersand}, operand_{operand} {
     // Transform &*unit -> unit (like in C)
     if (auto op = dynamic_cast<DereferenceExpression*>(operand_)) {
@@ -165,7 +160,7 @@ class AddressofExpression : public Expression {
 
   lex::Token ampersand_;
 
-  /*Lvalue*/ Expression* operand_;
+  /**/ Expression* operand_;
 
   // Mabye embed and save allocation
   types::Type* type_ = nullptr;
@@ -284,7 +279,7 @@ class CompoundInitializerExpr : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
-class FieldAccessExpression : public LvalueExpression {
+class FieldAccessExpression : public Expression {
  public:
   FieldAccessExpression(lex::Token field_name, Expression* lvalue)
       : struct_expression_{lvalue}, field_name_{field_name} {
@@ -322,9 +317,8 @@ class FieldAccessExpression : public LvalueExpression {
 
 class BlockExpression : public Expression {
  public:
-  BlockExpression(lex::Token curly_brace, std::vector<Statement*> stmts,
-                  Expression* final)
-      : curly_brace_{curly_brace}, stmts_{stmts}, final_{final} {
+  BlockExpression(lex::Token curly_brace, Expression* expr)
+      : curly_brace_{curly_brace}, expr_{expr} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -332,20 +326,44 @@ class BlockExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    return final_ ? final_->GetType() : &types::builtin_unit;
+    return expr_->GetType();
   };
 
   virtual lex::Location GetLocation() override {
     return curly_brace_.location;
   }
 
-  lex::Token curly_brace_{};
+  lex::Token curly_brace_;
 
-  std::vector<Statement*> stmts_;
-
-  Expression* final_;
+  Expression* expr_;
 
   ast::scope::ScopeLayer* layer_ = nullptr;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class LiteralExpression : public Expression {
+ public:
+  LiteralExpression(lex::Token token) : token_{token} {
+  }
+
+  LiteralExpression(const LiteralExpression& other) = default;
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitLiteral(this);
+  }
+
+  virtual types::Type* GetType() override {
+    return types::FindLeader(type_);
+  };
+
+  virtual lex::Location GetLocation() override {
+    return token_.location;
+  }
+
+  types::Type* type_ = nullptr;
+
+  lex::Token token_;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -357,9 +375,9 @@ class IfExpression : public Expression {
       : condition_{condition},
         true_branch_{true_branch},
         false_branch_{false_branch} {
-    if (!false_branch_) {
-      false_branch_ = new BlockExpression{{}, {}, nullptr};
-    }
+    false_branch_ = false_branch_
+                        ? false_branch_
+                        : new LiteralExpression{lex::Token::UnitToken()};
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -412,7 +430,7 @@ class MatchExpression : public Expression {
 
 //////////////////////////////////////////////////////////////////////
 
-class NewExpression : public LvalueExpression {
+class NewExpression : public Expression {
  public:
   NewExpression(lex::Token new_token, Expression* allocation_size,
                 Expression* initial_value, types::Type* underlying)
@@ -448,33 +466,7 @@ class NewExpression : public LvalueExpression {
 
 //////////////////////////////////////////////////////////////////////
 
-class LiteralExpression : public Expression {
- public:
-  LiteralExpression(lex::Token token) : token_{token} {
-  }
-
-  LiteralExpression(const LiteralExpression& other) = default;
-
-  virtual void Accept(Visitor* visitor) override {
-    visitor->VisitLiteral(this);
-  }
-
-  virtual types::Type* GetType() override {
-    return types::FindLeader(type_);
-  };
-
-  virtual lex::Location GetLocation() override {
-    return token_.location;
-  }
-
-  types::Type* type_ = nullptr;
-
-  lex::Token token_;
-};
-
-//////////////////////////////////////////////////////////////////////
-
-class VarAccessExpression : public LvalueExpression {
+class VarAccessExpression : public Expression {
  public:
   VarAccessExpression(lex::Token name) : name_{name} {
   }
@@ -609,3 +601,95 @@ class IndexExpression : public Expression {
 
   types::Type* type_ = nullptr;
 };
+
+//////////////////////////////////////////////////////////////////////
+
+class SeqExpression : public Expression {
+ public:
+  SeqExpression(Expression* expr, lex::Token semicolon, Expression* rest)
+      : expr_{expr}, semicolon_{semicolon}, rest_(rest) {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitSeqExpr(this);
+  }
+
+  virtual types::Type* GetType() override {
+    return rest_ ? rest_->GetType() : &types::builtin_unit;
+    // TODO: perf?
+  }
+
+  virtual lex::Location GetLocation() override {
+    return expr_->GetLocation();
+  }
+
+  Expression* expr_;
+
+  lex::Token semicolon_;
+
+  Expression* rest_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class LetExpression : public Expression {
+ public:
+  LetExpression(lex::Token let, Pattern* pat, Expression* value,
+                Expression* _else, Expression* rest)
+      : let_(let),
+        pattern_(pat),
+        value_(value),
+        rest_(rest),
+        else_rest_(_else) {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitLet(this);
+  }
+
+  virtual types::Type* GetType() override {
+    return types::FindLeader(type_);
+  }
+
+  virtual lex::Location GetLocation() override {
+    return let_.location;
+  }
+
+  lex::Token let_;
+  Pattern* pattern_;
+
+  Expression* value_;
+
+  Expression* rest_;
+  Expression* else_rest_;
+
+  types::Type* type_ = nullptr;
+};
+
+//////////////////////////////////////////////////////////////////////
+
+class AssignExpression : public Expression {
+ public:
+  AssignExpression(lex::Token assign, Expression* target, Expression* value)
+      : assign_{assign}, target_{target}, value_{value} {
+  }
+
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitAssign(this);
+  }
+
+  virtual types::Type* GetType() override {
+    return &types::builtin_unit;
+  }
+
+  virtual lex::Location GetLocation() override {
+    return assign_.location;
+  }
+
+  lex::Token assign_;
+
+  Expression* target_;
+  Expression* value_;
+};
+
+//////////////////////////////////////////////////////////////////////

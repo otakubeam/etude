@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseExpression() {
-  return ParseComparison();
+  return ParseAssignment();
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -22,24 +22,19 @@ Expression* Parser::ParseBlockExpression() {
     return ParseCompoundInitializer(curly_brace);
   }
 
-  // Now Parse Block for Real
+  //
+  // Descend into the Sequencing Expression
+  //
+  //     seq_expr ::= <...> ; <...>
+  //
 
-  std::vector<Statement*> statements;
-  Expression* final_expr = nullptr;
+  auto seq = ParseSeqExpression();
 
-  while (!Matches(lex::TokenType::RIGHT_CBRACE)) try {
-      if (auto decl = ParseDeclaration()) {
-        statements.push_back(decl);
-      } else if (auto stmt = ParseStatement()) {
-        statements.push_back(stmt);
-      }
-    } catch (ExprStatement* e) {
-      final_expr = e->expr_;
-      Consume(lex::TokenType::RIGHT_CBRACE);
-      break;
-    }
+  // TODO: also look for delarations!
 
-  return new BlockExpression{curly_brace, std::move(statements), final_expr};
+  Consume(lex::TokenType::RIGHT_CBRACE);
+
+  return new BlockExpression{curly_brace, seq};
 }
 
 ////////////////////////////////////////////////////////////////////

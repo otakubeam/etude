@@ -13,6 +13,21 @@ bool Parser::Matches(lex::TokenType type) {
   return true;
 }
 
+bool Parser::MatchesAssignmentSign(lex::TokenType type) {
+  switch (type) {
+    case lex::TokenType::DIV_EQ:
+    case lex::TokenType::ASSIGN:
+    case lex::TokenType::STAR_EQ:
+    case lex::TokenType::PLUS_EQ:
+    case lex::TokenType::MINUS_EQ:
+      lexer_.Advance();
+      return true;
+
+    default:
+      return false;
+  }
+}
+
 bool Parser::MatchesComparisonSign(lex::TokenType type) {
   switch (type) {
     case lex::TokenType::GE:

@@ -10,20 +10,15 @@ class Parser {
 
   auto ParseModule() -> Module;
 
-  ///////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
+  //                           Patterns                             //
+  ////////////////////////////////////////////////////////////////////
 
   Pattern* ParsePattern();
   Pattern* ParseLiteralPattern();
   Pattern* ParseBindingPattern();
   Pattern* ParseDiscardingPattern();
   Pattern* ParseVariantPattern();
-
-  ///////////////////////////////////////////////////////////////////
-
-  Statement* ParseStatement();
-
-  Statement* ParseExprStatement();
-  AssignmentStatement* ParseAssignment(LvalueExpression* target);
 
   ////////////////////////////////////////////////////////////////////
   //                        Declarations                            //
@@ -50,17 +45,12 @@ class Parser {
 
   Expression* ParseExpression();
 
-  // Keywords
-
-  Expression* ParseKeywordExpresssion();
-  Expression* ParseReturnExpression();
-  Expression* ParseYieldExpression();
-  Expression* ParseMatchExpression();
-  Expression* ParseNewExpression();
-  Expression* ParseIfExpression();
+  Expression* ParseSeqExpression();
+  Expression* ParseLetExpression();
 
   // Arithmetic
 
+  Expression* ParseAssignment();      // =
   Expression* ParseComparison();      // == <= >= != < >
   Expression* ParseAdditive();        // + -
   Expression* ParseMultiplicative();  // * \ %
@@ -86,6 +76,15 @@ class Parser {
   Expression* ParseCompoundInitializer(lex::Token curly_brace);
   Expression* ParseSignleFieldCompound();
 
+  // Keywords
+
+  Expression* ParseKeywordExpresssion();
+  Expression* ParseReturnExpression();
+  Expression* ParseYieldExpression();
+  Expression* ParseMatchExpression();
+  Expression* ParseNewExpression();
+  Expression* ParseIfExpression();
+
   // Bottom
 
   Expression* ParsePrimary();
@@ -106,6 +105,7 @@ class Parser {
   auto ParseFormals() -> std::vector<lex::Token>;
   auto ParseDesignatedList() -> std::vector<CompoundInitializerExpr::Member>;
 
+  bool MatchesAssignmentSign(lex::TokenType type);
   bool MatchesComparisonSign(lex::TokenType type);
   bool Matches(lex::TokenType type);
   void Consume(lex::TokenType type);

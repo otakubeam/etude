@@ -65,6 +65,7 @@ enum class TokenType {
   COMMA,
 
   VAR,
+  LET,
   TYPE,
   TRAIT,
   STRUCT,

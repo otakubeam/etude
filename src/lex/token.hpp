@@ -21,7 +21,7 @@ struct Token {
       : type{type}, location{start}, sem_info{sem_info} {
   }
 
-  static Token UnitToken(lex::Token tok) {
+  static Token UnitToken(lex::Token tok = {}) {
     return Token(TokenType::UNIT, tok.location);
   }
 

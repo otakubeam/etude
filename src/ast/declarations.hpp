@@ -1,6 +1,7 @@
 #pragma once
 
-#include <ast/statements.hpp>
+#include <ast/syntax_tree.hpp>
+#include <types/type.hpp>
 
 #include <lex/token.hpp>
 
@@ -8,7 +9,7 @@
 
 //////////////////////////////////////////////////////////////////////
 
-class Declaration : public Statement {
+class Declaration : public TreeNode {
  public:
   virtual void Accept(Visitor* /* visitor */){};
 
@@ -96,7 +97,7 @@ class ImplDeclaration : public Declaration {
 class TypeDeclaration : public Declaration {
  public:
   TypeDeclaration(lex::Token name, std::vector<lex::Token> params,
-                    types::Type* body)
+                  types::Type* body)
       : name_{name}, parameters_{params}, body_{body} {
   }
 
@@ -131,9 +132,8 @@ class TypeDeclaration : public Declaration {
 
 class VarDeclaration : public Declaration {
  public:
-  VarDeclaration(VarAccessExpression* lvalue, Expression* value,
-                   types::Type* hint)
-      : lvalue_{lvalue}, annotation_{hint}, value_{value} {
+  VarDeclaration(lex::Token name, Expression* value, types::Type* hint)
+      : name_{name}, annotation_{hint}, value_{value} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -141,18 +141,18 @@ class VarDeclaration : public Declaration {
   }
 
   virtual lex::Location GetLocation() override {
-    return lvalue_->GetLocation();
+    return name_.location;
   }
 
   std::string_view GetName() override {
-    return lvalue_->GetName();
+    return name_.GetName();
   }
 
   // var or static
   lex::Token type_;
 
   // Specific type for GetName method
-  VarAccessExpression* lvalue_;
+  lex::Token name_;
 
   bool exported_ = false;
 
@@ -169,7 +169,7 @@ class VarDeclaration : public Declaration {
 class FunDeclaration : public Declaration {
  public:
   FunDeclaration(lex::Token name, std::vector<lex::Token> formals,
-                   Expression* body, types::Type* hint)
+                 Expression* body, types::Type* hint)
       : name_{name}, type_{hint}, formals_{std::move(formals)}, body_{body} {
   }
 

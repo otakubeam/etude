@@ -47,6 +47,7 @@ namespace lex {
   code(DOT)                 \
   code(COMMA)               \
   code(VAR)                 \
+  code(LET)                 \
   code(TYPE)                \
   code(TRAIT)               \
   code(STRUCT)              \

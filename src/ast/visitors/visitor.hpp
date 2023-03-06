@@ -3,39 +3,36 @@
 //////////////////////////////////////////////////////////////////////
 
 class Expression;
+class AssignExpression;
 class ComparisonExpression;
 class BinaryExpression;
 class UnaryExpression;
 class DereferenceExpression;
 class AddressofExpression;
-class IfExpression;
-class MatchExpression;
-class NewExpression;
-class BlockExpression;
 class FnCallExpression;
 class IntrinsicCall;
 class CompoundInitializerExpr;
 class FieldAccessExpression;
 class LiteralExpression;
+class IfExpression;
+class MatchExpression;
+class NewExpression;
+class BlockExpression;
 class VarAccessExpression;
 class TypecastExpression;
 class ReturnExpression;
 class YieldExpression;
 class IndexExpression;
+class SeqExpression;
+class LetExpression;
 
 //////////////////////////////////////////////////////////////////////
 
-class Statement;
-class ExprStatement;
-class AssignmentStatement;
-
-//////////////////////////////////////////////////////////////////////
-
-class TypeDeclStatement;
+class TypeDeclaration;
 class TraitDeclaration;
 class ImplDeclaration;
-class VarDeclStatement;
-class FunDeclStatement;
+class VarDeclaration;
+class FunDeclaration;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -51,19 +48,13 @@ class Visitor {
  public:
   virtual ~Visitor() = default;
 
-  // Statements
-
-  virtual void VisitAssignment(AssignmentStatement* node) = 0;
-
-  virtual void VisitExprStatement(ExprStatement* node) = 0;
-
   // Declarations
 
-  virtual void VisitTypeDecl(TypeDeclStatement* node) = 0;
+  virtual void VisitTypeDecl(TypeDeclaration* node) = 0;
 
-  virtual void VisitVarDecl(VarDeclStatement* node) = 0;
+  virtual void VisitVarDecl(VarDeclaration* node) = 0;
 
-  virtual void VisitFunDecl(FunDeclStatement* node) = 0;
+  virtual void VisitFunDecl(FunDeclaration* node) = 0;
 
   virtual void VisitTraitDecl(TraitDeclaration* node) = 0;
 
@@ -82,6 +73,12 @@ class Visitor {
   virtual void VisitVariantPat(VariantPattern* node) = 0;
 
   // Expressions
+
+  virtual void VisitSeqExpr(SeqExpression* node) = 0;
+
+  virtual void VisitAssign(AssignExpression* node) = 0;
+
+  virtual void VisitLet(LetExpression* node) = 0;
 
   virtual void VisitComparison(ComparisonExpression* node) = 0;
 
