@@ -16,21 +16,21 @@ class Parser {
 
   class ModuleBuilder {
    public:
-    ModuleBuilder(Parser& me) : me_(me) {
+    ModuleBuilder(Parser& me) : me(me) {
     }
 
-    auto Run() -> Module;
+    auto Run() -> ModuleDeclaration*;
 
    private:
     auto ParseImports() -> void;
     auto ParseExportBlock() -> void;
     auto ParseRestDefinitions() -> void;
 
-    Parser& me_;
-    Module result_;
+    Parser& me;
+    ModuleDeclaration* result;
   };
 
-  auto ParseModule() -> Module;
+  auto ParseModule(std::string_view name) -> ModuleDeclaration*;
 
   ////////////////////////////////////////////////////////////////////
   //                        Declarations                            //

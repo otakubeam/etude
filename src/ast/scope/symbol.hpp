@@ -27,6 +27,7 @@ enum class SymbolType {
   GENERIC,  // <<<----- used in expand.hpp
 
   TRAIT_METHOD,
+  MODULE,
   TRAIT,
 
   STATIC,
@@ -45,8 +46,7 @@ struct TypeSymbol {
   // The definition of the type
   TypeDeclaration* definition = nullptr;
 
-  // ... Continuation of the associated types list
-  // (in case the Symbol refers to associated type)
+  // ... Continuation of the types list
   TypeSymbol* next = nullptr;
 };
 
@@ -65,6 +65,9 @@ struct FunSymbol {
 
   // The definition of method
   FunDeclaration* definition = nullptr;
+
+  // ... Continuation of the functions list
+  FunSymbol* next = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -120,7 +123,7 @@ struct ImplSymbol {
   // The list of all defined associated types
   TypeSymbol* types = nullptr;
 
-  // ... Continuation of the list
+  // ... Continuation of the list of impls for a trait
   ImplSymbol* next = nullptr;
 };
 
@@ -131,7 +134,7 @@ struct TraitSymbol {
   Attribute* attrs = nullptr;
 
   // The original trait declaration
-  TraitDeclaration* trait = nullptr;
+  TraitDeclaration* me = nullptr;
 
   // List of all trait methods
   TraitMethod* methods = nullptr;
@@ -141,6 +144,28 @@ struct TraitSymbol {
 
   // List of impls for the trait
   ImplSymbol* impls = nullptr;
+
+  // ... the list of Traits in a module
+  TraitSymbol* next = nullptr;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct ModuleSymbol {
+  // The list of functions for the module
+  FunSymbol* functions = nullptr;
+
+  // The list of types for the module
+  TypeSymbol* types = nullptr;
+
+  // The list of traits for the module
+  TraitSymbol* traits = nullptr;
+
+  // The list of impls for the module
+  ImplSymbol* impls = nullptr;
+
+  // The list of functions marked @test for the module
+  FunSymbol* tests = nullptr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,11 +177,11 @@ struct Symbol {
 
   union {
     BindingSymbol as_bind;   // var a; const b;
+    ModuleSymbol as_module;  // vec; parse; sys;
     TraitMethod* as_method;  // show(...)
     TraitSymbol as_trait;    // trait Show { ... }
-    ImplSymbol as_impl;
-    TypeSymbol as_type;  // type Vec a = struct { ... }
-    FunSymbol as_fun{};  // fun push vec item = ... ;
+    TypeSymbol as_type;      // type Vec a = struct { ... }
+    FunSymbol as_fun{};      // fun push vec item = ... ;
   };
 
   lex::Location declared_at;

@@ -2,44 +2,46 @@
 
 ///////////////////////////////////////////////////////////////////
 
-auto Parser::ParseModule() -> Module {
+auto Parser::ParseModule(std::string_view name) -> ModuleDeclaration* {
   ModuleBuilder builder{*this};
-  return builder.Run();
+  auto result = builder.Run();
+  result->name_ = name;
+  return result;
 }
 
 ///////////////////////////////////////////////////////////////////
 
-auto Parser::ModuleBuilder::Run() -> Module {
+auto Parser::ModuleBuilder::Run() -> ModuleDeclaration* {
+  result = new ModuleDeclaration;
   ParseImports();
   ParseExportBlock();
   ParseRestDefinitions();
-  result_.ExportTraitMethods();
+  // result_.ExportTraitMethods();
+  return result;
 }
 
 ///////////////////////////////////////////////////////////////////
 
 auto Parser::ModuleBuilder::ParseImports() -> void {
-  while (me_.Matches(lex::TokenType::IDENTIFIER)) {
-    auto modulename = me_.lexer_.GetPreviousToken();
-    result_.imports_.push_back(modulename);
-    me_.Consume(lex::TokenType::SEMICOLON);
+  while (me.Matches(lex::TokenType::IDENTIFIER)) {
+    auto modulename = me.lexer_.GetPreviousToken();
+    result->imports_.push_back(modulename);
+    me.Consume(lex::TokenType::SEMICOLON);
   }
 }
 
 ///////////////////////////////////////////////////////////////////
 
 auto Parser::ModuleBuilder::ParseExportBlock() -> void {
-  if (!me_.Matches(lex::TokenType::EXPORT)) {
+  if (!me.Matches(lex::TokenType::EXPORT)) {
     return;
   }
 
-  me_.Consume(lex::TokenType::LEFT_CBRACE);
+  me.Consume(lex::TokenType::LEFT_CBRACE);
 
-  while (!me_.Matches(lex::TokenType::RIGHT_CBRACE)) {
-    auto proto = me_.ParseDeclaration();
-    result_.exported_.push_back(proto->GetName());
-    result_.items_.push_back(proto);
-
+  while (!me.Matches(lex::TokenType::RIGHT_CBRACE)) {
+    auto declaration = me.ParseDeclaration();
+    result->exported_.push_back(declaration);
   }
 }
 
@@ -48,9 +50,9 @@ auto Parser::ModuleBuilder::ParseExportBlock() -> void {
 auto Parser::ModuleBuilder::ParseRestDefinitions() -> void {
   auto declarations = std::vector<Declaration*>{};
 
-  while (!me_.Matches(lex::TokenType::TOKEN_EOF)) {
-    auto declaration = me_.ParseDeclaration();
-    result_.items_.push_back(declaration);
+  while (!me.Matches(lex::TokenType::TOKEN_EOF)) {
+    auto declaration = me.ParseDeclaration();
+    result->local_.push_back(declaration);
   }
 }
 

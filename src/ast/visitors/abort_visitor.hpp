@@ -25,6 +25,10 @@ class AbortVisitor : public Visitor {
     std::abort();
   }
 
+  virtual void VisitModuleDecl(ModuleDeclaration*) override {
+    std::abort();
+  }
+
   virtual void VisitImplDecl(ImplDeclaration*) override {
     std::abort();
   }

@@ -80,7 +80,7 @@ void Context::Print() {
 
   fmt::print("Bindings: \n");
   for (auto& sym : bindings.symbols) {
-    fmt::print("{}:{}\n", sym.name, types::FormatType(*sym.GetType()));
+    fmt::print("{}:{}\n", sym.Name(), types::FormatType(*sym.GetType()));
   }
 
   fmt::print("\n\n\n");

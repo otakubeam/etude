@@ -20,13 +20,36 @@ class Declaration : public TreeNode {
 
 //////////////////////////////////////////////////////////////////////
 
+class ModuleDeclaration : public Declaration {
+ public:
+  virtual void Accept(Visitor* visitor) override {
+    visitor->VisitModuleDecl(this);
+  }
+
+  virtual lex::Location GetLocation() override {
+    return lex::Location{.filename = name_};
+  }
+
+  std::string_view GetName() override {
+    return name_;
+  }
+
+  std::string_view name_;
+
+  std::vector<lex::Token> imports_;
+  std::vector<Declaration*> exported_;
+  std::vector<Declaration*> local_;
+};
+
+//////////////////////////////////////////////////////////////////////
+
 class TraitDeclaration : public Declaration {
  public:
   TraitDeclaration(lex::Token name, std::vector<lex::Token> params,
-                   std::vector<Declaration*> items)
+                   std::vector<Declaration*> assoc_items)
       : name_{name},
         parameters_{std::move(params)},
-        assoc_items_{std::move(items)} {
+        assoc_items_{std::move(assoc_items)} {
   }
 
   virtual void Accept(Visitor* visitor) override {
@@ -145,10 +168,7 @@ class VarDeclaration : public Declaration {
   // var or static
   lex::Token type_;
 
-  // Specific type for GetName method
   lex::Token name_;
-
-  bool exported_ = false;
 
   // Optional, can be inferred from the right part
   types::Type* annotation_ = nullptr;

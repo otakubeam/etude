@@ -17,6 +17,7 @@ class ContextBuilder : public ReturnVisitor<int> {
   void VisitTypeDecl(TypeDeclaration* node) override;
   void VisitImplDecl(ImplDeclaration* node) override;
   void VisitTraitDecl(TraitDeclaration* node) override;
+  void VisitModuleDecl(ModuleDeclaration* node) override;
 
   void VisitDiscardingPat(DiscardingPattern* node) override;
   void VisitBindingPat(BindingPattern* node) override;
@@ -51,10 +52,12 @@ class ContextBuilder : public ReturnVisitor<int> {
 
   void MaybeEval(TreeNode* node);
 
-  using T = TraitSymbol;
   using I = ImplSymbol;
-  auto WithItemsSeparated(TraitDeclaration* node) -> T;
+  using T = TraitSymbol;
+  using M = ModuleSymbol;
   auto WithItemsSeparated(ImplDeclaration* node) -> I*;
+  auto WithItemsSeparated(TraitDeclaration* node) -> T;
+  auto WithItemsSeparated(ModuleDeclaration* node) -> M*;
 
  public:
   // For debug dumping all symbols in the program

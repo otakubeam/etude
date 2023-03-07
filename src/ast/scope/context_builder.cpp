@@ -79,6 +79,12 @@ void ContextBuilder::VisitImplDecl(ImplDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
+void ContextBuilder::VisitModuleDecl(ModuleDeclaration* node) {
+  auto module = WithItemsSeparated(node);
+}
+
+//////////////////////////////////////////////////////////////////////
+
 void ContextBuilder::VisitTypeDecl(TypeDeclaration* node) {
   EnterScopeLayer(node->GetLocation(), node->GetName());
 

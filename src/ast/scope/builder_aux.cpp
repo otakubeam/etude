@@ -84,4 +84,54 @@ auto ContextBuilder::WithItemsSeparated(ImplDeclaration* node) -> I* {
 
 //////////////////////////////////////////////////////////////////////
 
+auto ContextBuilder::WithItemsSeparated(ModuleDeclaration* node) -> M* {
+  auto module = new ModuleSymbol;
+
+  ////////////////////////////////////////////////////////////////////
+
+  auto Decide = [&module](Declaration* item) {
+    if (auto function = item->as<FunDeclaration>()) {
+      auto func_sym = new FunSymbol{.definition = function};
+      func_sym->next = std::exchange(module->functions, func_sym);
+
+      return;
+    }
+
+    if (auto trait = item->as<TraitDeclaration>()) {
+      auto trait_sym = new TraitSymbol{.me = trait};
+      trait_sym->next = std::exchange(module->traits, trait_sym);
+
+      return;
+    }
+
+    if (auto impl = item->as<ImplDeclaration>()) {
+      auto impl_sym = new ImplSymbol{.me = impl};
+      impl_sym->next = std::exchange(module->impls, impl_sym);
+
+      return;
+    }
+
+    if (auto type = item->as<TypeDeclaration>()) {
+      auto type_sym = new TypeSymbol{.definition = type};
+      type_sym->next = std::exchange(module->types, type_sym);
+
+      return;
+    }
+  };
+
+  ////////////////////////////////////////////////////////////////////
+
+  for (auto* item : node->exported_) {
+    Decide(item);
+  }
+
+  for (auto* item : node->local_) {
+    Decide(item);
+  }
+
+  return module;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 }  // namespace ast::scope

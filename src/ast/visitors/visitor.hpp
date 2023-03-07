@@ -30,6 +30,7 @@ class LetExpression;
 
 class TypeDeclaration;
 class TraitDeclaration;
+class ModuleDeclaration;
 class ImplDeclaration;
 class VarDeclaration;
 class FunDeclaration;
@@ -57,6 +58,8 @@ class Visitor {
   virtual void VisitFunDecl(FunDeclaration*) = 0;
 
   virtual void VisitTraitDecl(TraitDeclaration*) = 0;
+
+  virtual void VisitModuleDecl(ModuleDeclaration*) = 0;
 
   virtual void VisitImplDecl(ImplDeclaration*) = 0;
 
