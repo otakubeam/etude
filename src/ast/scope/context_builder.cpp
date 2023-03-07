@@ -131,40 +131,32 @@ void ContextBuilder::VisitVarDecl(VarDeclaration* node) {
 //////////////////////////////////////////////////////////////////////
 
 void ContextBuilder::VisitFunDecl(FunDeclaration* node) {
+  if (!node->body_) {
+    return;
+  }
+
   node->layer_ = current_context_;
 
   auto fun_ty = types::HintedOrNew(node->type_);
 
   SetTyContext(fun_ty, current_context_);
 
-  if (!node->trait_method_) {
-    current_context_->bindings.InsertSymbol(
-        {.sym_type = SymbolType::FUN,
-         .name = node->GetName(),
-         .as_fun =
-             {
-                 .attrs = node->attributes,
-                 .type = fun_ty,
-                 .definition = node,
-             },
-         .declared_at = node->GetLocation()});
-  }
-
-  if (!node->body_) {
-    return;
-  }
+  //
+  // Note: This should happen where context is built
+  //
+  // auto fun_symbol = MakeFunSymbol(node);
+  // current_context_->bindings.InsertSymbol();
+  //
 
   // Provide the definition to the symbol table
 
   auto symbol = current_context_->RetrieveSymbol(node->GetName());
 
-  if (std::exchange(symbol->as_fun.definition, node)) {
+  if (std::exchange(symbol->as_fun.definition->body_, node->body_)) {
     throw std::runtime_error{"Multiple definitions of a function"};
   }
 
   EnterScopeLayer(node->body_->GetLocation(), node->GetName());
-
-  node->layer_ = current_context_;
 
   // Insert the parameters into the table
 
@@ -180,13 +172,7 @@ void ContextBuilder::VisitFunDecl(FunDeclaration* node) {
 
   // Build the body of the function
 
-  {
-    auto fn = current_fn_;  // For return
-    current_fn_ = node->GetName();
-
-    node->body_->Accept(this);
-    current_fn_ = fn;
-  }
+  node->body_->Accept(this);
 
   PopScopeLayer();
 }
@@ -198,7 +184,6 @@ void ContextBuilder::VisitYield(YieldExpression* node) {
 }
 
 void ContextBuilder::VisitReturn(ReturnExpression* node) {
-  node->this_fun = current_fn_;
   node->layer_ = current_context_;
   node->return_value_->Accept(this);
 }
@@ -227,9 +212,7 @@ void ContextBuilder::VisitBindingPat(BindingPattern* node) {
 }
 
 void ContextBuilder::VisitDiscardingPat(DiscardingPattern*){};
-
-void ContextBuilder::VisitLiteralPat(LiteralPattern*) {
-}
+void ContextBuilder::VisitLiteralPat(LiteralPattern*){};
 
 void ContextBuilder::VisitVariantPat(VariantPattern* node) {
   node->layer_ = current_context_;
@@ -292,6 +275,10 @@ void ContextBuilder::VisitNew(NewExpression* node) {
   types::SetTyContext(node->type_, current_context_);
 }
 
+void ContextBuilder::VisitLet(LetExpression* node) {
+  std::abort();  // TODO
+}
+
 void ContextBuilder::VisitBlock(BlockExpression* node) {
   EnterScopeLayer(node->GetLocation(), "Block scope");
 
@@ -327,14 +314,10 @@ void ContextBuilder::VisitVarAccess(VarAccessExpression* node) {
   node->layer_ = current_context_;
 }
 
-void ContextBuilder::VisitLiteral(LiteralExpression*) {
-  // No-op
-}
+void ContextBuilder::VisitLiteral(LiteralExpression*){};
 
 void ContextBuilder::VisitTypecast(TypecastExpression* node) {
   node->expr_->Accept(this);
-
-  // (...) ~> *Vec(Int)        <<<------- Instantiate
   types::SetTyContext(node->type_, current_context_);
 }
 

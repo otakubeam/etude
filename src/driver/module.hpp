@@ -7,12 +7,9 @@
 #include <ast/elaboration/mark_intrinsics.hpp>
 #include <ast/scope/context_builder.hpp>
 
-#include <ast/visitors/visitor.hpp>
 #include <ast/declarations.hpp>
 
 #include <qbe/ir_emitter.hpp>
-
-#include <lex/location.hpp>
 
 //////////////////////////////////////////////////////////////////////
 
@@ -22,76 +19,20 @@ class Module {
  public:
   friend class Parser;
 
-  void SetName(std::string_view name) {
-    name_ = name;
-  }
+  void SetName(std::string_view name);
 
-  void ExportTraitMethods() {
-    // Walk all items
-    for (auto item : items_) {
-      // Get traits
-      if (auto trait = item->as<TraitDeclaration>()) {
-        // Get their methods
-        for (auto method : trait->methods_) {
-          // And export them
-          exported_.push_back(method->GetName());
-        }
-      }
-    }
-  }
+  void ExportTraitMethods();
+  void BuildContext(CompilationDriver* driver);
 
-  void BuildContext(CompilationDriver* driver) {
-    global_context.driver = driver;
+  void MarkIntrinsics();
+  void InferTypes(types::constraints::ConstraintSolver& solver);
 
-    ast::scope::ContextBuilder ctx_builder{global_context};
-    types::constraints::ExpandTypeVariables expand;
+  auto CompileMain(Declaration* main);
+  auto CompileTests();
+  void Compile(Declaration* main);
+  std::string_view GetName() const;
 
-    for (auto item : items_) {
-      item->Accept(&ctx_builder);
-    }
-
-    for (auto item : items_) {
-      item->Accept(&expand);
-    }
-  }
-
-  void MarkIntrinsics() {
-    ast::elaboration::MarkIntrinsics mark;
-    for (auto& r : items_) r = mark.Eval(r)->as<Declaration>();
-  }
-
-  void InferTypes(types::constraints::ConstraintSolver& solver) {
-    solver.CollectAndSolve(items_);
-  }
-
-  auto CompileMain(Declaration* main) {
-    types::instantiate::TemplateInstantiator inst(main);
-    return inst.Flush();
-  }
-
-  auto CompileTests() {
-    types::instantiate::TemplateInstantiator inst(tests_);
-    return inst.Flush();
-  }
-
-  void Compile(Declaration* main) {
-    auto [funs, gen_ty_list] = [&]() {
-      return main ? CompileMain(main) : CompileTests();
-    }();
-
-    qbe::IrEmitter ir;
-    ir.EmitTypes(std::move(gen_ty_list));
-
-    for (auto f : funs) f->Accept(&ir);
-  }
-
-  std::string_view GetName() const {
-    return name_;
-  }
-
-  ast::scope::Symbol* GetExportedSymbol(std::string_view name) {
-    return global_context.FindLocalSymbol(name);
-  }
+  ast::scope::Symbol* GetExportedSymbol(std::string_view name);
 
  public:
   std::vector<std::string_view> imports_;

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <ast/visitors/template_visitor.hpp>
-#include <ast/visitors/abort_visitor.hpp>
+#include <ast/visitors/return_visitor.hpp>
 
 #include <utility>
 

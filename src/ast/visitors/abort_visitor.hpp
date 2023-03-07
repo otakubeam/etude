@@ -136,6 +136,10 @@ class AbortVisitor : public Visitor {
   virtual void VisitTypecast(TypecastExpression*) override {
     std::abort();
   }
+
+  virtual void VisitIndex(IndexExpression*) override {
+    std::abort();
+  }
 };
 
 //////////////////////////////////////////////////////////////////////

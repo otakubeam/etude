@@ -43,7 +43,7 @@ void MarkIntrinsics::VisitTraitDecl(TraitDeclaration* node) {
 //////////////////////////////////////////////////////////////////////
 
 void MarkIntrinsics::VisitImplDecl(ImplDeclaration* node) {
-  for (auto& method : node->associated_items_) {
+  for (auto& method : node->assoc_items_) {
     method = Eval(method)->as<Declaration>();
   }
 

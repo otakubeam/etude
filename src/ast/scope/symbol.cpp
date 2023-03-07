@@ -27,6 +27,15 @@ types::Type* Symbol::GetType() {
 
 //////////////////////////////////////////////////////////////////////
 
+Symbol MakeFunSymbol(FunDeclaration* node) {
+  return Symbol{.sym_type = SymbolType::FUN,
+                .name = node->GetName(),
+                .as_fun = {.definition = node},
+                .declared_at = node->GetLocation()};
+}
+
+//////////////////////////////////////////////////////////////////////
+
 Symbol MakeVarSymbol(std::string_view name, types::Type* ty,
                      lex::Location loc) {
   return Symbol{.sym_type = SymbolType::VAR,
@@ -57,12 +66,10 @@ Symbol MakeTraitSymbol(std::string_view name, TraitSymbol trait,
 //////////////////////////////////////////////////////////////////////
 
 Symbol MakeTraitMethodSym(TraitMethod* method) {
-  return Symbol{
-      .sym_type = SymbolType::TRAIT_METHOD,
-      .name = method->blanket->GetName(),
-      .as_method = method,
-      .declared_at = method->blanket->GetLocation(),
-  };
+  return Symbol{.sym_type = SymbolType::TRAIT_METHOD,
+                .name = method->blanket->GetName(),
+                .as_method = method,
+                .declared_at = method->blanket->GetLocation()};
 }
 
 //////////////////////////////////////////////////////////////////////

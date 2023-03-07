@@ -8,10 +8,9 @@
 #include <ast/elaboration/mark_intrinsics.hpp>
 #include <ast/scope/context_builder.hpp>
 
-#include <parse/parse_error.hpp>
-#include <parse/parser.hpp>
-
 #include <qbe/ir_emitter.hpp>
+
+#include <parse/parser.hpp>
 
 #include <fmt/color.h>
 
@@ -19,7 +18,6 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <set>
 
 class CompilationDriver {
  public:

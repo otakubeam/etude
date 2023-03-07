@@ -547,7 +547,6 @@ class ReturnExpression : public Expression {
   lex::Token return_token_;
   Expression* return_value_;
 
-  std::string_view this_fun;
   ast::scope::Context* layer_;
 };
 

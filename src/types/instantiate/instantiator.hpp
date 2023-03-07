@@ -21,11 +21,6 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
 
   // Visitor methods
 
-  void VisitYield(YieldExpression* node) override;
-  void VisitReturn(ReturnExpression* node) override;
-  void VisitAssignment(AssignmentStatement* node) override;
-  void VisitExprStatement(ExprStatement* node) override;
-
   void VisitTypeDecl(TypeDeclaration* node) override;
   void VisitVarDecl(VarDeclaration* node) override;
   void VisitFunDecl(FunDeclaration* node) override;
@@ -37,6 +32,9 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   void VisitLiteralPat(LiteralPattern* node) override;
   void VisitVariantPat(VariantPattern* node) override;
 
+  void VisitAssign(AssignExpression* node) override;
+  void VisitSeqExpr(SeqExpression* node) override;
+  void VisitLet(LetExpression* node) override;
   void VisitComparison(ComparisonExpression* node) override;
   void VisitBinary(BinaryExpression* node) override;
   void VisitUnary(UnaryExpression* node) override;
@@ -44,6 +42,8 @@ class TemplateInstantiator : public ReturnVisitor<TreeNode*> {
   void VisitAddressof(AddressofExpression* node) override;
   void VisitIf(IfExpression* node) override;
   void VisitMatch(MatchExpression* node) override;
+  void VisitYield(YieldExpression* node) override;
+  void VisitReturn(ReturnExpression* node) override;
   void VisitNew(NewExpression* node) override;
   void VisitBlock(BlockExpression* node) override;
   void VisitFnCall(FnCallExpression* node) override;

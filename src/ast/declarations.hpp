@@ -191,8 +191,6 @@ class FunDeclaration : public Declaration {
 
   ///////////////////////////////////////////////////////////////////////
 
-  bool trait_method_ = false;
-
   lex::Token name_;
 
   Attribute* attributes = nullptr;

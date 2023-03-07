@@ -50,73 +50,73 @@ class Visitor {
 
   // Declarations
 
-  virtual void VisitTypeDecl(TypeDeclaration* node) = 0;
+  virtual void VisitTypeDecl(TypeDeclaration*) = 0;
 
-  virtual void VisitVarDecl(VarDeclaration* node) = 0;
+  virtual void VisitVarDecl(VarDeclaration*) = 0;
 
-  virtual void VisitFunDecl(FunDeclaration* node) = 0;
+  virtual void VisitFunDecl(FunDeclaration*) = 0;
 
-  virtual void VisitTraitDecl(TraitDeclaration* node) = 0;
+  virtual void VisitTraitDecl(TraitDeclaration*) = 0;
 
-  virtual void VisitImplDecl(ImplDeclaration* node) = 0;
+  virtual void VisitImplDecl(ImplDeclaration*) = 0;
 
   // Patterns
 
-  virtual void VisitBindingPat(BindingPattern* node) = 0;
+  virtual void VisitBindingPat(BindingPattern*) = 0;
 
-  virtual void VisitDiscardingPat(DiscardingPattern* node) = 0;
+  virtual void VisitDiscardingPat(DiscardingPattern*) = 0;
 
-  virtual void VisitLiteralPat(LiteralPattern* node) = 0;
+  virtual void VisitLiteralPat(LiteralPattern*) = 0;
 
-  virtual void VisitStructPat(StructPattern* node) = 0;
+  virtual void VisitStructPat(StructPattern*) = 0;
 
-  virtual void VisitVariantPat(VariantPattern* node) = 0;
+  virtual void VisitVariantPat(VariantPattern*) = 0;
 
   // Expressions
 
-  virtual void VisitSeqExpr(SeqExpression* node) = 0;
+  virtual void VisitSeqExpr(SeqExpression*) = 0;
 
-  virtual void VisitAssign(AssignExpression* node) = 0;
+  virtual void VisitAssign(AssignExpression*) = 0;
 
-  virtual void VisitLet(LetExpression* node) = 0;
+  virtual void VisitLet(LetExpression*) = 0;
 
-  virtual void VisitComparison(ComparisonExpression* node) = 0;
+  virtual void VisitComparison(ComparisonExpression*) = 0;
 
-  virtual void VisitBinary(BinaryExpression* node) = 0;
+  virtual void VisitBinary(BinaryExpression*) = 0;
 
-  virtual void VisitUnary(UnaryExpression* node) = 0;
+  virtual void VisitUnary(UnaryExpression*) = 0;
 
-  virtual void VisitDeref(DereferenceExpression* node) = 0;
+  virtual void VisitDeref(DereferenceExpression*) = 0;
 
-  virtual void VisitAddressof(AddressofExpression* node) = 0;
+  virtual void VisitAddressof(AddressofExpression*) = 0;
 
-  virtual void VisitIf(IfExpression* node) = 0;
+  virtual void VisitIf(IfExpression*) = 0;
 
-  virtual void VisitMatch(MatchExpression* node) = 0;
+  virtual void VisitMatch(MatchExpression*) = 0;
 
-  virtual void VisitNew(NewExpression* node) = 0;
+  virtual void VisitNew(NewExpression*) = 0;
 
-  virtual void VisitBlock(BlockExpression* node) = 0;
+  virtual void VisitBlock(BlockExpression*) = 0;
 
-  virtual void VisitFnCall(FnCallExpression* node) = 0;
+  virtual void VisitFnCall(FnCallExpression*) = 0;
 
-  virtual void VisitIntrinsic(IntrinsicCall* node) = 0;
+  virtual void VisitIntrinsic(IntrinsicCall*) = 0;
 
-  virtual void VisitCompoundInitalizer(CompoundInitializerExpr* node) = 0;
+  virtual void VisitCompoundInitalizer(CompoundInitializerExpr*) = 0;
 
-  virtual void VisitFieldAccess(FieldAccessExpression* node) = 0;
+  virtual void VisitFieldAccess(FieldAccessExpression*) = 0;
 
-  virtual void VisitVarAccess(VarAccessExpression* node) = 0;
+  virtual void VisitVarAccess(VarAccessExpression*) = 0;
 
-  virtual void VisitLiteral(LiteralExpression* node) = 0;
+  virtual void VisitLiteral(LiteralExpression*) = 0;
 
-  virtual void VisitTypecast(TypecastExpression* node) = 0;
+  virtual void VisitTypecast(TypecastExpression*) = 0;
 
-  virtual void VisitYield(YieldExpression* node) = 0;
+  virtual void VisitYield(YieldExpression*) = 0;
 
-  virtual void VisitReturn(ReturnExpression* node) = 0;
+  virtual void VisitReturn(ReturnExpression*) = 0;
 
-  virtual void VisitIndex(IndexExpression* node) = 0;
+  virtual void VisitIndex(IndexExpression*) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////

@@ -26,8 +26,8 @@ Context* Context::FindLayer(std::string_view name) {
 //////////////////////////////////////////////////////////////////////
 
 Symbol* Context::RetrieveSymbol(std::string_view name, bool nothrow) {
-  if (auto f = FindLocalSymbol(name)) {
-    return f;
+  if (auto local = FindLocalSymbol(name)) {
+    return local;
   }
   return FindFromExported(name, nothrow);
 }
@@ -75,13 +75,12 @@ Context* Context::MakeNewScopeLayer(lex::Location loc, std::string_view name) {
 //////////////////////////////////////////////////////////////////////
 
 void Context::Print() {
-  fmt::print("[!] Context {} at {}, level {}\n", name, location.Format(),
-             level);
+  fmt::print("[!] Context {} at {}, level {}\n",  //
+             name, location.Format(), level);
 
   fmt::print("Bindings: \n");
   for (auto& sym : bindings.symbols) {
-    fmt::print("{}:{}\n", sym.FormatSymbol(),
-               types::FormatType(*sym.GetType()));
+    fmt::print("{}:{}\n", sym.name, types::FormatType(*sym.GetType()));
   }
 
   fmt::print("\n\n\n");

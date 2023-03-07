@@ -177,6 +177,7 @@ struct Symbol {
 
 using Name = std::string_view;
 
+Symbol MakeFunSymbol(FunDeclaration* node);
 Symbol MakeVarSymbol(Name, types::Type*, lex::Location);
 Symbol MakeTySymbol(Name, types::Type*, lex::Location);
 Symbol MakeTraitSymbol(Name, TraitSymbol, lex::Location);

@@ -15,22 +15,20 @@ class ExpandTypeVariables : public AbortVisitor {
   ExpandTypeVariables() {
   }
 
-  void VisitYield(YieldExpression* node) override;
-  void VisitReturn(ReturnExpression* node) override;
-  void VisitAssignment(AssignmentStatement* node) override;
-  void VisitExprStatement(ExprStatement* node) override;
-
+  void VisitTypeDecl(TypeDeclaration* node) override;
   void VisitVarDecl(VarDeclaration* node) override;
   void VisitFunDecl(FunDeclaration* node) override;
-  void VisitTypeDecl(TypeDeclaration* node) override;
   void VisitTraitDecl(TraitDeclaration* node) override;
   void VisitImplDecl(ImplDeclaration* node) override;
 
-  void VisitBindingPat(BindingPattern*) override{};
-  void VisitLiteralPat(LiteralPattern*) override{};
-  void VisitVariantPat(VariantPattern*) override{};
-  void VisitDiscardingPat(DiscardingPattern*) override{};
+  void VisitBindingPat(BindingPattern* node) override;
+  void VisitDiscardingPat(DiscardingPattern* node) override;
+  void VisitLiteralPat(LiteralPattern* node) override;
+  void VisitVariantPat(VariantPattern* node) override;
 
+  void VisitAssign(AssignExpression* node) override;
+  void VisitSeqExpr(SeqExpression* node) override;
+  void VisitLet(LetExpression* node) override;
   void VisitComparison(ComparisonExpression* node) override;
   void VisitBinary(BinaryExpression* node) override;
   void VisitUnary(UnaryExpression* node) override;
@@ -38,6 +36,8 @@ class ExpandTypeVariables : public AbortVisitor {
   void VisitAddressof(AddressofExpression* node) override;
   void VisitIf(IfExpression* node) override;
   void VisitMatch(MatchExpression* node) override;
+  void VisitYield(YieldExpression* node) override;
+  void VisitReturn(ReturnExpression* node) override;
   void VisitNew(NewExpression* node) override;
   void VisitBlock(BlockExpression* node) override;
   void VisitFnCall(FnCallExpression* node) override;
@@ -47,6 +47,7 @@ class ExpandTypeVariables : public AbortVisitor {
   void VisitLiteral(LiteralExpression* node) override;
   void VisitVarAccess(VarAccessExpression* node) override;
   void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
+  void VisitIndex(IndexExpression* node) override;
 };
 
 }  // namespace types::constraints

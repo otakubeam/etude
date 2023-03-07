@@ -3,6 +3,7 @@
 #include <ast/scope/symbol.hpp>
 
 #include <unordered_map>
+#include <vector>
 #include <deque>
 
 class CompilationDriver;

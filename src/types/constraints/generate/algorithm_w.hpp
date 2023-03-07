@@ -6,7 +6,7 @@
 
 #include <ast/scope/context.hpp>
 
-#include <ast/visitors/template_visitor.hpp>
+#include <ast/visitors/return_visitor.hpp>
 
 #include <queue>
 
@@ -17,11 +17,6 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   AlgorithmW(std::deque<Trait>& work_queue, ConstraintSolver& solver)
       : solver_{solver}, work_queue_{work_queue} {
   }
-
-  void VisitYield(YieldExpression* node) override;
-  void VisitReturn(ReturnExpression* node) override;
-  void VisitAssignment(AssignmentStatement* node) override;
-  void VisitExprStatement(ExprStatement* node) override;
 
   void VisitTypeDecl(TypeDeclaration* node) override;
   void VisitVarDecl(VarDeclaration* node) override;
@@ -34,6 +29,9 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   void VisitLiteralPat(LiteralPattern* node) override;
   void VisitVariantPat(VariantPattern* node) override;
 
+  void VisitAssign(AssignExpression* node) override;
+  void VisitSeqExpr(SeqExpression* node) override;
+  void VisitLet(LetExpression* node) override;
   void VisitComparison(ComparisonExpression* node) override;
   void VisitBinary(BinaryExpression* node) override;
   void VisitUnary(UnaryExpression* node) override;
@@ -41,6 +39,8 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   void VisitAddressof(AddressofExpression* node) override;
   void VisitIf(IfExpression* node) override;
   void VisitMatch(MatchExpression* node) override;
+  void VisitYield(YieldExpression* node) override;
+  void VisitReturn(ReturnExpression* node) override;
   void VisitNew(NewExpression* node) override;
   void VisitBlock(BlockExpression* node) override;
   void VisitFnCall(FnCallExpression* node) override;
@@ -50,6 +50,7 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   void VisitLiteral(LiteralExpression* node) override;
   void VisitVarAccess(VarAccessExpression* node) override;
   void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
+  void VisitIndex(IndexExpression* node) override;
 
  private:
   void PushEqual(lex::Location loc, Type* a, Type* b);
