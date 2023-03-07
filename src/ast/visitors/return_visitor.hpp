@@ -5,6 +5,8 @@
 
 #include <fmt/core.h>
 
+//////////////////////////////////////////////////////////////////////
+
 template <typename T>
 class ReturnVisitor : public AbortVisitor {
  public:
@@ -17,3 +19,5 @@ class ReturnVisitor : public AbortVisitor {
  protected:
   T return_value;
 };
+
+//////////////////////////////////////////////////////////////////////

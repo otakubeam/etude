@@ -3,6 +3,8 @@
 #include <ast/declarations.hpp>
 #include <ast/patterns.hpp>
 
+#include <utility>
+
 namespace ast::scope {
 
 //////////////////////////////////////////////////////////////////////
@@ -13,161 +15,33 @@ ContextBuilder::ContextBuilder(Context& unit_context)
 
 //////////////////////////////////////////////////////////////////////
 
-void ContextBuilder::VisitTypeDecl(TypeDeclaration* node) {
-  if (!node->body_) {
-    std::abort();
-  }
-
-  current_context_ =
-      current_context_->MakeNewScopeLayer(node->GetLocation(), node->GetName());
-
-  // Replicate * `size` times
-
-  auto kind_args = types::MakeKindParamPack(node->parameters_.size());
-  auto kind = MakeFunType(std::move(kind_args), &types::builtin_kind);
-
-  // type Ty t = struct { v: Vec(t), }     <<<----   set context for vec
-  types::SetTyContext(node->body_, current_context_);
-
-  auto ty = new types::Type{
-      .tag = types::TypeTag::TY_CONS,
-      .as_tycons = types::TyConsType{.name = node->name_,
-                                     .param_pack = node->parameters_,
-                                     .body = node->body_,
-                                     .kind = kind}};
-
-  types::SetTyContext(ty, current_context_);
-
-  // Accessible from parent
-  current_context_->parent->bindings.InsertSymbol(Symbol{
-      .sym_type = SymbolType::TYPE,
-      .name = node->GetName(),
-      .as_type = {.type = ty},
-      .declared_at = node->GetLocation(),
-  });
-
-  for (auto param : node->parameters_) {
-    current_context_->bindings.InsertSymbol(Symbol{
-        .sym_type = SymbolType::TYPE,
-        .name = param.GetName(),
-        .as_type = {.type = &types::builtin_kind},  // Why?
-        .declared_at = param.location,
-    });
-  }
-
-  PopScopeLayer();
-}
-
-//////////////////////////////////////////////////////////////////////
-
-void ContextBuilder::VisitVarDecl(VarDeclaration* node) {
-  if (node->value_) {
-    node->value_->Accept(this);
-  }
-
-  node->layer_ = current_context_;
-
-  auto inst_ty = node->annotation_ = types::HintedOrNew(node->annotation_);
-
-  // e.g. `of Vec(Vec(Int)) static matrix = ...`
-  SetTyContext(inst_ty, current_context_);
-
-  current_context_->bindings.InsertSymbol({
-      .sym_type = SymbolType::VAR,
-      .name = node->GetName(),
-      .as_varbind = {.type = inst_ty},
-      .declared_at = node->GetLocation(),
-  });
-}
-
-//////////////////////////////////////////////////////////////////////
-
-void ContextBuilder::VisitFunDecl(FunDeclaration* node) {
-  node->layer_ = current_context_;
-
-  auto fun_ty = types::HintedOrNew(node->type_);
-
-  // Handle cases where parts of the signature are known
-  // e.g. Vec(_) -> Maybe(_)
-
-  SetTyContext(fun_ty, current_context_);
-
-  if (!node->trait_method_) {
-    current_context_->bindings.InsertSymbol({
-        .sym_type = SymbolType::FUN,
-        .name = node->GetName(),
-        .as_fn_sym =
-            {
-                .argnum = node->formals_.size(),
-                .type = fun_ty,
-                .def = node,
-                .attrs = node->attributes,
-            },
-        .declared_at = node->GetLocation(),
-    });
-  }
-
-  if (node->body_) {
-    auto symbol = current_context_->RetrieveSymbol(node->GetName());
-    symbol->as_fn_sym.def = node;
-
-    current_context_ = current_context_->MakeNewScopeLayer(
-        node->body_->GetLocation(), node->GetName());
-
-    node->layer_ = current_context_;
-
-    // Bring parameters into the scope (their very special one)
-
-    for (auto param : node->formals_) {
-      current_context_->bindings.InsertSymbol({
-          .sym_type = SymbolType::VAR,
-          .name = param.GetName(),
-          .as_varbind = {.type = types::MakeTypeVar(current_context_)},
-          .declared_at = param.location,
-      });
-    }
-
-    {
-      auto fn = current_fn_;  // For return
-      current_fn_ = node->GetName();
-
-      node->body_->Accept(this);
-      current_fn_ = fn;
-    }
-
-    PopScopeLayer();
-  }
-}
-
-//////////////////////////////////////////////////////////////////////
-
 void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
-  current_context_->bindings.InsertSymbol({
-      .sym_type = SymbolType::TRAIT,
-      .name = node->GetName(),
-      .as_trait = {.decl = node},
-      .declared_at = node->GetLocation(),
-  });
+  // Construct the trait symbol by first separating the items
+  //    into their categories: methods / types / constants.
 
-  for (auto decl : node->methods_) {
-    current_context_->bindings.InsertSymbol({
-        .sym_type = SymbolType::TRAIT_METHOD,
-        .name = decl->GetName(),
-        .as_fn_sym =
-            {
-                .type = decl->type_,
-                .def = decl,
-                .trait = node,
-            },
-        .declared_at = decl->GetLocation(),
-    });
+  auto trait_symbol = MakeTraitSymbol(node->GetName(),           //
+                                      WithItemsSeparated(node),  //
+                                      node->GetLocation());
+
+  current_context_->bindings.InsertSymbol(trait_symbol);
+
+  // Insert the trait methods into the global namespace
+
+  auto* first = trait_symbol.as_trait.methods;
+
+  for (auto method = first; method; method = method->next) {
+    auto method_symbol = MakeTraitMethodSymbol(method);
+    current_context_->bindings.InsertSymbol(method_symbol);
   }
 
-  current_context_ =
-      current_context_->MakeNewScopeLayer(node->GetLocation(), "Trait scope");
+  EnterScopeLayer(node->GetLocation(), "Trait scope");
 
-  for (auto decl : node->methods_) {
-    decl->Accept(this);
+  //
+  // TODO: Define Self and the generic types of this trait
+  //
+
+  for (auto method = first; method; method = method->next) {
+    MaybeEval(method->blanket);
   }
 
   PopScopeLayer();
@@ -177,30 +51,141 @@ void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
 
 void ContextBuilder::VisitImplDecl(ImplDeclaration* node) {
   auto trait = current_context_->RetrieveSymbol(node->trait_name_);
-  auto& impls = trait->as_trait.decl->impls_;
+
+  auto impl = WithItemsSeparated(node);
+  impl->next = std::exchange(trait->as_trait.impls, impl);
 
   types::SetTyContext(node->for_type_, current_context_);
 
-  impls.push_back(node);
+  EnterScopeLayer(node->GetLocation(), "Impl scope");
 
-  current_context_ =
-      current_context_->MakeNewScopeLayer(node->GetLocation(), "Impl scope");
+  // Insert Self into the context
 
-  auto ty = new types::Type{.tag = types::TypeTag::TY_CONS,
-                            .as_tycons = types::TyConsType{
-                                .body = node->for_type_,
-                            }};
+  auto self_constructor = types::MakeTyCons("Self", {}, node->for_type_,  //
+                                            nullptr, current_context_);
+  auto self_type = MakeTySymbol("Self", self_constructor, node->GetLocation());
 
-  current_context_->bindings.InsertSymbol(Symbol{
-      .sym_type = SymbolType::TYPE,
-      .name = "Self",
-      .as_type = {.type = ty},
-      .declared_at = node->GetLocation(),
-  });
+  current_context_->bindings.InsertSymbol(self_type);
 
-  for (auto methods : node->trait_methods_) {
-    methods->trait_method_ = true;
-    methods->Accept(this);
+  // Eval all methods
+
+  auto* first = impl->methods;
+  for (auto method = first; method; method = method->next) {
+    Eval(method->definition);
+  }
+
+  PopScopeLayer();
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void ContextBuilder::VisitTypeDecl(TypeDeclaration* node) {
+  EnterScopeLayer(node->GetLocation(), node->GetName());
+
+  // type Ty t = struct { v: Vec(t), }     <<<----   set context for vec
+
+  types::SetTyContext(node->body_, current_context_);
+
+  // Build the kind for the type constructor: e.g. `Vec :: * -> *`
+  auto kind_args = types::MakeKindParamPack(node->parameters_.size());
+  auto kind = MakeFunType(std::move(kind_args), &types::builtin_kind);
+
+  auto ty_cons = types::MakeTyCons(node->name_, std::move(node->parameters_),
+                                   node->body_, kind, current_context_);
+
+  // Make constructor accessible from parent scope
+
+  auto ty_symbol = MakeTySymbol(node->GetName(), ty_cons, node->GetLocation());
+  current_context_->parent->bindings.InsertSymbol(std::move(ty_symbol));
+
+  // Instantiate parameters in the new scope
+
+  for (auto param : node->parameters_) {
+    auto name = param.GetName();
+    auto kind = &types::builtin_kind;
+    auto ty_param = MakeTySymbol(name, kind, param.location);
+    current_context_->bindings.InsertSymbol(ty_param);
+  }
+
+  PopScopeLayer();
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void ContextBuilder::VisitVarDecl(VarDeclaration* node) {
+  node->layer_ = current_context_;
+
+  MaybeEval(node->value_);
+
+  auto binding_type = node->annotation_ = types::HintedOrNew(node->annotation_);
+
+  SetTyContext(binding_type, current_context_);
+
+  auto name = node->GetName();
+  auto location = node->GetLocation();
+  auto binding_symbol = MakeVarSymbol(name, binding_type, location);
+
+  current_context_->bindings.InsertSymbol(binding_symbol);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+void ContextBuilder::VisitFunDecl(FunDeclaration* node) {
+  node->layer_ = current_context_;
+
+  auto fun_ty = types::HintedOrNew(node->type_);
+
+  SetTyContext(fun_ty, current_context_);
+
+  if (!node->trait_method_) {
+    current_context_->bindings.InsertSymbol(
+        {.sym_type = SymbolType::FUN,
+         .name = node->GetName(),
+         .as_fun =
+             {
+                 .attrs = node->attributes,
+                 .type = fun_ty,
+                 .definition = node,
+             },
+         .declared_at = node->GetLocation()});
+  }
+
+  if (!node->body_) {
+    return;
+  }
+
+  // Provide the definition to the symbol table
+
+  auto symbol = current_context_->RetrieveSymbol(node->GetName());
+
+  if (std::exchange(symbol->as_fun.definition, node)) {
+    throw std::runtime_error{"Multiple definitions of a function"};
+  }
+
+  EnterScopeLayer(node->body_->GetLocation(), node->GetName());
+
+  node->layer_ = current_context_;
+
+  // Insert the parameters into the table
+
+  for (auto param : node->formals_) {
+    auto ty_variable = types::MakeTypeVar(current_context_);
+
+    auto symbol = MakeVarSymbol(param.GetName(),  //
+                                ty_variable,      //
+                                param.location);
+
+    current_context_->bindings.InsertSymbol(symbol);
+  }
+
+  // Build the body of the function
+
+  {
+    auto fn = current_fn_;  // For return
+    current_fn_ = node->GetName();
+
+    node->body_->Accept(this);
+    current_fn_ = fn;
   }
 
   PopScopeLayer();
@@ -218,13 +203,14 @@ void ContextBuilder::VisitReturn(ReturnExpression* node) {
   node->return_value_->Accept(this);
 }
 
-void ContextBuilder::VisitAssignment(AssignmentStatement* node) {
+void ContextBuilder::VisitAssign(AssignExpression* node) {
   node->value_->Accept(this);
   node->target_->Accept(this);
 }
 
-void ContextBuilder::VisitExprStatement(ExprStatement* node) {
+void ContextBuilder::VisitSeqExpr(SeqExpression* node) {
   node->expr_->Accept(this);
+  MaybeEval(node->rest_);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -233,18 +219,16 @@ void ContextBuilder::VisitBindingPat(BindingPattern* node) {
   node->layer_ = current_context_;
   node->type_ = types::MakeTypeVar(current_context_);
 
-  current_context_->bindings.InsertSymbol({
-      .sym_type = SymbolType::VAR,
-      .name = node->name_,
-      .as_varbind = {.type = node->type_},
-      .declared_at = node->GetLocation(),
-  });
+  auto binding_symbol = MakeVarSymbol(node->name_,  //
+                                      node->type_,  //
+                                      node->GetLocation());
+
+  current_context_->bindings.InsertSymbol(binding_symbol);
 }
 
 void ContextBuilder::VisitDiscardingPat(DiscardingPattern*){};
 
 void ContextBuilder::VisitLiteralPat(LiteralPattern*) {
-  // No-op
 }
 
 void ContextBuilder::VisitVariantPat(VariantPattern* node) {
@@ -290,11 +274,10 @@ void ContextBuilder::VisitIf(IfExpression* node) {
 void ContextBuilder::VisitMatch(MatchExpression* node) {
   node->against_->Accept(this);
 
-  for (auto& [pat, expr] : node->patterns_) {
-    current_context_ =
-        current_context_->MakeNewScopeLayer(pat->GetLocation(), "Match scope");
+  for (auto& [pattern, expr] : node->patterns_) {
+    EnterScopeLayer(pattern->GetLocation(), "Match scope");
 
-    pat->Accept(this);
+    pattern->Accept(this);
     expr->Accept(this);
 
     PopScopeLayer();
@@ -302,32 +285,21 @@ void ContextBuilder::VisitMatch(MatchExpression* node) {
 }
 
 void ContextBuilder::VisitNew(NewExpression* node) {
-  if (node->allocation_size_) {
-    node->allocation_size_->Accept(this);
-  }
-
-  if (node->initial_value_) {
-    node->initial_value_->Accept(this);
-  }
-
-  // Handle stuff like `new [10] Vec(_)`
-  types::SetTyContext(node->underlying_, current_context_);
+  MaybeEval(node->allocation_size_);
+  MaybeEval(node->initial_value_);
 
   node->type_ = types::MakeTypePtr(node->underlying_);
   types::SetTyContext(node->type_, current_context_);
 }
 
 void ContextBuilder::VisitBlock(BlockExpression* node) {
-  current_context_ =
-      current_context_->MakeNewScopeLayer(node->GetLocation(), "Block scope");
+  EnterScopeLayer(node->GetLocation(), "Block scope");
 
-  for (auto stmt : node->stmts_) {
-    stmt->Accept(this);
-  }
+  //
+  // TODO: add the declarations
+  //
 
-  if (node->final_) {
-    node->final_->Accept(this);
-  }
+  Eval(node->expr_);
 
   PopScopeLayer();
 }
@@ -342,9 +314,7 @@ void ContextBuilder::VisitFnCall(FnCallExpression* node) {
 
 void ContextBuilder::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
   for (auto mem : node->initializers_) {
-    if (mem.init) {
-      mem.init->Accept(this);
-    }
+    MaybeEval(mem.init);
   }
 }
 

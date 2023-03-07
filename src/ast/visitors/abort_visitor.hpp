@@ -3,15 +3,11 @@
 #include <ast/visitors/visitor.hpp>
 #include <cstdlib>
 
+//////////////////////////////////////////////////////////////////////
+
 class AbortVisitor : public Visitor {
  public:
-  virtual void VisitYield(YieldExpression*) override {
-    std::abort();
-  }
-
-  virtual void VisitReturn(ReturnExpression*) override {
-    std::abort();
-  }
+  // Declarations
 
   virtual void VisitTypeDecl(TypeDeclaration*) override {
     std::abort();
@@ -55,15 +51,19 @@ class AbortVisitor : public Visitor {
     std::abort();
   }
 
-  virtual void VisitAssignment(AssignmentStatement*) override {
-    std::abort();
-  }
-
-  virtual void VisitExprStatement(ExprStatement*) override {
-    std::abort();
-  }
-
   // Expressions
+
+  virtual void VisitAssign(AssignExpression*) override {
+    std::abort();
+  }
+
+  virtual void VisitSeqExpr(SeqExpression*) override {
+    std::abort();
+  }
+
+  virtual void VisitLet(LetExpression*) override {
+    std::abort();
+  }
 
   virtual void VisitComparison(ComparisonExpression*) override {
     std::abort();
@@ -82,6 +82,14 @@ class AbortVisitor : public Visitor {
   }
 
   virtual void VisitAddressof(AddressofExpression*) override {
+    std::abort();
+  }
+
+  virtual void VisitYield(YieldExpression*) override {
+    std::abort();
+  }
+
+  virtual void VisitReturn(ReturnExpression*) override {
     std::abort();
   }
 

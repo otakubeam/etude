@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ast/syntax_tree.hpp>
+#include <ast/expressions.hpp>
 
 #include <types/type.hpp>
 
@@ -57,7 +58,7 @@ class ImplDeclaration : public Declaration {
       : trait_name_{name},
         for_type_{for_type},
         params_{std::move(params)},
-        associated_items_{std::move(assoc_items)} {
+        assoc_items_{std::move(assoc_items)} {
   }
 
   //  impl Into Str for String  {
@@ -82,7 +83,7 @@ class ImplDeclaration : public Declaration {
 
   std::vector<types::Type*> params_;
 
-  std::vector<Declaration*> associated_items_;
+  std::vector<Declaration*> assoc_items_;
 };
 
 //////////////////////////////////////////////////////////////////////

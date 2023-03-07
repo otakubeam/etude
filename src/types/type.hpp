@@ -73,7 +73,7 @@ struct FunType {
 // This is like a function symbol
 
 struct TyConsType {
-  lex::Token name{};
+  std::string_view name;
   std::vector<lex::Token> param_pack{};
 
   Type* body = nullptr;
@@ -83,7 +83,7 @@ struct TyConsType {
 // And this is like a function call
 
 struct TyAppType {
-  lex::Token name;
+  std::string_view name;
   std::vector<Type*> param_pack;
 };
 
@@ -143,8 +143,8 @@ Type* MakeTypeVar(ast::scope::Context* ty_cons);
 Type* MakeTypePtr(Type* underlying);
 Type* MakeFunType(std::vector<Type*> param_pack, Type* result_type);
 Type* MakeTyApp(lex::Token name, std::vector<Type*> param_pack);
-Type* MakeTyCons(lex::Token name, std::vector<lex::Token> params, Type* body,
-                 Type* kind, ast::scope::Context* context);
+Type* MakeTyCons(std::string_view name, std::vector<lex::Token> params,
+                 Type* body, Type* kind, ast::scope::Context* context);
 Type* MakeStructType(std::vector<Member> fields);
 Type* MakeSumType(std::vector<Member> fields);
 

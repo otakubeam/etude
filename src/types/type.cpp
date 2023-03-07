@@ -176,17 +176,17 @@ Type* MakeTypeVar() {
 
 //////////////////////////////////////////////////////////////////////
 
-Type* MakeTyCons(lex::Token name, std::vector<lex::Token> params, Type* body,
-                 Type* kind, ast::scope::Context* context) {
+Type* MakeTyCons(std::string_view name, std::vector<lex::Token> params,
+                 Type* body, Type* kind, ast::scope::Context* context) {
   type_store.push_back(Type{.id = type_store.size(),
-                                  .tag = TypeTag::TY_CONS,
-                                  .typing_context_ = context,
-                                  .as_tycons = {
-                                      .name = name,
-                                      .param_pack = std::move(params),
-                                      .body = body,
-                                      .kind = kind,
-                                  }});
+                            .tag = TypeTag::TY_CONS,
+                            .typing_context_ = context,
+                            .as_tycons = {
+                                .name = name,
+                                .param_pack = std::move(params),
+                                .body = body,
+                                .kind = kind,
+                            }});
   return &type_store.back();
 }
 
@@ -205,19 +205,18 @@ Type* MakeTypeVar(ast::scope::Context* ty_cons) {
 
 Type* MakeTypePtr(Type* underlying) {
   type_store.push_back(Type{.id = type_store.size(),
-                                  .tag = types::TypeTag::TY_PTR,
-                                  .as_ptr = {.underlying = underlying}});
+                            .tag = types::TypeTag::TY_PTR,
+                            .as_ptr = {.underlying = underlying}});
   return &type_store.back();
 }
 
 //////////////////////////////////////////////////////////////////////
 
 Type* MakeFunType(std::vector<Type*> param_pack, Type* result_type) {
-  type_store.push_back(
-      Type{.id = type_store.size(),
-           .tag = TypeTag::TY_FUN,
-           .as_fun = {.param_pack = std::move(param_pack),
-                      .result_type = result_type}});
+  type_store.push_back(Type{.id = type_store.size(),
+                            .tag = TypeTag::TY_FUN,
+                            .as_fun = {.param_pack = std::move(param_pack),
+                                       .result_type = result_type}});
   return &type_store.back();
 }
 

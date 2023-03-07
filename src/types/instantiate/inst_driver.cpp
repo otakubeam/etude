@@ -11,7 +11,12 @@ namespace types::instantiate {
 
 FunDeclaration* TemplateInstantiator::FindTraitMethod(
     ast::scope::Symbol* symbol, Type* mono) {
-  for (auto& impl : symbol->as_fn_sym.trait->impls_) {
+
+  auto trait_name = symbol->as_method.trait->name_;
+
+  // Find this name!
+
+  for (auto& impl : symbol->as_method.trait) {
     for (auto& def : impl->associated_items_) {
       if (def->GetName() == symbol->name) {
         fmt::print(stderr, "Searching method {} for {}\n", symbol->name,

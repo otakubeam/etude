@@ -33,8 +33,8 @@ void MarkIntrinsics::VisitFunDecl(FunDeclaration* node) {
 //////////////////////////////////////////////////////////////////////
 
 void MarkIntrinsics::VisitTraitDecl(TraitDeclaration* node) {
-  for (auto& method : node->methods_) {
-    method = Eval(method)->as<FunDeclaration>();
+  for (auto& method : node->assoc_items_) {
+    method = Eval(method)->as<Declaration>();
   }
 
   return_value = node;
@@ -43,8 +43,8 @@ void MarkIntrinsics::VisitTraitDecl(TraitDeclaration* node) {
 //////////////////////////////////////////////////////////////////////
 
 void MarkIntrinsics::VisitImplDecl(ImplDeclaration* node) {
-  for (auto& method : node->trait_methods_) {
-    method = Eval(method)->as<FunDeclaration>();
+  for (auto& method : node->associated_items_) {
+    method = Eval(method)->as<Declaration>();
   }
 
   return_value = node;
@@ -70,14 +70,13 @@ void MarkIntrinsics::VisitReturn(ReturnExpression* node) {
   return_value = node;
 }
 
-void MarkIntrinsics::VisitAssignment(AssignmentStatement* node) {
-  node->target_ = Eval(node->target_)->as<LvalueExpression>();
+void MarkIntrinsics::VisitAssign(AssignExpression* node) {
+  node->target_ = Eval(node->target_)->as<Expression>();
   node->value_ = Eval(node->value_)->as<Expression>();
-
   return_value = node;
 }
 
-void MarkIntrinsics::VisitExprStatement(ExprStatement* node) {
+void MarkIntrinsics::VisitSeqExpr(SeqExpression* node) {
   node->expr_ = Eval(node->expr_)->as<Expression>();
   return_value = node;
 }
@@ -87,20 +86,17 @@ void MarkIntrinsics::VisitExprStatement(ExprStatement* node) {
 void MarkIntrinsics::VisitComparison(ComparisonExpression* node) {
   node->left_ = Eval(node->left_)->as<Expression>();
   node->right_ = Eval(node->right_)->as<Expression>();
-
   return_value = node;
 }
 
 void MarkIntrinsics::VisitBinary(BinaryExpression* node) {
   node->left_ = Eval(node->left_)->as<Expression>();
   node->right_ = Eval(node->right_)->as<Expression>();
-
   return_value = node;
 }
 
 void MarkIntrinsics::VisitUnary(UnaryExpression* node) {
   node->operand_ = Eval(node->operand_)->as<Expression>();
-
   return_value = node;
 }
 
@@ -147,14 +143,7 @@ void MarkIntrinsics::VisitNew(NewExpression* node) {
 }
 
 void MarkIntrinsics::VisitBlock(BlockExpression* node) {
-  for (auto& s : node->stmts_) {
-    s = Eval(s)->as<Statement>();
-  }
-
-  if (node->final_) {
-    node->final_ = Eval(node->final_)->as<Expression>();
-  }
-
+  node->expr_ = Eval(node->expr_)->as<Expression>();
   return_value = node;
 }
 

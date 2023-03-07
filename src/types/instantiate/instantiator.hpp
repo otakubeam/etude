@@ -3,7 +3,7 @@
 #include <types/constraints/trait.hpp>
 #include <types/type.hpp>
 
-#include <ast/visitors/template_visitor.hpp>
+#include <ast/visitors/return_visitor.hpp>
 #include <ast/scope/context.hpp>
 #include <ast/declarations.hpp>
 
