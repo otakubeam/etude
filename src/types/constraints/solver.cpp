@@ -8,27 +8,7 @@ ConstraintSolver::ConstraintSolver() {
 }
 
 // Wrapper to give already sorted defs
-void ConstraintSolver::CollectAndSolve(SortedFuns& definitions) {
-  for (auto def : definitions) {
-    if (auto fun = def->as<FunDeclaration>()) {
-      binding_groups_.push_back({fun});
-      continue;
-    }
-
-    if (auto impl = def->as<ImplDeclaration>()) {
-      for (auto method : impl->associated_items_) {
-        binding_groups_.push_back({method});
-      }
-      continue;
-    }
-
-    if (auto trait = def->as<TraitDeclaration>()) {
-      for (auto method : trait->methods_) {
-        binding_groups_.push_back({method});
-      }
-    }
-  }
-  CollectAndSolve();
+void ConstraintSolver::CollectAndSolve(ast::scope::ModuleSymbol*) {
 }
 
 void ConstraintSolver::CollectAndSolve() {

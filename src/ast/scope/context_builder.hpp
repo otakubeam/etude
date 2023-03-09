@@ -35,6 +35,7 @@ class ContextBuilder : public ReturnVisitor<int> {
   void VisitMatch(MatchExpression* node) override;
   void VisitYield(YieldExpression* node) override;
   void VisitBlock(BlockExpression* node) override;
+  void VisitIndex(IndexExpression* node) override;
   void VisitReturn(ReturnExpression* node) override;
   void VisitFnCall(FnCallExpression* node) override;
   void VisitIntrinsic(IntrinsicCall* node) override;
@@ -47,6 +48,7 @@ class ContextBuilder : public ReturnVisitor<int> {
   void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
 
  private:
+  auto TryEnterModuleCtx(std::string_view name) -> Context*;
   void EnterScopeLayer(lex::Location loc, std::string_view name);
   void PopScopeLayer();
 

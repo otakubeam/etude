@@ -16,6 +16,10 @@ class Declaration : public TreeNode {
   virtual void Accept(Visitor* /* visitor */){};
 
   virtual std::string_view GetName() = 0;
+
+  virtual operator std::string_view() {
+    return GetName();
+  }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -37,8 +41,11 @@ class ModuleDeclaration : public Declaration {
   std::string_view name_;
 
   std::vector<lex::Token> imports_;
-  std::vector<Declaration*> exported_;
+
   std::vector<Declaration*> local_;
+  std::vector<Declaration*> exported_;
+
+  ast::scope::Context* layer_ = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -107,6 +114,8 @@ class ImplDeclaration : public Declaration {
   std::vector<types::Type*> params_;
 
   std::vector<Declaration*> assoc_items_;
+
+  ImplDeclaration* next_;
 };
 
 //////////////////////////////////////////////////////////////////////

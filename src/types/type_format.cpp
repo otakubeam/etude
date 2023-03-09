@@ -42,11 +42,11 @@ std::string FormatApp(Type& type) {
   auto& tyapp = type.as_tyapp;
 
   if (tyapp.param_pack.empty()) {
-    fmt::format_to(insert, "{}", tyapp.name.GetName());
+    fmt::format_to(insert, "{}", tyapp.name);
     return result;
   }
 
-  fmt::format_to(insert, "{}( ", tyapp.name.GetName());
+  fmt::format_to(insert, "{}( ", tyapp.name);
 
   for (auto& a : tyapp.param_pack) {
     fmt::format_to(insert, "{}, ", FormatType(*a));
@@ -87,7 +87,7 @@ std::string FormatUnion(Type&) {
 
 std::string FormatCons(Type& type) {
   return fmt::format(
-      "Cons {} of {} of {}", type.as_tycons.name.GetName(),
+      "Cons {} of {} of {}", type.as_tycons.name,
       type.as_tycons.kind ? FormatType(*type.as_tycons.kind) : "<kind>",
       FormatType(*type.as_tycons.body));
 }
@@ -151,7 +151,7 @@ std::string MangleFun(Type& type) {
 std::string MangleApp(Type& type) {
   std::string result;
   auto ins = std::back_inserter(result);
-  fmt::format_to(ins, "{}", type.as_tyapp.name.GetName());
+  fmt::format_to(ins, "{}", type.as_tyapp.name);
   for (auto& t : type.as_tyapp.param_pack) {
     fmt::format_to(ins, "{}", Mangle(*t));
   }

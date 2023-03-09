@@ -9,18 +9,23 @@ Expression* Parser::ParsePostfixExpressions() {
     switch (lexer_.Peek().type) {
       case lex::TokenType::ARROW:
         expr = ParseArrow(expr);
+        break;
 
       case lex::TokenType::LEFT_SBRACE:
         expr = ParseIndexing(expr);
+        break;
 
       case lex::TokenType::DOT:
         expr = ParseFieldAccess(expr);
+        break;
 
       case lex::TokenType::LEFT_PAREN:
         expr = ParseCall(expr);
+        break;
 
       case lex::TokenType::ARROW_CAST:
         expr = ParseCast(expr);
+        break;
 
       default:
         return expr;

@@ -52,6 +52,20 @@ void MarkIntrinsics::VisitImplDecl(ImplDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
+void MarkIntrinsics::VisitModuleDecl(ModuleDeclaration* node) {
+  for (auto& local : node->local_) {
+    local = Eval(local)->as<Declaration>();
+  }
+
+  for (auto& exports : node->exported_) {
+    exports = Eval(exports)->as<Declaration>();
+  }
+
+  return_value = node;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 // No-op
 void MarkIntrinsics::VisitBindingPat(BindingPattern*){};
 void MarkIntrinsics::VisitDiscardingPat(DiscardingPattern*){};
@@ -142,8 +156,24 @@ void MarkIntrinsics::VisitNew(NewExpression* node) {
   return_value = node;
 }
 
+void MarkIntrinsics::VisitLet(LetExpression* node) {
+  node->value_ = Eval(node->value_)->as<Expression>();
+
+  node->rest_ = node->rest_ ? Eval(node->rest_)->as<Expression>()  //
+                            : nullptr;
+
+  node->else_rest_ = node->else_rest_
+                         ? Eval(node->else_rest_)->as<Expression>()  //
+                         : nullptr;
+}
+
 void MarkIntrinsics::VisitBlock(BlockExpression* node) {
   node->expr_ = Eval(node->expr_)->as<Expression>();
+  return_value = node;
+}
+
+void MarkIntrinsics::VisitIndex(IndexExpression* node) {
+  node->indexed_expr_ = Eval(node->indexed_expr_)->as<Expression>();
   return_value = node;
 }
 

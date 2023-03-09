@@ -12,7 +12,7 @@ types::Type* Symbol::GetType() {
     case SymbolType::VAR:
       return types::FindLeader(as_bind.type);
     case SymbolType::FUN:
-      return types::FindLeader(as_fun.type);
+      return types::FindLeader(as_fun->type);
     case SymbolType::TRAIT_METHOD:
       return types::FindLeader(as_method->blanket->type_);
     case SymbolType::TYPE:
@@ -27,11 +27,32 @@ types::Type* Symbol::GetType() {
 
 //////////////////////////////////////////////////////////////////////
 
-Symbol MakeFunSymbol(FunDeclaration* node) {
+Symbol MakeGenericSymbol(std::string_view name, types::Type* leader,
+                         lex::Location loc) {
+  return Symbol{.sym_type = SymbolType::GENERIC,
+                .name = name,
+                .as_type = {.cons = leader},
+                .declared_at = loc};
+}
+
+//////////////////////////////////////////////////////////////////////
+
+Symbol MakeModSymbol(std::string_view name, ModuleSymbol* mod_sym,
+                     lex::Location loc) {
+  return Symbol{.sym_type = SymbolType::MODULE,
+                .name = name,
+                .as_module = mod_sym,
+                .declared_at = loc};
+}
+
+//////////////////////////////////////////////////////////////////////
+
+Symbol MakeFunSymbol(std::string_view name, FunSymbol* func_sym,
+                     lex::Location loc) {
   return Symbol{.sym_type = SymbolType::FUN,
-                .name = node->GetName(),
-                .as_fun = {.definition = node},
-                .declared_at = node->GetLocation()};
+                .name = name,
+                .as_fun = func_sym,
+                .declared_at = loc};
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -65,7 +86,7 @@ Symbol MakeTraitSymbol(std::string_view name, TraitSymbol trait,
 
 //////////////////////////////////////////////////////////////////////
 
-Symbol MakeTraitMethodSym(TraitMethod* method) {
+Symbol MakeTraitMethodSymbol(TraitMethod* method) {
   return Symbol{.sym_type = SymbolType::TRAIT_METHOD,
                 .name = method->blanket->GetName(),
                 .as_method = method,

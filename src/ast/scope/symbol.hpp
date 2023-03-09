@@ -7,11 +7,15 @@
 //////////////////////////////////////////////////////////////////////
 // Forward
 
+struct Attribute;
 class FunDeclaration;
 class TypeDeclaration;
-class TraitDeclaration;
 class ImplDeclaration;
-struct Attribute;
+class TraitDeclaration;
+
+namespace ast::scope {
+struct Context;
+}
 
 namespace types {
 struct Type;
@@ -161,11 +165,14 @@ struct ModuleSymbol {
   // The list of traits for the module
   TraitSymbol* traits = nullptr;
 
-  // The list of impls for the module
-  ImplSymbol* impls = nullptr;
-
   // The list of functions marked @test for the module
   FunSymbol* tests = nullptr;
+
+  // The list of impls for the module
+  // (not a symbol because impls are unnamed)
+  ImplDeclaration* impls = nullptr;
+
+  ast::scope::Context* module_context_ = nullptr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -176,12 +183,12 @@ struct Symbol {
   std::string_view name;
 
   union {
-    BindingSymbol as_bind;   // var a; const b;
-    ModuleSymbol as_module;  // vec; parse; sys;
-    TraitMethod* as_method;  // show(...)
-    TraitSymbol as_trait;    // trait Show { ... }
-    TypeSymbol as_type;      // type Vec a = struct { ... }
-    FunSymbol as_fun{};      // fun push vec item = ... ;
+    BindingSymbol as_bind;    // var a; const b;
+    ModuleSymbol* as_module;  // vec; parse; sys;
+    TraitMethod* as_method;   // show(...)
+    TraitSymbol as_trait;     // trait Show { ... }
+    TypeSymbol as_type;       // type Vec a = struct { ... }
+    FunSymbol* as_fun{};      // fun push vec item = ... ;
   };
 
   lex::Location declared_at;
@@ -192,7 +199,7 @@ struct Symbol {
 
   FunDeclaration* GetFunctionDefinition() {
     FMT_ASSERT(sym_type == SymbolType::FUN, "Not a function symbol");
-    return as_fun.definition;
+    return as_fun->definition;
   }
 
   types::Type* GetType();
@@ -202,11 +209,13 @@ struct Symbol {
 
 using Name = std::string_view;
 
-Symbol MakeFunSymbol(FunDeclaration* node);
+Symbol MakeTraitMethodSymbol(TraitMethod* method);
+Symbol MakeGenericSymbol(Name, types::Type*, lex::Location);
+Symbol MakeTraitSymbol(Name, TraitSymbol, lex::Location);
+Symbol MakeModSymbol(Name, ModuleSymbol*, lex::Location);
+Symbol MakeFunSymbol(Name, FunSymbol*, lex::Location);
 Symbol MakeVarSymbol(Name, types::Type*, lex::Location);
 Symbol MakeTySymbol(Name, types::Type*, lex::Location);
-Symbol MakeTraitSymbol(Name, TraitSymbol, lex::Location);
-Symbol MakeTraitMethodSymbol(TraitMethod* method);
 
 //////////////////////////////////////////////////////////////////////
 

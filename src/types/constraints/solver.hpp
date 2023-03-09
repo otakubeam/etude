@@ -18,8 +18,7 @@ class ConstraintSolver {
 
   void CollectAndSolve();
 
-  using SortedFuns = std::vector<Declaration*>;
-  void CollectAndSolve(SortedFuns& binding_group);
+  void CollectAndSolve(ast::scope::ModuleSymbol* mod);
 
   bool Unify(Type* a, Type* b);
 
@@ -30,10 +29,10 @@ class ConstraintSolver {
   void ReportErrors();
 
   void Generalize(Type* ty);
-  bool UnifyUnderlyingTypes(Type* a, Type* b);
+  bool UnifyUnderlyingTypes(Type* left, Type* right);
 
   void ConstrainGenerics();
-  bool TrySolveConstraint(Trait i);
+  bool TrySolveConstraint(Trait constraint);
   void GeneralizeBindingGroup(BindingGroup& group);
 
  private:

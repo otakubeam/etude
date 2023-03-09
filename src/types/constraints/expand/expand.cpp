@@ -10,26 +10,36 @@ namespace types::constraints {
 //////////////////////////////////////////////////////////////////////
 
 void DefineGenerics(Type* ty) {
-  if (ty->tag == TypeTag::TY_APP) {
-    auto name = ty->as_tyapp.name;
+  if (ty->tag != TypeTag::TY_APP) {
+    return;
+  }
 
-    if (auto symbol = ty->typing_context_->RetrieveSymbol(name, true)) {
-      if (symbol->sym_type == ast::scope::SymbolType::GENERIC) {
-        fmt::print(stderr, "Using generic {}\n", name.GetName());
-        ty->leader = symbol->as_type.type;
-      }
+  auto name = ty->as_tyapp.name;
 
-    } else {
-      fmt::print(stderr, "Defining generic {} at {}\n", name.GetName(),
-                 ty->typing_context_->location.Format());
-      ty->leader = MakeTypeVar(ty->typing_context_);
-      ty->typing_context_->bindings.InsertSymbol({
-          .sym_type = ast::scope::SymbolType::GENERIC,
-          .name = name,
-          .as_type = {ty->leader},
-          .declared_at = ty->typing_context_->location,
-      });
+  if (auto symbol = ty->typing_context_->RetrieveSymbol(name)) {
+    //
+    // If the symbol has already been defined as generic,
+    // then use its definition
+    //
+    if (symbol->sym_type == ast::scope::SymbolType::GENERIC) {
+      fmt::print(stderr, "Using generic {}\n", name);
+
+      ty->leader = symbol->as_type.cons;
     }
+
+  } else {
+    //
+    // If the symbol is unknown in this context, treat is
+    // as universally quantified type
+    //
+    auto loc = ty->typing_context_->location;
+
+    fmt::print(stderr, "Defining generic {} at {}\n", name, loc.Format());
+
+    ty->leader = MakeTypeVar(ty->typing_context_);
+
+    auto generic_sym = ast::scope::MakeGenericSymbol(name, ty->leader, loc);
+    ty->typing_context_->InsertSymbol(generic_sym);
   }
 }
 
@@ -118,7 +128,7 @@ void ExpandTypeVariables::VisitFunDecl(FunDeclaration* node) {
 //////////////////////////////////////////////////////////////////////
 
 void ExpandTypeVariables::VisitTraitDecl(TraitDeclaration* node) {
-  for (auto decl : node->methods_) {
+  for (auto decl : node->assoc_items_) {
     decl->Accept(this);
   }
 }
@@ -126,7 +136,7 @@ void ExpandTypeVariables::VisitTraitDecl(TraitDeclaration* node) {
 //////////////////////////////////////////////////////////////////////
 
 void ExpandTypeVariables::VisitImplDecl(ImplDeclaration* node) {
-  for (auto decl : node->trait_methods_) {
+  for (auto decl : node->assoc_items_) {
     decl->Accept(this);
   }
 }
@@ -141,12 +151,12 @@ void ExpandTypeVariables::VisitReturn(ReturnExpression* node) {
   node->return_value_->Accept(this);
 }
 
-void ExpandTypeVariables::VisitAssignment(AssignmentStatement* node) {
+void ExpandTypeVariables::VisitAssign(AssignExpression* node) {
   node->value_->Accept(this);
   node->target_->Accept(this);
 }
 
-void ExpandTypeVariables::VisitExprStatement(ExprStatement* node) {
+void ExpandTypeVariables::VisitSeqExpr(SeqExpression* node) {
   node->expr_->Accept(this);
 }
 
@@ -177,14 +187,13 @@ void ExpandTypeVariables::VisitNew(NewExpression* node) {
   Traverse(node->underlying_);
 }
 
-void ExpandTypeVariables::VisitBlock(BlockExpression* node) {
-  for (auto stmt : node->stmts_) {
-    stmt->Accept(this);
-  }
+void ExpandTypeVariables::VisitLet(LetExpression*) {
+}
 
-  if (node->final_) {
-    node->final_->Accept(this);
-  }
+void ExpandTypeVariables::VisitBlock(BlockExpression*) {
+}
+
+void ExpandTypeVariables::VisitIndex(IndexExpression*) {
 }
 
 void ExpandTypeVariables::VisitFnCall(FnCallExpression*) {

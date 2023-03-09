@@ -37,13 +37,12 @@ struct Context {
 
   void Print();
 
+  void InsertSymbol(Symbol symbol);
+
   Context* FindLayer(std::string_view name);
 
-  Symbol* RetrieveSymbol(std::string_view name, bool nothrow = false);
-
+  Symbol* RetrieveSymbol(std::string_view name);
   Symbol* FindLocalSymbol(std::string_view name);
-  Symbol* FindFromExported(std::string_view name, bool nothrow);
-
   Symbol* RetrieveFromChild(std::string_view name);
 
   Context* MakeNewScopeLayer(lex::Location loc, std::string_view name);

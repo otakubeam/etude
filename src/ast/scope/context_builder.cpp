@@ -16,22 +16,16 @@ ContextBuilder::ContextBuilder(Context& unit_context)
 //////////////////////////////////////////////////////////////////////
 
 void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
-  // Construct the trait symbol by first separating the items
-  //    into their categories: methods / types / constants.
-
-  auto trait_symbol = MakeTraitSymbol(node->GetName(),           //
-                                      WithItemsSeparated(node),  //
-                                      node->GetLocation());
-
-  current_context_->bindings.InsertSymbol(trait_symbol);
+  auto trait_symbol = current_context_->RetrieveSymbol(node->GetName());
 
   // Insert the trait methods into the global namespace
 
-  auto* first = trait_symbol.as_trait.methods;
+  auto* first = trait_symbol->as_trait.methods;
 
   for (auto method = first; method; method = method->next) {
     auto method_symbol = MakeTraitMethodSymbol(method);
-    current_context_->bindings.InsertSymbol(method_symbol);
+
+    current_context_->InsertSymbol(method_symbol);
   }
 
   EnterScopeLayer(node->GetLocation(), "Trait scope");
@@ -65,11 +59,12 @@ void ContextBuilder::VisitImplDecl(ImplDeclaration* node) {
                                             nullptr, current_context_);
   auto self_type = MakeTySymbol("Self", self_constructor, node->GetLocation());
 
-  current_context_->bindings.InsertSymbol(self_type);
+  current_context_->InsertSymbol(self_type);
 
   // Eval all methods
 
   auto* first = impl->methods;
+
   for (auto method = first; method; method = method->next) {
     Eval(method->definition);
   }
@@ -81,6 +76,63 @@ void ContextBuilder::VisitImplDecl(ImplDeclaration* node) {
 
 void ContextBuilder::VisitModuleDecl(ModuleDeclaration* node) {
   auto module = WithItemsSeparated(node);
+  module->module_context_ = current_context_;
+
+  // Add module symbol to the global scope
+
+  current_context_->InsertSymbol(MakeModSymbol(node->GetName(),  //
+                                               module,           //
+                                               node->GetLocation()));
+
+  EnterScopeLayer(node->GetLocation(), "Module scope");
+
+  // Freestanding functions
+
+  for (auto func = module->functions; func; func = func->next) {
+    //
+    // Build the actual symbol
+    //
+    // Must do it here in order to differenciate trait methods from functions
+    // (methods are added in `VisitTraitDecl`)
+    //
+    auto InsertFunctionSymbol = [func, this] {
+      current_context_->InsertSymbol(
+          MakeFunSymbol(func->definition->GetName(),  //
+                        func,                         //
+                        func->definition->GetLocation()));
+    };
+
+    InsertFunctionSymbol();
+    Eval(func->definition);
+  }
+
+  // Freestanding types
+
+  for (auto type = module->types; type; type = type->next) {
+    Eval(type->definition);
+  }
+
+  for (auto trait = module->traits; trait; trait = trait->next) {
+    //
+    // Construct the trait symbol by first separating the items
+    //    into their categories: methods / types / constants.
+    //
+    auto trait_symbol = MakeTraitSymbol(trait->me->GetName(),           //
+                                        WithItemsSeparated(trait->me),  //
+                                        trait->me->GetLocation());
+
+    current_context_->InsertSymbol(trait_symbol);
+
+    Eval(trait->me);
+  }
+
+  // Process Impls only after Traits
+
+  for (auto impl = module->impls; impl; impl = impl->next_) {
+    Eval(impl);
+  }
+
+  PopScopeLayer();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -101,16 +153,16 @@ void ContextBuilder::VisitTypeDecl(TypeDeclaration* node) {
 
   // Make constructor accessible from parent scope
 
-  auto ty_symbol = MakeTySymbol(node->GetName(), ty_cons, node->GetLocation());
-  current_context_->parent->bindings.InsertSymbol(std::move(ty_symbol));
+  current_context_->parent->InsertSymbol(MakeTySymbol(node->GetName(),  //
+                                                      ty_cons,          //
+                                                      node->GetLocation()));
 
   // Instantiate parameters in the new scope
 
   for (auto param : node->parameters_) {
-    auto name = param.GetName();
-    auto kind = &types::builtin_kind;
-    auto ty_param = MakeTySymbol(name, kind, param.location);
-    current_context_->bindings.InsertSymbol(ty_param);
+    current_context_->InsertSymbol(MakeTySymbol(param.GetName(),       //
+                                                &types::builtin_kind,  //
+                                                param.location));
   }
 
   PopScopeLayer();
@@ -127,11 +179,9 @@ void ContextBuilder::VisitVarDecl(VarDeclaration* node) {
 
   SetTyContext(binding_type, current_context_);
 
-  auto name = node->GetName();
-  auto location = node->GetLocation();
-  auto binding_symbol = MakeVarSymbol(name, binding_type, location);
-
-  current_context_->bindings.InsertSymbol(binding_symbol);
+  current_context_->InsertSymbol(MakeVarSymbol(node->GetName(),  //
+                                               binding_type,     //
+                                               node->GetLocation()));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -147,18 +197,11 @@ void ContextBuilder::VisitFunDecl(FunDeclaration* node) {
 
   SetTyContext(fun_ty, current_context_);
 
-  //
-  // Note: This should happen where context is built
-  //
-  // auto fun_symbol = MakeFunSymbol(node);
-  // current_context_->bindings.InsertSymbol();
-  //
-
   // Provide the definition to the symbol table
 
   auto symbol = current_context_->RetrieveSymbol(node->GetName());
 
-  if (std::exchange(symbol->as_fun.definition->body_, node->body_)) {
+  if (symbol->as_fun->definition->body_ != node->body_) {
     throw std::runtime_error{"Multiple definitions of a function"};
   }
 
@@ -173,7 +216,7 @@ void ContextBuilder::VisitFunDecl(FunDeclaration* node) {
                                 ty_variable,      //
                                 param.location);
 
-    current_context_->bindings.InsertSymbol(symbol);
+    current_context_->InsertSymbol(symbol);
   }
 
   // Build the body of the function
@@ -214,7 +257,7 @@ void ContextBuilder::VisitBindingPat(BindingPattern* node) {
                                       node->type_,  //
                                       node->GetLocation());
 
-  current_context_->bindings.InsertSymbol(binding_symbol);
+  current_context_->InsertSymbol(binding_symbol);
 }
 
 void ContextBuilder::VisitDiscardingPat(DiscardingPattern*){};
@@ -282,7 +325,15 @@ void ContextBuilder::VisitNew(NewExpression* node) {
 }
 
 void ContextBuilder::VisitLet(LetExpression* node) {
-  std::abort();  // TODO
+  Eval(node->value_);
+  MaybeEval(node->else_rest_);
+
+  EnterScopeLayer(node->GetLocation(), "Let scope");
+
+  Eval(node->pattern_);  // Add a new binding
+  Eval(node->rest_);
+
+  PopScopeLayer();
 }
 
 void ContextBuilder::VisitBlock(BlockExpression* node) {
@@ -297,12 +348,23 @@ void ContextBuilder::VisitBlock(BlockExpression* node) {
   PopScopeLayer();
 }
 
+void ContextBuilder::VisitIndex(IndexExpression* node) {
+  Eval(node->indexed_expr_);
+  Eval(node->index_);
+}
+
 void ContextBuilder::VisitFnCall(FnCallExpression* node) {
   node->layer_ = current_context_;
-  node->callable_->Accept(this);
+
+  Eval(node->callable_);
+
   for (auto& a : node->arguments_) {
     a->Accept(this);
   }
+}
+
+void ContextBuilder::VisitIntrinsic(IntrinsicCall* node) {
+  VisitFnCall(node);
 }
 
 void ContextBuilder::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
@@ -314,9 +376,40 @@ void ContextBuilder::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
 void ContextBuilder::VisitFieldAccess(FieldAccessExpression* node) {
   node->layer_ = current_context_;
   node->struct_expression_->Accept(this);
+
+  if (node->layer_ == current_context_) {
+    return;
+  }
+
+  // This was a namespace
+
+  auto field = node->field_name_.GetName();
+
+  // Is field a namespace too?
+  // Retrieve from current context
+
+  if (auto mod_ctx = TryEnterModuleCtx(field)) {
+    node->layer_ = current_context_ = mod_ctx;
+  } else {
+    //
+    // If it's not a namespace then it's the final name
+    // Return current_context_ to its previous value
+    //
+    // TODO: make name resolution a separate pass
+    //
+    current_context_ = node->layer_;
+  }
 }
 
 void ContextBuilder::VisitVarAccess(VarAccessExpression* node) {
+  // Modules are updated eagerly
+
+  if (auto mod_ctx = TryEnterModuleCtx(node->GetName())) {
+    node->layer_ = current_context_ = mod_ctx;
+  }
+
+  // While ordinary symbol are updated at once
+
   node->layer_ = current_context_;
 }
 

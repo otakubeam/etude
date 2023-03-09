@@ -104,7 +104,7 @@ bool ConstraintSolver::UnifyUnderlyingTypes(Type* a, Type* b) {
     }
 
     case TypeTag::TY_APP: {
-      if (a->as_tyapp.name.GetName() != b->as_tyapp.name) {
+      if (a->as_tyapp.name != b->as_tyapp.name) {
         while (auto new_a = ApplyTyconsLazy(a)) {
           fmt::print(stderr, "a ~ {}\n", FormatType(*new_a));
           a = new_a;

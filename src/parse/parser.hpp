@@ -2,7 +2,7 @@
 
 #include <parse/parsing_errors.hpp>
 
-#include <driver/module.hpp>
+#include <ast/declarations.hpp>
 
 #include <lex/lexer.hpp>
 

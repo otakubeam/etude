@@ -20,7 +20,7 @@ bool EqApp(TyAppType* lhs, TyAppType* rhs) {
   auto& pack_a = lhs->param_pack;
   auto& pack_b = rhs->param_pack;
 
-  if (lhs->name.GetName() != rhs->name.GetName()) {
+  if (lhs->name != rhs->name) {
     return false;
   }
 
@@ -222,7 +222,7 @@ Type* MakeFunType(std::vector<Type*> param_pack, Type* result_type) {
 
 //////////////////////////////////////////////////////////////////////
 
-Type* MakeTyApp(lex::Token name, std::vector<Type*> param_pack) {
+Type* MakeTyApp(std::string_view name, std::vector<Type*> param_pack) {
   type_store.push_back(Type{
       .id = type_store.size(),
       .tag = TypeTag::TY_APP,

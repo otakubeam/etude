@@ -69,8 +69,8 @@ TEST_CASE("Expression statement", "[parser]") {
   lex::Lexer l{"test.et", source};
   Parser p{l};
 
-  auto stmt = p.ParseStatement();
-  REQUIRE(typeid(*stmt) == typeid(ExprStatement));
+  auto stmt = p.ParseExpression();
+  REQUIRE(typeid(*stmt) == typeid(SeqExpression));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -145,13 +145,9 @@ TEST_CASE("parser:block-statement", "[parser]") {
 
   // Explicitly evaluate dereferences
 
-  auto& r1 = *block->stmts_[0];
-  auto& r2 = *block->stmts_[1];
-  auto& r3 = *block->stmts_[2];
+  auto& r1 = *block->expr_;
 
-  CHECK(typeid(r1) == typeid(ExprStatement));
-  CHECK(typeid(r2) == typeid(VarDeclaration));
-  CHECK(typeid(r3) == typeid(FunDeclaration));
+  REQUIRE(typeid(r1) == typeid(SeqExpression));
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -221,8 +221,6 @@ class IntrinsicCall : public FnCallExpression {
   virtual types::Type* GetType() override {
     switch (intrinsic) {
       case ast::elaboration::Intrinsic::PRINT:
-        return &types::builtin_unit;
-
       case ast::elaboration::Intrinsic::ASSERT:
         return &types::builtin_unit;
 

@@ -1,10 +1,23 @@
 #include <ast/scope/context_builder.hpp>
 
 #include <ast/declarations.hpp>
+#include <ast/scope/symbol.hpp>
 
 #include <utility>
 
 namespace ast::scope {
+
+//////////////////////////////////////////////////////////////////////
+
+auto ContextBuilder::TryEnterModuleCtx(std::string_view name) -> Context* {
+  if (auto symbol = current_context_->RetrieveSymbol(name)) {
+    if (symbol->sym_type == SymbolType::MODULE) {
+      return symbol->as_module->module_context_;
+    }
+  }
+
+  return nullptr;
+}
 
 //////////////////////////////////////////////////////////////////////
 
@@ -87,10 +100,16 @@ auto ContextBuilder::WithItemsSeparated(ImplDeclaration* node) -> I* {
 auto ContextBuilder::WithItemsSeparated(ModuleDeclaration* node) -> M* {
   auto module = new ModuleSymbol;
 
+  // The following method separates different kinds of declarations
+
   ////////////////////////////////////////////////////////////////////
 
-  auto Decide = [&module](Declaration* item) {
+  auto Separate = [&module](Declaration* item) {
     if (auto function = item->as<FunDeclaration>()) {
+      if (!function->body_) {
+        return;
+      }
+
       auto func_sym = new FunSymbol{.definition = function};
       func_sym->next = std::exchange(module->functions, func_sym);
 
@@ -105,8 +124,7 @@ auto ContextBuilder::WithItemsSeparated(ModuleDeclaration* node) -> M* {
     }
 
     if (auto impl = item->as<ImplDeclaration>()) {
-      auto impl_sym = new ImplSymbol{.me = impl};
-      impl_sym->next = std::exchange(module->impls, impl_sym);
+      impl->next_ = std::exchange(module->impls, impl);
 
       return;
     }
@@ -122,11 +140,11 @@ auto ContextBuilder::WithItemsSeparated(ModuleDeclaration* node) -> M* {
   ////////////////////////////////////////////////////////////////////
 
   for (auto* item : node->exported_) {
-    Decide(item);
+    Separate(item);
   }
 
   for (auto* item : node->local_) {
-    Decide(item);
+    Separate(item);
   }
 
   return module;

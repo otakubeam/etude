@@ -142,7 +142,7 @@ Type* MakeTypeVar(ast::scope::Context* ty_cons);
 
 Type* MakeTypePtr(Type* underlying);
 Type* MakeFunType(std::vector<Type*> param_pack, Type* result_type);
-Type* MakeTyApp(lex::Token name, std::vector<Type*> param_pack);
+Type* MakeTyApp(std::string_view name, std::vector<Type*> param_pack);
 Type* MakeTyCons(std::string_view name, std::vector<lex::Token> params,
                  Type* body, Type* kind, ast::scope::Context* context);
 Type* MakeStructType(std::vector<Member> fields);

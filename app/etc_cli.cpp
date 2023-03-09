@@ -7,7 +7,7 @@
 #include <string>
 #include <getopt.h>
 
-void ParseOptions(CompilationDriver& driver, int argc, char** argv) {
+void ParseOptions(cmd::Driver& driver, int argc, char** argv) {
   auto opt = '\0';
   while ((opt = getopt(argc, argv, "tm:")) != -1) {
     switch (opt) {
@@ -25,7 +25,7 @@ void ParseOptions(CompilationDriver& driver, int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
-  CompilationDriver driver;
+  cmd::Driver driver;
 
   ParseOptions(driver, argc, argv);
 
