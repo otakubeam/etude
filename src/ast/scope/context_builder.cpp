@@ -204,7 +204,7 @@ void ContextBuilder::VisitFunDecl(FunDeclaration* node) {
 
   auto ExchangeBody = [symbol, node]() {
     auto prev = std::exchange(symbol->as_fun->definition->body_, node->body_);
-    if (prev != node->body_ && prev != nullptr) {
+    if (prev && prev != node->body_) {
       throw std::runtime_error{fmt::format(
           "Multiple definitions of a function {}", node->GetName())};
     }
