@@ -106,10 +106,6 @@ auto ContextBuilder::WithItemsSeparated(ModuleDeclaration* node) -> M* {
 
   auto Separate = [&module](Declaration* item) {
     if (auto function = item->as<FunDeclaration>()) {
-      if (!function->body_) {
-        return;
-      }
-
       auto func_sym = new FunSymbol{.definition = function};
       func_sym->next = std::exchange(module->functions, func_sym);
 

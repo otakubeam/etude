@@ -96,6 +96,7 @@ void ContextBuilder::VisitModuleDecl(ModuleDeclaration* node) {
     // (methods are added in `VisitTraitDecl`)
     //
     auto InsertFunctionSymbol = [func, this] {
+      fmt::print("[!] Proc: {}\n", func->definition->GetName());
       current_context_->InsertSymbol(
           MakeFunSymbol(func->definition->GetName(),  //
                         func,                         //
@@ -201,9 +202,15 @@ void ContextBuilder::VisitFunDecl(FunDeclaration* node) {
 
   auto symbol = current_context_->RetrieveSymbol(node->GetName());
 
-  if (symbol->as_fun->definition->body_ != node->body_) {
-    throw std::runtime_error{"Multiple definitions of a function"};
-  }
+  auto ExchangeBody = [symbol, node]() {
+    auto prev = std::exchange(symbol->as_fun->definition->body_, node->body_);
+    if (prev != node->body_ && prev != nullptr) {
+      throw std::runtime_error{fmt::format(
+          "Multiple definitions of a function {}", node->GetName())};
+    }
+  };
+
+  ExchangeBody();
 
   EnterScopeLayer(node->body_->GetLocation(), node->GetName());
 

@@ -23,7 +23,7 @@ struct ScopeLayer {
 struct Context {
   ScopeLayer bindings{};
 
-  std::string_view name;
+  std::string_view name = "Global scope";
 
   lex::Location location;
 
