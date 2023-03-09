@@ -62,11 +62,14 @@ Context* Context::MakeNewScopeLayer(lex::Location loc, std::string_view name) {
 
 void Context::Print() {
   fmt::print("[!] Context {} at {}, level {}\n",  //
-             name, location.Format(), level);
+             name,                                //
+             location.Format(),                   //
+             level);
 
   fmt::print("Bindings: \n");
+
   for (auto& sym : bindings.symbols) {
-    fmt::print("{}:{}\n", sym.Name(), types::FormatType(*sym.GetType()));
+    fmt::print("{}:\n", sym.Name());
   }
 
   fmt::print("\n\n\n");

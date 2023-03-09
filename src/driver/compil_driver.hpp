@@ -21,10 +21,6 @@ namespace cmd {
 // Compilation Driver
 class Driver {
  public:
-  // All its dependencies have already been completed
-  void ProcessModule(ModuleDeclaration* one);
-  void RegisterSymbols();
-
   void Compile();
 
   void SetTestBuild();
@@ -49,6 +45,8 @@ class Driver {
       -> std::pair<ModuleDeclaration*, lex::Lexer>;
 
   void ParseAllModules();  // -> TopSort starting from the main module
+
+  void ProcessModule(ModuleDeclaration* mod);
 
  private:
   bool test_build = false;

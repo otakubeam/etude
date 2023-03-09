@@ -79,19 +79,25 @@ void Driver::ParseAllModules() {
 //////////////////////////////////////////////////////////////////////
 
 // All its dependencies have already been completed
-void Driver::ProcessModule(ModuleDeclaration* one) {
+void Driver::ProcessModule(ModuleDeclaration* mod) {
   ast::elaboration::MarkIntrinsics mark;
-  one->Accept(&mark);
+  mod->Accept(&mark);
 
-  one->Accept(&ctx_builder_);
+  mod->Accept(&ctx_builder_);
 }
 
 //////////////////////////////////////////////////////////////////////
 
 void Driver::Compile() {
+  ParseAllModules();
+
   for (auto& mod : modules_) {
     ProcessModule(mod);
   }
+
+  global_context_.Print();
+
+  std::exit(0);
 }
 
 //////////////////////////////////////////////////////////////////////

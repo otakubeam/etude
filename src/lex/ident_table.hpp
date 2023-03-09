@@ -49,6 +49,7 @@ class IdentTable {
     map_.insert({"type", TokenType::TYPE});
     map_.insert({"new", TokenType::NEW});
     map_.insert({"var", TokenType::VAR});
+    map_.insert({"let", TokenType::LET});
     map_.insert({"fun", TokenType::FUN});
     map_.insert({"sum", TokenType::SUM});
     map_.insert({"for", TokenType::FOR});

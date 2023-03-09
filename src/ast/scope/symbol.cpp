@@ -19,9 +19,10 @@ types::Type* Symbol::GetType() {
     case SymbolType::GENERIC:
       return types::FindLeader(as_type.cons);
     case SymbolType::STATIC:
+    case SymbolType::CONST:
+    case SymbolType::MODULE:
     case SymbolType::TRAIT:
-    default:
-      std::abort();
+      return nullptr;
   }
 }
 
