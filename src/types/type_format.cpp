@@ -4,100 +4,103 @@ namespace types {
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatStruct(Type& type) {
+std::string FormatStruct(StructTy* type) {
   std::string result;
   auto insert = std::back_inserter(result);
+
   fmt::format_to(insert, "struct {{ ");
 
-  for (auto& a : type.as_struct.first) {
-    fmt::format_to(insert, "{}: {}, ", a.field, FormatType(*a.ty));
+  for (auto a = type->members; a; a = a->next) {
+    fmt::format_to(insert, "{}: {}, ",  //
+                   a->field,            //
+                   FormatType(a->ty));
   }
 
   fmt::format_to(insert, "}}");
+
   return result;
 }
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatSum(Type& type) {
+std::string FormatSum(StructTy* type) {
   std::string result;
   auto insert = std::back_inserter(result);
+
   fmt::format_to(insert, "sum {{ ");
 
-  for (auto& a : type.as_sum.first) {
-    fmt::format_to(insert, "{}: {} | ", a.field,
-                   a.ty ? FormatType(*a.ty) : "()");
+  for (auto a = type->members; a; a = a->next) {
+    fmt::format_to(insert,
+                   "{}: {} | ",               //
+                   a->field,                  //
+                   a->ty ? FormatType(a->ty)  //
+                         : "()");
   }
 
   fmt::format_to(insert, "}}");
+
   return result;
 }
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatApp(Type& type) {
+std::string FormatApp(TyAppType* type) {
+  if (!type->parameters) {
+    return std::string{type->name};  // Nullary type application
+  }
+
+  std::string result;
+  auto a = type->parameters;
+  auto insert = std::back_inserter(result);
+
+  fmt::format_to(insert, "{}(", type->name);
+
+  for (auto a = type->parameters; a->next; a = a->next) {
+    fmt::format_to(insert, "{}, ", FormatType(a->ty));
+  }
+
+  fmt::format_to(insert, "{})", FormatType(a->ty));
+
+  return result;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+std::string FormatFun(FunType* type) {
   std::string result;
   auto insert = std::back_inserter(result);
 
-  auto& tyapp = type.as_tyapp;
+  fmt::format_to(insert, "->");
 
-  if (tyapp.param_pack.empty()) {
-    fmt::format_to(insert, "{}", tyapp.name);
-    return result;
+  for (auto a = type->parameters; a; a = a->next) {
+    fmt::format_to(insert, "{} -> ", FormatType(a->ty));
   }
 
-  fmt::format_to(insert, "{}( ", tyapp.name);
+  fmt::format_to(insert, "{}", FormatType(type->result_type));
 
-  for (auto& a : tyapp.param_pack) {
-    fmt::format_to(insert, "{}, ", FormatType(*a));
-  }
-
-  fmt::format_to(insert, ")");
   return result;
 }
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatFun(Type& type) {
-  std::string result;
-  auto insert = std::back_inserter(result);
-  fmt::format_to(insert, "(");
-
-  for (auto& a : type.as_fun.param_pack) {
-    fmt::format_to(insert, "{} -> ", FormatType(*a));
-  }
-
-  fmt::format_to(insert, "{})", FormatType(*type.as_fun.result_type));
-  return result;
+std::string FormatPtr(PtrType* type) {
+  return fmt::format("*{}", FormatType(type->underlying));
 }
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatPtr(Type& type) {
-  return fmt::format("*{}", FormatType(*type.as_ptr.underlying));
+std::string FormatCons(TyConsType* type) {
+  return fmt::format("Cons {}", type->name);
 }
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatUnion(Type&) {
-  return fmt::format("union {{ <unimplemented> }}");
-}
-
-//////////////////////////////////////////////////////////////////////
-
-std::string FormatCons(Type& type) {
-  return fmt::format(
-      "Cons {} of {} of {}", type.as_tycons.name,
-      type.as_tycons.kind ? FormatType(*type.as_tycons.kind) : "<kind>",
-      FormatType(*type.as_tycons.body));
-}
-
-//////////////////////////////////////////////////////////////////////
-
-std::string FormatTypeInner(Type& type) {
-  switch (type.tag) {
+std::string FormatTypeInner(Type* type) {
+  switch (type->tag) {
     case TypeTag::TY_KIND:
       return fmt::format("*");
+    case TypeTag::TY_NEVER:
+      return fmt::format("!");
     case TypeTag::TY_INT:
       return fmt::format("Int");
     case TypeTag::TY_BOOL:
@@ -106,30 +109,31 @@ std::string FormatTypeInner(Type& type) {
       return fmt::format("Char");
     case TypeTag::TY_UNIT:
       return fmt::format("Unit");
-    case TypeTag::TY_NEVER:
-      return "!";
 
     case TypeTag::TY_PTR:
-      return FormatPtr(type);
-    case TypeTag::TY_UNION:
-      return FormatUnion(type);
-    case TypeTag::TY_SUM:
-      return FormatSum(type);
-    case TypeTag::TY_STRUCT:
-      return FormatStruct(type);
+      return FormatPtr(&type->as_ptr);
     case TypeTag::TY_FUN:
-      return FormatFun(type);
-    case TypeTag::TY_CONS:
-      return FormatCons(type);
+      return FormatFun(&type->as_fun);
     case TypeTag::TY_APP:
-      return FormatApp(type);
+      return FormatApp(&type->as_tyapp);
+    case TypeTag::TY_SUM:
+      return FormatSum(&type->as_struct);
+    case TypeTag::TY_CONS:
+      return FormatCons(&type->as_tycons);
+    case TypeTag::TY_STRUCT:
+      return FormatStruct(&type->as_struct);
 
     case TypeTag::TY_VARIABLE:
-      return fmt::format("${}", type.id);
+      return fmt::format("${}{}",  //
+                         FormatConstraints(type->as_var.constraints),
+                         type->as_var.id);
 
     case TypeTag::TY_PARAMETER:
-      return fmt::format("G{}", type.id);
+      return fmt::format("G{}{}",  //
+                         FormatConstraints(type->as_var.constraints),
+                         type->as_var.id);
 
+    case TypeTag::TY_UNION:
     default:
       std::abort();
   }
@@ -137,99 +141,34 @@ std::string FormatTypeInner(Type& type) {
 
 //////////////////////////////////////////////////////////////////////
 
-std::string MangleFun(Type& type) {
-  std::string result;
-  auto ins = std::back_inserter(result);
-  fmt::format_to(ins, "f{}", type.as_fun.param_pack.size());
-  for (auto& t : type.as_fun.param_pack) {
-    fmt::format_to(ins, "{}", Mangle(*t));
-  }
-
-  return result;
-}
-
-std::string MangleApp(Type& type) {
-  std::string result;
-  auto ins = std::back_inserter(result);
-  fmt::format_to(ins, "{}", type.as_tyapp.name);
-  for (auto& t : type.as_tyapp.param_pack) {
-    fmt::format_to(ins, "{}", Mangle(*t));
-  }
-  return result;
-}
-
-std::string MangleStruct(Type& type) {
-  std::string result;
-  auto ins = std::back_inserter(result);
-  fmt::format_to(ins, "struct");
-  for (auto& t : type.as_struct.first) {
-    fmt::format_to(ins, "{}", Mangle(*t.ty));
-  }
-  return result;
-}
-
-std::string Mangle(Type& type) {
-  switch (type.tag) {
-    case TypeTag::TY_INT:
-      return fmt::format("i");
-    case TypeTag::TY_BOOL:
-      return fmt::format("b");
-    case TypeTag::TY_CHAR:
-      return fmt::format("c");
-    case TypeTag::TY_UNIT:
-      return fmt::format("u");
-
-    case TypeTag::TY_PTR:
-      return "P" + Mangle(*type.as_ptr.underlying);
-    case TypeTag::TY_FUN:
-      return MangleFun(type);
-    case TypeTag::TY_APP:
-      return MangleApp(type);
-
-    case TypeTag::TY_STRUCT:
-      return MangleStruct(type);
-
-    case TypeTag::TY_SUM:
-    case TypeTag::TY_UNION:
-    case TypeTag::TY_VARIABLE:
-    case TypeTag::TY_CONS:
-    case TypeTag::TY_PARAMETER:
-    case TypeTag::TY_KIND:
-    default:
-      std::abort();
-  }
-}
-
-//////////////////////////////////////////////////////////////////////
-
-std::string FormatConstraints(Type& type) {
+std::string FormatConstraints(Trait* constraints) {
   std::string output;
-  auto ins = std::back_inserter(output);
-  for (auto& cons : type.as_parameter.constraints) {
-    fmt::format_to(ins, "{}::", FormatTraitNoType(cons));
+
+  auto insert = std::back_inserter(output);
+
+  for (; constraints; constraints = constraints->next) {
+    fmt::format_to(insert, "{}::", FormatTraitNoType(*constraints));
   }
+
   return output;
 }
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatType(Type& type) {
-  auto& leader = *FindLeader(&type);
-  return fmt::format("{}{}", FormatConstraints(leader),
-                     FormatTypeInner(leader));
+std::string FormatType(Type* type) {
+  return FormatTypeInner(FindLeader(type));
 }
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatTypeDebug(Type& type) {
-  if (FindLeader(&type) == &type) {
-    return fmt::format("{}{}", FormatConstraints(type), FormatTypeInner(type));
+std::string FormatTypeDebug(Type* type) {
+  if (FindLeader(type) == type) {
+    return fmt::format("{}", FormatType(type));
   }
 
-  return fmt::format("({}{} => {}{})", FormatConstraints(type),
-                     FormatTypeInner(type),
-                     FormatConstraints(*FindLeader(&type)),
-                     FormatTypeInner(*FindLeader(&type)));
+  return fmt::format("({} => {})",      //
+                     FormatType(type),  //
+                     FormatType(FindLeader(type)));
 }
 
 //////////////////////////////////////////////////////////////////////

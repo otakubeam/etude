@@ -1,18 +1,20 @@
 #pragma once
 
+#include <ast/visitors/return_visitor.hpp>
+#include <ast/scope/context.hpp>
+
+#include <types/constraints/solver.hpp>
 #include <types/constraints/trait.hpp>
 #include <types/type.hpp>
-
-#include <ast/visitors/abort_visitor.hpp>
-#include <ast/scope/context.hpp>
 
 #include <queue>
 
 namespace types::constraints {
 
-class ExpandTypeVariables : public AbortVisitor {
+class ConstraintGenerator : public ReturnVisitor<Type*> {
  public:
-  ExpandTypeVariables() {
+  ConstraintGenerator(std::deque<Trait>& work_queue, ConstraintSolver& solver)
+      : solver_{solver}, work_queue_{work_queue} {
   }
 
   void VisitVarDecl(VarDeclaration* node) override;
@@ -49,6 +51,16 @@ class ExpandTypeVariables : public AbortVisitor {
   void VisitVarAccess(VarAccessExpression* node) override;
   void VisitFieldAccess(FieldAccessExpression* node) override;
   void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
+
+ private:
+  void PushEqual(lex::Location loc, Type* a, Type* b);
+
+ private:
+  ConstraintSolver& solver_;
+
+  std::deque<Trait>& work_queue_;
+
+  std::string_view current_function_;
 };
 
 }  // namespace types::constraints

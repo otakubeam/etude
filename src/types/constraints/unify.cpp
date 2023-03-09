@@ -25,7 +25,7 @@ bool ConstraintSolver::Unify(Type* a, Type* b) {
   }
 
   if (la->tag == TypeTag::TY_VARIABLE) {
-    la->leader = lb;
+    la->as_var.leader = lb;
 
     // Do not merge constraints here, but find leader in solver
 
@@ -41,96 +41,80 @@ bool ConstraintSolver::Unify(Type* a, Type* b) {
 
 //////////////////////////////////////////////////////////////////////
 
+bool ConstraintSolver::UnifyStructs(StructTy* a, StructTy* b) {
+  auto a_mem = a->members;
+  auto b_mem = b->members;
+
+  while (a_mem && b_mem) {
+    if (a_mem->field != b_mem->field) {
+      return false;
+    }
+
+    if (!Unify(a_mem->ty, b_mem->ty)) {
+      return false;
+    }
+
+    a_mem = a_mem->next, b_mem = b_mem->next;
+  }
+
+  // If one list has ended, then structs are not equal
+  return (a_mem || b_mem) ? false : true;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+bool ConstraintSolver::CompareParameterLists(Parameter* a, Parameter* b) {
+  while (a && b) {
+    if (!Unify(a->ty, b->ty)) {
+      return false;
+    }
+    a = a->next, b = b->next;
+  }
+
+  return (a || b) ? false : true;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+bool ConstraintSolver::UnifyFunc(FunType* a, FunType* b) {
+  return CompareParameterLists(a->parameters, b->parameters) &&
+         Unify(a->result_type, b->result_type);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+bool ConstraintSolver::UnifyPtr(PtrType* a, PtrType* b) {
+  return Unify(a->underlying, b->underlying);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+bool ConstraintSolver::UnifyTyApp(TyAppType* a, TyAppType* b) {
+  return a->name == b->name &&
+         CompareParameterLists(a->parameters, b->parameters);
+}
+
+//////////////////////////////////////////////////////////////////////
+
 bool ConstraintSolver::UnifyUnderlyingTypes(Type* a, Type* b) {
   switch (a->tag) {
     case TypeTag::TY_PTR:
-      return Unify(a->as_ptr.underlying, b->as_ptr.underlying);
+      return UnifyPtr(&a->as_ptr, &b->as_ptr);
 
-    case TypeTag::TY_STRUCT: {
-      auto& a_mem = a->as_struct.first;
-      auto& b_mem = b->as_struct.first;
+    case TypeTag::TY_FUN:
+      return UnifyFunc(&a->as_fun, &b->as_fun);
 
-      if (a_mem.size() != b_mem.size()) {
-        return false;
-      }
+    case TypeTag::TY_APP:
+      return UnifyTyApp(&a->as_tyapp, &b->as_tyapp);
 
-      for (size_t i = 0; i < a_mem.size(); i++) {
-        if (!Unify(a_mem[i].ty, b_mem[i].ty)) {
-          return false;
-        }
-      }
-
-      break;
-    }
-
-    case TypeTag::TY_SUM: {
-      auto& a_mem = a->as_sum.first;
-      auto& b_mem = b->as_sum.first;
-
-      if (a_mem.size() != b_mem.size()) {
-        throw std::runtime_error{"Inference error: struct size mismatch"};
-      }
-
-      // Also don't forget to check the names!
-
-      for (size_t i = 0; i < a_mem.size(); i++) {
-        if (a_mem[i].field != b_mem[i].field) {
-          throw std::runtime_error{"Inference error: sum field mismatch"};
-        }
-
-        if (!Unify(a_mem[i].ty, b_mem[i].ty)) {
-          return false;
-        }
-      }
-
-      break;
-    }
-
-    case TypeTag::TY_FUN: {
-      auto& pack = a->as_fun.param_pack;
-      auto& pack2 = b->as_fun.param_pack;
-
-      if (pack.size() != pack2.size()) {
-        return false;
-      }
-
-      for (size_t i = 0; i < pack.size(); i++) {
-        if (!Unify(pack[i], pack2[i])) {
-          return false;
-        }
-      }
-
-      return Unify(a->as_fun.result_type, b->as_fun.result_type);
-    }
-
-    case TypeTag::TY_APP: {
-      if (a->as_tyapp.name != b->as_tyapp.name) {
-        while (auto new_a = ApplyTyconsLazy(a)) {
-          fmt::print(stderr, "a ~ {}\n", FormatType(*new_a));
-          a = new_a;
-        }
-
-        while (auto new_b = ApplyTyconsLazy(b)) {
-          fmt::print(stderr, "b ~ {}\n", FormatType(*new_b));
-          b = new_b;
-        }
-
-        return Unify(a, b);
-      }
-
-      auto& pack = a->as_tyapp.param_pack;
-      auto& pack2 = b->as_tyapp.param_pack;
-
-      for (size_t i = 0; i < pack.size(); i++) {
-        if (!Unify(pack[i], pack2[i])) {
-          return false;
-        }
-      }
-
-      break;
-    }
+    case TypeTag::TY_SUM:
+    case TypeTag::TY_STRUCT:
+      return UnifyStructs(&a->as_struct, &b->as_struct);
 
     case TypeTag::TY_CONS:
+      // Later:
+      // bind :: m(a) -> (a -> m(b)) -> m(b)
+      //
     case TypeTag::TY_KIND:
     case TypeTag::TY_NEVER:
     case TypeTag::TY_VARIABLE:
@@ -155,23 +139,16 @@ void ConstraintSolver::Generalize(Type* ty) {
       Generalize(l->as_ptr.underlying);
       break;
 
-    case TypeTag::TY_STRUCT:
-      for (auto& mem : l->as_struct.first) {
-        Generalize(mem.ty);
-      }
-      break;
-
     case TypeTag::TY_SUM:
-      for (auto& mem : l->as_sum.first) {
-        Generalize(mem.ty);
+    case TypeTag::TY_STRUCT:
+      for (auto mem = l->as_struct.members; mem; mem = mem->next) {
+        Generalize(mem->ty);
       }
       break;
 
     case TypeTag::TY_FUN: {
-      auto& pack = l->as_fun.param_pack;
-
-      for (size_t i = 0; i < pack.size(); i++) {
-        Generalize(pack[i]);
+      for (auto p = l->as_fun.parameters; p; p = p->next) {
+        Generalize(p->ty);
       }
 
       Generalize(l->as_fun.result_type);
@@ -179,8 +156,8 @@ void ConstraintSolver::Generalize(Type* ty) {
     }
 
     case TypeTag::TY_APP:
-      for (auto& mem : l->as_tyapp.param_pack) {
-        Generalize(mem);
+      for (auto p = l->as_tyapp.parameters; p; p = p->next) {
+        Generalize(p->ty);
       }
       break;
 
@@ -196,6 +173,7 @@ void ConstraintSolver::Generalize(Type* ty) {
     case TypeTag::TY_KIND:
     case TypeTag::TY_UNION:
       std::abort();
+
     default:
       break;
   }

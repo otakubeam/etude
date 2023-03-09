@@ -1,6 +1,7 @@
+#include <ast/elaboration/quantify_types.hpp>
+
 #include <types/constraints/solver.hpp>
-#include <types/constraints/expand/expand.hpp>
-#include <types/constraints/generate/algorithm_w.hpp>
+#include <types/constraints/generator.hpp>
 
 namespace types::constraints {
 
@@ -11,8 +12,10 @@ ConstraintSolver::ConstraintSolver() {
 void ConstraintSolver::CollectAndSolve(ast::scope::ModuleSymbol*) {
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void ConstraintSolver::CollectAndSolve() {
-  generate::AlgorithmW generator(work_queue_, *this);
+  ConstraintGenerator generator(work_queue_, *this);
 
   for (auto& group : binding_groups_) {
     for (auto def : group) {
@@ -34,6 +37,8 @@ void ConstraintSolver::CollectAndSolve() {
   binding_groups_.clear();
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void ConstraintSolver::ConstrainGenerics() {
   while (work_queue_.size()) {
     auto& q = work_queue_.front();
@@ -42,11 +47,13 @@ void ConstraintSolver::ConstrainGenerics() {
       return;
     }
 
-    q.bound->as_parameter.constraints.push_back(q);
+    q.next = std::exchange(q.bound->as_parameter.constraints, q);
 
     work_queue_.pop_front();
   }
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void ConstraintSolver::GeneralizeBindingGroup(BindingGroup& group) {
   for (auto def : group) {
@@ -55,6 +62,8 @@ void ConstraintSolver::GeneralizeBindingGroup(BindingGroup& group) {
                def->type_->Format());
   }
 }
+
+//////////////////////////////////////////////////////////////////////
 
 bool ConstraintSolver::TrySolveConstraint(Trait i) {
   fmt::print(stderr, "Solving constraint {}\n", FormatTrait(i));
@@ -72,7 +81,7 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
 
       if (i.bound->tag == TypeTag::TY_VARIABLE ||
           i.bound->tag == TypeTag::TY_PARAMETER) {
-        i.bound->as_parameter.constraints.push_back(i);
+        i.next = std::exchange(i.bound->as_parameter.constraints, i);
       }
 
       return true;
@@ -136,12 +145,12 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
       i.bound = FindLeader(i.bound);
 
       if (i.bound->tag == TypeTag::TY_STRUCT) {
-        auto pack = i.bound->as_struct.first;
+        auto pack = i.bound->as_struct.members;
 
-        for (auto& p : pack) {
-          if (p.field == i.has_field.field_name) {
+        for (auto p = pack; p; p = p->next) {
+          if (p->field == i.has_field.field_name) {
             auto field_type = i.has_field.field_type;
-            fill_queue_.push_back(MakeTyEqTrait(p.ty, field_type, i.location));
+            fill_queue_.push_back(MakeTyEqTrait(p->ty, field_type, i.location));
             return true;
           }
         }
@@ -152,12 +161,12 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
       }
 
       if (i.bound->tag == TypeTag::TY_SUM) {
-        auto pack = i.bound->as_sum.first;
+        auto pack = i.bound->as_sum.members;
 
-        for (auto& p : pack) {
-          if (p.field == i.has_field.field_name) {
+        for (auto p = pack; p; p = p->next) {
+          if (p->field == i.has_field.field_name) {
             auto field_type = i.has_field.field_type;
-            fill_queue_.push_back(MakeTyEqTrait(p.ty, field_type, i.location));
+            fill_queue_.push_back(MakeTyEqTrait(p->ty, field_type, i.location));
             return true;
           }
         }
@@ -187,6 +196,8 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
   return false;
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void ConstraintSolver::SolveBatch() {
   PrintQueue();
 
@@ -208,12 +219,16 @@ void ConstraintSolver::SolveBatch() {
   }
 }
 
+//////////////////////////////////////////////////////////////////////
+
 void ConstraintSolver::ReportErrors() {
   for (auto& error : errors_) {
     fmt::print("Cannot satisfy bound {} arising from {}\n",  //
                FormatTrait(error), error.location.Format());
   }
 }
+
+//////////////////////////////////////////////////////////////////////
 
 void ConstraintSolver::PrintQueue() {
   for (auto& i : work_queue_) {
@@ -222,5 +237,7 @@ void ConstraintSolver::PrintQueue() {
 
   fmt::print(stderr, "\n\n");
 }
+
+//////////////////////////////////////////////////////////////////////
 
 }  // namespace types::constraints

@@ -39,26 +39,33 @@ enum class TypeTag {
   TY_CONS,  // `Vec` in `type Vec t = { data: *t, ... }`;
   TY_KIND,  // *
 
-  TY_VARIABLE,
+  TY_VARIABLE,   // (Yet) Unknown type
   TY_PARAMETER,  // Generalized type parameters
 };
 
 //////////////////////////////////////////////////////////////////////
 
 struct Member {
-  std::string_view field;
   Type* ty = nullptr;
+  std::string_view field;
+
+  // The continuation of the list of members
+  Member* next = nullptr;
+};
+
+struct Parameter {
+  Type* ty = nullptr;
+
+  // The continuation
+  Parameter* next = nullptr;
 };
 
 //////////////////////////////////////////////////////////////////////
 
-// This is also plain union type
-struct StructTy {
-  std::vector<Member> first;
-};
-
-struct SumType {
-  std::vector<Member> first;
+struct TyVar {
+  size_t id = 0;           // For easy identification
+  Type* leader = nullptr;  // For use in union find
+  Trait* constraints = nullptr;
 };
 
 struct PtrType {
@@ -66,29 +73,31 @@ struct PtrType {
 };
 
 struct FunType {
-  std::vector<Type*> param_pack;
+  Parameter* parameters;
   Type* result_type;
 };
 
-// This is like a function symbol
+struct StructTy {
+  Member* members;
+};
 
+// Corresponds to the function symbol on the type level
 struct TyConsType {
   std::string_view name;
+
   std::vector<lex::Token> param_pack{};
 
   Type* body = nullptr;
+
+  // The signature of the symbol; corresponds to the
+  // signature of a function
   Type* kind = nullptr;
 };
 
-// And this is like a function call
-
+// Corresponds to the function call on the type level
 struct TyAppType {
   std::string_view name;
-  std::vector<Type*> param_pack;
-};
-
-struct QualifiedGeneric {
-  std::vector<Trait> constraints;
+  Parameter* parameters;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -103,34 +112,36 @@ extern Type builtin_kind;
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatType(Type& type);
-std::string Mangle(Type& type);
+std::string FormatConstraints(Trait* constraints);
+std::string FormatType(Type* type);
+std::string Mangle(Type* type);
 
 //////////////////////////////////////////////////////////////////////
 
 struct Type {
   using Arena = std::deque<Type>;
 
-  Type* leader = nullptr;  // For use in union find
-
-  size_t id = 0;  // For easy identification
-
-  TypeTag tag = TypeTag::TY_VARIABLE;  // Unknown type
+  TypeTag tag = TypeTag::TY_VARIABLE;
 
   ast::scope::Context* typing_context_ = nullptr;
 
-  PtrType as_ptr{};
-  FunType as_fun{};
-  SumType as_sum{};
-  StructTy as_struct{};
-  TyAppType as_tyapp{};
-  TyConsType as_tycons{};
-  QualifiedGeneric as_parameter{};
+  union {
+    TyVar as_var{};
+    PtrType as_ptr;
+    FunType as_fun;
+    StructTy as_struct;
+    TyAppType as_tyapp;
+    TyConsType as_tycons;
+  };
 
   std::string Format() {
-    return FormatType(*this);
+    return FormatType(this);
   }
 };
+
+//////////////////////////////////////////////////////////////////////
+
+extern Type::Arena type_store;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -140,13 +151,14 @@ Type* HintedOrNew(Type*);
 Type* MakeTypeVar();
 Type* MakeTypeVar(ast::scope::Context* ty_cons);
 
-Type* MakeTypePtr(Type* underlying);
-Type* MakeFunType(std::vector<Type*> param_pack, Type* result_type);
-Type* MakeTyApp(std::string_view name, std::vector<Type*> param_pack);
+Type* MakeTypePtr(Type* under);
+Type* MakeSumType(Member* fields);
+Type* MakeStructType(Member* fields);
+Type* MakeFunType(Parameter* parameters, Type* result_type);
+
+Type* MakeTyApp(std::string_view name, Parameter* parameters);
 Type* MakeTyCons(std::string_view name, std::vector<lex::Token> params,
                  Type* body, Type* kind, ast::scope::Context* context);
-Type* MakeStructType(std::vector<Member> fields);
-Type* MakeSumType(std::vector<Member> fields);
 
 auto MakeKindParamPack(size_t size) -> std::vector<Type*>;
 
@@ -156,22 +168,15 @@ void SetTyContext(types::Type* ty, ast::scope::Context* typing_context);
 
 //////////////////////////////////////////////////////////////////////
 
-std::string FormatStruct(Type& type);
-std::string FormatFun(Type& type);
-
-//////////////////////////////////////////////////////////////////////
-
 Type* FindLeader(Type* ty);
 Type* TypeStorage(Type* ty);
 Type* ApplyTyconsLazy(Type* ty);
 
-using KnownParams = std::unordered_map<Type*, Type*>;
-Type* Instantinate(Type* ty, KnownParams& map);
+using Map = std::unordered_map<std::string_view, Type*>;
+Type* SubstituteParameters(Type* subs, const Map& map);
 
-// a -> Vec(a) == b -> Vec(b)
-// For use in testing, works on generalized types
-bool TypesEquivalent(Type* lhs, Type* rhs,
-                     std::unordered_map<size_t, size_t> map = {});
+using KnownParams = std::unordered_map<Type*, Type*>;
+Type* InstituteParameters(Type* subs, const KnownParams& map);
 
 //////////////////////////////////////////////////////////////////////
 

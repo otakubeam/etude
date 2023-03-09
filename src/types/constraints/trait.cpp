@@ -16,17 +16,19 @@ Trait MakeEqTrait(Type* bound, lex::Location loc) {
 
 Trait MakeOrdTrait(Type* bound, lex::Location loc) {
   return Trait{
-      .tag = TraitTags::ORD, .bound = bound, .none = {}, .location = loc};
+      .tag = TraitTags::ORD,
+      .bound = bound,
+      .none = {},
+      .location = loc,
+  };
 }
 
 Trait MakeHasFieldTrait(Type* bound, std::string_view name, Type* field_type,
                         lex::Location loc) {
-  return Trait{
-      .tag = TraitTags::HAS_FIELD,
-      .bound = bound,
-      .has_field = {.field_name = name, .field_type = field_type},
-      .location = loc,
-  };
+  return Trait{.tag = TraitTags::HAS_FIELD,
+               .bound = bound,
+               .has_field = {.field_name = name, .field_type = field_type},
+               .location = loc};
 }
 
 std::string FormatTrait(Trait& trait) {

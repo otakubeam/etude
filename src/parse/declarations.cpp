@@ -76,7 +76,6 @@ Attribute* Parser::ParseAttributes() {
 }
 
 ///////////////////////////////////////////////////////////////////
-
 FunDeclaration* Parser::ParseFunPrototype(types::Type* hint) {
   if (!Matches(lex::TokenType::FUN)) {
     return nullptr;

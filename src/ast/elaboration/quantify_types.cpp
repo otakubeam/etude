@@ -1,11 +1,15 @@
-#include <types/constraints/expand/expand.hpp>
-#include <types/constraints/solver.hpp>
-
+#include <ast/elaboration/quantify_types.hpp>
 #include <ast/declarations.hpp>
 #include <ast/patterns.hpp>
 #include <lex/token.hpp>
 
-namespace types::constraints {
+namespace ast::elaboration {
+
+//////////////////////////////////////////////////////////////////////
+
+using types::MakeTypeVar;
+using types::Type;
+using types::TypeTag;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -99,13 +103,13 @@ void Traverse(Type* ty) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitTypeDecl(TypeDeclaration*) {
+void QuantifyTypes::VisitTypeDecl(TypeDeclaration*) {
   // No-op
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitVarDecl(VarDeclaration* node) {
+void QuantifyTypes::VisitVarDecl(VarDeclaration* node) {
   if (!node->annotation_) {
     return;
   }
@@ -115,7 +119,7 @@ void ExpandTypeVariables::VisitVarDecl(VarDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitFunDecl(FunDeclaration* node) {
+void QuantifyTypes::VisitFunDecl(FunDeclaration* node) {
   if (node->type_) {
     Traverse(node->type_);
   }
@@ -127,7 +131,7 @@ void ExpandTypeVariables::VisitFunDecl(FunDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitTraitDecl(TraitDeclaration* node) {
+void QuantifyTypes::VisitTraitDecl(TraitDeclaration* node) {
   for (auto decl : node->assoc_items_) {
     decl->Accept(this);
   }
@@ -135,7 +139,7 @@ void ExpandTypeVariables::VisitTraitDecl(TraitDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitImplDecl(ImplDeclaration* node) {
+void QuantifyTypes::VisitImplDecl(ImplDeclaration* node) {
   for (auto decl : node->assoc_items_) {
     decl->Accept(this);
   }
@@ -143,80 +147,80 @@ void ExpandTypeVariables::VisitImplDecl(ImplDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitYield(YieldExpression* node) {
+void QuantifyTypes::VisitYield(YieldExpression* node) {
   node->yield_value_->Accept(this);
 }
 
-void ExpandTypeVariables::VisitReturn(ReturnExpression* node) {
+void QuantifyTypes::VisitReturn(ReturnExpression* node) {
   node->return_value_->Accept(this);
 }
 
-void ExpandTypeVariables::VisitAssign(AssignExpression* node) {
+void QuantifyTypes::VisitAssign(AssignExpression* node) {
   node->value_->Accept(this);
   node->target_->Accept(this);
 }
 
-void ExpandTypeVariables::VisitSeqExpr(SeqExpression* node) {
+void QuantifyTypes::VisitSeqExpr(SeqExpression* node) {
   node->expr_->Accept(this);
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void ExpandTypeVariables::VisitComparison(ComparisonExpression*) {
+void QuantifyTypes::VisitComparison(ComparisonExpression*) {
 }
 
-void ExpandTypeVariables::VisitBinary(BinaryExpression*) {
+void QuantifyTypes::VisitBinary(BinaryExpression*) {
 }
 
-void ExpandTypeVariables::VisitUnary(UnaryExpression*) {
+void QuantifyTypes::VisitUnary(UnaryExpression*) {
 }
 
-void ExpandTypeVariables::VisitDeref(DereferenceExpression*) {
+void QuantifyTypes::VisitDeref(DereferenceExpression*) {
 }
 
-void ExpandTypeVariables::VisitAddressof(AddressofExpression*) {
+void QuantifyTypes::VisitAddressof(AddressofExpression*) {
 }
 
-void ExpandTypeVariables::VisitIf(IfExpression*) {
+void QuantifyTypes::VisitIf(IfExpression*) {
 }
 
-void ExpandTypeVariables::VisitMatch(MatchExpression*) {
+void QuantifyTypes::VisitMatch(MatchExpression*) {
 }
 
-void ExpandTypeVariables::VisitNew(NewExpression* node) {
+void QuantifyTypes::VisitNew(NewExpression* node) {
   Traverse(node->underlying_);
 }
 
-void ExpandTypeVariables::VisitLet(LetExpression*) {
+void QuantifyTypes::VisitLet(LetExpression*) {
 }
 
-void ExpandTypeVariables::VisitBlock(BlockExpression*) {
+void QuantifyTypes::VisitBlock(BlockExpression*) {
 }
 
-void ExpandTypeVariables::VisitIndex(IndexExpression*) {
+void QuantifyTypes::VisitIndex(IndexExpression*) {
 }
 
-void ExpandTypeVariables::VisitFnCall(FnCallExpression*) {
+void QuantifyTypes::VisitFnCall(FnCallExpression*) {
 }
 
-void ExpandTypeVariables::VisitIntrinsic(IntrinsicCall*) {
+void QuantifyTypes::VisitIntrinsic(IntrinsicCall*) {
 }
 
-void ExpandTypeVariables::VisitCompoundInitalizer(CompoundInitializerExpr*) {
+void QuantifyTypes::VisitCompoundInitalizer(CompoundInitializerExpr*) {
 }
 
-void ExpandTypeVariables::VisitFieldAccess(FieldAccessExpression*) {
+void QuantifyTypes::VisitFieldAccess(FieldAccessExpression*) {
 }
 
-void ExpandTypeVariables::VisitVarAccess(VarAccessExpression*) {
+void QuantifyTypes::VisitVarAccess(VarAccessExpression*) {
 }
 
-void ExpandTypeVariables::VisitLiteral(LiteralExpression*) {
+void QuantifyTypes::VisitLiteral(LiteralExpression*) {
 }
 
-void ExpandTypeVariables::VisitTypecast(TypecastExpression* node) {
+void QuantifyTypes::VisitTypecast(TypecastExpression* node) {
   Traverse(node->type_);
   node->expr_->Accept(this);
 }
 
-}  // namespace types::constraints
+}  // namespace ast::elaboration

@@ -1,15 +1,15 @@
+#include <types/constraints/generator.hpp>
 #include <types/constraints/solver.hpp>
-#include <types/constraints/generate/algorithm_w.hpp>
 
 #include <ast/declarations.hpp>
 #include <ast/patterns.hpp>
 #include <lex/token.hpp>
 
-namespace types::constraints::generate {
+namespace types::constraints {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::PushEqual(lex::Location loc, Type* a, Type* b) {
+void ConstraintGenerator::PushEqual(lex::Location loc, Type* a, Type* b) {
   if (solver_.Unify(a, b)) {
     return;  // If can unify right away, then do it
   }
@@ -18,13 +18,13 @@ void AlgorithmW::PushEqual(lex::Location loc, Type* a, Type* b) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitTypeDecl(TypeDeclaration*) {
+void ConstraintGenerator::VisitTypeDecl(TypeDeclaration*) {
   // No-op
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitVarDecl(VarDeclaration* node) {
+void ConstraintGenerator::VisitVarDecl(VarDeclaration* node) {
   auto symbol = node->layer_->RetrieveSymbol(node->GetName());
 
   auto ty = symbol->GetType();
@@ -34,7 +34,7 @@ void AlgorithmW::VisitVarDecl(VarDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitFunDecl(FunDeclaration* node) {
+void ConstraintGenerator::VisitFunDecl(FunDeclaration* node) {
   if (!node->body_) {
     return;
   }
@@ -79,7 +79,7 @@ void AlgorithmW::VisitFunDecl(FunDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitTraitDecl(TraitDeclaration* node) {
+void ConstraintGenerator::VisitTraitDecl(TraitDeclaration* node) {
   for (auto decl : node->assoc_items_) {
     decl->Accept(this);
   }
@@ -87,7 +87,7 @@ void AlgorithmW::VisitTraitDecl(TraitDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitImplDecl(ImplDeclaration* node) {
+void ConstraintGenerator::VisitImplDecl(ImplDeclaration* node) {
   for (auto decl : node->assoc_items_) {
     decl->Accept(this);
   }
@@ -95,7 +95,7 @@ void AlgorithmW::VisitImplDecl(ImplDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitModuleDecl(ModuleDeclaration* node) {
+void ConstraintGenerator::VisitModuleDecl(ModuleDeclaration* node) {
   auto mod = node->layer_->RetrieveSymbol(node->GetName());
   FMT_ASSERT(mod->sym_type == ast::scope::SymbolType::MODULE, "");
 
@@ -114,22 +114,22 @@ void AlgorithmW::VisitModuleDecl(ModuleDeclaration* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitBindingPat(BindingPattern* node) {
+void ConstraintGenerator::VisitBindingPat(BindingPattern* node) {
   auto symbol = node->layer_->RetrieveSymbol(node->name_);
   return_value = symbol->GetType();
 }
 
-void AlgorithmW::VisitDiscardingPat(DiscardingPattern* node) {
+void ConstraintGenerator::VisitDiscardingPat(DiscardingPattern* node) {
   return_value = MakeTypeVar(node->layer_);  // No type information
 }
 
-void AlgorithmW::VisitLiteralPat(LiteralPattern* node) {
+void ConstraintGenerator::VisitLiteralPat(LiteralPattern* node) {
   return_value = Eval(node->pat_);
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitVariantPat(VariantPattern* node) {
+void ConstraintGenerator::VisitVariantPat(VariantPattern* node) {
   auto inner = node->inner_pat_  //
                    ? Eval(node->inner_pat_)
                    : MakeTypeVar(node->layer_);
@@ -145,14 +145,14 @@ void AlgorithmW::VisitVariantPat(VariantPattern* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitYield(YieldExpression* node) {
+void ConstraintGenerator::VisitYield(YieldExpression* node) {
   Eval(node->yield_value_);
   return_value = &builtin_never;
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitReturn(ReturnExpression* node) {
+void ConstraintGenerator::VisitReturn(ReturnExpression* node) {
   auto find = node->layer_->RetrieveSymbol(current_function_);
 
   std::vector<Type*> args;
@@ -173,7 +173,7 @@ void AlgorithmW::VisitReturn(ReturnExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitAssign(AssignExpression* node) {
+void ConstraintGenerator::VisitAssign(AssignExpression* node) {
   auto value_ty = Eval(node->value_);
   auto target_ty = Eval(node->target_);
   PushEqual(node->GetLocation(), value_ty, target_ty);
@@ -183,7 +183,7 @@ void AlgorithmW::VisitAssign(AssignExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitSeqExpr(SeqExpression* node) {
+void ConstraintGenerator::VisitSeqExpr(SeqExpression* node) {
   Eval(node->expr_);
 
   return_value = node->rest_ ? Eval(node->rest_)  //
@@ -192,7 +192,7 @@ void AlgorithmW::VisitSeqExpr(SeqExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitComparison(ComparisonExpression* node) {
+void ConstraintGenerator::VisitComparison(ComparisonExpression* node) {
   auto e = Eval(node->left_);
   auto e2 = Eval(node->right_);
 
@@ -224,7 +224,7 @@ void AlgorithmW::VisitComparison(ComparisonExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitBinary(BinaryExpression* node) {
+void ConstraintGenerator::VisitBinary(BinaryExpression* node) {
   PushEqual(node->GetLocation(), Eval(node->right_), &builtin_int);
 
   node->type_ = return_value = Eval(node->left_);
@@ -239,7 +239,7 @@ void AlgorithmW::VisitBinary(BinaryExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitUnary(UnaryExpression* node) {
+void ConstraintGenerator::VisitUnary(UnaryExpression* node) {
   auto result = Eval(node->operand_);
 
   switch (node->operator_.type) {
@@ -260,7 +260,7 @@ void AlgorithmW::VisitUnary(UnaryExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitDeref(DereferenceExpression* node) {
+void ConstraintGenerator::VisitDeref(DereferenceExpression* node) {
   // An example:
   //
   //     fun use_ptr p = {    <<<--- 1) p :: a
@@ -275,14 +275,14 @@ void AlgorithmW::VisitDeref(DereferenceExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitAddressof(AddressofExpression* node) {
+void ConstraintGenerator::VisitAddressof(AddressofExpression* node) {
   node->type_ = return_value = MakeTypePtr(Eval(node->operand_));
   SetTyContext(node->type_, node->layer_);
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitIf(IfExpression* node) {
+void ConstraintGenerator::VisitIf(IfExpression* node) {
   auto result_ty = MakeTypeVar();
 
   PushEqual(node->GetLocation(), Eval(node->condition_), &builtin_bool);
@@ -294,7 +294,7 @@ void AlgorithmW::VisitIf(IfExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitMatch(MatchExpression* node) {
+void ConstraintGenerator::VisitMatch(MatchExpression* node) {
   auto result_ty = MakeTypeVar();
   auto target_ty = Eval(node->against_);
 
@@ -308,7 +308,7 @@ void AlgorithmW::VisitMatch(MatchExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitNew(NewExpression* node) {
+void ConstraintGenerator::VisitNew(NewExpression* node) {
   if (node->allocation_size_) {
     PushEqual(node->GetLocation(), Eval(node->allocation_size_), &builtin_int);
   }
@@ -323,25 +323,25 @@ void AlgorithmW::VisitNew(NewExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitLet(LetExpression*) {
+void ConstraintGenerator::VisitLet(LetExpression*) {
   std::abort();
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitBlock(BlockExpression* node) {
+void ConstraintGenerator::VisitBlock(BlockExpression* node) {
   Eval(node->expr_);
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitIndex(IndexExpression*) {
+void ConstraintGenerator::VisitIndex(IndexExpression*) {
   std::abort();
 }
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitFnCall(FnCallExpression* node) {
+void ConstraintGenerator::VisitFnCall(FnCallExpression* node) {
   if (node->fn_name_.empty()) {
     FMT_ASSERT(false, "Unimplemented");
   }
@@ -392,7 +392,7 @@ void AlgorithmW::VisitFnCall(FnCallExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitIntrinsic(IntrinsicCall* node) {
+void ConstraintGenerator::VisitIntrinsic(IntrinsicCall* node) {
   for (auto a : node->arguments_) {
     Eval(a);
   }
@@ -422,7 +422,8 @@ void AlgorithmW::VisitIntrinsic(IntrinsicCall* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
+void ConstraintGenerator::VisitCompoundInitalizer(
+    CompoundInitializerExpr* node) {
   node->type_ = MakeTypeVar(node->layer_);
 
   auto loc = node->GetLocation();
@@ -438,7 +439,7 @@ void AlgorithmW::VisitCompoundInitalizer(CompoundInitializerExpr* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
+void ConstraintGenerator::VisitFieldAccess(FieldAccessExpression* node) {
   node->type_ = MakeTypeVar(node->layer_);
   auto str = Eval(node->struct_expression_);
 
@@ -451,14 +452,14 @@ void AlgorithmW::VisitFieldAccess(FieldAccessExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
+void ConstraintGenerator::VisitVarAccess(VarAccessExpression* node) {
   if (auto symbol = node->layer_->RetrieveSymbol(node->name_)) {
     auto ty = symbol->GetType();
 
     node->type_ = ty;
 
     KnownParams p = {};
-    return_value = ty->tag == TypeTag::TY_FUN ? Instantinate(ty, p) : ty;
+    return_value = ty->tag == TypeTag::TY_FUN ? InstituteParameters(ty, p) : ty;
 
     return;
   }
@@ -469,7 +470,7 @@ void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitLiteral(LiteralExpression* node) {
+void ConstraintGenerator::VisitLiteral(LiteralExpression* node) {
   switch (node->token_.type) {
     case lex::TokenType::INTEGER:
       return_value = &builtin_int;
@@ -501,7 +502,7 @@ void AlgorithmW::VisitLiteral(LiteralExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-void AlgorithmW::VisitTypecast(TypecastExpression* node) {
+void ConstraintGenerator::VisitTypecast(TypecastExpression* node) {
   auto e = Eval(node->expr_);
 
   work_queue_.push_back(Trait{
@@ -516,4 +517,4 @@ void AlgorithmW::VisitTypecast(TypecastExpression* node) {
 
 //////////////////////////////////////////////////////////////////////
 
-}  // namespace types::constraints::generate
+}  // namespace types::constraints

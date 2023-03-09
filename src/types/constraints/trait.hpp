@@ -12,19 +12,20 @@ namespace types {
 struct Type;
 
 enum class TraitTags {
-  EQ,
-  ORD,  // EQ a => ORD a
-
-  ADD,  // only + : for pointers and numeric
-  NUM,  // ADD a => NUM a
-
-  CALLABLE,
-
-  TYPES_EQ,
-  HAS_FIELD,
-  CONVERTIBLE_TO,
-
-  USER_DEFINED,
+  EQ,              //
+  ORD,             // Eq a => Ord a
+                   //
+  ADD,             // only `+` : for pointers and numeric
+  NUM,             // Add a => Num a
+                   //
+  INDEX,           // []
+  CALLABLE,        // ()
+                   //
+  TYPES_EQ,        // ~
+  HAS_FIELD,       // .name : type
+  CONVERTIBLE_TO,  // ~>
+                   //
+  USER_DEFINED,    // Parsed, Show, etc..
 };
 
 struct HasFieldTrait {
@@ -62,6 +63,8 @@ struct Trait {
   };
 
   lex::Location location;
+
+  Trait* next = nullptr;
 };
 
 Trait MakeTyEqTrait(Type* a, Type* b, lex::Location);

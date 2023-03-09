@@ -28,8 +28,15 @@ class ConstraintSolver {
   void PrintQueue();
   void ReportErrors();
 
-  void Generalize(Type* ty);
   bool UnifyUnderlyingTypes(Type* left, Type* right);
+
+  bool CompareParameterLists(Parameter* a, Parameter* b);
+  bool UnifyStructs(StructTy* a, StructTy* b);
+  bool UnifyTyApp(TyAppType* a, TyAppType* b);
+  bool UnifyFunc(FunType* a, FunType* b);
+  bool UnifyPtr(PtrType* a, PtrType* b);
+
+  void Generalize(Type* ty);
 
   void ConstrainGenerics();
   bool TrySolveConstraint(Trait constraint);

@@ -1,21 +1,18 @@
 #pragma once
 
-#include <types/type.hpp>
-#include <types/constraints/trait.hpp>
-#include <types/constraints/solver.hpp>
-
+#include <ast/visitors/abort_visitor.hpp>
 #include <ast/scope/context.hpp>
 
-#include <ast/visitors/return_visitor.hpp>
+#include <types/constraints/trait.hpp>
+#include <types/type.hpp>
 
 #include <queue>
 
-namespace types::constraints::generate {
+namespace ast::elaboration {
 
-class AlgorithmW : public ReturnVisitor<Type*> {
+class QuantifyTypes : public AbortVisitor {
  public:
-  AlgorithmW(std::deque<Trait>& work_queue, ConstraintSolver& solver)
-      : solver_{solver}, work_queue_{work_queue} {
+  QuantifyTypes() {
   }
 
   void VisitVarDecl(VarDeclaration* node) override;
@@ -52,17 +49,6 @@ class AlgorithmW : public ReturnVisitor<Type*> {
   void VisitVarAccess(VarAccessExpression* node) override;
   void VisitFieldAccess(FieldAccessExpression* node) override;
   void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
-
- private:
-  void PushEqual(lex::Location loc, Type* a, Type* b);
-
- private:
-  ConstraintSolver& solver_;
-
-  std::deque<Trait>& work_queue_;
-
-  std::string_view current_function_;
-
 };
 
-}  // namespace types::constraints::generate
+}  // namespace ast::elaboration
