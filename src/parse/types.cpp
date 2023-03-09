@@ -110,15 +110,30 @@ types::Type* Parser::ParseSumType() {
 
 ///////////////////////////////////////////////////////////////////
 
-types::Type* Parser::ParsePrimitiveType() {
-  if (Matches(lex::TokenType::LEFT_PAREN)) {
-    if (Matches(lex::TokenType::RIGHT_PAREN)) {
-      return &types::builtin_unit;
-    }
+types::Type* Parser::ParseTyApp() {
+}
 
-    auto type = ParseFunctionType();
-    Consume(lex::TokenType::RIGHT_PAREN);
-    return type;
+///////////////////////////////////////////////////////////////////
+
+types::Type* Parser::ParseTyGrouping() {
+  if (!Matches(lex::TokenType::LEFT_PAREN)) {
+    return nullptr;
+  }
+
+  if (Matches(lex::TokenType::RIGHT_PAREN)) {
+    return &types::builtin_unit;
+  }
+
+  auto type = ParseFunctionType();
+  Consume(lex::TokenType::RIGHT_PAREN);
+  return type;
+}
+
+///////////////////////////////////////////////////////////////////
+
+types::Type* Parser::ParsePrimitiveType() {
+  if (auto g = ParseTyGrouping()) {
+    return g;
   }
 
   auto tok = lexer_.Peek();
@@ -128,37 +143,42 @@ types::Type* Parser::ParsePrimitiveType() {
     case lex::TokenType::IDENTIFIER: {
       std::vector<types::Type*> types;
 
-      if (Matches(lex::TokenType::LEFT_PAREN)) {
-        while (!Matches(lex::TokenType::RIGHT_PAREN)) {
-          types.push_back(ParseType());
-          Matches(lex::TokenType::COMMA);
-        }
+      if (!Matches(lex::TokenType::LEFT_PAREN)) {
+        return types::MakeTyApp(tok, nullptr);
       }
 
-      return types::MakeTyApp(tok, std::move(types));
+      while (!Matches(lex::TokenType::RIGHT_PAREN)) {
+        types.push_back(ParseType());
+        Matches(lex::TokenType::COMMA);
+      }
+
+      return types::MakeTyApp(tok, nullptr);
     }
 
-    case lex::TokenType::UNDERSCORE:
-      return types::MakeTypeVar();
-
-    case lex::TokenType::TY_INT:
-      return &types::builtin_int;
-
-    case lex::TokenType::TY_BOOL:
-      return &types::builtin_bool;
-
-    case lex::TokenType::TY_CHAR:
-      return &types::builtin_char;
-
-    case lex::TokenType::TY_STRING:
-      return types::MakeTypePtr(&types::builtin_char);
-
-    case lex::TokenType::TY_UNIT:
-      return &types::builtin_unit;
-
-    default:
-      throw parse::errors::ParseTypeError{FormatLocation()};
+      return types::MakeTyApp(tok, std::move(types));
   }
+
+  case lex::TokenType::UNDERSCORE:
+    return types::MakeTypeVar();
+
+  case lex::TokenType::TY_INT:
+    return &types::builtin_int;
+
+  case lex::TokenType::TY_BOOL:
+    return &types::builtin_bool;
+
+  case lex::TokenType::TY_CHAR:
+    return &types::builtin_char;
+
+  case lex::TokenType::TY_STRING:
+    return types::MakeTypePtr(&types::builtin_char);
+
+  case lex::TokenType::TY_UNIT:
+    return &types::builtin_unit;
+
+  default:
+    throw parse::errors::ParseTypeError{FormatLocation()};
+}
 }
 
 ///////////////////////////////////////////////////////////////////

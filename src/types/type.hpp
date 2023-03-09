@@ -91,7 +91,7 @@ struct TyConsType {
 
   // The signature of the symbol; corresponds to the
   // signature of a function
-  Type* kind = nullptr;
+  size_t kind = 0;
 };
 
 // Corresponds to the function call on the type level
@@ -131,8 +131,8 @@ struct Type {
     FunType as_fun;
     StructTy as_struct;
     TyAppType as_tyapp;
-    TyConsType as_tycons;
   };
+  TyConsType as_tycons{};
 
   std::string Format() {
     return FormatType(this);
@@ -158,9 +158,7 @@ Type* MakeFunType(Parameter* parameters, Type* result_type);
 
 Type* MakeTyApp(std::string_view name, Parameter* parameters);
 Type* MakeTyCons(std::string_view name, std::vector<lex::Token> params,
-                 Type* body, Type* kind, ast::scope::Context* context);
-
-auto MakeKindParamPack(size_t size) -> std::vector<Type*>;
+                 Type* body, size_t kind, ast::scope::Context* context);
 
 //////////////////////////////////////////////////////////////////////
 

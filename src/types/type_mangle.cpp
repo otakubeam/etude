@@ -10,8 +10,8 @@ std::string MangleFun(FunType* type) {
 
   fmt::format_to(ins, "fn");
 
-  for (auto& t : type.as_fun.param_pack) {
-    fmt::format_to(ins, "{}", Mangle(*t));
+  for (auto t = type->parameters; t; t = t->next) {
+    fmt::format_to(ins, "{}", Mangle(t->ty));
   }
 
   return result;
@@ -19,32 +19,38 @@ std::string MangleFun(FunType* type) {
 
 //////////////////////////////////////////////////////////////////////
 
-std::string MangleApp(Type* type) {
+std::string MangleApp(TyAppType* type) {
   std::string result;
   auto ins = std::back_inserter(result);
-  fmt::format_to(ins, "{}", type.as_tyapp.name);
-  for (auto& t : type.as_tyapp.param_pack) {
-    fmt::format_to(ins, "{}", Mangle(*t));
+
+  fmt::format_to(ins, "{}", type->name);
+
+  for (auto t = type->parameters; t; t = t->next) {
+    fmt::format_to(ins, "{}", Mangle(t->ty));
   }
+
   return result;
 }
 
 //////////////////////////////////////////////////////////////////////
 
-std::string MangleStruct(Type* type) {
+std::string MangleStruct(StructTy* type) {
   std::string result;
   auto ins = std::back_inserter(result);
+
   fmt::format_to(ins, "struct");
-  for (auto& t : type.as_struct.first) {
-    fmt::format_to(ins, "{}", Mangle(*t.ty));
+
+  for (auto t = type->members; t; t = t->next) {
+    fmt::format_to(ins, "{}", Mangle(t->ty));
   }
+
   return result;
 }
 
 //////////////////////////////////////////////////////////////////////
 
 std::string Mangle(Type* type) {
-  switch (type.tag) {
+  switch (type->tag) {
     case TypeTag::TY_INT:
       return fmt::format("i");
     case TypeTag::TY_BOOL:
@@ -55,16 +61,15 @@ std::string Mangle(Type* type) {
       return fmt::format("u");
 
     case TypeTag::TY_PTR:
-      return "P" + Mangle(*type.as_ptr.underlying);
+      return "P" + Mangle(type->as_ptr.underlying);
     case TypeTag::TY_FUN:
-      return MangleFun(type);
+      return MangleFun(&type->as_fun);
     case TypeTag::TY_APP:
-      return MangleApp(type);
-
-    case TypeTag::TY_STRUCT:
-      return MangleStruct(type);
-
+      return MangleApp(&type->as_tyapp);
     case TypeTag::TY_SUM:
+    case TypeTag::TY_STRUCT:
+      return MangleStruct(&type->as_struct);
+
     case TypeTag::TY_UNION:
     case TypeTag::TY_VARIABLE:
     case TypeTag::TY_CONS:

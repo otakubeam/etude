@@ -56,7 +56,7 @@ void ContextBuilder::VisitImplDecl(ImplDeclaration* node) {
   // Insert Self into the context
 
   auto self_constructor = types::MakeTyCons("Self", {}, node->for_type_,  //
-                                            nullptr, current_context_);
+                                            1, current_context_);
   auto self_type = MakeTySymbol("Self", self_constructor, node->GetLocation());
 
   current_context_->InsertSymbol(self_type);
@@ -146,9 +146,8 @@ void ContextBuilder::VisitTypeDecl(TypeDeclaration* node) {
   types::SetTyContext(node->body_, current_context_);
 
   // Build the kind for the type constructor: e.g. `Vec :: * -> *`
-  auto kind_args = types::MakeKindParamPack(node->parameters_.size());
-  auto kind = MakeFunType(std::move(kind_args), &types::builtin_kind);
 
+  auto kind = node->parameters_.size();
   auto ty_cons = types::MakeTyCons(node->name_, std::move(node->parameters_),
                                    node->body_, kind, current_context_);
 

@@ -128,6 +128,8 @@ class Parser {
   types::Type* ParsePointerType();
   types::Type* ParseStructType();
   types::Type* ParseSumType();
+  types::Type* ParseTyApp();
+  types::Type* ParseTyGrouping();
   types::Type* ParsePrimitiveType();
 
   ////////////////////////////////////////////////////////////////////

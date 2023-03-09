@@ -10,16 +10,6 @@ Type* HintedOrNew(Type* type) {
 
 //////////////////////////////////////////////////////////////////////
 
-auto MakeKindParamPack(size_t size) -> std::vector<Type*> {
-  std::vector<Type*> result;
-  for (size_t i = 0; i < size; i++) {
-    result.push_back(&builtin_kind);
-  }
-  return result;
-}
-
-//////////////////////////////////////////////////////////////////////
-
 Type* MakeTypeVar() {
   return MakeTypeVar(nullptr);
 }
@@ -66,11 +56,10 @@ Type* MakeTyApp(std::string_view name, Parameter* parameters) {
 //////////////////////////////////////////////////////////////////////
 
 Type* MakeTyCons(std::string_view name, std::vector<lex::Token> params,
-                 Type* body, Type* kind, ast::scope::Context* context) {
-  type_store.push_back(Type{.id = type_store.size(),
-                            .tag = TypeTag::TY_CONS,
+                 Type* body, size_t kind, ast::scope::Context* context) {
+  type_store.push_back(Type{.tag = TypeTag::TY_CONS,
                             .typing_context_ = context,
-                            .as_tycons = {
+                            .as_tycons = TyConsType{
                                 .name = name,
                                 .param_pack = std::move(params),
                                 .body = body,

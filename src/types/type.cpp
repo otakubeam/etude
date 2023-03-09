@@ -93,4 +93,13 @@ void SetTyContext(types::Type* ty, ast::scope::Context* typing_context) {
 
 //////////////////////////////////////////////////////////////////////
 
+// Either find a concrete constructor or don't find a leader -> stop
+Type* FindLeader(Type* ty) {
+  return ty->tag == TypeTag::TY_VARIABLE && ty->as_var.leader
+             ? FindLeader(ty->as_var.leader)  //
+             : ty;
+}
+
+//////////////////////////////////////////////////////////////////////
+
 }  // namespace types

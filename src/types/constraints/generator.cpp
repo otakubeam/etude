@@ -43,26 +43,40 @@ void ConstraintGenerator::VisitFunDecl(FunDeclaration* node) {
 
   // Build param pack
 
-  std::vector<Type*> param_pack;
+  auto Run = [node, this](std::span<lex::Token> vec,
+                          const auto& self) -> Parameter*  //
+  {
+    if (vec.empty()) {
+      return nullptr;
+    }
 
-  for (auto f : node->formals_) {
-    param_pack.push_back(MakeTypeVar(node->layer_));
+    auto tv = MakeTypeVar(node->layer_);
+    auto symbol = node->layer_->RetrieveSymbol(vec.front());
+    PushEqual(node->GetLocation(), symbol->GetType(), tv);
 
-    auto symbol = node->layer_->RetrieveSymbol(f);
-
-    PushEqual(node->GetLocation(), symbol->GetType(), param_pack.back());
-  }
+    return new Parameter{.ty = tv, .next = self(vec.subspan(1), self)};
+  };
 
   // Make function type
 
+  auto ty = MakeFunType(Run(node->formals_, Run), MakeTypeVar());
+
+  SetTyContext(ty, node->layer_);
+
+  //
+  //
+  //
+  // WTF is this?
+  //
+  //
+  //
+
   auto fn_name = node->GetName();
   auto symbol = node->layer_->RetrieveSymbol(fn_name);
-  auto ty = MakeFunType(std::move(param_pack), MakeTypeVar());
-  SetTyContext(ty, node->layer_);
 
   if (symbol->sym_type == ast::scope::SymbolType::TRAIT_METHOD) {
     KnownParams map = {};
-    auto method_ty = Instantinate(symbol->GetType(), map);
+    auto method_ty = InstituteParameters(symbol->GetType(), map);
 
     PushEqual(node->GetLocation(), ty, method_ty);
     if (node->type_) {
@@ -155,18 +169,20 @@ void ConstraintGenerator::VisitYield(YieldExpression* node) {
 void ConstraintGenerator::VisitReturn(ReturnExpression* node) {
   auto find = node->layer_->RetrieveSymbol(current_function_);
 
-  std::vector<Type*> args;
+  auto args_left = find->as_fun->definition->formals_.size();
 
-  auto argnum = find->as_fun->definition->formals_.size();
+  auto Run = [node](int left, const auto& self) -> Parameter* {
+    return left == 0 ? nullptr
+                     : new Parameter{
+                           .ty = MakeTypeVar(node->layer_),
+                           .next = self(left - 1, self),
+                       };
+  };
 
-  for (size_t i = 0; i < argnum; i++) {
-    args.push_back(MakeTypeVar(node->layer_));
-  }
-
-  auto ty = MakeFunType(std::move(args), Eval(node->return_value_));
-  SetTyContext(ty, node->layer_);
+  auto ty = MakeFunType(Run(args_left, Run), Eval(node->return_value_));
 
   PushEqual(node->GetLocation(), find->GetType(), ty);
+  SetTyContext(ty, node->layer_);
 
   return_value = &builtin_never;
 }
@@ -361,24 +377,32 @@ void ConstraintGenerator::VisitFnCall(FnCallExpression* node) {
   // Get new fresh variables for all type parameters
 
   KnownParams map = {};
-  ty = Instantinate(ty, map);
+  ty = InstituteParameters(ty, map);
   SetTyContext(ty, ctx);
 
   // Build function type bases on arguments
 
-  std::vector<Type*> result;
-  for (auto& a : node->arguments_) {
-    result.push_back(Eval(a));
-  }
-  auto result_ty = MakeTypeVar(ctx);
-  auto f = MakeFunType(std::move(result), result_ty);
+  auto Run = [this](std::span<Expression*> vec, auto& self) -> Parameter* {
+    //
+    // Recursive lambda functions in C++11
+    // https://stackoverflow.com/a/40873505
+    //
+    return vec.empty() ? nullptr
+                       : new Parameter{
+                             .ty = Eval(vec.front()),
+                             .next = self(vec.subspan(1), self),
+                         };
+  };
+
+  auto result_type = MakeTypeVar(ctx);
+  auto f = MakeFunType(Run(node->arguments_, Run), result_type);
 
   SetTyContext(f, ty->typing_context_);
   node->callable_type_ = f;
 
   // Constrain
 
-  work_queue_.push_back({
+  work_queue_.push_back(Trait{
       .tag = TraitTags::CALLABLE,
       .bound = ty,
       .none = {},
@@ -387,7 +411,7 @@ void ConstraintGenerator::VisitFnCall(FnCallExpression* node) {
 
   PushEqual(node->GetLocation(), f, ty);
 
-  return_value = result_ty;
+  return_value = result_type;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -423,7 +447,8 @@ void ConstraintGenerator::VisitIntrinsic(IntrinsicCall* node) {
 //////////////////////////////////////////////////////////////////////
 
 void ConstraintGenerator::VisitCompoundInitalizer(
-    CompoundInitializerExpr* node) {
+    CompoundInitializerExpr* node)  //
+{
   node->type_ = MakeTypeVar(node->layer_);
 
   auto loc = node->GetLocation();

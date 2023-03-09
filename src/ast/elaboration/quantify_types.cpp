@@ -28,7 +28,8 @@ void DefineGenerics(Type* ty) {
     if (symbol->sym_type == ast::scope::SymbolType::GENERIC) {
       fmt::print(stderr, "Using generic {}\n", name);
 
-      ty->leader = symbol->as_type.cons;
+      ty->tag = types::TypeTag::TY_PARAMETER;
+      ty->as_var.leader = symbol->as_type.cons;
     }
 
   } else {
@@ -40,9 +41,11 @@ void DefineGenerics(Type* ty) {
 
     fmt::print(stderr, "Defining generic {} at {}\n", name, loc.Format());
 
-    ty->leader = MakeTypeVar(ty->typing_context_);
+    auto par = ty->as_var.leader = MakeTypeVar(ty->typing_context_);
+    auto generic_sym = ast::scope::MakeGenericSymbol(name, par, loc);
 
-    auto generic_sym = ast::scope::MakeGenericSymbol(name, ty->leader, loc);
+    ty->as_var.leader = par;
+    ty->tag = types::TypeTag::TY_PARAMETER;
     ty->typing_context_->InsertSymbol(generic_sym);
   }
 }
@@ -55,14 +58,14 @@ void Traverse(Type* ty) {
 
   switch (ty->tag) {
     case TypeTag::TY_APP:
-      for (auto& a : ty->as_tyapp.param_pack) {
-        Traverse(a);
+      for (auto a = ty->as_tyapp.parameters; a; a = a->next) {
+        Traverse(a->ty);
       }
       break;
 
     case TypeTag::TY_FUN:
-      for (auto& a : ty->as_fun.param_pack) {
-        Traverse(a);
+      for (auto a = ty->as_fun.parameters; a; a = a->next) {
+        Traverse(a->ty);
       }
 
       Traverse(ty->as_fun.result_type);
@@ -72,15 +75,10 @@ void Traverse(Type* ty) {
       Traverse(ty->as_ptr.underlying);
       break;
 
-    case TypeTag::TY_STRUCT:
-      for (auto& a : ty->as_struct.first) {
-        Traverse(a.ty);
-      }
-      break;
-
     case TypeTag::TY_SUM:
-      for (auto& a : ty->as_sum.first) {
-        Traverse(a.ty);
+    case TypeTag::TY_STRUCT:
+      for (auto a = ty->as_struct.members; a; a = a->next) {
+        Traverse(a->ty);
       }
       break;
 

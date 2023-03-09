@@ -585,7 +585,7 @@ class IndexExpression : public Expression {
   }
 
   virtual types::Type* GetType() override {
-    return type_->leader;
+    return types::FindLeader(type_);
   }
 
   virtual lex::Location GetLocation() override {

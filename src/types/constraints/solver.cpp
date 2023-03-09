@@ -47,7 +47,7 @@ void ConstraintSolver::ConstrainGenerics() {
       return;
     }
 
-    q.next = std::exchange(q.bound->as_parameter.constraints, q);
+    q.next = std::exchange(q.bound->as_var.constraints, q);
 
     work_queue_.pop_front();
   }
@@ -70,6 +70,9 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
   CheckTypes();
 
   switch (i.tag) {
+    case TraitTags::INDEX:
+      std::abort();
+
     case TraitTags::TYPES_EQ:
       if (!Unify(i.types_equal.a, i.types_equal.b)) {
         errors_.push_back(i);
@@ -81,7 +84,7 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
 
       if (i.bound->tag == TypeTag::TY_VARIABLE ||
           i.bound->tag == TypeTag::TY_PARAMETER) {
-        i.next = std::exchange(i.bound->as_parameter.constraints, i);
+        i.next = std::exchange(i.bound->as_var.constraints, i);
       }
 
       return true;
@@ -161,7 +164,7 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
       }
 
       if (i.bound->tag == TypeTag::TY_SUM) {
-        auto pack = i.bound->as_sum.members;
+        auto pack = i.bound->as_struct.members;
 
         for (auto p = pack; p; p = p->next) {
           if (p->field == i.has_field.field_name) {
@@ -177,7 +180,7 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
 
       if (i.bound->tag == TypeTag::TY_APP) {
         i.bound = ApplyTyconsLazy(i.bound);
-        fmt::print(stderr, "Applied tycons {}\n", FormatType(*i.bound));
+        fmt::print(stderr, "Applied tycons {}\n", FormatType(i.bound));
         fill_queue_.push_back(i);
         return true;
       }

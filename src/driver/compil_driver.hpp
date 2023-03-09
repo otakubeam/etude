@@ -2,7 +2,7 @@
 
 #include <driver/driver_errors.hpp>
 
-#include <types/constraints/generate/algorithm_w.hpp>
+#include <types/constraints/generator.hpp>
 
 #include <ast/elaboration/mark_intrinsics.hpp>
 #include <ast/scope/context_builder.hpp>
