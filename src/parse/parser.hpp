@@ -121,16 +121,24 @@ class Parser {
   Pattern* ParseDiscardingPattern();
   Pattern* ParseVariantPattern();
 
-  ////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////
+  //                             Types                               //
+  /////////////////////////////////////////////////////////////////////
 
   types::Type* ParseType();
   types::Type* ParseFunctionType();
   types::Type* ParsePointerType();
   types::Type* ParseStructType();
   types::Type* ParseSumType();
-  types::Type* ParseTyApp();
+  types::Type* ParseTyApp(lex::Token);
   types::Type* ParseTyGrouping();
   types::Type* ParsePrimitiveType();
+
+  types::Member* ParseSumMembers();
+  types::Member* ParseStructMembers();
+
+  types::Parameter* ParseTypeList();
+  auto ParseFuncParameters() -> std::pair<types::Parameter*, types::Type*>;
 
   ////////////////////////////////////////////////////////////////////
 
