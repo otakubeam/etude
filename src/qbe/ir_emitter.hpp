@@ -49,12 +49,12 @@ class IrEmitter : public ReturnVisitor<Value> {
   virtual void VisitComparison(ComparisonExpression* node) override;
   virtual void VisitBinary(BinaryExpression* node) override;
   virtual void VisitUnary(UnaryExpression*) override;
-  virtual void VisitFnCall(FnCallExpression* node) override;
   virtual void VisitIntrinsic(IntrinsicCall* node) override;
   virtual void VisitFieldAccess(FieldAccessExpression* node) override;
   virtual void VisitVarAccess(VarAccessExpression* node) override;
   virtual void VisitLiteral(LiteralExpression* node) override;
   virtual void VisitTypecast(TypecastExpression* node) override;
+  virtual void VisitFnCall(FnCallExpression* node) override;
   virtual void VisitCompoundInitalizer(CompoundInitializerExpr* node) override;
 
  private:
@@ -201,12 +201,16 @@ class IrEmitter : public ReturnVisitor<Value> {
 
     for (size_t copied = 0; copied < size; copied += align) {
       fmt::print("# Copying \n");
-      fmt::print("  {} = {} load{} {}\n", temp.Emit(), ld_res, ld_suf,
-                 src_ptr.Emit());
-      fmt::print("  store{} {}, {}  \n", str_suf, temp.Emit(), dst_ptr.Emit());
 
-      fmt::print("  {} =l add {}, {}\n", src_ptr.Emit(), src_ptr.Emit(), align);
-      fmt::print("  {} =l add {}, {}\n", dst_ptr.Emit(), dst_ptr.Emit(), align);
+      static constexpr auto fmt_load = "  {} = {} load{} {}\n";
+      fmt::print(fmt_load, temp.Emit(), ld_res, ld_suf, src_ptr.Emit());
+
+      static constexpr auto fmt_store = "  store{} {}, {}  \n";
+      fmt::print(fmt_store, str_suf, temp.Emit(), dst_ptr.Emit());
+
+      static constexpr auto fmt_add = "  {} =l add {}, {}\n";
+      fmt::print(fmt_add, src_ptr.Emit(), src_ptr.Emit(), align);
+      fmt::print(fmt_add, dst_ptr.Emit(), dst_ptr.Emit(), align);
     }
   }
 

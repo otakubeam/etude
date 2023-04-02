@@ -22,10 +22,6 @@ class GenAddr : public AbortVisitor {
       : parent_{parent}, target_id_{target_id} {
   }
 
-  std::string Give() {
-    return result_;
-  }
-
   virtual void VisitDeref(DereferenceExpression* node) override {
     fmt::print("  {} =l copy {}\n", target_id_.Emit(),
                parent_.Eval(node->operand_).Emit());
@@ -55,7 +51,6 @@ class GenAddr : public AbortVisitor {
  private:
   IrEmitter& parent_;
   Value target_id_;
-  std::string result_;
 };
 
 }  // namespace qbe

@@ -21,10 +21,6 @@ class GenAt : public AbortVisitor {
       : parent_{parent}, target_id_{target_id} {
   }
 
-  std::string Give() {
-    return result_;
-  }
-
   virtual void VisitDeref(DereferenceExpression* node) override {
     if (parent_.measure_.IsZST(node->GetType())) {
       return;
@@ -103,18 +99,18 @@ class GenAt : public AbortVisitor {
 
   virtual void VisitNew(NewExpression* node) override {
     auto mem = parent_.Eval(node);
-    fmt::print("  storel {}, {}\n", mem.Emit(), target_id_.Emit());
+    fmt::print("  storel {}, {} \n", mem.Emit(), target_id_.Emit());
   }
 
   virtual void VisitAddressof(AddressofExpression* node) override {
     auto mem = parent_.Eval(node);
-    fmt::print("  storel {}, {}\n", mem.Emit(), target_id_.Emit());
+    fmt::print("  storel {}, {} \n", mem.Emit(), target_id_.Emit());
   }
 
   virtual void VisitUnary(UnaryExpression* node) override {
     auto id = parent_.Eval(node);
-    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
-               target_id_.Emit());
+    constexpr auto fmt = "  store{} {}, {} \n";
+    fmt::print(fmt, StoreSuf(node->GetType()), id.Emit(), target_id_.Emit());
   }
 
   virtual void VisitIf(IfExpression* node) override {
@@ -130,26 +126,26 @@ class GenAt : public AbortVisitor {
       return;
     }
 
-    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
-               target_id_.Emit());
+    constexpr auto fmt = "  store{} {}, {} \n";
+    fmt::print(fmt, StoreSuf(node->GetType()), id.Emit(), target_id_.Emit());
   }
 
   virtual void VisitTypecast(TypecastExpression* node) override {
     auto id = parent_.Eval(node);
-    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
-               target_id_.Emit());
+    constexpr auto fmt = "  store{} {}, {} \n";
+    fmt::print(fmt, StoreSuf(node->GetType()), id.Emit(), target_id_.Emit());
   }
 
   virtual void VisitBinary(BinaryExpression* node) override {
     auto id = parent_.Eval(node);
-    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
-               target_id_.Emit());
+    constexpr auto fmt = "  store{} {}, {} \n";
+    fmt::print(fmt, StoreSuf(node->GetType()), id.Emit(), target_id_.Emit());
   }
 
   virtual void VisitComparison(ComparisonExpression* node) override {
     auto id = parent_.Eval(node);
-    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
-               target_id_.Emit());
+    constexpr auto fmt = "  store{} {}, {} \n";
+    fmt::print(fmt, StoreSuf(node->GetType()), id.Emit(), target_id_.Emit());
   }
 
   virtual void VisitBlock(BlockExpression* node) override {
@@ -159,8 +155,8 @@ class GenAt : public AbortVisitor {
       return;
     }
 
-    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
-               target_id_.Emit());
+    constexpr auto fmt = "  store{} {}, {} \n";
+    fmt::print(fmt, StoreSuf(node->GetType()), id.Emit(), target_id_.Emit());
   }
 
   virtual void VisitVarAccess(VarAccessExpression* node) override {
@@ -176,8 +172,8 @@ class GenAt : public AbortVisitor {
       return;
     }
 
-    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
-               target_id_.Emit());
+    constexpr auto fmt = "  store{} {}, {} \n";
+    fmt::print(fmt, StoreSuf(node->GetType()), id.Emit(), target_id_.Emit());
   }
 
   virtual void VisitMatch(MatchExpression* node) override {
@@ -193,8 +189,8 @@ class GenAt : public AbortVisitor {
       return;
     }
 
-    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
-               target_id_.Emit());
+    constexpr auto fmt = "  store{} {}, {} \n";
+    fmt::print(fmt, StoreSuf(node->GetType()), id.Emit(), target_id_.Emit());
   }
 
   virtual void VisitLiteral(LiteralExpression* node) override {
@@ -203,14 +199,13 @@ class GenAt : public AbortVisitor {
     }
 
     auto id = parent_.Eval(node);
-    fmt::print("  store{} {}, {}\n", StoreSuf(node->GetType()), id.Emit(),
-               target_id_.Emit());
+    constexpr auto fmt = "  store{} {}, {} \n";
+    fmt::print(fmt, StoreSuf(node->GetType()), id.Emit(), target_id_.Emit());
   }
 
  private:
   IrEmitter& parent_;
   Value target_id_;
-  std::string result_;
 };
 
 }  // namespace qbe
