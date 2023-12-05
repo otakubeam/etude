@@ -15,7 +15,7 @@ add_compile_options(-Wall -Wextra -g -Og -fsanitize=undefined)
 
 # --------------------------------------------------------------------
 
-find_package(fmt)
+find_package(fmt QUIET)
 
 if (NOT fmt_FOUND)
 
