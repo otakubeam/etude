@@ -28,8 +28,6 @@ if (NOT fmt_FOUND)
 
 endif (NOT fmt_FOUND)
 
-# find_package(Catch2 2 REQUIRED)
-
 # --------------------------------------------------------------------
 
 add_subdirectory(src)
