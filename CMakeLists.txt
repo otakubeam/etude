@@ -30,18 +30,7 @@ add_compile_options(-Wall -Wextra -g -Og -fsanitize=undefined)
 
 # --------------------------------------------------------------------
 
-find_package(fmt QUIET)
-
-if (NOT fmt_FOUND)
-
-  FetchContent_Declare(fmt
-    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-    GIT_TAG master
-  )
-
-  FetchContent_MakeAvailable(fmt)
-
-endif (NOT fmt_FOUND)
+fetch_package(fmt https://github.com/fmtlib/fmt.git master)
 
 # --------------------------------------------------------------------
 
