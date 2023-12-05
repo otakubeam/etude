@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.23)
 project(etude)
 
+include(FetchContent)
+
 # --------------------------------------------------------------------
 
 set(CMAKE_CXX_STANDARD 20)
@@ -13,7 +15,18 @@ add_compile_options(-Wall -Wextra -g -Og -fsanitize=undefined)
 
 # --------------------------------------------------------------------
 
-find_package(fmt REQUIRED)
+find_package(fmt)
+
+if (NOT fmt_FOUND)
+
+  FetchContent_Declare(fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG master
+  )
+
+  FetchContent_MakeAvailable(fmt)
+
+endif (NOT fmt_FOUND)
 
 # find_package(Catch2 2 REQUIRED)
 
