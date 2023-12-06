@@ -3,14 +3,14 @@ project(etude)
 
 include(FetchContent)
 
-function(fetch_package pakcage_name git_link git_branch)
+function(fetch_package pakcage_name git_link git_tag)
   find_package("${pakcage_name}" QUIET)
 
   if (NOT "${pakcage_name}_FOUND")
 
     FetchContent_Declare("${pakcage_name}"
       GIT_REPOSITORY "${git_link}"
-      GIT_TAG "${git_branch}"
+      GIT_TAG "${git_tag}"
     )
 
     FetchContent_MakeAvailable("${pakcage_name}")
