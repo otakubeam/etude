@@ -53,6 +53,90 @@ TEST_CASE("parser:precendence", "[parser]") {
 
 //////////////////////////////////////////////////////////////////////
 
+TEST_CASE("parser:multiplication", "[parser]") {
+  char stream[] = "2 * 3";
+  std::stringstream source{stream};
+  lex::Lexer l{source};
+  Parser p{l};
+
+  auto expr = p.ParseExpression();
+  REQUIRE(typeid(*expr) == typeid(BinaryExpression));
+
+  auto bin_expr = dynamic_cast<BinaryExpression*>(expr);
+  REQUIRE(bin_expr->operator_.type == lex::TokenType::STAR);
+  REQUIRE(typeid(*bin_expr->left_) == typeid(LiteralExpression));
+  REQUIRE(typeid(*bin_expr->right_) == typeid(LiteralExpression));
+
+  auto left = dynamic_cast<LiteralExpression*>(bin_expr->left_);
+  REQUIRE(left->token_.type == lex::TokenType::NUMBER);
+  REQUIRE(std::get<int>(left->token_.sem_info) == 2);
+
+  auto right = dynamic_cast<LiteralExpression*>(bin_expr->right_);
+  REQUIRE(right->token_.type == lex::TokenType::NUMBER);
+  REQUIRE(std::get<int>(right->token_.sem_info) == 3);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("parser:division", "[parser]") {
+  char stream[] = "1 / 4";
+  std::stringstream source{stream};
+  lex::Lexer l{source};
+  Parser p{l};
+
+  auto expr = p.ParseExpression();
+  REQUIRE(typeid(*expr) == typeid(BinaryExpression));
+
+  auto bin_expr = dynamic_cast<BinaryExpression*>(expr);
+  REQUIRE(bin_expr->operator_.type == lex::TokenType::DIV);
+  REQUIRE(typeid(*bin_expr->left_) == typeid(LiteralExpression));
+  REQUIRE(typeid(*bin_expr->right_) == typeid(LiteralExpression));
+
+  auto left = dynamic_cast<LiteralExpression*>(bin_expr->left_);
+  REQUIRE(left->token_.type == lex::TokenType::NUMBER);
+  REQUIRE(std::get<int>(left->token_.sem_info) == 1);
+
+  auto right = dynamic_cast<LiteralExpression*>(bin_expr->right_);
+  REQUIRE(right->token_.type == lex::TokenType::NUMBER);
+  REQUIRE(std::get<int>(right->token_.sem_info) == 4);
+}
+
+//////////////////////////////////////////////////////////////////////
+
+TEST_CASE("parser:priorities", "[parser]") {
+  char stream[] = "1 + 2 * 3";
+  std::stringstream source{stream};
+  lex::Lexer l{source};
+  Parser p{l};
+
+  auto expr = p.ParseExpression();
+  REQUIRE(typeid(*expr) == typeid(BinaryExpression));
+
+  auto bin_expr = dynamic_cast<BinaryExpression*>(expr);
+  REQUIRE(bin_expr->operator_.type == lex::TokenType::PLUS);
+  REQUIRE(typeid(*bin_expr->left_) == typeid(LiteralExpression));
+  REQUIRE(typeid(*bin_expr->right_) == typeid(BinaryExpression));
+
+  auto left = dynamic_cast<LiteralExpression*>(bin_expr->left_);
+  REQUIRE(left->token_.type == lex::TokenType::NUMBER);
+  REQUIRE(std::get<int>(left->token_.sem_info) == 1);
+
+  auto right = dynamic_cast<BinaryExpression*>(bin_expr->right_);
+  REQUIRE(right->operator_.type == lex::TokenType::STAR);
+  REQUIRE(typeid(*right->left_) == typeid(LiteralExpression));
+  REQUIRE(typeid(*right->right_) == typeid(LiteralExpression));
+
+  auto left_multiplier = dynamic_cast<LiteralExpression*>(right->left_);
+  REQUIRE(left_multiplier->token_.type == lex::TokenType::NUMBER);
+  REQUIRE(std::get<int>(left_multiplier->token_.sem_info) == 2);
+
+  auto right_multiplier = dynamic_cast<LiteralExpression*>(right->right_);
+  REQUIRE(right_multiplier->token_.type == lex::TokenType::NUMBER);
+  REQUIRE(std::get<int>(right_multiplier->token_.sem_info) == 3);
+}
+
+//////////////////////////////////////////////////////////////////////
+
 TEST_CASE("parser:error", "[parser]") {
   char stream[] = "1 - (1 + 2";
   std::stringstream source{stream};

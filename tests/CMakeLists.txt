@@ -1,3 +1,5 @@
+fetch_package(Catch2 https://github.com/catchorg/Catch2.git devel)
+
 message(STATUS "Generating tests")
 
 get_filename_component(TESTS_PATH "." ABSOLUTE)
