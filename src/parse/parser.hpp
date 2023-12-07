@@ -55,7 +55,7 @@ class Parser {
   Expression* ParseBlockExpression();
 
   Expression* ParseComparison();
-  Expression* ParseBinary();
+  Expression* ParseAdditive();
 
   Expression* ParseUnary();
   Expression* ParseDeref();

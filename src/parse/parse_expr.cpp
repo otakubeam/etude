@@ -185,17 +185,17 @@ Expression* Parser::ParseBlockExpression() {
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseComparison() {
-  Expression* first = ParseBinary();
+  Expression* first = ParseAdditive();
 
   auto token = lexer_.Peek();
 
   if (MatchesComparisonSign(token.type)) {
-    auto second = ParseBinary();
+    auto second = ParseAdditive();
     first = new ComparisonExpression(first, token, second);
   } else if (Matches(lex::TokenType::EQUALS) ||
              Matches(lex::TokenType::NOT_EQ)) {
     // TODO: move out to separate function
-    auto second = ParseBinary();
+    auto second = ParseAdditive();
     first = new ComparisonExpression(first, token, second);
   }
 
@@ -204,7 +204,7 @@ Expression* Parser::ParseComparison() {
 
 ////////////////////////////////////////////////////////////////////
 
-Expression* Parser::ParseBinary() {
+Expression* Parser::ParseAdditive() {
   Expression* first = ParseUnary();
 
   while (Matches(lex::TokenType::PLUS) || Matches(lex::TokenType::MINUS)) {
