@@ -56,6 +56,7 @@ class Parser {
 
   Expression* ParseComparison();
   Expression* ParseAdditive();
+  Expression* ParseMultiplicative();
 
   Expression* ParseUnary();
   Expression* ParseDeref();

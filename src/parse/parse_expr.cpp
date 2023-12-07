@@ -218,6 +218,20 @@ Expression* Parser::ParseAdditive() {
 
 ////////////////////////////////////////////////////////////////////
 
+Expression* Parser::ParseMultiplicative() {
+  Expression* first = ParseUnary();
+
+  while (Matches(lex::TokenType::STAR) || Matches(lex::TokenType::DIV)) {
+    auto token = lexer_.GetPreviousToken();
+    auto second = ParseUnary();
+    first = new BinaryExpression(first, token, second);
+  }
+
+  return first;
+}
+
+////////////////////////////////////////////////////////////////////
+
 Expression* Parser::ParseUnary() {
   auto token = lexer_.Peek();
 
