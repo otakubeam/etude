@@ -205,11 +205,11 @@ Expression* Parser::ParseComparison() {
 ////////////////////////////////////////////////////////////////////
 
 Expression* Parser::ParseAdditive() {
-  Expression* first = ParseUnary();
+  Expression* first = ParseMultiplicative();
 
   while (Matches(lex::TokenType::PLUS) || Matches(lex::TokenType::MINUS)) {
     auto token = lexer_.GetPreviousToken();
-    auto second = ParseUnary();
+    auto second = ParseMultiplicative();
     first = new BinaryExpression(first, token, second);
   }
 
