@@ -92,6 +92,21 @@ TEST_CASE("Statement", "[lex]") {
 
 //////////////////////////////////////////////////////////////////////
 
+TEST_CASE("Logic operations", "[lex]") {
+  std::stringstream source("a && b || c;");
+  lex::Lexer l{source};
+
+  CHECK(l.Matches(lex::TokenType::IDENTIFIER));
+  CHECK(l.Matches(lex::TokenType::AND));
+  CHECK(l.Matches(lex::TokenType::IDENTIFIER));
+  CHECK(l.Matches(lex::TokenType::OR));
+  CHECK(l.Matches(lex::TokenType::IDENTIFIER));
+  CHECK(l.Matches(lex::TokenType::SEMICOLON));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
+}
+
+//////////////////////////////////////////////////////////////////////
+
 TEST_CASE("String literal", "[lex]") {
   std::stringstream source("\"Hello world\"");
   lex::Lexer l{source};

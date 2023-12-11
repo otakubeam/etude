@@ -3,6 +3,21 @@ project(etude)
 
 include(FetchContent)
 
+function(fetch_package pakcage_name git_link git_tag)
+  find_package("${pakcage_name}" QUIET)
+
+  if (NOT "${${pakcage_name}_FOUND}")
+
+    FetchContent_Declare("${pakcage_name}"
+      GIT_REPOSITORY "${git_link}"
+      GIT_TAG "${git_tag}"
+    )
+
+    FetchContent_MakeAvailable("${pakcage_name}")
+
+  endif (NOT "${${pakcage_name}_FOUND}")
+endfunction()
+
 # --------------------------------------------------------------------
 
 set(CMAKE_CXX_STANDARD 20)
@@ -15,20 +30,7 @@ add_compile_options(-Wall -Wextra -g -Og -fsanitize=undefined)
 
 # --------------------------------------------------------------------
 
-find_package(fmt QUIET)
-
-if (NOT fmt_FOUND)
-
-  FetchContent_Declare(fmt
-    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-    GIT_TAG master
-  )
-
-  FetchContent_MakeAvailable(fmt)
-
-endif (NOT fmt_FOUND)
-
-# find_package(Catch2 2 REQUIRED)
+fetch_package(fmt https://github.com/fmtlib/fmt.git master)
 
 # --------------------------------------------------------------------
 

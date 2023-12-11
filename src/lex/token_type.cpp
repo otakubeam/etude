@@ -36,6 +36,8 @@ namespace lex {
   code(LEFT_SBRACE)         \
   code(RIGHT_SBRACE)        \
   code(NOT)                 \
+  code(OR)                  \
+  code(AND)                 \
   code(ADDR)                \
   code(STAR)                \
   code(ARROW)               \
