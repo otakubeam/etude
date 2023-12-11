@@ -177,9 +177,19 @@ std::optional<TokenType> Lexer::MatchOperator() {
       }
 
     case '&':
-      return TokenType::ADDR;
+      if (scanner_.PeekNextSymbol() == '&') {
+        scanner_.MoveRight();
+        return TokenType::AND;
+      } else {
+        return TokenType::ADDR;
+      }
     case '|':
-      return TokenType::BIT_OR;
+      if (scanner_.PeekNextSymbol() == '|') {
+        scanner_.MoveRight();
+        return TokenType::OR;
+      } else {
+        return TokenType::BIT_OR;
+      }
     case '(':
       return TokenType::LEFT_PAREN;
     case ')':

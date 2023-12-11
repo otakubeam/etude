@@ -49,7 +49,10 @@ enum class TokenType {
   LEFT_SBRACE,
   RIGHT_SBRACE,
 
+  // LOGIC
   NOT,
+  OR,
+  AND,
 
   ADDR,
   STAR,
@@ -68,7 +71,7 @@ enum class TokenType {
   STRUCT,
   SUM,
   UNION,
-  
+
   OF,
   FOR,
   IMPL,
