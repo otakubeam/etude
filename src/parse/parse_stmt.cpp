@@ -17,7 +17,9 @@ Statement* Parser::ParseStatement() {
 Statement* Parser::ParseExprStatement() {
   auto expr = ParseExpression();
 
-  if (Matches(lex::TokenType::ASSIGN)) {
+  if (Matches(lex::TokenType::ASSIGN) ||
+      Matches(lex::TokenType::PLUS_EQ) || Matches(lex::TokenType::MINUS_EQ) ||
+      Matches(lex::TokenType::STAR_EQ) || Matches(lex::TokenType::DIV_EQ)) {
     if (auto target = expr->as<LvalueExpression>()) {
       return ParseAssignment(target);
     }
