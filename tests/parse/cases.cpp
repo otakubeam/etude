@@ -41,6 +41,31 @@ TEST_CASE("parser:vardecl", "[parser]") {
 
 //////////////////////////////////////////////////////////////////////
 
+TEST_CASE("parser:compound-add-assignment", "[parser]") {
+  char stream[] = "x += 5;";
+  std::stringstream source{stream};
+  lex::Lexer l{source};
+  Parser p{l};
+
+  auto statement = p.ParseStatement();
+  REQUIRE(typeid(*statement) == typeid(AssignmentStatement));
+
+  auto assignment_statement = dynamic_cast<AssignmentStatement*>(statement);
+  REQUIRE(assignment_statement->assign_.type == lex::TokenType::PLUS_EQ);
+  REQUIRE(typeid(*assignment_statement->value_) == typeid(LiteralExpression));
+  REQUIRE(typeid(*assignment_statement->target_) == typeid(VarAccessExpression));
+
+  auto value = dynamic_cast<LiteralExpression*>(assignment_statement->value_);
+  REQUIRE(value->token_.type == lex::TokenType::NUMBER);
+  REQUIRE(std::get<int>(value->token_.sem_info) == 5);
+
+  auto target = dynamic_cast<VarAccessExpression*>(assignment_statement->target_);
+  REQUIRE(target->name_.type == lex::TokenType::IDENTIFIER);
+  REQUIRE(std::get<std::string_view>(target->name_.sem_info) == "x");
+}
+
+//////////////////////////////////////////////////////////////////////
+
 TEST_CASE("parser:precendence", "[parser]") {
   char stream[] = "- 1 - 2";
   std::stringstream source{stream};
