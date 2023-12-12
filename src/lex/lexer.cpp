@@ -149,7 +149,7 @@ std::optional<TokenType> Lexer::MatchOperator() {
         scanner_.MoveRight();
         return TokenType::ARROW_CAST;
       } else {
-        std::abort();
+        return TokenType::TILDE;
       }
 
     case '+':
@@ -180,6 +180,8 @@ std::optional<TokenType> Lexer::MatchOperator() {
       return TokenType::ADDR;
     case '|':
       return TokenType::BIT_OR;
+    case '^':
+      return TokenType::BIT_XOR;
     case '(':
       return TokenType::LEFT_PAREN;
     case ')':

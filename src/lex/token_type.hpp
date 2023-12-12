@@ -68,7 +68,7 @@ enum class TokenType {
   STRUCT,
   SUM,
   UNION,
-  
+
   OF,
   FOR,
   IMPL,
@@ -84,6 +84,8 @@ enum class TokenType {
   IF,
   MATCH,
   BIT_OR,
+  BIT_XOR,
+  TILDE,
   THEN,
   ELSE,
 
