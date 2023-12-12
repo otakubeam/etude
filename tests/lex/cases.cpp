@@ -92,6 +92,19 @@ TEST_CASE("Statement", "[lex]") {
 
 //////////////////////////////////////////////////////////////////////
 
+TEST_CASE("Bit operations", "[lex]") {
+  std::stringstream source("~ ^ & |");
+  lex::Lexer l{source};
+
+  CHECK(l.Matches(lex::TokenType::TILDE));
+  CHECK(l.Matches(lex::TokenType::BIT_XOR));
+  CHECK(l.Matches(lex::TokenType::ADDR));
+  CHECK(l.Matches(lex::TokenType::BIT_OR));
+  CHECK(l.Matches(lex::TokenType::TOKEN_EOF));
+}
+
+//////////////////////////////////////////////////////////////////////
+
 TEST_CASE("String literal", "[lex]") {
   std::stringstream source("\"Hello world\"");
   lex::Lexer l{source};

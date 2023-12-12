@@ -62,6 +62,8 @@ namespace lex {
   code(IF)                  \
   code(MATCH)               \
   code(BIT_OR)              \
+  code(BIT_XOR)             \
+  code(TILDE)               \
   code(THEN)                \
   code(ELSE)                \
   code(COLON)               \
