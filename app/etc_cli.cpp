@@ -9,7 +9,7 @@
 
 void ParseOptions(CompilationDriver& driver, int argc, char** argv) {
   auto opt = '\0';
-  while ((opt = getopt(argc, argv, "tm:")) != -1) {
+  while ((opt = getopt(argc, argv, "-t:-m:-l:")) != -1) {
     switch (opt) {
       case 't':
         driver.SetTestBuild();
@@ -17,8 +17,11 @@ void ParseOptions(CompilationDriver& driver, int argc, char** argv) {
       case 'm':
         driver.SetMainModule(optarg);
         break;
+      case 'l':
+        driver.SetStdlibPath(optarg);
+        break;
       default: /* '?' */
-        fprintf(stderr, "Usage: %s [-m] module [-t] \n", argv[0]);
+        fprintf(stderr, "Usage: %s [-m] module [-l] stdlib_path [-t] \n", argv[0]);
         exit(EXIT_FAILURE);
     }
   }

@@ -16,7 +16,7 @@ struct NoStdlibError : DriverError {
   NoStdlibError(const std::string_view name) {
     message = fmt::format(
         "Could not open file '{}.et' in the current directory and "
-        "'ETUDE_STDLIB' environment variable is not set. \n"
+        "'-l' flag wasn't used and 'ETUDE_STDLIB' environment variable is not set. \n"
         "Please, refer to the documentation. \n",
         name);
   }

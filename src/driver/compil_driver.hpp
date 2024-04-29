@@ -21,10 +21,12 @@
 #include <sstream>
 #include <set>
 
+#include <optional>
+
 class CompilationDriver {
  public:
   CompilationDriver(std::string_view main_mod = "main")
-      : main_module_{main_mod} {
+      : main_module_{main_mod}, stdlib_path_{std::nullopt} {
   }
 
   // 1. Searches in different places
@@ -35,7 +37,7 @@ class CompilationDriver {
     std::ifstream file(module_name);
 
     if (!file.is_open()) {
-      if (auto path = std::getenv("ETUDE_STDLIB")) {
+      if (auto path = stdlib_path_ ? stdlib_path_.value() : std::getenv("ETUDE_STDLIB")) {
         std::filesystem::path stdlib{path};
         file = std::ifstream(stdlib / module_name);
       } else {
@@ -128,6 +130,10 @@ class CompilationDriver {
     main_module_ = mod;
   }
 
+  void SetStdlibPath(const char* stdlib_path) {
+    stdlib_path_ = stdlib_path;
+  }
+
   void Compile() {
     ParseAllModules();
     RegisterSymbols();
@@ -160,6 +166,7 @@ class CompilationDriver {
 
  private:
   std::string_view main_module_;
+  std::optional<const char*> stdlib_path_;
 
   // For each import map `symbol_name -> module`
   std::unordered_map<std::string_view, Module*> module_of_;
