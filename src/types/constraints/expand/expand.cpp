@@ -7,6 +7,8 @@
 
 namespace types::constraints {
 
+constexpr bool TraceExpand = false;
+
 //////////////////////////////////////////////////////////////////////
 
 void DefineGenerics(Type* ty) {
@@ -15,19 +17,26 @@ void DefineGenerics(Type* ty) {
 
     if (auto symbol = ty->typing_context_->RetrieveSymbol(name, true)) {
       if (symbol->sym_type == ast::scope::SymbolType::GENERIC) {
-        fmt::print(stderr, "Using generic {}\n", name.GetName());
+        if constexpr (TraceExpand) {
+          fmt::print(stderr, "Using generic {}\n", name.GetName());
+        }
         ty->leader = symbol->as_type.type;
       }
 
     } else {
-      fmt::print(stderr, "Defining generic {} at {}\n", name.GetName(),
+      if constexpr (TraceExpand) {
+        fmt::print(stderr, "Defining generic {} at {}\n", name.GetName(),
                  ty->typing_context_->location.Format());
+      }
       ty->leader = MakeTypeVar(ty->typing_context_);
       ty->typing_context_->bindings.InsertSymbol({
           .sym_type = ast::scope::SymbolType::GENERIC,
           .name = name,
           .as_type = {ty->leader},
-          .declared_at = ty->typing_context_->location,
+          .declared_at = {
+            unit: ty->typing_context_->unit,
+            position: ty->typing_context_->location,
+          }
       });
     }
   }

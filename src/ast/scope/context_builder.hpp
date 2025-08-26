@@ -4,11 +4,13 @@
 
 #include <ast/visitors/abort_visitor.hpp>
 
+class Module;
+
 namespace ast::scope {
 
 class ContextBuilder : public AbortVisitor {
  public:
-  ContextBuilder(Context& unit_context);
+  ContextBuilder(Module& unit, Context& unit_context);
 
   virtual void VisitYield(YieldStatement* node) override;
   virtual void VisitReturn(ReturnStatement* node) override;
@@ -50,6 +52,8 @@ class ContextBuilder : public AbortVisitor {
  private:
   Context& unit_context_;
   Context* current_context_{&unit_context_};
+
+  Module& unit_;
 
   std::string_view current_fn_;
 

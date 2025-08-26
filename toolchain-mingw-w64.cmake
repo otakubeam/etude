@@ -1,0 +1,19 @@
+# https://web.archive.org/web/20110604002004/http://www.vle-project.org/wiki/Cross_compilation_Win32
+# https://stackoverflow.com/a/3282928
+
+SET(CMAKE_SYSTEM_NAME Windows)
+SET(CMAKE_SYSTEM_PROCESSOR x86_64-w64-mingw32)
+SET(CMAKE_SYSTEM_VERSION 1)
+SET(WIN32 1)
+
+set(CMAKE_SYSROOT /usr/x86_64-w64-mingw32/)
+
+SET(CMAKE_C_COMPILER /usr/bin/x86_64-w64-mingw32-gcc)
+SET(CMAKE_CXX_COMPILER /usr/bin/x86_64-w64-mingw32-g++)
+SET(CMAKE_RC_COMPILER /usr/bin/x86_64-w64-mingw32-windres)
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+

@@ -2,6 +2,7 @@
 
 #include <fmt/core.h>
 #include <string>
+#include <cstdlib>
 
 namespace qbe {
 

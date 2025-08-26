@@ -2,6 +2,8 @@
 #include <types/constraints/expand/expand.hpp>
 #include <types/constraints/generate/algorithm_w.hpp>
 
+#include <ast/error_at_location.hpp>
+
 namespace types::constraints {
 
 ConstraintSolver::ConstraintSolver() {
@@ -47,7 +49,7 @@ void ConstraintSolver::CollectAndSolve() {
 
     if (work_queue_.size()) {
       PrintQueue();
-      throw std::runtime_error{"Residual constraints remain!"};
+      throw ErrorAtLocation(work_queue_.front().location, "Residual constraints remain!");
     }
   }
 
@@ -71,13 +73,19 @@ void ConstraintSolver::ConstrainGenerics() {
 void ConstraintSolver::GeneralizeBindingGroup(BindingGroup& group) {
   for (auto def : group) {
     Generalize(def->type_);
-    fmt::print(stderr, "[[Debug]] {} generalized type {}\n", def->GetName(),
-               def->type_->Format());
+
+    #if LOG_TYPING
+      fmt::print(stderr, "[[Debug]] {} generalized type {}\n", def->GetName(),
+                def->type_->Format());
+    #endif
   }
 }
 
 bool ConstraintSolver::TrySolveConstraint(Trait i) {
-  fmt::print(stderr, "Solving constraint {}\n", FormatTrait(i));
+  #if LOG_TYPING
+    fmt::print(stderr, "Solving constraint {}\n", FormatTrait(i));
+  #endif
+
   CheckTypes();
 
   switch (i.tag) {
@@ -188,7 +196,11 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
 
       if (i.bound->tag == TypeTag::TY_APP) {
         i.bound = ApplyTyconsLazy(i.bound);
-        fmt::print(stderr, "Applied tycons {}\n", FormatType(*i.bound));
+
+        #if LOG_TYPING
+          fmt::print(stderr, "Applied tycons {}\n", FormatType(*i.bound));
+        #endif
+
         fill_queue_.push_back(i);
         return true;
       }
@@ -208,7 +220,9 @@ bool ConstraintSolver::TrySolveConstraint(Trait i) {
 }
 
 void ConstraintSolver::SolveBatch() {
-  PrintQueue();
+  #if LOG_TYPING
+    PrintQueue();
+  #endif
 
   bool once_more = true;
 
@@ -224,13 +238,13 @@ void ConstraintSolver::SolveBatch() {
 
   if (errors_.size()) {
     ReportErrors();
-    throw std::runtime_error{"Final unification error"};
+    throw ErrorAtLocation(errors_.front().location, "Final unification error");
   }
 }
 
 void ConstraintSolver::ReportErrors() {
   for (auto& error : errors_) {
-    fmt::print("Cannot satisfy bound {} arising from {}\n",  //
+    fmt::print(stderr, "Cannot satisfy bound {} arising from {}\n",  //
                FormatTrait(error), error.location.Format());
   }
 }

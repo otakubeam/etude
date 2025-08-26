@@ -50,6 +50,7 @@ types::Type* Parser::ParseStructType() {
   while (Matches(lex::TokenType::IDENTIFIER)) {
     fields.push_back(types::Member{
         .field = lexer_.GetPreviousToken().GetName(),
+        .name = lexer_.GetPreviousToken(),
     });
 
     Consume(lex::TokenType::COLON);
@@ -57,7 +58,7 @@ types::Type* Parser::ParseStructType() {
     if (auto type = ParseFunctionType()) {
       fields.back().ty = type;
     } else {
-      throw parse::errors::ParseTypeError{FormatLocation()};
+      throw parse::errors::ParseTypeError(lexer_.GetPreviousToken().location);
     }
 
     // May or may not be, advance
@@ -90,13 +91,14 @@ types::Type* Parser::ParseSumType() {
 
     fields.push_back(types::Member{
         .field = lexer_.GetPreviousToken().GetName(),
+        .name = lexer_.GetPreviousToken()
     });
 
     if (Matches(lex::TokenType::COLON)) {
       if (auto type = ParseFunctionType()) {
         fields.back().ty = type;
       } else {
-        throw parse::errors::ParseTypeError{FormatLocation()};
+        throw parse::errors::ParseTypeError(lexer_.GetPreviousToken().location);
       }
     } else {
       fields.back().ty = &types::builtin_never;
@@ -157,6 +159,6 @@ types::Type* Parser::ParsePrimitiveType() {
       return &types::builtin_unit;
 
     default:
-      throw parse::errors::ParseTypeError{FormatLocation()};
+      throw parse::errors::ParseTypeError(lexer_.GetPreviousToken().location);
   }
 }

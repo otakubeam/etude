@@ -22,7 +22,7 @@ Statement* Parser::ParseExprStatement() {
       return ParseAssignment(target);
     }
 
-    throw parse::errors::ParseNonLvalueError{FormatLocation()};
+    throw parse::errors::ParseNonLvalueError(lexer_.GetPreviousToken().location);
   }
 
   try {

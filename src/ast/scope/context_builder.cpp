@@ -7,8 +7,10 @@ namespace ast::scope {
 
 //////////////////////////////////////////////////////////////////////
 
-ContextBuilder::ContextBuilder(Context& unit_context)
-    : unit_context_{unit_context}, current_context_{&unit_context} {
+ContextBuilder::ContextBuilder(Module& unit, Context& unit_context)
+    : unit_context_{unit_context}
+    , current_context_{&unit_context}
+    , unit_(unit) {
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -43,7 +45,10 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
       .sym_type = SymbolType::TYPE,
       .name = node->GetName(),
       .as_type = {.type = ty},
-      .declared_at = node->GetLocation(),
+      .declared_at = {
+          unit: unit_,
+          position: node->GetLocation(),
+      },
   });
 
   for (auto param : node->parameters_) {
@@ -51,7 +56,10 @@ void ContextBuilder::VisitTypeDecl(TypeDeclStatement* node) {
         .sym_type = SymbolType::TYPE,
         .name = param.GetName(),
         .as_type = {.type = &types::builtin_kind},  // Why?
-        .declared_at = param.location,
+        .declared_at = {
+          unit: unit_,
+          position: param.location,
+        },
     });
   }
 
@@ -76,7 +84,11 @@ void ContextBuilder::VisitVarDecl(VarDeclStatement* node) {
       .sym_type = SymbolType::VAR,
       .name = node->GetName(),
       .as_varbind = {.type = inst_ty},
-      .declared_at = node->GetLocation(),
+      
+      .declared_at = {
+        unit: unit_,
+        position: node->GetLocation(),
+      },
   });
 }
 
@@ -103,7 +115,10 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
                 .def = node,
                 .attrs = node->attributes,
             },
-        .declared_at = node->GetLocation(),
+        .declared_at = {
+          unit: unit_,
+          position: node->GetLocation(),
+        },
     });
   }
 
@@ -123,7 +138,10 @@ void ContextBuilder::VisitFunDecl(FunDeclStatement* node) {
           .sym_type = SymbolType::VAR,
           .name = param.GetName(),
           .as_varbind = {.type = types::MakeTypeVar(current_context_)},
-          .declared_at = param.location,
+          .declared_at = {
+            unit: unit_,
+            position: param.location,
+          },
       });
     }
 
@@ -146,7 +164,10 @@ void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
       .sym_type = SymbolType::TRAIT,
       .name = node->GetName(),
       .as_trait = {.decl = node},
-      .declared_at = node->GetLocation(),
+      .declared_at = {
+          unit: unit_,
+          position: node->GetLocation(),
+        },
   });
 
   for (auto decl : node->methods_) {
@@ -159,7 +180,11 @@ void ContextBuilder::VisitTraitDecl(TraitDeclaration* node) {
                 .def = decl,
                 .trait = node,
             },
-        .declared_at = decl->GetLocation(),
+        
+        .declared_at = {
+          unit: unit_,
+          position: node->GetLocation(),
+        },
     });
   }
 
@@ -195,7 +220,10 @@ void ContextBuilder::VisitImplDecl(ImplDeclaration* node) {
       .sym_type = SymbolType::TYPE,
       .name = "Self",
       .as_type = {.type = ty},
-      .declared_at = node->GetLocation(),
+      .declared_at = {
+          unit: unit_,
+          position: node->GetLocation(),
+        },
   });
 
   for (auto methods : node->trait_methods_) {
@@ -237,8 +265,11 @@ void ContextBuilder::VisitBindingPat(BindingPattern* node) {
       .sym_type = SymbolType::VAR,
       .name = node->name_,
       .as_varbind = {.type = node->type_},
-      .declared_at = node->GetLocation(),
-  });
+      .declared_at = {
+          unit: unit_,
+          position: node->GetLocation(),
+      },
+    });
 }
 
 void ContextBuilder::VisitDiscardingPat(DiscardingPattern*){};

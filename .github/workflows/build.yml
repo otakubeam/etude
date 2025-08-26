@@ -1,0 +1,245 @@
+name: Build
+
+on:
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches:
+      - 'master'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  build-linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          # If your submodules are configured to use SSH instead of HTTPS please uncomment the following line
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+          git submodule sync --recursive
+          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+      - name: Set up apt packages
+        run: sudo apt update && sudo apt install build-essential gcc g++ make ninja-build cmake
+      - name: Build
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release . && cmake --build build
+      - name: List shared object dependencies (should be empty)
+        run: |
+          ldd etc || true # Just for logging
+          (LC_ALL=C ldd etc 2>&1) | grep 'not a dynamic executable' >/dev/null # If not found, grep returns 1
+      - name: Make archive
+        run: 7z a package.linux-arm64.zip etc stdlib etc_stdlib.bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package.linux-arm64
+          path: package.linux-arm64.zip
+  build-linux-amd64:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          # If your submodules are configured to use SSH instead of HTTPS please uncomment the following line
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+          git submodule sync --recursive
+          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+      - name: Set up apt packages
+        run: sudo apt update && sudo apt install build-essential gcc g++ make ninja-build cmake
+      - name: Build
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release . && cmake --build build
+      - name: List shared object dependencies (should be empty)
+        run: |
+          ldd etc || true # Just for logging
+          (LC_ALL=C ldd etc 2>&1) | grep 'not a dynamic executable' >/dev/null # If not found, grep returns 1
+      - name: Make archive
+        run: 7z a package.linux-amd64.zip etc stdlib etc_stdlib.bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package.linux-amd64
+          path: package.linux-amd64.zip
+  build-windows-amd64:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          # If your submodules are configured to use SSH instead of HTTPS please uncomment the following line
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+          git submodule sync --recursive
+          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+      - name: Set up apt packages
+        run: sudo apt update && sudo apt install build-essential make ninja-build cmake mingw-w64
+      - name: Build
+        run: cmake -B build --toolchain=toolchain-mingw-w64.cmake -DCMAKE_BUILD_TYPE=Release . && cmake --build build
+      - name: List shared object dependencies (should only have system dlls)
+        run: (LC_ALL=C objdump -p etc.exe) | grep 'DLL Name'
+      - name: Make archive
+        run: 7z a package.windows-amd64.zip etc.exe stdlib etc_stdlib.bat
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package.windows-amd64
+          path: package.windows-amd64.zip
+  # Нужно собирать boost 1.76 из исходников, в brew очень новая версия, с ней не собирается liblsp.
+  build-macos-amd64:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          # If your submodules are configured to use SSH instead of HTTPS please uncomment the following line
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+          git submodule sync --recursive
+          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+      - name: Set up brew packages
+        run: brew install cmake make
+      - name: Build
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release . && cmake --build build
+      - name: List shared object dependencies (should only use system dylibs)
+        run: otool -L etc
+      - name: Make archive
+        run: 7z a package.macos-amd64.zip etc stdlib etc_stdlib.bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package.macos-amd64
+          path: package.macos-amd64.zip
+  build-macos-arm64:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v2
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          # If your submodules are configured to use SSH instead of HTTPS please uncomment the following line
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+          git submodule sync --recursive
+          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+      - name: Set up brew packages
+        run: brew install cmake make
+      - name: Build
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release . && cmake --build build
+      - name: List shared object dependencies (should only use system dylibs)
+        run: otool -L etc
+      - name: Make archive
+        run: 7z a package.macos-arm64.zip etc stdlib etc_stdlib.bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package.macos-arm64
+          path: package.macos-arm64.zip
+  release:
+    runs-on: ubuntu-24.04
+    needs:
+      - build-linux-arm64
+      - build-linux-amd64
+      - build-windows-amd64
+      - build-macos-amd64
+      - build-macos-arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: make release name
+        run: |
+          authored_date=$(date -u -d @$(git --no-pager log -1 --pretty='format:%at' ${GITHUB_REF}) +%Y%m%d)
+          echo "release_name=${authored_date}-$(git rev-parse --short ${GITHUB_REF})" >> $GITHUB_OUTPUT
+        id: release_name
+      - name: Download package for linux-arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: package.linux-arm64
+          path: ./
+      - name: Download package for linux-amd64
+        uses: actions/download-artifact@v4
+        with:
+          name: package.linux-amd64
+          path: ./
+      - name: Download package for windows-amd64
+        uses: actions/download-artifact@v4
+        with:
+          name: package.windows-amd64
+          path: ./
+      - name: Download package for macos-amd64
+        uses: actions/download-artifact@v4
+        with:
+          name: package.macos-amd64
+          path: ./
+      - name: Download package for macos-arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: package.macos-arm64
+          path: ./
+      - name: List files
+        run: ls /opt
+      - name: tag
+        run: |
+          authored_date=$(date -u -d @$(git --no-pager log -1 --pretty='format:%at' ${GITHUB_REF}) +%Y%m%d)
+          git tag ${authored_date}-$(git rev-parse --short ${GITHUB_REF})
+          git push --tags
+      - uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ steps.release_name.outputs.release_name }}
+          tag_name: ${{ steps.release_name.outputs.release_name }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: upload linux-arm64 package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./package.linux-arm64.zip
+          asset_name: etude.${{ steps.release_name.outputs.release_name }}.linux-arm64.zip
+          asset_content_type: application/octet-stream
+      - name: upload linux-amd64 package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./package.linux-amd64.zip
+          asset_name: etude.${{ steps.release_name.outputs.release_name }}.linux-amd64.zip
+          asset_content_type: application/octet-stream
+      - name: upload windows-amd64 package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./package.windows-amd64.zip
+          asset_name: etude.${{ steps.release_name.outputs.release_name }}.windows-amd64.zip
+          asset_content_type: application/octet-stream
+      - name: upload macos-amd64 package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./package.macos-amd64.zip
+          asset_name: etude.${{ steps.release_name.outputs.release_name }}.macos-amd64.zip
+          asset_content_type: application/octet-stream
+      - name: upload macos-arm64 package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./package.macos-arm64.zip
+          asset_name: etude.${{ steps.release_name.outputs.release_name }}.macos-arm64.zip
+          asset_content_type: application/octet-stream

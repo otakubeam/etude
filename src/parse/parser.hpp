@@ -4,11 +4,13 @@
 
 #include <lex/lexer.hpp>
 
+#include <memory>
+
 class Parser {
  public:
   Parser(lex::Lexer& l);
 
-  auto ParseModule() -> Module;
+  auto ParseModule() -> std::unique_ptr<Module>;
 
   ///////////////////////////////////////////////////////////////////
 

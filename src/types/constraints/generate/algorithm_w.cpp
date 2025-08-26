@@ -5,6 +5,8 @@
 #include <ast/patterns.hpp>
 #include <lex/token.hpp>
 
+#include <ast/error_at_location.hpp>
+
 namespace types::constraints::generate {
 
 //////////////////////////////////////////////////////////////////////
@@ -315,16 +317,19 @@ void AlgorithmW::VisitBlock(BlockExpression* node) {
 
 void AlgorithmW::VisitFnCall(FnCallExpression* node) {
   if (node->fn_name_.empty()) {
-    FMT_ASSERT(false, "Unimplemented");
+    throw ErrorAtLocation(node->callable_->GetLocation(), "Unnamed function call is unimplemented");
+    // FMT_ASSERT(false, "Unimplemented");
   }
 
-  auto symbol = node->layer_->RetrieveSymbol(node->fn_name_);
+  auto symbol = node->layer_->RetrieveSymbol(node->fn_name_, true);
 
   if (!symbol) {
     node->layer_->Print();
-    throw std::runtime_error{
-        fmt::format("Could not find function {} at loc {}",  //
-                    node->fn_name_, node->GetLocation().Format())};
+    throw ErrorAtLocation(
+      node->GetLocation(),
+      fmt::format("Could not find function {} at loc {}",  //
+                  node->fn_name_, node->GetLocation().Format())
+    );
   }
 
   auto ty = symbol->GetType();
@@ -436,8 +441,10 @@ void AlgorithmW::VisitVarAccess(VarAccessExpression* node) {
     return;
   }
 
-  throw std::runtime_error{
-      fmt::format("Could not find {}", node->name_.GetName())};
+  throw ErrorAtLocation(
+    node->name_.location,
+    fmt::format("Could not find {}", node->name_.GetName())
+  );
 }
 
 //////////////////////////////////////////////////////////////////////

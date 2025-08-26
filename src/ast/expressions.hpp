@@ -264,6 +264,7 @@ class CompoundInitializerExpr : public Expression {
   struct Member {
     std::string_view field;
     Expression* init;
+    lex::Token name;
   };
 
   CompoundInitializerExpr(lex::Token curly, std::vector<Member> values)

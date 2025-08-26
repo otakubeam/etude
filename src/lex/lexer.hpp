@@ -12,7 +12,7 @@ namespace lex {
 
 class Lexer {
  public:
-  Lexer(std::istream& source);
+  Lexer(lex::InputFile source);
 
   Token GetNextToken();
 
@@ -23,6 +23,14 @@ class Lexer {
   Token GetPreviousToken();
 
   bool Matches(lex::TokenType type);
+
+  std::filesystem::path GetFileAbsPath() {
+    return scanner_.GetFileAbsPath();
+  }
+
+  void SetUnit(Module* unit) {
+    scanner_.SetUnit(unit);
+  }
 
  private:
   void SkipWhitespace();

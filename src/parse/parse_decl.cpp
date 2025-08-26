@@ -3,15 +3,16 @@
 
 ///////////////////////////////////////////////////////////////////
 
-auto Parser::ParseModule() -> Module {
-  Module result;
+auto Parser::ParseModule() -> std::unique_ptr<Module> {
+  auto result = std::make_unique<Module>(lexer_.GetFileAbsPath());
+  lexer_.SetUnit(result.get());
 
   // 1. Parse imported modules;
   // --------------------------
 
   auto ParseImports = [this, &result]() {
     while (Matches(lex::TokenType::IDENTIFIER)) {
-      result.imports_.push_back(lexer_.GetPreviousToken());
+      result->imports_.push_back(lexer_.GetPreviousToken());
       Consume(lex::TokenType::SEMICOLON);
     }
   };
@@ -29,7 +30,7 @@ auto Parser::ParseModule() -> Module {
     Consume(lex::TokenType::RIGHT_CBRACE);
 
     while (auto decl = ParseDeclaration()) {
-      result.items_.push_back(decl);
+      result->items_.push_back(decl);
     }
 
     Consume(lex::TokenType::LEFT_CBRACE);
@@ -52,7 +53,7 @@ auto Parser::ParseModule() -> Module {
     while (!Matches(lex::TokenType::RIGHT_CBRACE)) {
       auto proto = ParsePrototype();
       exported.push_back(proto->GetName());
-      result.items_.push_back(proto);
+      result->items_.push_back(proto);
       if (auto trait = proto->as<TraitDeclaration>()) {
         for (auto method : trait->methods_) {
           exported.push_back(method->GetName());
@@ -63,7 +64,7 @@ auto Parser::ParseModule() -> Module {
     return exported;
   };
 
-  result.exported_ = ParseExportBlock();
+  result->exported_ = ParseExportBlock();
 
   // 4. Parse the rest of definitions
   // --------------------------------
@@ -73,11 +74,11 @@ auto Parser::ParseModule() -> Module {
   while (!Matches(lex::TokenType::TOKEN_EOF)) {
     auto declaration = ParseDeclaration();
 
-    result.items_.push_back(declaration);
+    result->items_.push_back(declaration);
 
     if (auto fun = declaration->as<FunDeclStatement>()) {
       if (fun->attributes && fun->attributes->FindAttr("test")) {
-        result.tests_.push_back(fun);
+        result->tests_.push_back(fun);
       }
     }
   }

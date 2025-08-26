@@ -61,8 +61,9 @@ class SizeMeasure {
       }
 
       default:
-        fmt::print("Type was {}\n", t->Format());
+        fmt::print(stderr, "Type was {}\n", t->Format());
         FMT_ASSERT(false, "Unreachable!");
+        __builtin_unreachable();
     }
   }
 
@@ -86,7 +87,7 @@ class SizeMeasure {
     }
 
     FMT_ASSERT(t->tag == types::TypeTag::TY_STRUCT,
-               "Typeoffset is not a strucct");  // This should be unreachable
+               "Typeoffset is not a struct");  // This should be unreachable
 
     size_t offset = 0;
 

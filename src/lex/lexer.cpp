@@ -2,7 +2,7 @@
 
 namespace lex {
 
-Lexer::Lexer(std::istream& source) : scanner_{source} {
+Lexer::Lexer(lex::InputFile source) : scanner_{std::move(source)} {
 }
 
 ////////////////////////////////////////////////////////////////////

@@ -2,8 +2,12 @@
 #include <types/constraints/solver.hpp>
 
 #include <ast/patterns.hpp>
+#include <ast/error_at_location.hpp>
 
 #include <lex/token.hpp>
+
+#include <cassert>
+
 
 namespace types::instantiate {
 
@@ -198,7 +202,17 @@ bool TemplateInstantiator::BuildSubstitution(Type* poly, Type* mono,
       auto& pack2 = mono->as_fun.param_pack;
 
       if (pack.size() != pack2.size()) {
-        throw std::runtime_error{"Function unification size mismatch"};
+        // Let's assume typing_context is always defined.
+        //   Otherwise we need to somehow get module full path.
+        //   Which we will, if it will be needed. But if it is not,
+        //   going without passing in here would be more clear,
+        //   more as-is.
+        assert(poly->typing_context_ != nullptr);
+
+        throw ErrorAtLocation(
+          poly->typing_context_->location,
+          fmt::format("Function unification size mismatch between {} and {}", poly->Format(), mono->Format())
+        );
       }
 
       for (size_t i = 0; i < pack.size(); i++) {

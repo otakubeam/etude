@@ -15,6 +15,9 @@
 
 namespace types {
 
+void ClearTypeStorage();
+
+
 struct Type;
 
 //////////////////////////////////////////////////////////////////////
@@ -46,7 +49,12 @@ enum class TypeTag {
 //////////////////////////////////////////////////////////////////////
 
 struct Member {
+  // Just name->GetName(), not really something complicated. But need
+  //   to rewrite a bunch of code in order to use the token directly.
+  // Token is needed for language server positions.
   std::string_view field;
+  lex::Token name;
+
   Type* ty = nullptr;
 };
 

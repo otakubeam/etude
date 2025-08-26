@@ -1,8 +1,23 @@
 #include <types/type.hpp>
 
+#include <ast/error_at_location.hpp>
+
 namespace types {
 
+// Should be in CompilationDriver, probably.
+//   Was a pain for tooling, where we run
+//   compiler multiple times. It references
+//   addreses of symbols that are gone, they
+//   were from the previous run.
+//   Fix is to clear this global variable.
+//   But really it could be supplied by the
+//   compilation driver to some function
+//   doing job.
 static Type::Arena type_store{};
+
+void ClearTypeStorage() {
+  type_store.clear();
+}
 
 //////////////////////////////////////////////////////////////////////
 
@@ -334,7 +349,7 @@ Type* SubstituteParameters(Type* subs, const Map& map) {
 
       for (auto& p : pack) {
         result.push_back(
-            Member{.field = p.field, .ty = SubstituteParameters(p.ty, map)});
+            Member{.field = p.field, .name = p.name, .ty = SubstituteParameters(p.ty, map)});
       }
 
       auto ty = MakeStructType(std::move(result));
@@ -348,10 +363,11 @@ Type* SubstituteParameters(Type* subs, const Map& map) {
       auto& pack = subs->as_sum.first;
 
       for (auto& p : pack) {
-        result.push_back(Member{.field = p.field,
-                                .ty = p.ty  //
-                                          ? SubstituteParameters(p.ty, map)
-                                          : nullptr});
+        result.push_back(Member{
+          .field = p.field,
+          .name = p.name,
+          .ty = p.ty  ? SubstituteParameters(p.ty, map) : nullptr
+        });
       }
 
       auto ty = MakeSumType(std::move(result));
@@ -428,7 +444,10 @@ Type* ApplyTyconsLazy(Type* ty) {
   auto& pack = ty->as_tyapp.param_pack;
 
   if (pack.size() != names.size()) {
-    throw std::runtime_error("Instantination size mismatch");
+    throw ErrorAtLocation(
+      symbol->declared_at.position,
+      fmt::format("Instantination size mismatch between {} and {}", symbol->GetType()->Format(), ty->Format())
+    );
   }
 
   std::unordered_map<std::string_view, Type*> map;
@@ -512,6 +531,7 @@ Type* Instantinate(Type* ty, KnownParams& map) {
       for (auto& p : pack) {
         args.push_back(Member{
             .field = p.field,
+            .name = p.name,
             .ty = Instantinate(p.ty, map),
         });
       }
@@ -528,6 +548,7 @@ Type* Instantinate(Type* ty, KnownParams& map) {
       for (auto& p : pack) {
         args.push_back(Member{
             .field = p.field,
+            .name = p.name,
             .ty = Instantinate(p.ty, map),
         });
       }

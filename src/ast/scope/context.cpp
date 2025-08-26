@@ -1,6 +1,7 @@
 #include <driver/compil_driver.hpp>
 #include <ast/scope/context.hpp>
 #include <types/type.hpp>
+#include <ast/error_at_location.hpp>
 
 namespace ast::scope {
 
@@ -54,7 +55,7 @@ Symbol* Context::FindFromExported(std::string_view name, bool nothrow = false) {
     return nullptr;
   } else {
     Print();
-    throw std::runtime_error{fmt::format("No such symbol {}\n", name)};
+    throw ErrorAtLocation(location, fmt::format("No such symbol {}\n", name));
   }
 }
 
@@ -63,6 +64,7 @@ Symbol* Context::FindFromExported(std::string_view name, bool nothrow = false) {
 Context* Context::MakeNewScopeLayer(lex::Location loc, std::string_view name) {
   auto child = new Context{
       .name = name,
+      .unit = unit,
       .location = loc,
       .level = level + 1,
       .parent = this,
@@ -75,16 +77,16 @@ Context* Context::MakeNewScopeLayer(lex::Location loc, std::string_view name) {
 //////////////////////////////////////////////////////////////////////
 
 void Context::Print() {
-  fmt::print("[!] Context {} at {}, level {}\n", name, location.Format(),
+  fmt::print(stderr, "[!] Context {} at {}, level {}\n", name, location.Format(),
              level);
 
-  fmt::print("Bindings: \n");
+  fmt::print(stderr, "Bindings: \n");
   for (auto& sym : bindings.symbols) {
     fmt::print("{}:{}\n", sym.FormatSymbol(),
                types::FormatType(*sym.GetType()));
   }
 
-  fmt::print("\n\n\n");
+  fmt::print(stderr, "\n\n\n");
 
   for (auto& ch : children) {
     ch->Print();

@@ -14,6 +14,9 @@
 
 #include <lex/location.hpp>
 
+#include <cassert>
+#include <filesystem>
+
 //////////////////////////////////////////////////////////////////////
 
 class CompilationDriver;
@@ -22,14 +25,24 @@ class Module {
  public:
   friend class Parser;
 
-  void SetName(std::string_view name) {
-    name_ = name;
+  Module(std::filesystem::path abs_path)
+    : abs_path_(std::move(abs_path))
+    , global_context(std::make_unique<ast::scope::Context>(ast::scope::Context{
+      .name = std::string_view(),
+      .unit = *this,
+      .location = lex::Location{this, 0, 0}
+    }))
+  {
+    assert(abs_path_.is_absolute());
   }
 
-  void BuildContext(CompilationDriver* driver) {
-    global_context.driver = driver;
+  Module(Module&&) = default;
+  Module(const Module&) = delete;
 
-    ast::scope::ContextBuilder ctx_builder{global_context};
+  void BuildContext(CompilationDriver* driver) {
+    global_context->driver = driver;
+
+    ast::scope::ContextBuilder ctx_builder{*this, *global_context.get()};
     types::constraints::ExpandTypeVariables expand;
 
     for (auto item : items_) {
@@ -75,17 +88,39 @@ class Module {
     return name_;
   }
 
-  std::vector<std::string_view> imports_;
+  std::vector<lex::Token> imports_;
   std::vector<std::string_view> exported_;
 
   ast::scope::Symbol* GetExportedSymbol(std::string_view name) {
-    return global_context.FindLocalSymbol(name);
+    return global_context->FindLocalSymbol(name);
+  }
+
+  void RunTooling(Visitor* visitor) {
+    for (Declaration* decl: items_) {
+      decl->Accept(visitor);
+    }
+  }
+
+  std::filesystem::path GetAbsPath() const {
+    return abs_path_;
+  }
+
+private:
+  // Only accessible for CompilationDriver to set the name
+  //   after the module was parsed.
+  // This hints users that name has the right value, when
+  //   they see it. Because it's done early and no one
+  //   else can touch it to make it wrong.
+  friend class CompilationDriver;
+  void SetName(std::string_view name) {
+    name_ = name;
   }
 
  private:
   std::string_view name_;
+  std::filesystem::path abs_path_;
 
-  ast::scope::Context global_context;
+  std::unique_ptr<ast::scope::Context> global_context;
 
   // Actual code item from this module
   std::vector<Declaration*> items_;

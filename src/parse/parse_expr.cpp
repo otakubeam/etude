@@ -84,9 +84,7 @@ Expression* Parser::ParseIfExpression() {
   auto true_branch = ParseExpression();
 
   if (!condition || !true_branch) {
-    throw parse::errors::ParseTrueBlockError{
-        location_token.location.Format(),
-    };
+    throw parse::errors::ParseTrueBlockError(location_token.location);
   }
 
   Expression* false_branch = nullptr;
@@ -306,8 +304,9 @@ auto Parser::ParseDesignatedList()
     Consume(lex::TokenType::ASSIGN);
 
     initializers.push_back({
-        .field = field,
+        .field = field.GetName(),
         .init = ParseExpression(),
+        .name = field,
     });
 
     if (!Matches(lex::TokenType::COMMA)) {
@@ -458,8 +457,7 @@ Expression* Parser::ParsePrimary() {
     }
 
     default: {
-      auto location = token.location.Format();
-      throw parse::errors::ParsePrimaryError{location};
+      throw parse::errors::ParsePrimaryError(token.location);
     }
   }
 
@@ -504,6 +502,7 @@ Expression* Parser::ParseSignleFieldCompound() {
           {
               ident.GetName(),
               TagOnly() ? nullptr : ParseExpression(),
+              ident,
           },
       },
   };

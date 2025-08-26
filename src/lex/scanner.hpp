@@ -9,18 +9,28 @@
 #include <filesystem>
 #include <iostream>
 #include <istream>
+#include <sstream>
 #include <vector>
 #include <span>
 
 namespace lex {
 
+struct InputFile {
+  std::stringstream stream;
+  std::filesystem::path abs_path;
+};
+
 //////////////////////////////////////////////////////////////////////
 
 class Scanner {
  public:
-  Scanner(std::istream& source) : source_{source} {
+  Scanner(lex::InputFile source) : source_{std::move(source)}, location_{nullptr, 0, 0} {
     InitBuffer();
     FetchNextSymbol();
+  }
+
+  void SetUnit(Module* unit) {
+    location_.unit = unit;
   }
 
   void InitBuffer() {
@@ -69,7 +79,7 @@ class Scanner {
   }
 
   void MoveNextLine() {
-    while (CurrentSymbol() != '\n' && !source_.eof()) {
+    while (CurrentSymbol() != '\n' && !source_.stream.eof()) {
       MoveRight();
     }
 
@@ -82,7 +92,7 @@ class Scanner {
   }
 
   char PeekNextSymbol() {
-    return source_.peek();
+    return source_.stream.peek();
   }
 
   Location GetLocation() const {
@@ -93,14 +103,18 @@ class Scanner {
     return lines_;
   }
 
+  std::filesystem::path GetFileAbsPath() const {
+    return source_.abs_path;
+  }
+
  private:
   void FetchNextSymbol() {
-    if (source_.eof()) {
+    if (source_.stream.eof()) {
       symbol_ = EOF;
       return;
     }
 
-    symbol_ = source_.get();
+    symbol_ = source_.stream.get();
 
     buffer_.push_back(symbol_);
   }
@@ -110,7 +124,7 @@ class Scanner {
   }
 
  private:
-  std::istream& source_;
+  lex::InputFile source_;
 
   std::vector<std::string_view> lines_;
 

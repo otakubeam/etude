@@ -5,9 +5,14 @@
 #include <cstddef>
 #include <string>
 
+#include <filesystem>
+
+class Module;
+
 namespace lex {
 
 struct Location {
+  Module* unit;
   size_t lineno = 0;
   size_t columnno = 0;
 

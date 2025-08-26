@@ -2,6 +2,7 @@
 #include <parse/parse_error.hpp>
 
 #include <ast/patterns.hpp>
+#include <ast/error_at_location.hpp>
 
 ///////////////////////////////////////////////////////////////////
 
@@ -29,7 +30,7 @@ Pattern* Parser::ParsePattern() {
 
 Pattern* Parser::ParseLiteralPattern() {
   if (lexer_.Peek().type == lex::TokenType::LEFT_PAREN) {
-    throw std::runtime_error{"Unexprected symbol '(' matching against literal"};
+    throw ErrorAtLocation(lexer_.Peek().location, "Unexpected symbol '(' matching against literal");
   }
 
   auto lit = ParsePrimary()->as<LiteralExpression>();

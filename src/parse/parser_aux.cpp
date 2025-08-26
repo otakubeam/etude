@@ -29,10 +29,10 @@ bool Parser::MatchesComparisonSign(lex::TokenType type) {
 
 void Parser::Consume(lex::TokenType type) {
   if (!Matches(type)) {
-    throw parse::errors::ParseTokenError{
+    throw parse::errors::ParseTokenError(
         lex::FormatTokenType(type),
-        FormatLocation(),
-    };
+        lexer_.GetPreviousToken().location
+    );
   }
 }
 

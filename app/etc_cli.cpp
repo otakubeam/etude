@@ -29,7 +29,15 @@ int main(int argc, char** argv) {
 
   ParseOptions(driver, argc, argv);
 
-  driver.Compile();
+  try {
+    driver.Compile();
+  } catch (const ErrorAtLocation& error) {
+    fmt::println(stderr, "{}: {}", error.where().Format(), error.what());
+    return 1;
+  }
+  // Ошибки общие, без местоположения, обрабатываются как раньше. Такие остались
+  //   в CompilationDriver, когда не удалось открыть файл или не нашлась
+  //   стандартная библиотека.
 
   return 0;
 }

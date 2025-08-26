@@ -5,6 +5,8 @@
 #include <string_view>
 #include <vector>
 
+class Module;
+
 class FunDeclStatement;
 class TraitDeclaration;
 class ImplDeclaration;
@@ -64,7 +66,10 @@ struct Symbol {
     VarbindSymbol as_varbind;
   };
 
-  lex::Location declared_at;
+  struct {
+    Module& unit;
+    lex::Location position;
+  } declared_at;
   std::vector<lex::Location> uses{};
 
   std::string_view FormatSymbol() {

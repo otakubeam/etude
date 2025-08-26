@@ -3,48 +3,41 @@
 #include <fmt/core.h>
 
 #include <string>
+#include <string_view>
+
+#include <ast/error_at_location.hpp>
 
 namespace parse::errors {
 
-struct ParseError : std::exception {
-  std::string message;
+using ParseError = ErrorAtLocation;
 
-  const char* what() const noexcept override {
-    return message.c_str();
-  }
+template <const char * FormatStr>
+struct LocationFormattedError : ParseError {
+  LocationFormattedError(lex::Location location)
+    : ParseError(
+      std::move(location),
+      fmt::format(FormatStr, location.Format()))
+  {}
 };
 
-struct ParsePrimaryError : ParseError {
-  ParsePrimaryError(const std::string& location) {
-    message = fmt::format("Could not match primary expression at location {}\n",
-                          location);
-  }
-};
+constexpr const char ParsePrimaryErrorFmt[]   = "Could not match primary expression at location {}";
+using ParsePrimaryError   = LocationFormattedError<ParsePrimaryErrorFmt>;
 
-struct ParseTrueBlockError : ParseError {
-  ParseTrueBlockError(const std::string& location) {
-    message =
-        fmt::format("Could not parse true block at location {}\n", location);
-  }
-};
+constexpr const char ParseTrueBlockErrorFmt[] = "Could not parse true block at location {}";
+using ParseTrueBlockError = LocationFormattedError<ParseTrueBlockErrorFmt>;
 
-struct ParseNonLvalueError : ParseError {
-  ParseNonLvalueError(const std::string& location) {
-    message = fmt::format("Expected lvalue at location {}\n", location);
-  }
-};
+constexpr const char ParseNonLvalueErrorFmt[] = "Expected lvalue at location {}";
+using ParseNonLvalueError = LocationFormattedError<ParseNonLvalueErrorFmt>;
 
-struct ParseTypeError : ParseError {
-  ParseTypeError(const std::string& location) {
-    message =
-        fmt::format("Could not parse the type at location {}\n", location);
-  }
-};
+constexpr const char ParseTypeErrorFmt[]      = "Could not parse the type at location {}";
+using ParseTypeError      = LocationFormattedError<ParseTypeErrorFmt>;
 
 struct ParseTokenError : ParseError {
-  ParseTokenError(const std::string& tok, const std::string& location) {
-    message = fmt::format("Expected token {} at location {}\n", tok, location);
-  }
+  ParseTokenError(const std::string& tok, lex::Location location)
+    : ParseError(
+      std::move(location),
+      fmt::format("Expected token {} at location {}", tok, location.Format()))
+  {}
 };
 
 }  // namespace parse::errors
